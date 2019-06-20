@@ -6,7 +6,7 @@
 #include "WireCellData/ToyCTPointCloud.h"
 
 #include "WireCellPID/CalcPoints.h"
-
+#include "WireCellPID/PR3DCluster.h"
 
 #include "TH1.h"
 #include "TFile.h"
@@ -185,8 +185,9 @@ int main(int argc, char* argv[])
 
   // load cells ... 
   GeomCellSelection mcells;
-  CellIndexMap map_mcell_cluster_id;
-  
+  //  CellIndexMap map_mcell_cluster_id;
+  WireCellPID::PR3DClusterSelection live_clusters;
+  WireCellPID::PR3DCluster *cluster;
   int prev_cluster_id=-1;
   int ident = 0;
   TC->GetEntry(0);
@@ -276,7 +277,15 @@ int main(int argc, char* argv[])
     }
     mcells.push_back(mcell);
     
-    map_mcell_cluster_id[mcell]=cluster_id;
+    //    map_mcell_cluster_id[mcell]=cluster_id;
+
+    if (cluster_id != prev_cluster_id){
+      cluster = new WireCellPID::PR3DCluster(cluster_id);
+      live_clusters.push_back(cluster);
+    }
+    cluster->AddCell(mcell,time_slice);
+
+
     
     prev_cluster_id = cluster_id;
     ident++;
@@ -293,8 +302,8 @@ int main(int argc, char* argv[])
   }
 
   
-  TFile *file1 = new TFile(Form("graph_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
-  Trun->CloneTree()->Write();
+    TFile *file1 = new TFile(Form("graph_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
+    Trun->CloneTree()->Write();
 
   TTree *T_cluster ;
   Double_t x,y,z,q,nq;
@@ -314,33 +323,33 @@ int main(int argc, char* argv[])
   T_cluster->SetDirectory(file1);
   
 
-  for (size_t i=0;i!=mcells.size();i++){
-    SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)mcells.at(i);
+  // for (size_t i=0;i!=mcells.size();i++){
+  //   SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)mcells.at(i);
     
-    PointVector ps = mcell->get_sampling_points();
-    int time_slice = mcell->GetTimeSlice();
-    ncluster = map_mcell_cluster_id[mcell];
+  //   PointVector ps = mcell->get_sampling_points();
+  //   int time_slice = mcell->GetTimeSlice();
+  //   ncluster = map_mcell_cluster_id[mcell];
     
-    if (ps.size()==0){
-      std::cout << "zero sampling points!" << std::endl;
-    }else{
-      q = mcell->get_q() / ps.size();
-      nq = ps.size();
-      double offset_x = 0;
-      for (int k=0;k!=ps.size();k++){
-	x = (ps.at(k).x- offset_x)/units::cm ;
-	y = ps.at(k).y/units::cm;
-	z = ps.at(k).z/units::cm;
-	//	std::vector<int> time_chs = ct_point_cloud.convert_3Dpoint_time_ch(ps.at(k));
-	//temp_time_slice = time_chs.at(0);
-	//ch_u = time_chs.at(1);
-	//ch_v = time_chs.at(2);
-	//ch_w = time_chs.at(3);
+  //   if (ps.size()==0){
+  //     std::cout << "zero sampling points!" << std::endl;
+  //   }else{
+  //     q = mcell->get_q() / ps.size();
+  //     nq = ps.size();
+  //     double offset_x = 0;
+  //     for (int k=0;k!=ps.size();k++){
+  // 	x = (ps.at(k).x- offset_x)/units::cm ;
+  // 	y = ps.at(k).y/units::cm;
+  // 	z = ps.at(k).z/units::cm;
+  // 	//	std::vector<int> time_chs = ct_point_cloud.convert_3Dpoint_time_ch(ps.at(k));
+  // 	//temp_time_slice = time_chs.at(0);
+  // 	//ch_u = time_chs.at(1);
+  // 	//ch_v = time_chs.at(2);
+  // 	//ch_w = time_chs.at(3);
 	
-	T_cluster->Fill();
-      }
-    }
-  }
+  // 	T_cluster->Fill();
+  //     }
+  //   }
+  // }
 
   
   file1->Write();
