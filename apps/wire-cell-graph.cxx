@@ -286,6 +286,9 @@ int main(int argc, char* argv[])
   
   prev_cluster_id = -1;
 
+
+
+  // replace by the new sampling points ...
   for (auto it = mcells.begin(); it!=mcells.end();it++){
     SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)(*it);
     WireCell2dToy::calc_sampling_points(gds, mcell, nrebin, frame_length, unit_dis);
