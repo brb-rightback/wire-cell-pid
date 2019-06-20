@@ -101,7 +101,6 @@ void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCell::
     min_wires1 = min_wires;
   }
   
-  
   for (auto it = max_wires1.begin(); it!=max_wires1.end(); it++){
     bool flag_must1 = false;
     if (max_wires_set.find(*it)!=max_wires_set.end()) flag_must1 = true;
