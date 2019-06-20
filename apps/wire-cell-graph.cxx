@@ -299,10 +299,7 @@ int main(int argc, char* argv[])
   for (size_t i=0; i!=live_clusters.size();i++){
     WireCellPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
   }
-  //  for (auto it = mcells.begin(); it!=mcells.end();it++){
-  //  SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)(*it);
-  //  WireCellPID::calc_sampling_points(gds, mcell, nrebin, frame_length, unit_dis);
-  // }
+  
 
   
   TFile *file1 = new TFile(Form("graph_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
@@ -325,34 +322,37 @@ int main(int argc, char* argv[])
   T_cluster->Branch("ch_w",&ch_w,"ch_w/I");
   T_cluster->SetDirectory(file1);
   
-
-  // for (size_t i=0;i!=mcells.size();i++){
-  //   SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)mcells.at(i);
-    
-  //   PointVector ps = mcell->get_sampling_points();
-  //   int time_slice = mcell->GetTimeSlice();
-  //   ncluster = map_mcell_cluster_id[mcell];
-    
-  //   if (ps.size()==0){
-  //     std::cout << "zero sampling points!" << std::endl;
-  //   }else{
-  //     q = mcell->get_q() / ps.size();
-  //     nq = ps.size();
-  //     double offset_x = 0;
-  //     for (int k=0;k!=ps.size();k++){
-  // 	x = (ps.at(k).x- offset_x)/units::cm ;
-  // 	y = ps.at(k).y/units::cm;
-  // 	z = ps.at(k).z/units::cm;
-  // 	//	std::vector<int> time_chs = ct_point_cloud.convert_3Dpoint_time_ch(ps.at(k));
-  // 	//temp_time_slice = time_chs.at(0);
-  // 	//ch_u = time_chs.at(1);
-  // 	//ch_v = time_chs.at(2);
-  // 	//ch_w = time_chs.at(3);
-	
-  // 	T_cluster->Fill();
-  //     }
-  //   }
-  // }
+  for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
+    ncluster = (*it)->get_cluster_id();
+    SMGCSelection& mcells = (*it)->get_mcells();
+    for (size_t i=0;i!=mcells.size();i++){
+      SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)mcells.at(i);
+      
+      PointVector ps = mcell->get_sampling_points();
+      int time_slice = mcell->GetTimeSlice();
+      
+      
+      if (ps.size()==0){
+	std::cout << "zero sampling points!" << std::endl;
+      }else{
+	q = mcell->get_q() / ps.size();
+	nq = ps.size();
+	double offset_x = 0;
+	for (int k=0;k!=ps.size();k++){
+	  x = (ps.at(k).x- offset_x)/units::cm ;
+	  y = ps.at(k).y/units::cm;
+	  z = ps.at(k).z/units::cm;
+	  //	std::vector<int> time_chs = ct_point_cloud.convert_3Dpoint_time_ch(ps.at(k));
+	  //temp_time_slice = time_chs.at(0);
+	  //ch_u = time_chs.at(1);
+	  //ch_v = time_chs.at(2);
+	  //ch_w = time_chs.at(3);
+	  
+	  T_cluster->Fill();
+	}
+      }
+    }
+  }
 
   
   file1->Write();
