@@ -62,14 +62,12 @@ void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCell::
   const GeomWire *other_wire_2 = other_wires.back();
   dis_limit[0] = gds.wire_dist(*other_wire_1)-other_pitch/2.-tolerance;
   dis_limit[1] = gds.wire_dist(*other_wire_2)+other_pitch/2.+tolerance;
-
-  //std::cout << dis_limit[0] << " " << dis_limit[1] << std::endl;
-
-  
   
   int max_step = std::max(3.0,max_wires.size()/12.);
   int min_step = std::max(3.0,min_wires.size()/12.);
+
   //std::cout << min_step << " " << max_step << std::endl;
+  // have to be satisfied ...
   GeomWireSetp max_wires_set;
   GeomWireSetp min_wires_set;
   max_wires_set.insert(max_wires.front());
@@ -84,8 +82,38 @@ void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCell::
   }
   min_wires_set.insert(min_wires.back());
 
-  for (auto it = max_wires_set.begin(); it!=max_wires_set.end(); it++){
-    for (auto it1 = min_wires_set.begin(); it1!=min_wires_set.end();it1++){
+  double charge_threshold_max = 4000; // hard coded number
+  double charge_threshold_min = 4000; // hard coded number
+  double charge_threshold_other = 4000; // hard coded number
+  std::vector<WirePlaneType_t> bad_planes = mcell->get_bad_planes();
+  if (bad_planes.size()>0)
+    if (max_wire_plane_type==bad_planes.at(0)){
+      charge_threshold_max = 0;
+    }else if (min_wire_plane_type==bad_planes.at(0)){
+      charge_threshold_min = 0;
+    }else if (other_wire_plane_type==bad_planes.at(0)){
+      charge_threshold_other = 0;
+    }
+  GeomWireSelection max_wires1(max_wires_set.begin(), max_wires_set.end());
+  GeomWireSelection min_wires1(min_wires_set.begin(), min_wires_set.end());
+  if (max_wires.size() * min_wires.size() <= 2500){
+    max_wires1 = max_wires;
+    min_wires1 = min_wires;
+  }
+  
+  
+  for (auto it = max_wires1.begin(); it!=max_wires1.end(); it++){
+    bool flag_must1 = false;
+    if (max_wires_set.find(*it)!=max_wires_set.end()) flag_must1 = true;
+    double charge1 = mcell->Get_Wire_Charge(*it);
+    if ((!flag_must1) && (charge1 < charge_threshold_max)) continue;
+    
+    for (auto it1 = min_wires1.begin(); it1!=min_wires1.end();it1++){
+      bool flag_must2 = false;
+      if (min_wires_set.find(*it1)!=min_wires_set.end()) flag_must2 = true;
+      double charge2 =mcell->Get_Wire_Charge(*it1);
+      if ((!flag_must2) && (charge2 < charge_threshold_min)) continue;
+      
       Vector point;
       gds.crossing_point(*(*it),*(*it1),point);
       float dis = gds.wire_dist(point,other_wire_plane_type);
@@ -97,6 +125,15 @@ void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCell::
 	int index_w;
 	const GeomWire* wire_other = gds.closest(point,other_wire_plane_type);
 	if (wire_other == 0 ) continue;
+	double charge3 = mcell->Get_Wire_Charge(wire_other);
+	
+	if ( ((!flag_must1) || (!flag_must2)) && (charge1 < charge_threshold_max ||
+						  charge2 < charge_threshold_min ||
+						  charge3 < charge_threshold_other))
+	  continue;
+
+	//std::cout << charge1 << " " << charge2 << " " << charge3 << std::endl;
+	
 	if (max_wire_plane_type==WirePlaneType_t(0)){
 	  index_u = (*it)->index();
 	  if (min_wire_plane_type==WirePlaneType_t(1)){
