@@ -8,6 +8,8 @@
 #include "WireCellPID/CalcPoints.h"
 #include "WireCellPID/PR3DCluster.h"
 
+#include "WireCellPID/ExecMon.h"
+
 #include "TH1.h"
 #include "TFile.h"
 #include "TTree.h"
@@ -23,6 +25,9 @@ int main(int argc, char* argv[])
   }
   TH1::AddDirectory(kFALSE);
 
+  WireCellPID::ExecMon em("starting");
+  cout << em("load geometry") << endl;
+  
   WireCellSst::GeomDataSource gds(argv[1]);
   std::vector<double> ex = gds.extent();
   cout << "Extent: "
@@ -293,13 +298,14 @@ int main(int argc, char* argv[])
   
   prev_cluster_id = -1;
 
-
+  cout << em("load clusters from file") << endl;
 
   // replace by the new sampling points ...
   for (size_t i=0; i!=live_clusters.size();i++){
     WireCellPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
+    live_clusters.at(i)->Create_point_cloud();
   }
-  
+  cout << em("Add X, Y, Z points") << std::endl;
 
   
   TFile *file1 = new TFile(Form("graph_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
