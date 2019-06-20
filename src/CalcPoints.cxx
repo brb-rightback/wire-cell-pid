@@ -2,6 +2,14 @@
 
 using namespace WireCell;
 
+void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCellPID::PR3DCluster* cluster, int nrebin, int frame_length, double unit_dis){
+  SMGCSelection mcells = cluster->get_mcells();
+  for (auto it = mcells.begin(); it!=mcells.end(); it++){
+    WireCellPID::calc_sampling_points(gds,*it, nrebin, frame_length, unit_dis);
+  }
+}
+
+
 void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCell::SlimMergeGeomCell* mcell, int nrebin, int frame_length, double unit_dis){
   GeomWireSelection wires_u = mcell->get_uwires();
   GeomWireSelection wires_v = mcell->get_vwires();

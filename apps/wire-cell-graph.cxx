@@ -296,14 +296,17 @@ int main(int argc, char* argv[])
 
 
   // replace by the new sampling points ...
-  for (auto it = mcells.begin(); it!=mcells.end();it++){
-    SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)(*it);
-    WireCellPID::calc_sampling_points(gds, mcell, nrebin, frame_length, unit_dis);
+  for (size_t i=0; i!=live_clusters.size();i++){
+    WireCellPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
   }
+  //  for (auto it = mcells.begin(); it!=mcells.end();it++){
+  //  SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)(*it);
+  //  WireCellPID::calc_sampling_points(gds, mcell, nrebin, frame_length, unit_dis);
+  // }
 
   
-    TFile *file1 = new TFile(Form("graph_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
-    Trun->CloneTree()->Write();
+  TFile *file1 = new TFile(Form("graph_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
+  Trun->CloneTree()->Write();
 
   TTree *T_cluster ;
   Double_t x,y,z,q,nq;

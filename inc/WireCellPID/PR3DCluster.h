@@ -13,6 +13,7 @@ namespace WireCellPID{
     int get_cluster_id(){return cluster_id;};
     void set_cluster_id(int value){cluster_id=value;};
     int get_num_mcells(){return mcells.size();};
+    WireCell::SMGCSelection& get_mcells(){return mcells;};
   protected:
     int cluster_id;
     
