@@ -1,2 +1,2 @@
 #!/usr/bin/env python
-bld.make_package('WireCellPID', use='EIGEN WireCellQuickhull WireCellNanoflann lsp BOOST WireCellSst WireCellData WireCell2dToy ROOTSYS')
+bld.make_package('WireCellPID', use='EIGEN WireCellQuickhull WireCellNanoflann lsp BOOST WireCellSst WireCellData ROOTSYS')

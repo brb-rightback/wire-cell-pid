@@ -5,9 +5,7 @@
 #include "WireCellData/Singleton.h"
 #include "WireCellData/ToyCTPointCloud.h"
 
-
-// temporary for testing purpose ...
-#include "WireCell2dToy/CalcPoints.h"
+#include "WireCellPID/CalcPoints.h"
 
 
 #include "TH1.h"
@@ -291,7 +289,7 @@ int main(int argc, char* argv[])
   // replace by the new sampling points ...
   for (auto it = mcells.begin(); it!=mcells.end();it++){
     SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)(*it);
-    WireCell2dToy::calc_sampling_points(gds, mcell, nrebin, frame_length, unit_dis);
+    WireCellPID::calc_sampling_points(gds, mcell, nrebin, frame_length, unit_dis);
   }
 
   
