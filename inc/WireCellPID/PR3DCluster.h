@@ -14,10 +14,16 @@ namespace WireCellPID{
     int get_cluster_id(){return cluster_id;};
     void set_cluster_id(int value){cluster_id=value;};
     int get_num_mcells(){return mcells.size();};
+    int get_num_points(){return point_cloud->get_num_points(); };
+    int get_num_time_slices(){return time_cells_set_map.size();};
     WireCell::SMGCSelection& get_mcells(){return mcells;};
 
     void Create_point_cloud(WireCell::ToyPointCloud *global_point_cloud = 0);
     WireCell::ToyPointCloud* get_point_cloud(){return point_cloud;};
+
+    WireCell::Point calc_ave_pos(WireCell::Point& p, double dis);
+    WireCell::Point calc_ave_pos(WireCell::Point& p, int N);
+    int get_num_points(WireCell::Point& p_test, double dis);
     
   protected:
     int cluster_id;
