@@ -4,7 +4,28 @@
 #include "WireCellData/SlimMergeGeomCell.h"
 #include "WireCellData/ToyPointCloud.h"
 
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+
+using namespace boost;
+
 namespace WireCellPID{
+
+  struct VertexProp {
+    int index;
+    //WCPointCloud<double>::WCPoint wcpoint;
+    // add pointer to merged cell
+  };
+  struct EdgeProp {
+    float dist; // edge distance
+  };
+  
+  typedef adjacency_list<vecS, vecS, undirectedS, VertexProp, EdgeProp> MCUGraph;
+  typedef graph_traits<MCUGraph>::vertex_descriptor vertex_descriptor;
+  typedef graph_traits<MCUGraph>::edge_descriptor edge_descriptor;
+
+
+  
   class PR3DCluster{
   public:
     PR3DCluster(int cluster_id);
@@ -40,6 +61,16 @@ namespace WireCellPID{
     TVector3 VHoughTrans(WireCell::Point& p, double dis);
     std::pair<double,double> HoughTrans(WireCell::Point& p, double dis, WireCell::ToyPointCloud *point_cloud1);
     TVector3 VHoughTrans(WireCell::Point& p, double dis, WireCell::ToyPointCloud *point_cloud1);
+
+    // graph related ...
+    void Create_graph();
+    //void Create_graph(WireCell::ToyCTPointCloud& ct_point_cloud);
+    
+    void Establish_close_connected_graph();
+    void Connect_graph();
+    //void Connect_graph(WireCell::ToyCTPointCloud& ct_point_cloud);
+
+    void Del_graph();
     
   protected:
     int cluster_id;
@@ -53,6 +84,10 @@ namespace WireCellPID{
     
     WireCell::Vector PCA_axis[3];
     double PCA_values[3];
+
+    // graph
+    MCUGraph *graph;
+    
   };
   typedef std::vector<PR3DCluster*> PR3DClusterSelection;
 }
