@@ -18,12 +18,22 @@ namespace WireCellPID{
     int get_num_time_slices(){return time_cells_set_map.size();};
     WireCell::SMGCSelection& get_mcells(){return mcells;};
 
+    // Point cloud related ...
     void Create_point_cloud(WireCell::ToyPointCloud *global_point_cloud = 0);
     WireCell::ToyPointCloud* get_point_cloud(){return point_cloud;};
 
     WireCell::Point calc_ave_pos(WireCell::Point& p, double dis);
     WireCell::Point calc_ave_pos(WireCell::Point& p, int N);
     int get_num_points(WireCell::Point& p_test, double dis);
+
+
+    //PCA related ...
+    void Calc_PCA();
+    bool flag_PCA;
+    void Calc_PCA(WireCell::PointVector& points);
+    WireCell::Vector get_center(){return center;};
+    WireCell::Vector get_PCA_axis(int axis){return PCA_axis[axis];};
+    double get_PCA_value(int axis){return PCA_values[axis];};
     
   protected:
     int cluster_id;
@@ -33,6 +43,10 @@ namespace WireCellPID{
     std::map<WireCell::SlimMergeGeomCell*, std::set<int>> cell_times_set_map;
 
     WireCell::ToyPointCloud *point_cloud;
+    WireCell::Vector center;
+    
+    WireCell::Vector PCA_axis[3];
+    double PCA_values[3];
   };
   typedef std::vector<PR3DCluster*> PR3DClusterSelection;
 }
