@@ -65,12 +65,12 @@ namespace WireCellPID{
     // graph related ...
     void Create_graph();
     //void Create_graph(WireCell::ToyCTPointCloud& ct_point_cloud);
-    
     void Establish_close_connected_graph();
     void Connect_graph();
     //void Connect_graph(WireCell::ToyCTPointCloud& ct_point_cloud);
-
     void Del_graph();
+
+    
     
   protected:
     int cluster_id;
