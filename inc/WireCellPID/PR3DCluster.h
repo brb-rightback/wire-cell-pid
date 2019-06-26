@@ -70,6 +70,10 @@ namespace WireCellPID{
     //void Connect_graph(WireCell::ToyCTPointCloud& ct_point_cloud);
     void Del_graph();
 
+    // Steiner tree
+    void Create_steiner_tree();
+    void form_cell_points_map();
+
     
     
   protected:
@@ -87,6 +91,9 @@ namespace WireCellPID{
 
     // graph
     MCUGraph *graph;
+
+    // prepare for steiner tree
+    std::map<WireCell::SlimMergeGeomCell*, std::set<int>> cell_point_indices_map;
     
   };
   typedef std::vector<PR3DCluster*> PR3DClusterSelection;

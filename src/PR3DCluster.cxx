@@ -38,6 +38,36 @@ void WireCellPID::PR3DCluster::Del_graph(){
   }
 }
 
+void WireCellPID::PR3DCluster::Create_steiner_tree(){
+  Create_graph();
+
+  //
+  form_cell_points_map();
+  // std::cout << cell_point_indices_map.size() << std::endl;
+}
+
+void WireCellPID::PR3DCluster::form_cell_points_map(){
+  cell_point_indices_map.clear();
+  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+  
+  for (auto it = mcells.begin(); it!=mcells.end(); it++){
+    SlimMergeGeomCell *mcell = (*it);
+    std::vector<int>& wcps = point_cloud->get_mcell_indices(mcell);
+    if (cell_point_indices_map.find(mcell)==cell_point_indices_map.end()){
+      std::set<int> point_indices;
+      cell_point_indices_map[mcell] = point_indices;
+    }
+    
+    for (auto it1 = wcps.begin(); it1!=wcps.end(); it1++){
+      WCPointCloud<double>::WCPoint& wcp = cloud.pts[*it1]; 
+      cell_point_indices_map[mcell].insert(wcp.index);
+    }
+  }
+
+}
+
+
+
 
 void WireCellPID::PR3DCluster::AddCell(SlimMergeGeomCell* mcell, int time_slice){
   if (cell_times_set_map.find(mcell)==cell_times_set_map.end()){
@@ -393,7 +423,7 @@ std::pair<double,double> WireCellPID::PR3DCluster::HoughTrans(Point&p , double d
 }
 
 void WireCellPID::PR3DCluster::Create_graph(){
-  std::cout <<"Create Graph! " << cluster_id << " " << graph << std::endl; 
+  
   
   if (graph!=(WireCellPID::MCUGraph*)0)
     return;
@@ -405,6 +435,8 @@ void WireCellPID::PR3DCluster::Create_graph(){
   const int N = point_cloud->get_num_points();
   graph = new WireCellPID::MCUGraph(N);
 
+  std::cout <<"Create Graph! " << cluster_id << " " << graph << " " << N << std::endl; 
+  
   Establish_close_connected_graph();
   Connect_graph();
   
