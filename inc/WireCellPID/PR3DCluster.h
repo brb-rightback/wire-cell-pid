@@ -72,6 +72,8 @@ namespace WireCellPID{
 
     // Steiner tree
     void Create_steiner_tree();
+
+    void find_steiner_terminals();
     void form_cell_points_map();
 
     
@@ -94,6 +96,7 @@ namespace WireCellPID{
 
     // prepare for steiner tree
     std::map<WireCell::SlimMergeGeomCell*, std::set<int>> cell_point_indices_map;
+    std::set<int> steriner_terminal_indices;
     
   };
   typedef std::vector<PR3DCluster*> PR3DClusterSelection;
