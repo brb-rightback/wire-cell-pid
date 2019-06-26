@@ -13,7 +13,9 @@ void WireCellPID::PR3DCluster::find_steiner_terminals(WireCell::GeomDataSource& 
   // form all the maps ...
   form_cell_points_map();
 
-  
+  SMGCSelection temp_mcells;
+  temp_mcells.push_back(mcells.at(0));
+  find_peak_point_indices(temp_mcells, gds);
 }
 
 std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mcells, WireCell::GeomDataSource& gds){
@@ -26,8 +28,12 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
   
   WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
 
-  //WCPointCloud<double>::WCPoint& wcp = cloud.pts[*it1]; 
+  std::cout << all_indices.size() << std::endl;
+  WCPointCloud<double>::WCPoint& wcp = cloud.pts[(*all_indices.begin())]; 
+  calc_charge_wcp(wcp,gds);
+  //
 
+  
   
   // form another set with the actual points according to their charge
   // find the vertices with the point
@@ -35,16 +41,24 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
   // if charge smaller, push into dead list
   // if charge bigger, push current into dead list
   // if the current's charge is the biggest, push into good list 
-  
+
+  std::set<int> peak_indices;
+  return peak_indices;
 }
 
 double WireCellPID::PR3DCluster::calc_charge_wcp(WireCell::WCPointCloud<double>::WCPoint& wcp, WireCell::GeomDataSource& gds){
   double charge = 0;
   SlimMergeGeomCell *mcell = wcp.mcell;
-  int index_u = wcp.index_u;
-  int index_v = wcp.index_v;
-  int index_w = wcp.index_w;
   
+  const GeomWire *uwire = gds.by_planeindex(WirePlaneType_t(0),wcp.index_u);
+  const GeomWire *vwire = gds.by_planeindex(WirePlaneType_t(1),wcp.index_v);
+  const GeomWire *wwire = gds.by_planeindex(WirePlaneType_t(2),wcp.index_w);
+
+  double charge_u = mcell->Get_Wire_Charge(uwire);
+  double charge_v = mcell->Get_Wire_Charge(vwire);
+  double charge_w = mcell->Get_Wire_Charge(wwire);
+
+  std::cout << charge_u << " " << charge_v << " " << charge_w << std::endl;
   // deal with bad planes ... 
   // get charge for each indices ...
   // how to average ??? 
