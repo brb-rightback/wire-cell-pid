@@ -3,6 +3,7 @@
 
 #include "WireCellData/SlimMergeGeomCell.h"
 #include "WireCellData/ToyPointCloud.h"
+#include "WireCellSst/GeomDataSource.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
@@ -71,14 +72,15 @@ namespace WireCellPID{
     void Del_graph();
 
     // Steiner tree
-    void Create_steiner_tree();
+    void Create_steiner_tree(WireCell::GeomDataSource& gds);
 
-    void find_steiner_terminals();
+    void find_steiner_terminals(WireCell::GeomDataSource& gds);
     void form_cell_points_map();
 
     // find peak points within the mcells ...
-    std::set<int> find_peak_point_indices(WireCell::SMGCSelection mcells);
-    
+    std::set<int> find_peak_point_indices(WireCell::SMGCSelection mcells,WireCell::GeomDataSource& gds);
+
+    double calc_charge_wcp(WireCell::WCPointCloud<double>::WCPoint& wcp, WireCell::GeomDataSource& gds);
     
   protected:
     int cluster_id;

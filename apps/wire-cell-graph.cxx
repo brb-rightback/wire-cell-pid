@@ -304,7 +304,7 @@ int main(int argc, char* argv[])
   for (size_t i=0; i!=live_clusters.size();i++){
     WireCellPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
     live_clusters.at(i)->Create_point_cloud();
-    live_clusters.at(i)->Create_steiner_tree();
+    live_clusters.at(i)->Create_steiner_tree(gds);
   }
   cout << em("Add X, Y, Z points") << std::endl;
 
