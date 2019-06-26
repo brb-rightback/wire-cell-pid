@@ -30,7 +30,7 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
 
   std::cout << all_indices.size() << std::endl;
   WCPointCloud<double>::WCPoint& wcp = cloud.pts[(*all_indices.begin())]; 
-  calc_charge_wcp(wcp,gds);
+  std::cout << calc_charge_wcp(wcp,gds) << std::endl;
   //
 
   
@@ -48,6 +48,7 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
 
 double WireCellPID::PR3DCluster::calc_charge_wcp(WireCell::WCPointCloud<double>::WCPoint& wcp, WireCell::GeomDataSource& gds){
   double charge = 0;
+  double ncharge = 0;
   SlimMergeGeomCell *mcell = wcp.mcell;
   
   const GeomWire *uwire = gds.by_planeindex(WirePlaneType_t(0),wcp.index_u);
@@ -58,8 +59,28 @@ double WireCellPID::PR3DCluster::calc_charge_wcp(WireCell::WCPointCloud<double>:
   double charge_v = mcell->Get_Wire_Charge(vwire);
   double charge_w = mcell->Get_Wire_Charge(wwire);
 
-  std::cout << charge_u << " " << charge_v << " " << charge_w << std::endl;
+  charge += charge_u*charge_u; ncharge ++;
+  charge += charge_v*charge_v; ncharge ++;
+  charge += charge_w*charge_w; ncharge ++;
+  //std::cout << charge_u << " " << charge_v << " " << charge_w << std::endl;
+
   // deal with bad planes ... 
+  std::vector<WirePlaneType_t> bad_planes = mcell->get_bad_planes();
+  for (size_t i=0;i!=bad_planes.size();i++){
+    if (bad_planes.at(i)==WirePlaneType_t(0)){
+      charge -= charge_u*charge_u; ncharge--;
+    }else if (bad_planes.at(i)==WirePlaneType_t(1)){
+      charge -= charge_v*charge_v; ncharge--;
+    }else if (bad_planes.at(i)==WirePlaneType_t(2)){
+      charge -= charge_w*charge_w; ncharge--;
+    }
+  }
+  if (ncharge>0) {
+    charge = sqrt(charge/ncharge);
+  }else{
+    charge = 0;
+  }
+
   // get charge for each indices ...
   // how to average ??? 
   return charge;
