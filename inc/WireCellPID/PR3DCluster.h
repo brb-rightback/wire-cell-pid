@@ -76,6 +76,8 @@ namespace WireCellPID{
     void find_steiner_terminals();
     void form_cell_points_map();
 
+    // find peak points within the mcells ...
+    std::set<int> find_peak_point_indices(WireCell::SMGCSelection mcells);
     
     
   protected:

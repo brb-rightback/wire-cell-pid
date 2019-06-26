@@ -16,6 +16,11 @@ void WireCellPID::PR3DCluster::find_steiner_terminals(){
   
 }
 
+std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mcells){
+
+}
+
+
 void WireCellPID::PR3DCluster::form_cell_points_map(){
   cell_point_indices_map.clear();
   WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
