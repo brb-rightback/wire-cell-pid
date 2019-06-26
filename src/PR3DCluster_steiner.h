@@ -28,21 +28,37 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
   
   WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
 
-  std::cout << all_indices.size() << std::endl;
-  WCPointCloud<double>::WCPoint& wcp = cloud.pts[(*all_indices.begin())]; 
-  std::cout << calc_charge_wcp(wcp,gds) << std::endl;
-  //
-
-  
-  
   // form another set with the actual points according to their charge
+  std::map<int,double> map_index_charge;
+  std::set<std::pair<double, int>, std::greater<std::pair<double, int> > > candidates_set;
+  for (auto it = all_indices.begin(); it!=all_indices.end(); it++){
+    //std::cout << all_indices.size() << std::endl;
+    WCPointCloud<double>::WCPoint& wcp = cloud.pts[(*it)];
+    double charge = calc_charge_wcp(wcp,gds);
+    map_index_charge[(*it)] = charge;
+    if (charge > 4000){
+      candidates_set.insert(std::make_pair(charge,*it));
+    }
+    //std::cout <<  << std::endl;
+  }
+
+  //std::cout << candidates_set.size() << std::endl;
+  std::set<int> peak_indices;
+  std::set<int> non_peak_indices;
+  for (auto it = candidates_set.begin(); it!=candidates_set.end(); it++){
+    int index = it->second;
+    double charge = it->first;
+    
+  }
+  
+  
   // find the vertices with the point
   // loop over the connected vertices (not in the dead or good list)
   // if charge smaller, push into dead list
   // if charge bigger, push current into dead list
   // if the current's charge is the biggest, push into good list 
 
-  std::set<int> peak_indices;
+
   return peak_indices;
 }
 
