@@ -52,25 +52,55 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
   
   for (auto it = candidates_set.begin(); it!=candidates_set.end(); it++){
     int current_index = it->second;
-    double charge = it->first;
+    double current_charge = it->first;
     // find the vertices with the point
     std::pair<adjacency_iterator, adjacency_iterator> neighbors = boost::adjacent_vertices(vertex(current_index,*graph),*graph);
 
     if (peak_indices.size()==0){
-      
-    }else{
+      // if the current's charge is the biggest, push into good list 
+      peak_indices.insert(current_index);
       for (; neighbors.first!=neighbors.second; ++neighbors.first){
-	std::cout << *neighbors.first << " " << *neighbors.second << std::endl;
+	//std::cout << *neighbors.first << " " << *neighbors.second << std::endl;
+	if (map_index_charge.find(*neighbors.first)==map_index_charge.end()) continue;
+	// if charge smaller, push into dead list
+	if (current_charge > map_index_charge[*neighbors.first])
+	  non_peak_indices.insert(*neighbors.first);
       }
+    }else{
+      if (peak_indices.find(current_index)!=peak_indices.end() ||
+	  non_peak_indices.find(current_index)!=non_peak_indices.end())
+	continue;
+      bool flag_insert = true;
+      // if charge bigger, push current into dead list
+      // loop over the connected vertices (not in the dead or good list)
+      for (; neighbors.first!=neighbors.second; ++neighbors.first){
+	
+	if (map_index_charge.find(*neighbors.first)==map_index_charge.end()) continue;
+	if (current_charge > map_index_charge[*neighbors.first]){
+	  non_peak_indices.insert(*neighbors.first);
+	}else if (current_charge <  map_index_charge[*neighbors.first]){
+	  flag_insert = false;
+	  break;
+	}
+      }
+
+      if (flag_insert)
+	peak_indices.insert(current_index);
     }
     
-    // loop over the connected vertices (not in the dead or good list)
-    // if charge smaller, push into dead list
-    // if charge bigger, push current into dead list
-    // if the current's charge is the biggest, push into good list 
   }
-  
-  
+
+  /* std::cout << peak_indices.size() << " " << non_peak_indices.size() << " " << candidates_set.size() << " " << all_indices.size() << std::endl; */
+
+  /* for (auto it = peak_indices.begin(); it!=peak_indices.end(); it++){ */
+  /*   int current_index = *it; */
+  /*   std::cout << "Peak: " << current_index << " " << map_index_charge[current_index] << std::endl; */
+  /*   std::pair<adjacency_iterator, adjacency_iterator> neighbors = boost::adjacent_vertices(vertex(current_index,*graph),*graph); */
+  /*   for (; neighbors.first!=neighbors.second; ++neighbors.first){ */
+  /*     if (map_index_charge.find(*neighbors.first)==map_index_charge.end()) continue; */
+  /*     std::cout << *neighbors.first << " " << map_index_charge[*neighbors.first] << std::endl; */
+  /*   } */
+  /* } */
  
   
  

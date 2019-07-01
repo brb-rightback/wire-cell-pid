@@ -21,10 +21,10 @@ namespace WireCellPID{
     float dist; // edge distance
   };
   
-  typedef adjacency_list<vecS, vecS, undirectedS, VertexProp, EdgeProp> MCUGraph;
+  typedef adjacency_list<setS, vecS, undirectedS, VertexProp, EdgeProp> MCUGraph;
   typedef graph_traits<MCUGraph>::vertex_descriptor vertex_descriptor;
   typedef graph_traits<MCUGraph>::edge_descriptor edge_descriptor;
-
+  
 
   
   class PR3DCluster{

@@ -165,9 +165,10 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 	  WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
 	  if (wcp2.index != wcp1.index){
 	    int index2 = wcp2.index;
-	    //  std::cout << index1 << " " << index2 << std::endl;
+	    //
 	    // add edge ...
 	    auto edge = add_edge(index1,index2,*graph);
+	    //	    std::cout << index1 << " " << index2 << " " << edge.second << std::endl;
 	    if (edge.second){
 	      (*graph)[edge.first].dist = sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2));
 	      num_edges ++;
