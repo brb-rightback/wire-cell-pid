@@ -55,9 +55,15 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
     double charge = it->first;
     // find the vertices with the point
     std::pair<adjacency_iterator, adjacency_iterator> neighbors = boost::adjacent_vertices(vertex(current_index,*graph),*graph);
-     	for (; neighbors.first!=neighbors.second; ++neighbors.first){
-	  std::cout << *neighbors.first << " " << *neighbors.second << std::endl;
-	}
+
+    if (peak_indices.size()==0){
+      
+    }else{
+      for (; neighbors.first!=neighbors.second; ++neighbors.first){
+	std::cout << *neighbors.first << " " << *neighbors.second << std::endl;
+      }
+    }
+    
     // loop over the connected vertices (not in the dead or good list)
     // if charge smaller, push into dead list
     // if charge bigger, push current into dead list
