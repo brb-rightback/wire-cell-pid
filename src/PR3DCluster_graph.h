@@ -49,6 +49,7 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
       
       auto v = vertex(wcp.index, *graph); // retrieve vertex descriptor
       (*graph)[v].index = wcp.index;
+      
       if (map_uindex_wcps.find(wcp.index_u)==map_uindex_wcps.end()){
    	std::set<int> wcps;
    	wcps.insert(wcp.index);
@@ -167,10 +168,11 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 	    int index2 = wcp2.index;
 	    //
 	    // add edge ...
-	    auto edge = add_edge(index1,index2,*graph);
+	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph);
 	    //	    std::cout << index1 << " " << index2 << " " << edge.second << std::endl;
 	    if (edge.second){
-	      (*graph)[edge.first].dist = sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2));
+	      //	      (*graph)[edge.first] = WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2)));
+	      //  (*graph)[edge.first].dist = sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2));
 	      num_edges ++;
 	      // std::cout << wcp1.x << " " << wcp1.y << " " << wcp1.z << " " << wcp1.index_u << " " << wcp1.index_v << " " << wcp1.index_w << " " << wcp2.index_u << " " << wcp2.index_v << " " << wcp2.index_w << std::endl;
 	    }
@@ -479,9 +481,9 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
     int index1 = it4->first.first;
     int index2 = it4->second.first;
     double dis = it4->second.second;
-    auto edge = add_edge(index1,index2,*graph);
+    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(dis),*graph);
     if (edge.second){
-      (*graph)[edge.first].dist = dis;
+      //      (*graph)[edge.first].dist = dis;
       num_edges ++;
     }
   }
@@ -683,40 +685,45 @@ void WireCellPID::PR3DCluster::Connect_graph(){
     for (int j=0;j!=num;j++){
       for (int k=j+1;k!=num;k++){
 	if (std::get<0>(index_index_dis_mst[j][k])>=0){
-	  auto edge = add_edge(std::get<0>(index_index_dis_mst[j][k]),std::get<1>(index_index_dis_mst[j][k]),*graph);
-	  if (edge.second){
-	    if (std::get<2>(index_index_dis_mst[j][k])>5*units::cm){
-	      (*graph)[edge.first].dist = std::get<2>(index_index_dis_mst[j][k]);
-	    }else{
-	      (*graph)[edge.first].dist = std::get<2>(index_index_dis_mst[j][k]);
-	    }
+	  
+	  if (std::get<2>(index_index_dis_mst[j][k])>5*units::cm){
+	    auto edge = add_edge(std::get<0>(index_index_dis_mst[j][k]),std::get<1>(index_index_dis_mst[j][k]),WireCellPID::EdgeProp(std::get<2>(index_index_dis_mst[j][k])),*graph);
+	    // (*graph)[edge.first].dist = std::get<2>(index_index_dis_mst[j][k]);
+	  }else{
+	    auto edge = add_edge(std::get<0>(index_index_dis_mst[j][k]),std::get<1>(index_index_dis_mst[j][k]),WireCellPID::EdgeProp(std::get<2>(index_index_dis_mst[j][k])),*graph);
+	    // (*graph)[edge.first].dist = std::get<2>(index_index_dis_mst[j][k]);
 	  }
+	  
 	}
 
 	if (std::get<0>(index_index_dis_dir_mst[j][k])>=0){
 	  if (std::get<0>(index_index_dis_dir1[j][k])>=0){
-	    auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),*graph);
-	    if (edge.second){
-	      if (std::get<2>(index_index_dis_dir1[j][k])>5*units::cm){
-		(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir1[j][k])*1.2;
+	    //auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),*graph);
+	    //if (edge.second){
+	    if (std::get<2>(index_index_dis_dir1[j][k])>5*units::cm){
+	      auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),WireCellPID::EdgeProp(std::get<2>(index_index_dis_dir1[j][k])*1.2),*graph);
+	       //(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir1[j][k])*1.2;
 		// }else if (std::get<2>(index_index_dis_dir1[j][k])>2*units::cm){
 		// 	(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir1[j][k])*1.1;
-	      }else{
-		(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir1[j][k]);
-	      }
+	    }else{
+	      auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),WireCellPID::EdgeProp(std::get<2>(index_index_dis_dir1[j][k])),*graph);
+	      //(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir1[j][k]);
 	    }
+	      // }
 	  }
 	  if (std::get<0>(index_index_dis_dir2[j][k])>=0){
-	    auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]),*graph);
-	    if (edge.second){
+	    //auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]),*graph);
+	    // if (edge.second){
 	      if (std::get<2>(index_index_dis_dir2[j][k])>5*units::cm){
-		(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir2[j][k])*1.2;
+		auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]),WireCellPID::EdgeProp(std::get<2>(index_index_dis_dir2[j][k])*1.2),*graph);
+		//	(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir2[j][k])*1.2;
 		// }else if(std::get<2>(index_index_dis_dir2[j][k])>2*units::cm){
 		// 	(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir2[j][k])*1.1;
 	      }else{
-		(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir2[j][k]);
+		auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]),WireCellPID::EdgeProp(std::get<2>(index_index_dis_dir2[j][k])),*graph);
+		//		(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir2[j][k]);
 	      }
-	    }
+	      // }
 	  }
 	}
 	

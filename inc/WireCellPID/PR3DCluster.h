@@ -14,12 +14,15 @@ namespace WireCellPID{
 
   struct VertexProp {
     int index;
-    //WCPointCloud<double>::WCPoint wcpoint;
+    // WCPointCloud<double>::WCPoint wcpoint;
     // add pointer to merged cell
   };
-  struct EdgeProp {
-    float dist; // edge distance
-  };
+  /* struct EdgeProp { */
+  /*   float dist; // edge distance */
+  /* }; */
+
+  using EdgeProp = boost::property<boost::edge_weight_t, float>; 
+  // using VertexProp = boost::property(boost::vertex_color_t, int>; 
   
   typedef adjacency_list<setS, vecS, undirectedS, VertexProp, EdgeProp> MCUGraph;
   typedef graph_traits<MCUGraph>::vertex_descriptor vertex_descriptor;

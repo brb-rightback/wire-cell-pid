@@ -1,9 +1,51 @@
+#include "WireCellPaal/graph_metrics.h"
+#include "WireCellPaal/steiner_tree_greedy.h"
+
 void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds){
   Create_graph();
 
   // find all the steiner terminal indices ...
   find_steiner_terminals(gds);
+
+  std::vector<int> terminals(steiner_terminal_indices.begin(), steiner_terminal_indices.end());
+  const int N = point_cloud->get_num_points();
+  std::vector<int> nonterminals;
+  for (int i=0;i!=N;i++){
+    if (steiner_terminal_indices.find(i)==steiner_terminal_indices.end())
+      nonterminals.push_back(i);
+  }
+  //std::cout << N << " " << terminals.size() + nonterminals.size() << std::endl;
+
+  auto index = get(boost::vertex_index, *graph);
+  typedef boost::graph_traits<WireCellPID::MCUGraph>::edge_descriptor Edge; 
+  std::set<Edge> steinerEdges; 
+  std::vector<int> color(terminals.size()+nonterminals.size());
+  {
+    auto c = &color[0];
+    for (size_t i=0;i!=terminals.size();i++){
+      put(c, terminals.at(i),paal::Terminals::TERMINAL);
+    }
+    for (size_t i=0;i!=nonterminals.size();i++){
+      put(c, nonterminals.at(i), paal::Terminals::NONTERMINAL);
+    }
+  }
+  paal::steiner_tree_greedy(*graph, std::inserter(steinerEdges, steinerEdges.begin()),
+			    boost::vertex_color_map(boost::make_iterator_property_map(color.begin(),index)));
+  auto weight = get(boost::edge_weight, *graph);
+  auto sum = 0;
+  for (auto e : steinerEdges){
+    sum += get(weight,e);
+  }
+  std::cout << "result " << sum/units::cm << std::endl;
   
+  
+  /* using GraphMT = paal::data_structures::graph_metric<WireCellPID::MCUGraph, float, paal::data_structures::graph_type::sparse_tag>; */
+
+  /* auto metric = GraphMT(*graph); */
+  
+  // solve it
+  /* paal::ir::steiner_tree_iterative_rounding(metric, terminals, */
+  /* 					    nonterminals, std::back_inserter(selected_nonterminals)); */
 }
 
 void WireCellPID::PR3DCluster::find_steiner_terminals(WireCell::GeomDataSource& gds){
