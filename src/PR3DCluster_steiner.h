@@ -13,10 +13,18 @@ void WireCellPID::PR3DCluster::find_steiner_terminals(WireCell::GeomDataSource& 
   // form all the maps ...
   form_cell_points_map();
 
-  SMGCSelection temp_mcells;
-  temp_mcells.push_back(mcells.at(0));
-  find_peak_point_indices(temp_mcells, gds);
+  double sum = 0,sum1=0;
+  for (size_t i=0;i!=mcells.size();i++){
+    SMGCSelection temp_mcells;
+    temp_mcells.push_back(mcells.at(i));
+    std::set<int> indices = find_peak_point_indices(temp_mcells, gds);
+    sum += indices.size();
+    sum1 += mcells.at(i)->get_sampling_points().size();
+  }
+  std::cout << sum << " " << sum/sum1 << std::endl;
 }
+
+
 
 std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mcells, WireCell::GeomDataSource& gds){
   std::set<int> all_indices;
@@ -90,8 +98,7 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
     
   }
 
-  /* std::cout << peak_indices.size() << " " << non_peak_indices.size() << " " << candidates_set.size() << " " << all_indices.size() << std::endl; */
-
+   /* std::cout << peak_indices.size() << " " << non_peak_indices.size() << " " << candidates_set.size() << " " << all_indices.size() << std::endl; */
   /* for (auto it = peak_indices.begin(); it!=peak_indices.end(); it++){ */
   /*   int current_index = *it; */
   /*   std::cout << "Peak: " << current_index << " " << map_index_charge[current_index] << std::endl; */
@@ -101,6 +108,87 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
   /*     std::cout << *neighbors.first << " " << map_index_charge[*neighbors.first] << std::endl; */
   /*   } */
   /* } */
+  
+  
+  // form a graph to find the independent component ... 
+
+  if (peak_indices.size()>1){
+    std::vector<int> vec_peak_indices(peak_indices.begin(), peak_indices.end());
+    peak_indices.clear();
+    
+    const int N = vec_peak_indices.size();
+    boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS,
+      boost::no_property, boost::property<boost::edge_weight_t, double>>
+      temp_graph(N);
+    for (int j=0;j!=N;j++){
+      for (int k=0;k!=N;k++){
+	int index1 = j;
+	int index2 = k;
+	if (boost::edge(vertex(vec_peak_indices.at(index1),*graph), vertex(vec_peak_indices.at(index2),*graph), *graph).second)
+	  add_edge(index1, index2, temp_graph);
+      }
+    }
+    std::vector<int> component(num_vertices(temp_graph));
+    const int num = connected_components(temp_graph,&component[0]);
+    
+    double min_dis[num];
+    PointVector points(num);
+    int min_index[num];
+    int ncounts[num];
+    for (int i=0;i!=num;i++){
+      min_dis[i] = 1e9;
+      points.at(i).x = 0;
+      points.at(i).y = 0;
+      points.at(i).z = 0;
+      min_index[i] = -1;
+      ncounts[i] = 0;
+    }
+    
+    std::vector<int>::size_type i;
+    for (i=0;i!=component.size(); ++i){
+      ncounts[component[i]]++;
+      points.at(component[i]).x += cloud.pts[vec_peak_indices.at(i)].x;
+      points.at(component[i]).y += cloud.pts[vec_peak_indices.at(i)].y;
+      points.at(component[i]).z += cloud.pts[vec_peak_indices.at(i)].z;
+    }
+    // for each independent component, find the average position, and the closest point, maybe looping is good enough ...
+    for (int i=0;i!=num;i++){
+      points.at(i).x /= ncounts[i];
+      points.at(i).y /= ncounts[i];
+      points.at(i).z /= ncounts[i];
+    }
+
+    for (i=0;i!=component.size(); ++i){
+      double dis = pow( points.at(component[i]).x - cloud.pts[vec_peak_indices.at(i)].x,2) +
+	pow( points.at(component[i]).y - cloud.pts[vec_peak_indices.at(i)].y,2) +
+	pow( points.at(component[i]).z - cloud.pts[vec_peak_indices.at(i)].z,2) ;
+      if (dis < min_dis[component[i]]){
+	min_dis[component[i]] = dis;
+	min_index[component[i]] = vec_peak_indices.at(i);
+      }
+    }
+
+    for (int i=0;i!=num;i++){
+      peak_indices.insert(min_index[i]);
+    }
+    
+    //  std::cout << num << " " << peak_indices.size() << std::endl;
+    /* for (auto it = peak_indices.begin();  it!= peak_indices.end(); it++){ */
+    /*   auto it1 = it; */
+    /*   it1++; */
+    /*   if (it1!=peak_indices.end()){ */
+    /* 	std::cout << *it << " " << *it1 << " " << boost::edge(vertex(*it,*graph), vertex(*it1,*graph), *graph).second << " " << map_index_charge[*it] << " " << map_index_charge[*it1] */
+    /* 		  << " " << cloud.pts[(*it)].x/units::cm << " " << cloud.pts[(*it)].y/units::cm << " " << cloud.pts[(*it)].z/units::cm << " " */
+    /* 		  << " " << cloud.pts[(*it1)].x/units::cm << " " << cloud.pts[(*it1)].y/units::cm << " " << cloud.pts[(*it1)].z/units::cm << std::endl; */
+    /*   } */
+    /* } */
+  }
+
+  
+
+  
+  
+ 
  
   
  
