@@ -28,7 +28,7 @@ void WireCellPID::PR3DCluster::find_steiner_terminals(WireCell::GeomDataSource& 
 
 
 
-std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mcells, WireCell::GeomDataSource& gds){
+std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mcells, WireCell::GeomDataSource& gds, int nlevel){
   std::set<int> all_indices;
   for (auto it = mcells.begin(); it!=mcells.end(); it++){
     SlimMergeGeomCell *mcell = (*it);
@@ -64,18 +64,45 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
   for (auto it = candidates_set.begin(); it!=candidates_set.end(); it++){
     int current_index = it->second;
     double current_charge = it->first;
+
+    std::set<int> total_vertices_found;
+    total_vertices_found.insert(current_index);
+    {
+      std::set<int> vertices_to_be_examined;
+      vertices_to_be_examined.insert(current_index);
+      for (int j=0;j!=nlevel;j++){
+	std::set<int> vertices_saved_for_next;
+	for (auto it = vertices_to_be_examined.begin(); it!=vertices_to_be_examined.end(); it++){
+	  int temp_current_index = (*it);
+	  std::pair<adjacency_iterator, adjacency_iterator> neighbors = boost::adjacent_vertices(vertex(temp_current_index,*graph),*graph);
+	  for (; neighbors.first!=neighbors.second; ++neighbors.first){
+	    if (total_vertices_found.find(index(*neighbors.first))==total_vertices_found.end()){
+	      total_vertices_found.insert(index(*neighbors.first));
+	      vertices_saved_for_next.insert(index(*neighbors.first));
+	    }
+	  }
+	}
+	vertices_to_be_examined = vertices_saved_for_next;
+      }
+      total_vertices_found.erase(current_index);
+    }
+    //std::cout << total_vertices_found.size() << std::endl;
+    
     // find the vertices with the point
-    std::pair<adjacency_iterator, adjacency_iterator> neighbors = boost::adjacent_vertices(vertex(current_index,*graph),*graph);
+    // std::pair<adjacency_iterator, adjacency_iterator> neighbors = boost::adjacent_vertices(vertex(current_index,*graph),*graph);
+
+    
 
     if (peak_indices.size()==0){
       // if the current's charge is the biggest, push into good list 
       peak_indices.insert(current_index);
-      for (; neighbors.first!=neighbors.second; ++neighbors.first){
+      for (auto it = total_vertices_found.begin(); it!= total_vertices_found.end(); it++){
+	//      for (; neighbors.first!=neighbors.second; ++neighbors.first){
 	//std::cout << *neighbors.first << " " << *neighbors.second << std::endl;
-	if (map_index_charge.find(*neighbors.first)==map_index_charge.end()) continue;
+	if (map_index_charge.find(*it)==map_index_charge.end()) continue;
 	// if charge smaller, push into dead list
-	if (current_charge > map_index_charge[*neighbors.first])
-	  non_peak_indices.insert(*neighbors.first);
+	if (current_charge > map_index_charge[*it])
+	  non_peak_indices.insert(*it);
       }
     }else{
       if (peak_indices.find(current_index)!=peak_indices.end() ||
@@ -84,12 +111,12 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
       bool flag_insert = true;
       // if charge bigger, push current into dead list
       // loop over the connected vertices (not in the dead or good list)
-      for (; neighbors.first!=neighbors.second; ++neighbors.first){
-	
-	if (map_index_charge.find(*neighbors.first)==map_index_charge.end()) continue;
-	if (current_charge > map_index_charge[*neighbors.first]){
-	  non_peak_indices.insert(*neighbors.first);
-	}else if (current_charge <  map_index_charge[*neighbors.first]){
+      //      for (; neighbors.first!=neighbors.second; ++neighbors.first){
+      for (auto it = total_vertices_found.begin(); it!= total_vertices_found.end(); it++){
+	if (map_index_charge.find(*it)==map_index_charge.end()) continue;
+	if (current_charge > map_index_charge[*it]){
+	  non_peak_indices.insert(*it);
+	}else if (current_charge <  map_index_charge[*it]){
 	  flag_insert = false;
 	  break;
 	}

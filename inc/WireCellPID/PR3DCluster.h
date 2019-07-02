@@ -80,7 +80,7 @@ namespace WireCellPID{
 
     
     // find peak points within the mcells ...
-    std::set<int> find_peak_point_indices(WireCell::SMGCSelection mcells,WireCell::GeomDataSource& gds);
+    std::set<int> find_peak_point_indices(WireCell::SMGCSelection mcells,WireCell::GeomDataSource& gds, int nlevel = 1);
 
     std::pair<bool,double> calc_charge_wcp(WireCell::WCPointCloud<double>::WCPoint& wcp, WireCell::GeomDataSource& gds, double charge_cut = 4000);
     
