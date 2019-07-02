@@ -76,11 +76,13 @@ namespace WireCellPID{
 
     void find_steiner_terminals(WireCell::GeomDataSource& gds);
     void form_cell_points_map();
+    std::set<int> get_steiner_terminals(){return steiner_terminal_indices;};
 
+    
     // find peak points within the mcells ...
     std::set<int> find_peak_point_indices(WireCell::SMGCSelection mcells,WireCell::GeomDataSource& gds);
 
-    double calc_charge_wcp(WireCell::WCPointCloud<double>::WCPoint& wcp, WireCell::GeomDataSource& gds);
+    std::pair<bool,double> calc_charge_wcp(WireCell::WCPointCloud<double>::WCPoint& wcp, WireCell::GeomDataSource& gds, double charge_cut = 4000);
     
   protected:
     int cluster_id;
@@ -100,7 +102,7 @@ namespace WireCellPID{
 
     // prepare for steiner tree
     std::map<WireCell::SlimMergeGeomCell*, std::set<int>> cell_point_indices_map;
-    std::set<int> steriner_terminal_indices;
+    std::set<int> steiner_terminal_indices;
     
   };
   typedef std::vector<PR3DCluster*> PR3DClusterSelection;
