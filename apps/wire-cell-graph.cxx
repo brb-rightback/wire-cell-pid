@@ -376,9 +376,24 @@ int main(int argc, char* argv[])
   T_rec->Branch("pw",&pw,"pw/D");
   T_rec->Branch("pt",&pt,"pt/D");
   T_rec->SetDirectory(file1);
+
+  TTree *t_rec_charge = new TTree("T_rec_charge","T_rec_charge");
+  t_rec_charge->SetDirectory(file1);
+  t_rec_charge->Branch("x",&x,"x/D");
+  t_rec_charge->Branch("y",&y,"y/D");
+  t_rec_charge->Branch("z",&z,"z/D");
+  t_rec_charge->Branch("q",&charge_save,"q/D");
+  t_rec_charge->Branch("nq",&ncharge_save,"nq/D");
+  t_rec_charge->Branch("chi2",&chi2_save,"chi2/D");
+  t_rec_charge->Branch("ndf",&ndf_save,"ndf/D");
+  t_rec_charge->Branch("pu",&pu,"pu/D");
+  t_rec_charge->Branch("pv",&pv,"pv/D");
+  t_rec_charge->Branch("pw",&pw,"pw/D");
+  t_rec_charge->Branch("pt",&pt,"pt/D");
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     std::set<int> steiner_terminals = (*it)->get_steiner_terminals();
+    //std::set<int> steiner_terminals = (*it)->get_selected_terminals();
     WireCell::ToyPointCloud* point_cloud = (*it)->get_point_cloud();
     WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
     
@@ -398,6 +413,28 @@ int main(int argc, char* argv[])
     }
   }
 
+  for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
+    
+    std::set<int> steiner_terminals = (*it)->get_selected_terminals();
+    WireCell::ToyPointCloud* point_cloud = (*it)->get_point_cloud();
+    WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+    
+    for (auto it1 = steiner_terminals.begin();it1!=steiner_terminals.end();it1++){
+      x = cloud.pts[*it1].x/units::cm;
+      y = cloud.pts[*it1].y/units::cm;
+      z = cloud.pts[*it1].z/units::cm;
+      pu = cloud.pts[*it1].index_u;
+      pv = cloud.pts[*it1].index_v;
+      pw = cloud.pts[*it1].index_w;
+      pt = cloud.pts[*it1].mcell->GetTimeSlice();
+      ndf_save = (*it)->get_cluster_id();
+      charge_save = 0;
+      ncharge_save = 0;
+      chi2_save = 0;
+      t_rec_charge->Fill();
+    }
+  }
+  
   
   
   file1->Write();

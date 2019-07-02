@@ -33,10 +33,16 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds
 			    boost::vertex_color_map(boost::make_iterator_property_map(color.begin(),index)));
   auto weight = get(boost::edge_weight, *graph);
   auto sum = 0;
+
+  selected_terminal_indices.clear();
   for (auto e : steinerEdges){
-    sum += get(weight,e);
+    //sum += get(weight,e);
+    selected_terminal_indices.insert(index[source(e,*graph)]);
+    selected_terminal_indices.insert(index[target(e,*graph)]);
+    //std::cout << index[source(e,*graph)] << " " << index[target(e,*graph)] << std::endl;
   }
-  std::cout << "result " << sum/units::cm << std::endl;
+  std::cout << terminals.size() << " " << selected_terminal_indices.size() << std::endl;
+  //  std::cout << "result " << sum/units::cm << std::endl;
   
   
   /* using GraphMT = paal::data_structures::graph_metric<WireCellPID::MCUGraph, float, paal::data_structures::graph_type::sparse_tag>; */
