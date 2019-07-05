@@ -32,7 +32,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
     
 
     for (auto it1 = uwires.begin(); it1!=uwires.end(); it1++){
-      const GeomWire *wire = (*it1);
+      const GeomWire *wire = (*it1); 
       double charge = mcell->Get_Wire_Charge(wire);
       double charge_err = mcell->Get_Wire_Charge_Err(wire);
       u_time_chs[time_slice].insert(wire->channel());
@@ -203,7 +203,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
     WireCell2dToy::LowmemTiling tiling(time_slice,gds,*WCholder);
     // recreate the merged wires
     // recreate the merge cells
-    tiling.init_good_cells(u_time_chs, v_time_chs, w_time_chs);  
+    tiling.init_good_cells_with_charge(u_time_chs, v_time_chs, w_time_chs, time_ch_charge_map, time_ch_charge_err_map);  
   }
   
   
