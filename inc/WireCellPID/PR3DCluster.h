@@ -92,7 +92,15 @@ namespace WireCellPID{
     // path related
     std::list<WireCell::WCPointCloud<double>::WCPoint>& get_path_wcps(){return path_wcps;};
     std::list<WireCell::SlimMergeGeomCell*>& get_path_mcells(){return path_mcells;};
-    
+
+    // get exterme points ...
+    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_highest_lowest_wcps();
+    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_front_back_wcps();
+    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_earliest_latest_wcps();
+    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_main_axis_wcps();
+
+    std::vector<std::vector<WireCell::WCPointCloud<double>::WCPoint>> get_extreme_wcps();
+    std::pair<WireCell::Point,WireCell::Point> get_two_extreme_points();
     
   protected:
     int cluster_id;

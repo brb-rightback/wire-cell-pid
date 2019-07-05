@@ -13,7 +13,7 @@ using namespace WireCell;
 
 #include "PR3DCluster_graph.h"
 #include "PR3DCluster_steiner.h"
-
+#include "PR3DCluster_path.h"
 
 
 
