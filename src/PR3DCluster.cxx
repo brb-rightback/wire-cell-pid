@@ -23,7 +23,7 @@ WireCellPID::PR3DCluster::PR3DCluster(int cluster_id)
 {
   point_cloud = 0;
   graph = 0;
-  // source_wcp_index = -1;
+  source_wcp_index = -1;
   // flag_fine_tracking = false;
 }
 

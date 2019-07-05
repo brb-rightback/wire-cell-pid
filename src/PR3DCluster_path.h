@@ -128,42 +128,6 @@ std::vector<std::vector<WCPointCloud<double>::WCPoint>> WireCellPID::PR3DCluster
 
   return out_vec_wcps;
   
-  // WCPointCloud<double>::WCPoint max_wcps = saved_wcps.at(0);
-  // int max_count = counters.at(0);
-  // WCPointCloud<double>::WCPoint min_wcps;
-  // double value = -1e9;
-  
-  // for (size_t i=1;i!=saved_wcps.size();i++){
-  //   if (counters.at(i)>max_count){
-  //     max_wcps = saved_wcps.at(i);
-  //     max_count = counters.at(i);
-  //   }
-  // }
-
-  // //  TVector3 m_pca(main_axis.x, main_axis.y, main_axis.z);
-  // Point p1(max_wcps.x,max_wcps.y,max_wcps.z);
-  // TVector3 m_dir = VHoughTrans(p1,30*units::cm);
-    
-  // for (size_t i=0;i!=saved_wcps.size();i++){
-  //   TVector3 dir(saved_wcps.at(i).x-max_wcps.x,
-  // 		 saved_wcps.at(i).y-max_wcps.y,
-  // 		 saved_wcps.at(i).z-max_wcps.z);
-  //   double l1 = fabs(dir.Dot(m_dir)/m_dir.Mag());
-  //   TVector3 dir1 = dir.Cross(m_dir);
-  //   double l2 = dir1.Mag()/m_dir.Mag();
-  //   if (l1-l2 > value){
-  //     value = l1-l2;
-  //     min_wcps = saved_wcps.at(i);
-  //   }
-  //   //  std::cout << i << " " << saved_wcps.at(i).x/units::cm << " " << saved_wcps.at(i).y/units::cm << " " << saved_wcps.at(i).z/units::cm << " " << l1/units::cm << " " << l2/units::cm << std::endl;
-    
-  // }
-  
-  //return std::make_pair(max_wcps,min_wcps);
-  
-  //  std::cout << max_wcps.x/units::cm << " " << max_wcps.y/units::cm << " " << max_wcps.z/units::cm << " " << max_count << std::endl;
-
-  //  return std::make_pair(wcps[0],wcps[1]);
   
 }
 
@@ -242,3 +206,49 @@ std::pair<Point,Point> WireCellPID::PR3DCluster::get_two_extreme_points(){
   
   return std::make_pair(p1,p2);
 }
+
+
+void WireCellPID::PR3DCluster::dijkstra_shortest_paths(WCPointCloud<double>::WCPoint& wcp){
+  if (graph==(MCUGraph*)0)
+    Create_graph();
+  if (wcp.index==source_wcp_index)
+    return;
+  source_wcp_index = wcp.index;
+  parents.resize(num_vertices(*graph));
+  distances.resize(num_vertices(*graph));
+  
+  auto v0 = vertex(wcp.index,*graph);
+  boost::dijkstra_shortest_paths(*graph, v0,
+				 weight_map(get(edge_weight, *graph))
+				 .predecessor_map(&parents[0])
+				 .distance_map(&distances[0])
+				 );
+}
+
+
+void WireCellPID::PR3DCluster::cal_shortest_path(WCPointCloud<double>::WCPoint& wcp_target){
+  dest_wcp_index = wcp_target.index;
+  path_wcps.clear();
+  path_mcells.clear();
+
+  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+  int prev_i = -1;
+  for(int i = dest_wcp_index; i!=source_wcp_index; i = parents[i]) {
+    if (path_wcps.size()==0){
+      path_wcps.push_front(cloud.pts[i]);
+      path_mcells.push_front(cloud.pts[i].mcell);
+    }else{
+      path_wcps.push_front(cloud.pts[i]);
+      if (cloud.pts[i].mcell!=path_mcells.front())
+	path_mcells.push_front(cloud.pts[i].mcell);
+    }
+    if (i==prev_i) break;
+    prev_i = i;
+  }
+  path_wcps.push_front(cloud.pts[source_wcp_index]);
+  if (cloud.pts[source_wcp_index].mcell!=path_mcells.front())
+    path_mcells.push_front(cloud.pts[source_wcp_index].mcell);
+  
+}
+
+

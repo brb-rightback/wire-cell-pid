@@ -90,6 +90,12 @@ namespace WireCellPID{
 
 
     // path related
+     // create things for Dijkstra
+    std::vector<vertex_descriptor> parents;
+    std::vector<int> distances;
+    int source_wcp_index;
+    int dest_wcp_index;
+    
     std::list<WireCell::WCPointCloud<double>::WCPoint>& get_path_wcps(){return path_wcps;};
     std::list<WireCell::SlimMergeGeomCell*>& get_path_mcells(){return path_mcells;};
 
@@ -101,6 +107,9 @@ namespace WireCellPID{
 
     std::vector<std::vector<WireCell::WCPointCloud<double>::WCPoint>> get_extreme_wcps();
     std::pair<WireCell::Point,WireCell::Point> get_two_extreme_points();
+
+    void dijkstra_shortest_paths(WireCell::WCPointCloud<double>::WCPoint& wcp_source);
+    void cal_shortest_path(WireCell::WCPointCloud<double>::WCPoint& wcp_target);
     
   protected:
     int cluster_id;
