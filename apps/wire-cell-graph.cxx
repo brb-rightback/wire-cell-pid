@@ -300,8 +300,15 @@ int main(int argc, char* argv[])
 
   cout << em("load clusters from file") << endl;
 
+  // replace by the new sampling points ...
+  for (size_t i=0; i!=live_clusters.size();i++){
+    WireCellPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
+    live_clusters.at(i)->Create_point_cloud();
+  }
+  cout << em("Add X, Y, Z points") << std::endl;
+  
   double first_t_dis = live_clusters.at(0)->get_mcells().front()->GetTimeSlice()*time_slice_width - live_clusters.at(0)->get_mcells().front()->get_sampling_points().front().x;
-   double offset_t = first_t_dis/time_slice_width;
+  double offset_t = first_t_dis/time_slice_width;
   
   ToyCTPointCloud ct_point_cloud(0,2399,2400,4799,4800,8255, // channel range
 				 offset_t, -first_u_dis/pitch_u, -first_v_dis/pitch_v, -first_w_dis/pitch_w, // offset
@@ -314,17 +321,14 @@ int main(int argc, char* argv[])
   
   std::map<WireCellPID::PR3DCluster*, WireCellPID::PR3DCluster*> old_new_cluster_map;
   
-  // replace by the new sampling points ...
+  
   for (size_t i=0; i!=live_clusters.size();i++){
-    WireCellPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
-    live_clusters.at(i)->Create_point_cloud();
-    
     live_clusters.at(i)->Create_graph(ct_point_cloud);
     
     live_clusters.at(i)->Create_steiner_tree(gds);
   }
-  cout << em("Add X, Y, Z points") << std::endl;
-
+  cout << em("Build graph for all clusters") << std::endl;
+  
   
   TFile *file1 = new TFile(Form("graph_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
   Trun->CloneTree()->Write();
