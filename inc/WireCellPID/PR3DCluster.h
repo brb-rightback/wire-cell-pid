@@ -4,6 +4,7 @@
 #include "WireCellData/SlimMergeGeomCell.h"
 #include "WireCellData/ToyPointCloud.h"
 #include "WireCellSst/GeomDataSource.h"
+#include "WireCellData/ToyCTPointCloud.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
@@ -68,10 +69,10 @@ namespace WireCellPID{
 
     // graph related ...
     void Create_graph();
-    //void Create_graph(WireCell::ToyCTPointCloud& ct_point_cloud);
+    void Create_graph(WireCell::ToyCTPointCloud& ct_point_cloud);
     void Establish_close_connected_graph();
     void Connect_graph();
-    //void Connect_graph(WireCell::ToyCTPointCloud& ct_point_cloud);
+    void Connect_graph(WireCell::ToyCTPointCloud& ct_point_cloud);
     void Del_graph();
 
     // Steiner tree
