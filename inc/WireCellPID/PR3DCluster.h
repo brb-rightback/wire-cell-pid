@@ -76,17 +76,17 @@ namespace WireCellPID{
     void Del_graph();
 
     // Steiner tree
-    void Create_steiner_tree(WireCell::GeomDataSource& gds);
+    void Create_steiner_tree(WireCell::GeomDataSource& gds, bool disable_dead_mix_cell = true);
 
-    void find_steiner_terminals(WireCell::GeomDataSource& gds);
+    void find_steiner_terminals(WireCell::GeomDataSource& gds, bool disable_dead_mix_cell = true);
     void form_cell_points_map();
     std::set<int> get_steiner_terminals(){return steiner_terminal_indices;};
     std::set<int> get_selected_terminals(){return selected_terminal_indices;};
     
     // find peak points within the mcells ...
-    std::set<int> find_peak_point_indices(WireCell::SMGCSelection mcells,WireCell::GeomDataSource& gds, int nlevel = 1);
+    std::set<int> find_peak_point_indices(WireCell::SMGCSelection mcells,WireCell::GeomDataSource& gds, bool disable_dead_mix_cell = true, int nlevel = 1);
 
-    std::pair<bool,double> calc_charge_wcp(WireCell::WCPointCloud<double>::WCPoint& wcp, WireCell::GeomDataSource& gds, double charge_cut = 4000);
+    std::pair<bool,double> calc_charge_wcp(WireCell::WCPointCloud<double>::WCPoint& wcp, WireCell::GeomDataSource& gds, bool disable_dead_mix_cell = true, double charge_cut = 4000);
 
 
     // path related

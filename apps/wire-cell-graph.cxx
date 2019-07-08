@@ -335,12 +335,13 @@ int main(int argc, char* argv[])
     {
       WireCellPID::PR3DCluster *new_cluster = WireCellPID::Improve_PR3DCluster(live_clusters.at(i),ct_point_cloud, gds);
       WireCellPID::calc_sampling_points(gds,new_cluster,nrebin, frame_length, unit_dis,false);
+      
       new_cluster->Create_point_cloud();
       old_new_cluster_map[live_clusters.at(i)] = new_cluster;
 
       new_cluster->Create_graph(ct_point_cloud);
 
-      new_cluster->Create_steiner_tree(gds);
+      new_cluster->Create_steiner_tree(gds, false);
     }
     
     live_clusters.at(i)->Create_steiner_tree(gds);

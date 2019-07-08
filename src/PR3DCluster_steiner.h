@@ -1,11 +1,11 @@
 #include "WireCellPaal/graph_metrics.h"
 #include "WireCellPaal/steiner_tree_greedy.h"
 
-void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds){
+void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds, bool disable_dead_mix_cell){
   Create_graph();
 
   // find all the steiner terminal indices ...
-  find_steiner_terminals(gds);
+  find_steiner_terminals(gds, disable_dead_mix_cell);
 
   std::vector<int> terminals(steiner_terminal_indices.begin(), steiner_terminal_indices.end());
   const int N = point_cloud->get_num_points();
@@ -54,7 +54,7 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds
   /* 					    nonterminals, std::back_inserter(selected_nonterminals)); */
 }
 
-void WireCellPID::PR3DCluster::find_steiner_terminals(WireCell::GeomDataSource& gds){
+void WireCellPID::PR3DCluster::find_steiner_terminals(WireCell::GeomDataSource& gds, bool disable_dead_mix_cell){
   // reset ...
   steiner_terminal_indices.clear();
   
@@ -65,7 +65,7 @@ void WireCellPID::PR3DCluster::find_steiner_terminals(WireCell::GeomDataSource& 
   for (size_t i=0;i!=mcells.size();i++){
     SMGCSelection temp_mcells;
     temp_mcells.push_back(mcells.at(i));
-    std::set<int> indices = find_peak_point_indices(temp_mcells, gds);
+    std::set<int> indices = find_peak_point_indices(temp_mcells, gds, disable_dead_mix_cell);
     steiner_terminal_indices.insert(indices.begin(), indices.end());
     /* sum += indices.size(); */
     /* sum1 += mcells.at(i)->get_sampling_points().size(); */
@@ -76,7 +76,7 @@ void WireCellPID::PR3DCluster::find_steiner_terminals(WireCell::GeomDataSource& 
 
 
 
-std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mcells, WireCell::GeomDataSource& gds, int nlevel){
+std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mcells, WireCell::GeomDataSource& gds, bool disable_dead_mix_cell, int nlevel){
   std::set<int> all_indices;
   for (auto it = mcells.begin(); it!=mcells.end(); it++){
     SlimMergeGeomCell *mcell = (*it);
@@ -92,7 +92,8 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
   for (auto it = all_indices.begin(); it!=all_indices.end(); it++){
     //std::cout << all_indices.size() << std::endl;
     WCPointCloud<double>::WCPoint& wcp = cloud.pts[(*it)];
-    std::pair<bool, double> temp_charge = calc_charge_wcp(wcp,gds);
+    std::pair<bool, double> temp_charge = calc_charge_wcp(wcp,gds, disable_dead_mix_cell);
+    
     double charge = temp_charge.second;
     map_index_charge[(*it)] = charge;
     if (charge > 4000 && temp_charge.first){
@@ -267,7 +268,7 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
   return peak_indices;
 }
 
-std::pair<bool,double> WireCellPID::PR3DCluster::calc_charge_wcp(WireCell::WCPointCloud<double>::WCPoint& wcp, WireCell::GeomDataSource& gds, double charge_cut){
+std::pair<bool,double> WireCellPID::PR3DCluster::calc_charge_wcp(WireCell::WCPointCloud<double>::WCPoint& wcp, WireCell::GeomDataSource& gds, bool disable_dead_mix_cell, double charge_cut){
   double charge = 0;
   double ncharge = 0;
   SlimMergeGeomCell *mcell = wcp.mcell;
@@ -279,39 +280,58 @@ std::pair<bool,double> WireCellPID::PR3DCluster::calc_charge_wcp(WireCell::WCPoi
   double charge_u = mcell->Get_Wire_Charge(uwire);
   double charge_v = mcell->Get_Wire_Charge(vwire);
   double charge_w = mcell->Get_Wire_Charge(wwire);
-
+  
   bool flag_charge_u = false;
   bool flag_charge_v = false;
   bool flag_charge_w = false;
+
   if (charge_u>charge_cut) flag_charge_u = true;
   if (charge_v>charge_cut) flag_charge_v = true;
   if (charge_w>charge_cut) flag_charge_w = true;
   
-  charge += charge_u*charge_u; ncharge ++;
-  charge += charge_v*charge_v; ncharge ++;
-  charge += charge_w*charge_w; ncharge ++;
-  //std::cout << charge_u << " " << charge_v << " " << charge_w << std::endl;
+  if (disable_dead_mix_cell){
+    charge += charge_u*charge_u; ncharge ++;
+    charge += charge_v*charge_v; ncharge ++;
+    charge += charge_w*charge_w; ncharge ++;
+    //std::cout << charge_u << " " << charge_v << " " << charge_w << std::endl;
+    
+    // deal with bad planes ... 
+    std::vector<WirePlaneType_t> bad_planes = mcell->get_bad_planes();
+    for (size_t i=0;i!=bad_planes.size();i++){
+      if (bad_planes.at(i)==WirePlaneType_t(0)){
+	flag_charge_u = true;
+	charge -= charge_u*charge_u; ncharge--;
+      }else if (bad_planes.at(i)==WirePlaneType_t(1)){
+	flag_charge_v = true;
+	charge -= charge_v*charge_v; ncharge--;
+      }else if (bad_planes.at(i)==WirePlaneType_t(2)){
+	flag_charge_w = true;
+	charge -= charge_w*charge_w; ncharge--;
+      }
+    }
+    
+  }else{
+    if (charge_u==0) flag_charge_u = true;
+    if (charge_v==0) flag_charge_v = true;
+    if (charge_w==0) flag_charge_w = true;
 
-  // deal with bad planes ... 
-  std::vector<WirePlaneType_t> bad_planes = mcell->get_bad_planes();
-  for (size_t i=0;i!=bad_planes.size();i++){
-    if (bad_planes.at(i)==WirePlaneType_t(0)){
-      flag_charge_u = true;
-      charge -= charge_u*charge_u; ncharge--;
-    }else if (bad_planes.at(i)==WirePlaneType_t(1)){
-      flag_charge_v = true;
-      charge -= charge_v*charge_v; ncharge--;
-    }else if (bad_planes.at(i)==WirePlaneType_t(2)){
-      flag_charge_w = true;
-      charge -= charge_w*charge_w; ncharge--;
+    if (charge_u!=0){
+      charge += charge_u*charge_u; ncharge ++;
+    }
+    if (charge_v!=0){
+      charge += charge_v*charge_v; ncharge ++;
+    }
+    if (charge_w!=0){
+      charge += charge_w*charge_w; ncharge ++;
     }
   }
+
   if (ncharge>0) {
     charge = sqrt(charge/ncharge);
   }else{
     charge = 0;
   }
-
+  
   // get charge for each indices ...
   // how to average ??? 
   return std::make_pair(flag_charge_u && flag_charge_v && flag_charge_w ,charge);
