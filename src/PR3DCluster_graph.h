@@ -373,9 +373,13 @@ void WireCellPID::PR3DCluster::Create_graph(WireCell::ToyCTPointCloud& ct_point_
     Create_point_cloud();
 
 
+  
+  
   const int N = point_cloud->get_num_points();
   graph = new MCUGraph(N);
 
+  std::cout <<"Create Graph! " << cluster_id  << " " << N << std::endl;
+  
   Establish_close_connected_graph();
   Connect_graph(ct_point_cloud);
   Connect_graph();

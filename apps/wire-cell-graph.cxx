@@ -330,9 +330,11 @@ int main(int argc, char* argv[])
 
     live_clusters.at(i)->dijkstra_shortest_paths(wcps.first);
     live_clusters.at(i)->cal_shortest_path(wcps.second);
+
+    // mix dead cell ...
     {
       WireCellPID::PR3DCluster *new_cluster = WireCellPID::Improve_PR3DCluster(live_clusters.at(i),ct_point_cloud, gds);
-      WireCellPID::calc_sampling_points(gds,new_cluster,nrebin, frame_length, unit_dis);
+      WireCellPID::calc_sampling_points(gds,new_cluster,nrebin, frame_length, unit_dis,false);
       new_cluster->Create_point_cloud();
       old_new_cluster_map[live_clusters.at(i)] = new_cluster;
 
@@ -341,7 +343,7 @@ int main(int argc, char* argv[])
       new_cluster->Create_steiner_tree(gds);
     }
     
-    //    live_clusters.at(i)->Create_steiner_tree(gds);
+    live_clusters.at(i)->Create_steiner_tree(gds);
   }
   cout << em("Build graph for all clusters") << std::endl;
   
@@ -429,9 +431,13 @@ int main(int argc, char* argv[])
   t_rec_charge->Branch("pt",&pt,"pt/D");
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-    std::set<int> steiner_terminals = (*it)->get_steiner_terminals();
-    //std::set<int> steiner_terminals = (*it)->get_selected_terminals();
-    WireCell::ToyPointCloud* point_cloud = (*it)->get_point_cloud();
+
+     // WireCellPID::PR3DCluster* new_cluster = *it;
+    WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
+    
+    std::set<int> steiner_terminals = new_cluster->get_steiner_terminals();
+    //std::set<int> steiner_terminals = new_cluster->get_selected_terminals();
+    WireCell::ToyPointCloud* point_cloud = new_cluster->get_point_cloud();
     WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
     
     for (auto it1 = steiner_terminals.begin();it1!=steiner_terminals.end();it1++){
@@ -451,9 +457,12 @@ int main(int argc, char* argv[])
   }
 
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
+
+    // WireCellPID::PR3DCluster* new_cluster = *it;
+    WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
     
-    std::set<int> steiner_terminals = (*it)->get_selected_terminals();
-    WireCell::ToyPointCloud* point_cloud = (*it)->get_point_cloud();
+    std::set<int> steiner_terminals = new_cluster->get_selected_terminals();
+    WireCell::ToyPointCloud* point_cloud = new_cluster->get_point_cloud();
     WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
     
     for (auto it1 = steiner_terminals.begin();it1!=steiner_terminals.end();it1++){

@@ -2,15 +2,15 @@
 
 using namespace WireCell;
 
-void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCellPID::PR3DCluster* cluster, int nrebin, int frame_length, double unit_dis){
+void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCellPID::PR3DCluster* cluster, int nrebin, int frame_length, double unit_dis, bool disable_mix_dead_cell){
   SMGCSelection mcells = cluster->get_mcells();
   for (auto it = mcells.begin(); it!=mcells.end(); it++){
-    WireCellPID::calc_sampling_points(gds,*it, nrebin, frame_length, unit_dis);
+    WireCellPID::calc_sampling_points(gds,*it, nrebin, frame_length, unit_dis, disable_mix_dead_cell);
   }
 }
 
 
-void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCell::SlimMergeGeomCell* mcell, int nrebin, int frame_length, double unit_dis){
+void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCell::SlimMergeGeomCell* mcell, int nrebin, int frame_length, double unit_dis, bool disable_mix_dead_cell){
   GeomWireSelection wires_u = mcell->get_uwires();
   GeomWireSelection wires_v = mcell->get_vwires();
   GeomWireSelection wires_w = mcell->get_wwires();
@@ -102,8 +102,11 @@ void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCell::
     }else if (other_wire_plane_type==bad_planes.at(0)){
       charge_threshold_other = 0;
     }
+  
   GeomWireSelection max_wires1(max_wires_set.begin(), max_wires_set.end());
   GeomWireSelection min_wires1(min_wires_set.begin(), min_wires_set.end());
+  
+  // if not too big ...
   if (max_wires.size() * min_wires.size() <= 2500){
     max_wires1 = max_wires;
     min_wires1 = min_wires;
@@ -112,14 +115,15 @@ void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCell::
   for (auto it = max_wires1.begin(); it!=max_wires1.end(); it++){
     bool flag_must1 = false;
     if (max_wires_set.find(*it)!=max_wires_set.end()) flag_must1 = true;
+
     double charge1 = mcell->Get_Wire_Charge(*it);
-    if ((!flag_must1) && (charge1 < charge_threshold_max)) continue;
+    if ((!flag_must1) && (charge1 < charge_threshold_max) && (charge1!=0 || disable_mix_dead_cell) ) continue;
     
     for (auto it1 = min_wires1.begin(); it1!=min_wires1.end();it1++){
       bool flag_must2 = false;
       if (min_wires_set.find(*it1)!=min_wires_set.end()) flag_must2 = true;
       double charge2 =mcell->Get_Wire_Charge(*it1);
-      if ((!flag_must2) && (charge2 < charge_threshold_min)) continue;
+      if ((!flag_must2) && (charge2 < charge_threshold_min) && (charge2!=0 || disable_mix_dead_cell) ) continue;
       
       Vector point;
       gds.crossing_point(*(*it),*(*it1),point);
@@ -133,12 +137,19 @@ void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCell::
 	const GeomWire* wire_other = gds.closest(point,other_wire_plane_type);
 	if (wire_other == 0 ) continue;
 	double charge3 = mcell->Get_Wire_Charge(wire_other);
-	
-	if ( ((!flag_must1) || (!flag_must2)) && (charge1 < charge_threshold_max ||
-						  charge2 < charge_threshold_min ||
-						  charge3 < charge_threshold_other))
-	  continue;
 
+	if (flag_must1 && flag_must2){
+	}else{
+	  // if any charge is low ... 
+	  if ( charge1 < charge_threshold_max && (charge1 !=0 || disable_mix_dead_cell) ||
+	       charge2 < charge_threshold_min && (charge2 !=0 || disable_mix_dead_cell) ||
+	       charge3 < charge_threshold_other && (charge3 !=0 || disable_mix_dead_cell) )
+	    continue;
+	  
+	  // all charge == 0, move on ...
+	  if (charge1==0 && charge2==0 && charge3==0) continue;
+	}
+	
 	//std::cout << charge1 << " " << charge2 << " " << charge3 << std::endl;
 	
 	if (max_wire_plane_type==WirePlaneType_t(0)){
@@ -177,7 +188,7 @@ void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCell::
     }
   }
   
-  //std::cout << sampling_points.size() << " " << wires_u.size() <<  " " << wires_v.size() << " " << wires_w.size() << " " << max_wires.size() << " " << min_wires.size() << std::endl;
+  // std::cout << sampling_points.size() << " " << wires_u.size() <<  " " << wires_v.size() << " " << wires_w.size() << " " << max_wires.size() << " " << min_wires.size() << std::endl;
   
   if (sampling_points.size()>0){
     mcell->AddSamplingPoints(sampling_points);
