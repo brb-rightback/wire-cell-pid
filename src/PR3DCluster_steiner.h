@@ -96,7 +96,7 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
     
     double charge = temp_charge.second;
     map_index_charge[(*it)] = charge;
-    if (charge > 4000 && temp_charge.first){
+    if ((charge > 4000 || charge == 0 && (!disable_dead_mix_cell) ) && temp_charge.first){
       candidates_set.insert(std::make_pair(charge,*it));
     }
     //std::cout <<  << std::endl;
