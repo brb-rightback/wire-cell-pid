@@ -331,9 +331,13 @@ int main(int argc, char* argv[])
     live_clusters.at(i)->dijkstra_shortest_paths(wcps.first);
     live_clusters.at(i)->cal_shortest_path(wcps.second);
 
+    //    std::cout << "NEw cluster " << std::endl; 
     // mix dead cell ...
     {
-      WireCellPID::PR3DCluster *new_cluster = WireCellPID::Improve_PR3DCluster(live_clusters.at(i),ct_point_cloud, gds);
+      WireCellPID::PR3DCluster *new_cluster = WireCellPID::Improve_PR3DCluster_1(live_clusters.at(i),ct_point_cloud, gds);
+
+      //   WireCellPID::Improve_PR3DCluster_1(live_clusters.at(i),ct_point_cloud, gds);
+      // std::cout << "New sampling points" << std::endl;
       WireCellPID::calc_sampling_points(gds,new_cluster,nrebin, frame_length, unit_dis,false);
       
       new_cluster->Create_point_cloud();
