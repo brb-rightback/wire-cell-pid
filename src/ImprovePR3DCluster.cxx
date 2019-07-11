@@ -139,7 +139,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
     }
 
      // W plane
-      if (w_time_chs.find(time_slice)==w_time_chs.end()){
+     if (w_time_chs.find(time_slice)==w_time_chs.end()){
       std::set<int> wchs;
       for (auto it = dead_wch_ranges.begin(); it!=dead_wch_ranges.end(); it++){
 	for (int ch = (*it).first; ch<=(*it).second; ch++){
@@ -162,13 +162,71 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
     }
   }
 
+
   // deal with the good channels using WCPoint Cloud ...
+  std::map<std::pair<int,int>, std::pair<double,double> > map_u_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_uch, max_uch, 0);
+  std::map<std::pair<int,int>, std::pair<double,double> > map_v_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_vch, max_vch, 1);
+  std::map<std::pair<int,int>, std::pair<double,double> > map_w_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_wch, max_wch, 2);
+  //std::cout << map_u_tcc.size() << " " << map_v_tcc.size() << " " << map_w_tcc.size() << std::endl;
+  // Form a connected graph for each view ??? 
 
+  // U plane 
+  for (auto it = map_u_tcc.begin(); it!=map_u_tcc.end(); it++){
+    int time_slice = (*it).first.first;
+    int ch = (*it).first.second;
+    double charge = (*it).second.first;
+    double charge_err = (*it).second.second;
+    if (u_time_chs.find(time_slice)==u_time_chs.end()){
+      std::set<int> uchs;
+      uchs.insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+      u_time_chs[time_slice] = uchs;
+    }else{
+      u_time_chs[time_slice].insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+    }
+  }
+  // V plane
+  for (auto it = map_v_tcc.begin(); it!=map_v_tcc.end(); it++){
+    int time_slice = (*it).first.first;
+    int ch = (*it).first.second;
+    double charge = (*it).second.first;
+    double charge_err = (*it).second.second;
+    if (v_time_chs.find(time_slice)==v_time_chs.end()){
+      std::set<int> vchs;
+      vchs.insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+      v_time_chs[time_slice] = vchs;
+    }else{
+      v_time_chs[time_slice].insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+    }
+  }
 
+  // W plane
+  for (auto it = map_w_tcc.begin(); it!=map_w_tcc.end(); it++){
+    int time_slice = (*it).first.first;
+    int ch = (*it).first.second;
+    double charge = (*it).second.first;
+    double charge_err = (*it).second.second;
+    if (w_time_chs.find(time_slice)==w_time_chs.end()){
+      std::set<int> wchs;
+      wchs.insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+      w_time_chs[time_slice] = wchs;
+    }else{
+      w_time_chs[time_slice].insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+    }
+  }
   
-
-
-  // form cells ...
+ 
   
   WireCell2dToy::WireCellHolder *WCholder = new WireCell2dToy::WireCellHolder();
   for (auto it = u_time_chs.begin(); it!= u_time_chs.end(); it++){
@@ -179,7 +237,8 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
     tiling.init_good_cells_with_charge(u_time_chs, v_time_chs, w_time_chs, time_ch_charge_map, time_ch_charge_err_map);  
   }
   
-   // examine the newly create merged cells
+  
+  // examine the newly create merged cells
   std::map<int,SMGCSelection> old_time_mcells_map;
   for (auto it = old_mcells.begin(); it!=old_mcells.end(); it++){
     SlimMergeGeomCell *mcell = (*it);

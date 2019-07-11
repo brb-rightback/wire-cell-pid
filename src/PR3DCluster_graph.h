@@ -599,9 +599,9 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
     if (i+1 < time_slices.size()){
       if (time_slices.at(i+1)-time_slices.at(i)==1){
 	vec_mcells_set.push_back(time_cells_set_map[time_slices.at(i+1)]);
-	//	if (i+2 < time_slices.size())
-	//if (time_slices.at(i+2)-time_slices.at(i)==2)
-	//   vec_mcells_set.push_back(time_cells_set_map[time_slices.at(i+2)]);
+	if (i+2 < time_slices.size())
+	  if (time_slices.at(i+2)-time_slices.at(i)==2)
+	    vec_mcells_set.push_back(time_cells_set_map[time_slices.at(i+2)]);
       }else if (time_slices.at(i+1) - time_slices.at(i)==2){
 	vec_mcells_set.push_back(time_cells_set_map[time_slices.at(i+1)]);
       }

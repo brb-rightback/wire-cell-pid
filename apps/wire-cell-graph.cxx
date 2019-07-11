@@ -379,8 +379,11 @@ int main(int argc, char* argv[])
   T_cluster->SetDirectory(file1);
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-    ncluster = (*it)->get_cluster_id();
-    SMGCSelection& mcells = (*it)->get_mcells();
+    WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
+    //    WireCellPID::PR3DCluster* new_cluster = *it;
+    
+    ncluster = new_cluster->get_cluster_id();
+    SMGCSelection& mcells = new_cluster->get_mcells();
     for (size_t i=0;i!=mcells.size();i++){
       SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)mcells.at(i);
       
