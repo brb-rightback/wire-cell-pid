@@ -1,8 +1,21 @@
 #include "WireCellPID/ImprovePR3DCluster.h"
 #include "WireCell2dToy/LowmemTiling.h"
-
+#include "WireCellPID/CalcPoints.h"
 
 using namespace WireCell;
+
+WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_2(WireCellPID::PR3DCluster* cluster, ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis){
+   WireCellPID::PR3DCluster *temp_cluster = WireCellPID::Improve_PR3DCluster_1(cluster,ct_point_cloud, gds);
+   WireCellPID::calc_sampling_points(gds,temp_cluster,nrebin, frame_length, unit_dis,false);
+   temp_cluster->Create_point_cloud();
+   temp_cluster->Create_graph(ct_point_cloud);
+   std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_highest_lowest_wcps();
+   temp_cluster->dijkstra_shortest_paths(wcps.first);
+   temp_cluster->cal_shortest_path(wcps.second);
+   WireCellPID::PR3DCluster *new_cluster = Improve_PR3DCluster(temp_cluster, ct_point_cloud, gds);
+   delete temp_cluster;
+   return new_cluster;
+}
 
 WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCluster* cluster, ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds){
 

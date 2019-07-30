@@ -41,7 +41,7 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds
     selected_terminal_indices.insert(index[target(e,*graph)]);
     //std::cout << index[source(e,*graph)] << " " << index[target(e,*graph)] << std::endl;
   }
-  std::cout << terminals.size() << " " << selected_terminal_indices.size() << std::endl;
+  //  std::cout << terminals.size() << " " << selected_terminal_indices.size() << std::endl;
   //  std::cout << "result " << sum/units::cm << std::endl;
   
   
@@ -96,7 +96,8 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
     
     double charge = temp_charge.second;
     map_index_charge[(*it)] = charge;
-    if ((charge > 4000 || charge == 0 && (!disable_dead_mix_cell) ) && temp_charge.first){
+    if ((charge > 4000 ) && temp_charge.first){
+    // if ((charge > 4000 || charge == 0 && (!disable_dead_mix_cell) ) && temp_charge.first){
       candidates_set.insert(std::make_pair(charge,*it));
     }
     //std::cout <<  << std::endl;
@@ -299,21 +300,21 @@ std::pair<bool,double> WireCellPID::PR3DCluster::calc_charge_wcp(WireCell::WCPoi
     std::vector<WirePlaneType_t> bad_planes = mcell->get_bad_planes();
     for (size_t i=0;i!=bad_planes.size();i++){
       if (bad_planes.at(i)==WirePlaneType_t(0)){
-	flag_charge_u = true;
+	flag_charge_u = false;
 	charge -= charge_u*charge_u; ncharge--;
       }else if (bad_planes.at(i)==WirePlaneType_t(1)){
-	flag_charge_v = true;
+	flag_charge_v = false;
 	charge -= charge_v*charge_v; ncharge--;
       }else if (bad_planes.at(i)==WirePlaneType_t(2)){
-	flag_charge_w = true;
+	flag_charge_w = false;
 	charge -= charge_w*charge_w; ncharge--;
       }
     }
     
   }else{
-    if (charge_u==0) flag_charge_u = true;
-    if (charge_v==0) flag_charge_v = true;
-    if (charge_w==0) flag_charge_w = true;
+    if (charge_u==0) flag_charge_u = false;
+    if (charge_v==0) flag_charge_v = false;
+    if (charge_w==0) flag_charge_w = false;
 
     if (charge_u!=0){
       charge += charge_u*charge_u; ncharge ++;
@@ -334,7 +335,9 @@ std::pair<bool,double> WireCellPID::PR3DCluster::calc_charge_wcp(WireCell::WCPoi
   
   // get charge for each indices ...
   // how to average ??? 
-  return std::make_pair(flag_charge_u && flag_charge_v && flag_charge_w ,charge);
+  return std::make_pair(flag_charge_u && flag_charge_v ||
+			flag_charge_v && flag_charge_w ||
+			flag_charge_u && flag_charge_w, charge);
 }
 
 

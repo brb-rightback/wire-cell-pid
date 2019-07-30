@@ -8,6 +8,8 @@
 namespace WireCellPID{
   WireCellPID::PR3DCluster* Improve_PR3DCluster(WireCellPID::PR3DCluster* cluster, WireCell::ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds);
   WireCellPID::PR3DCluster* Improve_PR3DCluster_1(WireCellPID::PR3DCluster* cluster, WireCell::ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds);
+
+  WireCellPID::PR3DCluster* Improve_PR3DCluster_2(WireCellPID::PR3DCluster* cluster, WireCell::ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis);
   
 }
 
