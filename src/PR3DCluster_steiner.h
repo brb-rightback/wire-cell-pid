@@ -337,14 +337,15 @@ std::pair<bool,double> WireCellPID::PR3DCluster::calc_charge_wcp(WireCell::WCPoi
  
   
   // get charge for each indices ...
-  // how to average ???
-  //
-  if (ncharge>0) {
-      charge = sqrt(charge/ncharge);
-    }else{
-      charge = 0;
-    }
-    return std::make_pair(flag_charge_u && flag_charge_v && flag_charge_w, charge);
+  
+  
+  // require more than two planes are good 
+  if (ncharge>1) {
+    charge = sqrt(charge/ncharge);
+  }else{
+    charge = 0;
+  }
+  return std::make_pair(flag_charge_u && flag_charge_v && flag_charge_w, charge);
   
 }
 
