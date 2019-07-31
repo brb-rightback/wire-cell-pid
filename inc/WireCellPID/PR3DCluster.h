@@ -76,7 +76,7 @@ namespace WireCellPID{
     void Del_graph();
 
     // Steiner tree
-    void create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis);
+    WireCellPID::PR3DCluster* create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis);
     void Create_steiner_tree(WireCell::GeomDataSource& gds, WireCell::SMGCSelection& mcells, bool flag_path = false, bool disable_dead_mix_cell = true);
 
     

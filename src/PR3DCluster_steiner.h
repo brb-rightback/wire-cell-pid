@@ -3,7 +3,7 @@
 #include "WireCellPID/ImprovePR3DCluster.h"
 #include "WireCellPID/CalcPoints.h"
 
-void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis){
+WireCellPID::PR3DCluster* WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis){
   
   WireCellPID::PR3DCluster *new_cluster = WireCellPID::Improve_PR3DCluster_2(this, ct_point_cloud, gds, nrebin, frame_length, unit_dis); 
   
@@ -22,15 +22,87 @@ void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& c
   new_cluster->Create_steiner_tree(gds, mcells, true, false);
 
   // examine steiner tree terminals
-  
+  return new_cluster;
 }
 
-void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds, WireCell::SMGCSelection& mcells, bool flag_path, bool disable_dead_mix_cell){
+void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds, WireCell::SMGCSelection& old_mcells, bool flag_path, bool disable_dead_mix_cell){
   Create_graph();
 
   // find all the steiner terminal indices ...
   find_steiner_terminals(gds, disable_dead_mix_cell);
 
+  // form point cloud 
+  WireCell::ToyPointCloud temp_pcloud;
+  if (flag_path){
+    for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
+      WireCell::Point p((*it).x, (*it).y, (*it).z);
+      std::tuple<int, int, int> wire_index = std::make_tuple((*it).index_u, (*it).index_v, (*it).index_w);
+      temp_pcloud.AddPoint(p, wire_index ,0);
+    }
+  }
+  // organize mcells
+  std::map<int,SMGCSelection> old_time_mcells_map;
+  for (auto it = old_mcells.begin(); it!=old_mcells.end(); it++){
+    SlimMergeGeomCell *mcell = (*it);
+    int time_slice = mcell->GetTimeSlice();
+    if (old_time_mcells_map.find(time_slice)==old_time_mcells_map.end()){
+      SMGCSelection mcells;
+      mcells.push_back(mcell);
+      old_time_mcells_map[time_slice] = mcells;
+    }else{
+      old_time_mcells_map[time_slice].push_back(mcell);
+    }
+  }
+  
+  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+
+  std::set<int> indices_to_be_removal;
+  
+  for (auto it = steiner_terminal_indices.begin(); it!=steiner_terminal_indices.end(); it++){
+    // examine the steiner terminals according to the mcells, inside known mcells
+    int time_slice = cloud.pts[*it].mcell->GetTimeSlice();
+    bool flag_remove = true;
+    
+    if (old_time_mcells_map.find(time_slice)!=old_time_mcells_map.end()){
+      for (auto it1 = old_time_mcells_map[time_slice].begin(); it1!= old_time_mcells_map[time_slice].end(); it1++){
+	SlimMergeGeomCell *mcell = *it1;
+	 int u1_low_index = mcell->get_uwires().front()->index();
+	 int u1_high_index = mcell->get_uwires().back()->index();
+	 
+	 int v1_low_index = mcell->get_vwires().front()->index();
+	 int v1_high_index = mcell->get_vwires().back()->index();
+	 
+	 int w1_low_index = mcell->get_wwires().front()->index();
+	 int w1_high_index = mcell->get_wwires().back()->index();
+	 if (cloud.pts[*it].index_u <= u1_high_index &&
+	     cloud.pts[*it].index_u >= u1_low_index &&
+	     cloud.pts[*it].index_v <= v1_high_index &&
+	     cloud.pts[*it].index_v >= v1_low_index &&
+	     cloud.pts[*it].index_w <= w1_high_index &&
+	     cloud.pts[*it].index_w >= w1_low_index){
+	   flag_remove = false;
+	   break;
+	 }
+      }
+    }
+    // within a mcell check path ...
+    if (!flag_remove){
+      // examine the steiner terminals according to the path,
+      // within certain sizable distance along the path
+      // outside this distance, and also far from the projections
+      
+    }
+
+    if (flag_remove){
+      indices_to_be_removal.insert(*it);
+    }
+  }
+  
+  for (auto it = indices_to_be_removal.begin(); it!=indices_to_be_removal.end(); it++){
+    steiner_terminal_indices.erase(*it);
+  }
+  
+  // form the tree ... 
   std::vector<int> terminals(steiner_terminal_indices.begin(), steiner_terminal_indices.end());
   const int N = point_cloud->get_num_points();
   std::vector<int> nonterminals;
@@ -67,12 +139,11 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds
   }
   //  std::cout << terminals.size() << " " << selected_terminal_indices.size() << std::endl;
   //  std::cout << "result " << sum/units::cm << std::endl;
-  
-  
-  /* using GraphMT = paal::data_structures::graph_metric<WireCellPID::MCUGraph, float, paal::data_structures::graph_type::sparse_tag>; */
 
-  /* auto metric = GraphMT(*graph); */
   
+  // too slow ...
+  /* using GraphMT = paal::data_structures::graph_metric<WireCellPID::MCUGraph, float, paal::data_structures::graph_type::sparse_tag>; */
+  /* auto metric = GraphMT(*graph); */
   // solve it
   /* paal::ir::steiner_tree_iterative_rounding(metric, terminals, */
   /* 					    nonterminals, std::back_inserter(selected_nonterminals)); */
