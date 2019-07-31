@@ -7,16 +7,20 @@ using namespace WireCell;
 WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_2(WireCellPID::PR3DCluster* cluster, ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis){
   // include dead channels ...
   WireCellPID::PR3DCluster *temp_cluster = WireCellPID::Improve_PR3DCluster_1(cluster,ct_point_cloud, gds);
-   WireCellPID::calc_sampling_points(gds,temp_cluster,nrebin, frame_length, unit_dis,false);
-   temp_cluster->Create_point_cloud();
-   temp_cluster->Create_graph(ct_point_cloud);
-   std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_highest_lowest_wcps();
-   temp_cluster->dijkstra_shortest_paths(wcps.first);
-   temp_cluster->cal_shortest_path(wcps.second);
-   // include original inefficient channels ... 
-   WireCellPID::PR3DCluster *new_cluster = Improve_PR3DCluster(temp_cluster, ct_point_cloud, gds);
-   delete temp_cluster;
-   return new_cluster;
+  WireCellPID::calc_sampling_points(gds,temp_cluster,nrebin, frame_length, unit_dis,false);
+  temp_cluster->Create_point_cloud();
+  temp_cluster->Create_graph(ct_point_cloud);
+  
+   // std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_highest_lowest_wcps();
+  // // std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_main_axis_wcps();
+   
+   // temp_cluster->dijkstra_shortest_paths(wcps.first);
+   // temp_cluster->cal_shortest_path(wcps.second);
+   // // include original inefficient channels ... 
+   // WireCellPID::PR3DCluster *new_cluster = Improve_PR3DCluster(temp_cluster, ct_point_cloud, gds);
+   // delete temp_cluster;
+   // return new_cluster;
+   return temp_cluster;
 }
 
 WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCluster* cluster, ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds){
@@ -106,6 +110,12 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
   std::vector<std::pair<int, int> > dead_vch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_vch, max_vch, 1);
   std::vector<std::pair<int, int> > dead_wch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_wch, max_wch, 2);
 
+  // {
+  //   for (auto it = dead_uch_ranges.begin(); it!= dead_uch_ranges.end(); it++){
+  //     std::cout << it->first << " " << it->second << std::endl;
+  //   }
+  // }
+  
   for (int time_slice = min_time; time_slice <= max_time; time_slice ++){
     // U plane 
     if (u_time_chs.find(time_slice)==u_time_chs.end()){
@@ -121,7 +131,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
     }else{
       for (auto it = dead_uch_ranges.begin(); it!=dead_uch_ranges.end(); it++){
 	for (int ch = (*it).first; ch<=(*it).second; ch++){
-	  if (u_time_chs[time_slice].find(ch)!=u_time_chs[time_slice].end()){
+	  if (u_time_chs[time_slice].find(ch)==u_time_chs[time_slice].end()){
 	    u_time_chs[time_slice].insert(ch);
 	    time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
 	    time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
@@ -144,7 +154,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
     }else{
       for (auto it = dead_vch_ranges.begin(); it!=dead_vch_ranges.end(); it++){
 	for (int ch = (*it).first; ch<=(*it).second; ch++){
-	  if (v_time_chs[time_slice].find(ch)!=v_time_chs[time_slice].end()){
+	  if (v_time_chs[time_slice].find(ch)==v_time_chs[time_slice].end()){
 	    v_time_chs[time_slice].insert(ch);
 	    time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
 	    time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
@@ -167,7 +177,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
     }else{
       for (auto it = dead_wch_ranges.begin(); it!=dead_wch_ranges.end(); it++){
 	for (int ch = (*it).first; ch<=(*it).second; ch++){
-	  if (w_time_chs[time_slice].find(ch)!=w_time_chs[time_slice].end()){
+	  if (w_time_chs[time_slice].find(ch)==w_time_chs[time_slice].end()){
 	    w_time_chs[time_slice].insert(ch);
 	    time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
 	    time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
@@ -177,7 +187,28 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
     }
   }
 
+  // std::cout << cluster->get_cluster_id() << " " << min_time << " " << max_time << " " << min_uch << " " << max_uch << " "  << min_vch << " " << max_vch << " " << min_wch << " " << max_wch << std::endl;
+  // if (cluster->get_cluster_id()==2){
+  //   for (auto it  = u_time_chs.begin(); it!=u_time_chs.end(); it++){
+  //     if (it->first >=2298 && it->first <=2308){
+  // 	std::cout << "U: " << it->first << std::endl;
+  // 	int prev_ch = -1;
+  // 	for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+  // 	  if ( (*it1)-prev_ch!=1){
+  // 	    std::cout << prev_ch << "; " << (*it1) << " ";
+  // 	  }
+  // 	  prev_ch = (*it1);
+  // 	  //	  std::cout << (*it1) << " " ;
+  // 	}
+  // 	std::cout << std::endl;
+  //     }
+  //   }
 
+    
+  // }
+  
+ 
+  
   // deal with the good channels using WCPoint Cloud ...
   std::map<std::pair<int,int>, std::pair<double,double> > map_u_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_uch, max_uch, 0);
   std::map<std::pair<int,int>, std::pair<double,double> > map_v_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_vch, max_vch, 1);
@@ -241,7 +272,51 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
     }
   }
   
- 
+  //if (cluster->get_cluster_id()==2){
+    // for (auto it  = u_time_chs.begin(); it!=u_time_chs.end(); it++){
+    //   if (it->first >=2298 && it->first <=2308){
+    // 	std::cout << "U: " << it->first << std::endl;
+    // 	int prev_ch = -1;
+    // 	for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+    // 	  if ( (*it1)-prev_ch!=1){
+    // 	    std::cout << prev_ch << "; " << (*it1) << " ";
+    // 	  }
+    // 	  prev_ch = (*it1);
+    // 	  //	  std::cout << (*it1) << " " ;
+    // 	}
+    // 	std::cout << std::endl;
+    //   }
+    // }
+
+    // for (auto it  = v_time_chs.begin(); it!=v_time_chs.end(); it++){
+    //   if (it->first >=2298 && it->first <=2308){
+    // 	std::cout << "V: " << it->first << std::endl;
+    // 	int prev_ch = -1;
+    // 	for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+    // 	  if ( (*it1)-prev_ch!=1){
+    // 	    std::cout << prev_ch << "; " << (*it1) << " ";
+    // 	  }
+    // 	  prev_ch = (*it1);
+    // 	}
+    // 	std::cout << std::endl;
+    //   }
+    // }
+
+    // for (auto it  = w_time_chs.begin(); it!=w_time_chs.end(); it++){
+    //   if (it->first >=2298 && it->first <=2308){
+    // 	std::cout << "W: " << it->first << std::endl;
+    // 	int prev_ch = -1;
+    // 	for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+    // 	  if ( (*it1)-prev_ch!=1){
+    // 	    std::cout << prev_ch << "; " << (*it1) << " ";
+    // 	  }
+    // 	  prev_ch = (*it1);
+    // 	}
+    // 	std::cout << std::endl;
+    //   }
+    // }
+  // }
+  
   
   WireCell2dToy::WireCellHolder *WCholder = new WireCell2dToy::WireCellHolder();
   for (auto it = u_time_chs.begin(); it!= u_time_chs.end(); it++){
@@ -280,7 +355,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
       // -1 time slice
       if (old_time_mcells_map.find(time_slice-1) != old_time_mcells_map.end()){
 	for (auto it1 = old_time_mcells_map[time_slice-1].begin(); it1!=old_time_mcells_map[time_slice-1].end(); it1++){
-	  if (mcell->Overlap_fast((*it1))){
+	  if (mcell->Overlap_fast((*it1),3)){
 	    flag_good = true;
 	    break;
 	  }
@@ -291,7 +366,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
       // same time_slice
       if (old_time_mcells_map.find(time_slice) != old_time_mcells_map.end()){
 	for (auto it1 = old_time_mcells_map[time_slice].begin(); it1!=old_time_mcells_map[time_slice].end(); it1++){
-	  if (mcell->Overlap_fast((*it1))){
+	  if (mcell->Overlap_fast((*it1),3)){
 	    flag_good = true;
 	    break;
 	  }
@@ -302,14 +377,40 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
       // +1 time_slice
       if (old_time_mcells_map.find(time_slice+1) != old_time_mcells_map.end()){
 	for (auto it1 = old_time_mcells_map[time_slice+1].begin(); it1!=old_time_mcells_map[time_slice+1].end(); it1++){
-	  if (mcell->Overlap_fast((*it1))){
+	  if (mcell->Overlap_fast((*it1),3)){
 	    flag_good = true;
 	    break;
 	  }
 	}
       }
     }
-    
+
+    if (!flag_good){
+      // -2 time_slice
+      if (old_time_mcells_map.find(time_slice-2) != old_time_mcells_map.end()){
+	for (auto it1 = old_time_mcells_map[time_slice-2].begin(); it1!=old_time_mcells_map[time_slice-2].end(); it1++){
+	  if (mcell->Overlap_fast((*it1),3)){
+	    flag_good = true;
+	    break;
+	  }
+	}
+      }
+    }
+
+    if (!flag_good){
+      // +2 time_slice
+      if (old_time_mcells_map.find(time_slice+2) != old_time_mcells_map.end()){
+	for (auto it1 = old_time_mcells_map[time_slice+2].begin(); it1!=old_time_mcells_map[time_slice+2].end(); it1++){
+	  if (mcell->Overlap_fast((*it1),3)){
+	    flag_good = true;
+	    break;
+	  }
+	}
+      }
+    }
+
+    //    // hack for now ...
+    // flag_good = true;
 
     if (flag_good){
       if (new_time_mcells_map.find(time_slice)==new_time_mcells_map.end()){
@@ -321,13 +422,13 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
       }
     }else{
       new_mcells_set.insert(mcell);
-    }
-    
+    }    
   }
-  
-  int prev_num_mcells = new_mcells_set.size()+1;
-  while(new_mcells_set.size() != prev_num_mcells && new_mcells_set.size() > 0){
-    prev_num_mcells = new_mcells_set.size();
+
+  {  
+  // int prev_num_mcells = new_mcells_set.size()+1;
+  // while(new_mcells_set.size() != prev_num_mcells && new_mcells_set.size() > 0){
+  //   prev_num_mcells = new_mcells_set.size();
 
     SMGCSelection temp_mcells;
     
@@ -338,41 +439,41 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
       bool flag_good = false;
 
       if (!flag_good){
-	// -1 time slice
-	if (new_time_mcells_map.find(time_slice-1) != new_time_mcells_map.end()){
-	  for (auto it1 = new_time_mcells_map[time_slice-1].begin(); it1!=new_time_mcells_map[time_slice-1].end(); it1++){
-	    if (mcell->Overlap_fast((*it1))){
-	      flag_good = true;
-	      break;
-	    }
-	  }
-	}
+  	// -1 time slice
+  	if (new_time_mcells_map.find(time_slice-1) != new_time_mcells_map.end()){
+  	  for (auto it1 = new_time_mcells_map[time_slice-1].begin(); it1!=new_time_mcells_map[time_slice-1].end(); it1++){
+  	    if (mcell->Overlap_fast((*it1))){
+  	      flag_good = true;
+  	      break;
+  	    }
+  	  }
+  	}
       }
       if (!flag_good){
-	// same time_slice
-	if (new_time_mcells_map.find(time_slice) != new_time_mcells_map.end()){
-	  for (auto it1 = new_time_mcells_map[time_slice].begin(); it1!=new_time_mcells_map[time_slice].end(); it1++){
-	    if (mcell->Overlap_fast((*it1))){
-	      flag_good = true;
-	      break;
-	    }
-	  }
-	}
+  	// same time_slice
+  	if (new_time_mcells_map.find(time_slice) != new_time_mcells_map.end()){
+  	  for (auto it1 = new_time_mcells_map[time_slice].begin(); it1!=new_time_mcells_map[time_slice].end(); it1++){
+  	    if (mcell->Overlap_fast((*it1))){
+  	      flag_good = true;
+  	      break;
+  	    }
+  	  }
+  	}
       }
       if (!flag_good){
-	// +1 time_slice
-	if (new_time_mcells_map.find(time_slice+1) != new_time_mcells_map.end()){
-	  for (auto it1 = new_time_mcells_map[time_slice+1].begin(); it1!=new_time_mcells_map[time_slice+1].end(); it1++){
-	    if (mcell->Overlap_fast((*it1))){
-	      flag_good = true;
-	      break;
-	    }
-	  }
-	}
+  	// +1 time_slice
+  	if (new_time_mcells_map.find(time_slice+1) != new_time_mcells_map.end()){
+  	  for (auto it1 = new_time_mcells_map[time_slice+1].begin(); it1!=new_time_mcells_map[time_slice+1].end(); it1++){
+  	    if (mcell->Overlap_fast((*it1))){
+  	      flag_good = true;
+  	      break;
+  	    }
+  	  }
+  	}
       }
 
       if (flag_good){
-	temp_mcells.push_back(mcell);
+  	temp_mcells.push_back(mcell);
       }
     }
 
@@ -381,11 +482,11 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
       int time_slice = mcell->GetTimeSlice();
 
       if (new_time_mcells_map.find(time_slice)==new_time_mcells_map.end()){
-	SMGCSelection mcells;
-	mcells.push_back(mcell);
-	new_time_mcells_map[time_slice] = mcells;
+  	SMGCSelection mcells;
+  	mcells.push_back(mcell);
+  	new_time_mcells_map[time_slice] = mcells;
       }else{
-	new_time_mcells_map[time_slice].push_back(mcell);
+  	new_time_mcells_map[time_slice].push_back(mcell);
       }
       new_mcells_set.erase(mcell);
     }
