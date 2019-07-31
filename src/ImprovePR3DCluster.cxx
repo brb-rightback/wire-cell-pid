@@ -2,6 +2,8 @@
 #include "WireCell2dToy/LowmemTiling.h"
 #include "WireCellPID/CalcPoints.h"
 
+#include <boost/graph/connected_components.hpp>
+
 using namespace WireCell;
 
 WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_2(WireCellPID::PR3DCluster* cluster, ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis){
@@ -11,9 +13,11 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_2(WireCellPID::PR3DCl
   temp_cluster->Create_point_cloud();
   temp_cluster->Create_graph(ct_point_cloud);
   
-   std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_highest_lowest_wcps();
-  // std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_main_axis_wcps();
-   
+  //std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_highest_lowest_wcps();
+  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_two_boundary_wcps();
+  //std::cout << wcps.first.x << " " << wcps.first.y << " " << wcps.first.z << "; " <<
+  // wcps.second.x << " " << wcps.second.y << " " << wcps.second.z << "; " << fabs(wcps.first.x - wcps.second.x)/(2.22*units::mm) + fabs(wcps.first.index_u - wcps.second.index_u)  + fabs(wcps.first.index_v - wcps.second.index_v) + fabs(wcps.first.index_w - wcps.second.index_w) << std::endl;
+  
    temp_cluster->dijkstra_shortest_paths(wcps.first);
    temp_cluster->cal_shortest_path(wcps.second);
    // include original inefficient channels ... 
@@ -341,163 +345,150 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
       old_time_mcells_map[time_slice].push_back(mcell);
     }
   }
-  
-  std::map<int,SMGCSelection> new_time_mcells_map;
-  SMGCSet new_mcells_set;
-  
+  // order the new mcells
+  std::map<int, SMGCSelection> new_time_mcells_map;
+  std::map<int,SlimMergeGeomCell*> map_index_mcell;
+  std::map<SlimMergeGeomCell*,int> map_mcell_index;
   GeomCellSelection& temp_cells = WCholder->get_cells();
+  int index = 0;
   for (auto it = temp_cells.begin(); it!=temp_cells.end(); it++){
     SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)(*it);
+
+    map_index_mcell[index] = mcell;
+    map_mcell_index[mcell] = index;
+    index++;
+    
     int time_slice = mcell->GetTimeSlice();
-    bool flag_good = false;
-    
-    if (!flag_good){
-      // -1 time slice
-      if (old_time_mcells_map.find(time_slice-1) != old_time_mcells_map.end()){
-	for (auto it1 = old_time_mcells_map[time_slice-1].begin(); it1!=old_time_mcells_map[time_slice-1].end(); it1++){
-	  if (mcell->Overlap_fast((*it1))){
-	    flag_good = true;
-	    break;
-	  }
-	}
-      }
-    }
-    if (!flag_good){
-      // same time_slice
-      if (old_time_mcells_map.find(time_slice) != old_time_mcells_map.end()){
-	for (auto it1 = old_time_mcells_map[time_slice].begin(); it1!=old_time_mcells_map[time_slice].end(); it1++){
-	  if (mcell->Overlap_fast((*it1))){
-	    flag_good = true;
-	    break;
-	  }
-	}
-      }
-    }
-    if (!flag_good){
-      // +1 time_slice
-      if (old_time_mcells_map.find(time_slice+1) != old_time_mcells_map.end()){
-	for (auto it1 = old_time_mcells_map[time_slice+1].begin(); it1!=old_time_mcells_map[time_slice+1].end(); it1++){
-	  if (mcell->Overlap_fast((*it1))){
-	    flag_good = true;
-	    break;
-	  }
-	}
-      }
-    }
-
-    // if (!flag_good){
-    //   // -2 time_slice
-    //   if (old_time_mcells_map.find(time_slice-2) != old_time_mcells_map.end()){
-    // 	for (auto it1 = old_time_mcells_map[time_slice-2].begin(); it1!=old_time_mcells_map[time_slice-2].end(); it1++){
-    // 	  if (mcell->Overlap_fast((*it1))){
-    // 	    flag_good = true;
-    // 	    break;
-    // 	  }
-    // 	}
-    //   }
-    // }
-
-    // if (!flag_good){
-    //   // +2 time_slice
-    //   if (old_time_mcells_map.find(time_slice+2) != old_time_mcells_map.end()){
-    // 	for (auto it1 = old_time_mcells_map[time_slice+2].begin(); it1!=old_time_mcells_map[time_slice+2].end(); it1++){
-    // 	  if (mcell->Overlap_fast((*it1))){
-    // 	    flag_good = true;
-    // 	    break;
-    // 	  }
-    // 	}
-    //   }
-    // }
-
-    //    // hack for now ...
-    // flag_good = true;
-
-    if (flag_good){
-      if (new_time_mcells_map.find(time_slice)==new_time_mcells_map.end()){
-	SMGCSelection mcells;
-	mcells.push_back(mcell);
-	new_time_mcells_map[time_slice] = mcells;
-      }else{
-	new_time_mcells_map[time_slice].push_back(mcell);
-      }
+    if (new_time_mcells_map.find(time_slice)==new_time_mcells_map.end()){
+      SMGCSelection mcells;
+      mcells.push_back(mcell);
+      new_time_mcells_map[time_slice] = mcells;
     }else{
-      new_mcells_set.insert(mcell);
-    }    
+      new_time_mcells_map[time_slice].push_back(mcell);
+    }
   }
 
-
-  int prev_num_mcells = new_mcells_set.size()+1;
-  while(new_mcells_set.size() != prev_num_mcells && new_mcells_set.size() > 0){
-    prev_num_mcells = new_mcells_set.size();
-
-    SMGCSelection temp_mcells;
+  // graph ...
+  {
+    // create a graph and establish connected components ...
+    const int N = map_mcell_index.size();
+    boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS,
+    	boost::no_property, boost::property<boost::edge_weight_t, double>>
+    	temp_graph(N);
+    for (auto it=new_time_mcells_map.begin(); it!=new_time_mcells_map.end(); it++){
+      int time_slice = it->first;
+      if (new_time_mcells_map.find(time_slice+1)!=new_time_mcells_map.end()){
+	for (int j=0;j!=it->second.size();j++){
+	  SlimMergeGeomCell *mcell1 = it->second.at(j);
+	  for (int k=0;k!=new_time_mcells_map[time_slice+1].size();k++){
+	    SlimMergeGeomCell *mcell2 = new_time_mcells_map[time_slice+1].at(k);
+	    int index1 = map_mcell_index[mcell1];
+	    int index2 = map_mcell_index[mcell2];
+	    if (mcell1->Overlap_fast(mcell2)){
+	      auto edge = add_edge(index1,index2, 1, temp_graph);
+	    }
+	  }
+	}
+      }
+    }
+    std::vector<int> component(num_vertices(temp_graph));
+    const int num = connected_components(temp_graph,&component[0]);
+    //std::cout << num << std::endl;
+    if (num > 1){
+      SMGCSet new_mcells_set;
+      std::set<int> good_sets;
+      // examine each connected component and its mcell ...
+      std::vector<int>::size_type i;
+      for (i=0;i!=component.size(); ++i){
+	if (good_sets.find(component[i])!=good_sets.end()) continue;
+	SlimMergeGeomCell *mcell = map_index_mcell[i];
+	int time_slice = mcell->GetTimeSlice();
+	bool flag_good = false;
+	if (!flag_good){
+	  // -1 time slice
+	  if (old_time_mcells_map.find(time_slice-1) != old_time_mcells_map.end()){
+	    for (auto it1 = old_time_mcells_map[time_slice-1].begin(); it1!=old_time_mcells_map[time_slice-1].end(); it1++){
+	      if (mcell->Overlap_fast((*it1))){
+		flag_good = true;
+		break;
+	      }
+	    }
+	  }
+	}
+	if (!flag_good){
+	  // same time_slice
+	  if (old_time_mcells_map.find(time_slice) != old_time_mcells_map.end()){
+	    for (auto it1 = old_time_mcells_map[time_slice].begin(); it1!=old_time_mcells_map[time_slice].end(); it1++){
+	      if (mcell->Overlap_fast((*it1))){
+		flag_good = true;
+		break;
+	      }
+	    }
+	  }
+	}
+	if (!flag_good){
+	  // +1 time_slice
+	  if (old_time_mcells_map.find(time_slice+1) != old_time_mcells_map.end()){
+	    for (auto it1 = old_time_mcells_map[time_slice+1].begin(); it1!=old_time_mcells_map[time_slice+1].end(); it1++){
+	      if (mcell->Overlap_fast((*it1))){
+		flag_good = true;
+		break;
+	      }
+	    }
+	  }
+	}
+	//   // if (!flag_good){
+	//   //   // -2 time_slice
+	//   //   if (old_time_mcells_map.find(time_slice-2) != old_time_mcells_map.end()){
+	//   // 	for (auto it1 = old_time_mcells_map[time_slice-2].begin(); it1!=old_time_mcells_map[time_slice-2].end(); it1++){
+	//   // 	  if (mcell->Overlap_fast((*it1))){
+	//   // 	    flag_good = true;
+	//   // 	    break;
+	//   // 	  }
+	//   // 	}
+	//   //   }
+	//   // }
+	//   // if (!flag_good){
+	//   //   // +2 time_slice
+	//   //   if (old_time_mcells_map.find(time_slice+2) != old_time_mcells_map.end()){
+	//   // 	for (auto it1 = old_time_mcells_map[time_slice+2].begin(); it1!=old_time_mcells_map[time_slice+2].end(); it1++){
+	//   // 	  if (mcell->Overlap_fast((*it1))){
+	//   // 	    flag_good = true;
+	//   // 	    break;
+	//   // 	  }
+	//   // 	}
+	//   //   }
+	//   // }
+	if (flag_good){
+	  good_sets.insert(component[i]);
+	}
+      }
+      
+      // added or delete
+      new_time_mcells_map.clear();
+      
+      for (i=0;i!=component.size(); ++i){
+	SlimMergeGeomCell *mcell = map_index_mcell[i];
+	if (good_sets.find(component[i])!=good_sets.end()){
+	  int time_slice = mcell->GetTimeSlice();
+	  if (new_time_mcells_map.find(time_slice)==new_time_mcells_map.end()){
+	    SMGCSelection mcells;
+	    mcells.push_back(mcell);
+	    new_time_mcells_map[time_slice] = mcells;
+	  }else{
+	    new_time_mcells_map[time_slice].push_back(mcell);
+	  }
+	}else{
+	  delete mcell;
+	}
+      }
+      
+    }
     
-    //start to work on it ...
-    for (auto it= new_mcells_set.begin(); it!=new_mcells_set.end(); it++){
-      SlimMergeGeomCell *mcell = (*it);
-      int time_slice = mcell->GetTimeSlice();
-      bool flag_good = false;
-
-      if (!flag_good){
-  	// -1 time slice
-  	if (new_time_mcells_map.find(time_slice-1) != new_time_mcells_map.end()){
-  	  for (auto it1 = new_time_mcells_map[time_slice-1].begin(); it1!=new_time_mcells_map[time_slice-1].end(); it1++){
-  	    if (mcell->Overlap_fast((*it1))){
-  	      flag_good = true;
-  	      break;
-  	    }
-  	  }
-  	}
-      }
-      if (!flag_good){
-  	// same time_slice
-  	if (new_time_mcells_map.find(time_slice) != new_time_mcells_map.end()){
-  	  for (auto it1 = new_time_mcells_map[time_slice].begin(); it1!=new_time_mcells_map[time_slice].end(); it1++){
-  	    if (mcell->Overlap_fast((*it1))){
-  	      flag_good = true;
-  	      break;
-  	    }
-  	  }
-  	}
-      }
-      if (!flag_good){
-  	// +1 time_slice
-  	if (new_time_mcells_map.find(time_slice+1) != new_time_mcells_map.end()){
-  	  for (auto it1 = new_time_mcells_map[time_slice+1].begin(); it1!=new_time_mcells_map[time_slice+1].end(); it1++){
-  	    if (mcell->Overlap_fast((*it1))){
-  	      flag_good = true;
-  	      break;
-  	    }
-  	  }
-  	}
-      }
-
-      if (flag_good){
-  	temp_mcells.push_back(mcell);
-      }
-    }
-
-    for (auto it = temp_mcells.begin(); it!=temp_mcells.end(); it++){
-      SlimMergeGeomCell *mcell = (*it);
-      int time_slice = mcell->GetTimeSlice();
-
-      if (new_time_mcells_map.find(time_slice)==new_time_mcells_map.end()){
-  	SMGCSelection mcells;
-  	mcells.push_back(mcell);
-  	new_time_mcells_map[time_slice] = mcells;
-      }else{
-  	new_time_mcells_map[time_slice].push_back(mcell);
-      }
-      new_mcells_set.erase(mcell);
-    }
-    //  std::cout << new_mcells_set.size() << std::endl;
+   
   }
-
-  for (auto it=new_mcells_set.begin(); it!=new_mcells_set.end(); it++){
-    SlimMergeGeomCell *mcell = (*it);
-    delete mcell;
-  }
-  new_mcells_set.clear();
+  
+  
 
   // create a new cluster ...
   WireCellPID::PR3DCluster *new_cluster = new WireCellPID::PR3DCluster(cluster->get_cluster_id());
@@ -511,8 +502,6 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
   }
   
   //std::cout << cluster->get_cluster_id() << " " << old_mcells.size() << " " << u_time_chs.size() << " " << WCholder->get_ncell() << " " << WCholder->get_nwire() << " " << new_mcells_set.size() << std::endl;
-  
-  
   //Point p(150*units::cm, 35*units::cm, 532*units::cm);
   //std::vector<int> results = ct_point_cloud.convert_3Dpoint_time_ch(p);
   //std::cout << results.at(0) << " " << results.at(1) << " " << results.at(2) << " " << results.at(3) << std::endl;
@@ -730,18 +719,8 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
     // recreate the merge cells
     tiling.init_good_cells_with_charge(u_time_chs, v_time_chs, w_time_chs, time_ch_charge_map, time_ch_charge_err_map);  
   }
-  
-  // create a graph and establish connected components ...
 
-  // examine each connected component and its mcell ...
-
-  // added or delete
-
-  // form cluster ...
-
-
-  
-  // examine the newly create merged cells
+  // order the original mcells
   std::map<int,SMGCSelection> old_time_mcells_map;
   for (auto it = old_mcells.begin(); it!=old_mcells.end(); it++){
     SlimMergeGeomCell *mcell = (*it);
@@ -754,160 +733,150 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
       old_time_mcells_map[time_slice].push_back(mcell);
     }
   }
-  
-  std::map<int,SMGCSelection> new_time_mcells_map;
-  SMGCSet new_mcells_set;
-  
+
+  // order the new mcells
+  std::map<int, SMGCSelection> new_time_mcells_map;
+  std::map<int,SlimMergeGeomCell*> map_index_mcell;
+  std::map<SlimMergeGeomCell*,int> map_mcell_index;
   GeomCellSelection& temp_cells = WCholder->get_cells();
+  int index = 0;
   for (auto it = temp_cells.begin(); it!=temp_cells.end(); it++){
     SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)(*it);
+
+    map_index_mcell[index] = mcell;
+    map_mcell_index[mcell] = index;
+    index++;
+    
     int time_slice = mcell->GetTimeSlice();
-    bool flag_good = false;
-    
-    if (!flag_good){
-      // -1 time slice
-      if (old_time_mcells_map.find(time_slice-1) != old_time_mcells_map.end()){
-	for (auto it1 = old_time_mcells_map[time_slice-1].begin(); it1!=old_time_mcells_map[time_slice-1].end(); it1++){
-	  if (mcell->Overlap_fast((*it1))){
-	    flag_good = true;
-	    break;
-	  }
-	}
-      }
-    }
-    if (!flag_good){
-      // same time_slice
-      if (old_time_mcells_map.find(time_slice) != old_time_mcells_map.end()){
-	for (auto it1 = old_time_mcells_map[time_slice].begin(); it1!=old_time_mcells_map[time_slice].end(); it1++){
-	  if (mcell->Overlap_fast((*it1))){
-	    flag_good = true;
-	    break;
-	  }
-	}
-      }
-    }
-    if (!flag_good){
-      // +1 time_slice
-      if (old_time_mcells_map.find(time_slice+1) != old_time_mcells_map.end()){
-	for (auto it1 = old_time_mcells_map[time_slice+1].begin(); it1!=old_time_mcells_map[time_slice+1].end(); it1++){
-	  if (mcell->Overlap_fast((*it1))){
-	    flag_good = true;
-	    break;
-	  }
-	}
-      }
-    }
-    // if (!flag_good){
-    //   // -2 time_slice
-    //   if (old_time_mcells_map.find(time_slice-2) != old_time_mcells_map.end()){
-    // 	for (auto it1 = old_time_mcells_map[time_slice-2].begin(); it1!=old_time_mcells_map[time_slice-2].end(); it1++){
-    // 	  if (mcell->Overlap_fast((*it1))){
-    // 	    flag_good = true;
-    // 	    break;
-    // 	  }
-    // 	}
-    //   }
-    // }
-    // if (!flag_good){
-    //   // +2 time_slice
-    //   if (old_time_mcells_map.find(time_slice+2) != old_time_mcells_map.end()){
-    // 	for (auto it1 = old_time_mcells_map[time_slice+2].begin(); it1!=old_time_mcells_map[time_slice+2].end(); it1++){
-    // 	  if (mcell->Overlap_fast((*it1))){
-    // 	    flag_good = true;
-    // 	    break;
-    // 	  }
-    // 	}
-    //   }
-    // }
-    
-
-    if (flag_good){
-      if (new_time_mcells_map.find(time_slice)==new_time_mcells_map.end()){
-	SMGCSelection mcells;
-	mcells.push_back(mcell);
-	new_time_mcells_map[time_slice] = mcells;
-      }else{
-	new_time_mcells_map[time_slice].push_back(mcell);
-      }
+    if (new_time_mcells_map.find(time_slice)==new_time_mcells_map.end()){
+      SMGCSelection mcells;
+      mcells.push_back(mcell);
+      new_time_mcells_map[time_slice] = mcells;
     }else{
-      new_mcells_set.insert(mcell);
+      new_time_mcells_map[time_slice].push_back(mcell);
+    }
+  }
+
+  // graph ...
+  {
+    // create a graph and establish connected components ...
+    const int N = map_mcell_index.size();
+    boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS,
+    	boost::no_property, boost::property<boost::edge_weight_t, double>>
+    	temp_graph(N);
+    for (auto it=new_time_mcells_map.begin(); it!=new_time_mcells_map.end(); it++){
+      int time_slice = it->first;
+      if (new_time_mcells_map.find(time_slice+1)!=new_time_mcells_map.end()){
+	for (int j=0;j!=it->second.size();j++){
+	  SlimMergeGeomCell *mcell1 = it->second.at(j);
+	  for (int k=0;k!=new_time_mcells_map[time_slice+1].size();k++){
+	    SlimMergeGeomCell *mcell2 = new_time_mcells_map[time_slice+1].at(k);
+	    int index1 = map_mcell_index[mcell1];
+	    int index2 = map_mcell_index[mcell2];
+	    if (mcell1->Overlap_fast(mcell2)){
+	      auto edge = add_edge(index1,index2, 1, temp_graph);
+	    }
+	  }
+	}
+      }
+    }
+    std::vector<int> component(num_vertices(temp_graph));
+    const int num = connected_components(temp_graph,&component[0]);
+    //std::cout << num << std::endl;
+    if (num > 1){
+      SMGCSet new_mcells_set;
+      std::set<int> good_sets;
+      // examine each connected component and its mcell ...
+      std::vector<int>::size_type i;
+      for (i=0;i!=component.size(); ++i){
+	if (good_sets.find(component[i])!=good_sets.end()) continue;
+	SlimMergeGeomCell *mcell = map_index_mcell[i];
+	int time_slice = mcell->GetTimeSlice();
+	bool flag_good = false;
+	if (!flag_good){
+	  // -1 time slice
+	  if (old_time_mcells_map.find(time_slice-1) != old_time_mcells_map.end()){
+	    for (auto it1 = old_time_mcells_map[time_slice-1].begin(); it1!=old_time_mcells_map[time_slice-1].end(); it1++){
+	      if (mcell->Overlap_fast((*it1))){
+		flag_good = true;
+		break;
+	      }
+	    }
+	  }
+	}
+	if (!flag_good){
+	  // same time_slice
+	  if (old_time_mcells_map.find(time_slice) != old_time_mcells_map.end()){
+	    for (auto it1 = old_time_mcells_map[time_slice].begin(); it1!=old_time_mcells_map[time_slice].end(); it1++){
+	      if (mcell->Overlap_fast((*it1))){
+		flag_good = true;
+		break;
+	      }
+	    }
+	  }
+	}
+	if (!flag_good){
+	  // +1 time_slice
+	  if (old_time_mcells_map.find(time_slice+1) != old_time_mcells_map.end()){
+	    for (auto it1 = old_time_mcells_map[time_slice+1].begin(); it1!=old_time_mcells_map[time_slice+1].end(); it1++){
+	      if (mcell->Overlap_fast((*it1))){
+		flag_good = true;
+		break;
+	      }
+	    }
+	  }
+	}
+	//   // if (!flag_good){
+	//   //   // -2 time_slice
+	//   //   if (old_time_mcells_map.find(time_slice-2) != old_time_mcells_map.end()){
+	//   // 	for (auto it1 = old_time_mcells_map[time_slice-2].begin(); it1!=old_time_mcells_map[time_slice-2].end(); it1++){
+	//   // 	  if (mcell->Overlap_fast((*it1))){
+	//   // 	    flag_good = true;
+	//   // 	    break;
+	//   // 	  }
+	//   // 	}
+	//   //   }
+	//   // }
+	//   // if (!flag_good){
+	//   //   // +2 time_slice
+	//   //   if (old_time_mcells_map.find(time_slice+2) != old_time_mcells_map.end()){
+	//   // 	for (auto it1 = old_time_mcells_map[time_slice+2].begin(); it1!=old_time_mcells_map[time_slice+2].end(); it1++){
+	//   // 	  if (mcell->Overlap_fast((*it1))){
+	//   // 	    flag_good = true;
+	//   // 	    break;
+	//   // 	  }
+	//   // 	}
+	//   //   }
+	//   // }
+	if (flag_good){
+	  good_sets.insert(component[i]);
+	}
+      }
+      
+      // added or delete
+      new_time_mcells_map.clear();
+      
+      for (i=0;i!=component.size(); ++i){
+	SlimMergeGeomCell *mcell = map_index_mcell[i];
+	if (good_sets.find(component[i])!=good_sets.end()){
+	  int time_slice = mcell->GetTimeSlice();
+	  if (new_time_mcells_map.find(time_slice)==new_time_mcells_map.end()){
+	    SMGCSelection mcells;
+	    mcells.push_back(mcell);
+	    new_time_mcells_map[time_slice] = mcells;
+	  }else{
+	    new_time_mcells_map[time_slice].push_back(mcell);
+	  }
+	}else{
+	  delete mcell;
+	}
+      }
+      
     }
     
+   
   }
-  
-  int prev_num_mcells = new_mcells_set.size()+1;
-  while(new_mcells_set.size() != prev_num_mcells && new_mcells_set.size() > 0){
-    prev_num_mcells = new_mcells_set.size();
-
-    SMGCSelection temp_mcells;
-    
-    //start to work on it ...
-    for (auto it= new_mcells_set.begin(); it!=new_mcells_set.end(); it++){
-      SlimMergeGeomCell *mcell = (*it);
-      int time_slice = mcell->GetTimeSlice();
-      bool flag_good = false;
-
-      if (!flag_good){
-  	// -1 time slice
-  	if (new_time_mcells_map.find(time_slice-1) != new_time_mcells_map.end()){
-  	  for (auto it1 = new_time_mcells_map[time_slice-1].begin(); it1!=new_time_mcells_map[time_slice-1].end(); it1++){
-  	    if (mcell->Overlap_fast((*it1))){
-  	      flag_good = true;
-  	      break;
-  	    }
-  	  }
-  	}
-      }
-      if (!flag_good){
-  	// same time_slice
-  	if (new_time_mcells_map.find(time_slice) != new_time_mcells_map.end()){
-  	  for (auto it1 = new_time_mcells_map[time_slice].begin(); it1!=new_time_mcells_map[time_slice].end(); it1++){
-  	    if (mcell->Overlap_fast((*it1))){
-  	      flag_good = true;
-  	      break;
-  	    }
-  	  }
-  	}
-      }
-      if (!flag_good){
-  	// +1 time_slice
-  	if (new_time_mcells_map.find(time_slice+1) != new_time_mcells_map.end()){
-  	  for (auto it1 = new_time_mcells_map[time_slice+1].begin(); it1!=new_time_mcells_map[time_slice+1].end(); it1++){
-  	    if (mcell->Overlap_fast((*it1))){
-  	      flag_good = true;
-  	      break;
-  	    }
-  	  }
-  	}
-      }
-
-      if (flag_good){
-  	temp_mcells.push_back(mcell);
-      }
-    }
-
-    for (auto it = temp_mcells.begin(); it!=temp_mcells.end(); it++){
-      SlimMergeGeomCell *mcell = (*it);
-      int time_slice = mcell->GetTimeSlice();
-
-      if (new_time_mcells_map.find(time_slice)==new_time_mcells_map.end()){
-  	SMGCSelection mcells;
-  	mcells.push_back(mcell);
-  	new_time_mcells_map[time_slice] = mcells;
-      }else{
-  	new_time_mcells_map[time_slice].push_back(mcell);
-      }
-      new_mcells_set.erase(mcell);
-    }
-    //  std::cout << new_mcells_set.size() << std::endl;
-  }
-
-  for (auto it=new_mcells_set.begin(); it!=new_mcells_set.end(); it++){
-    SlimMergeGeomCell *mcell = (*it);
-    delete mcell;
-  }
-  new_mcells_set.clear();
-
+  // form cluster ...
   // create a new cluster ...
   WireCellPID::PR3DCluster *new_cluster = new WireCellPID::PR3DCluster(cluster->get_cluster_id());
   for (auto it = new_time_mcells_map.begin(); it!= new_time_mcells_map.end(); it++){
@@ -918,10 +887,9 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
       new_cluster->AddCell(mcell,time_slice);
     }
   }
+ 
   
   //std::cout << cluster->get_cluster_id() << " " << old_mcells.size() << " " << u_time_chs.size() << " " << WCholder->get_ncell() << " " << WCholder->get_nwire() << " " << new_mcells_set.size() << std::endl;
-  
-  
   //Point p(150*units::cm, 35*units::cm, 532*units::cm);
   //std::vector<int> results = ct_point_cloud.convert_3Dpoint_time_ch(p);
   //std::cout << results.at(0) << " " << results.at(1) << " " << results.at(2) << " " << results.at(3) << std::endl;

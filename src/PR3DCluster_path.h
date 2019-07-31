@@ -126,9 +126,7 @@ std::vector<std::vector<WCPointCloud<double>::WCPoint>> WireCellPID::PR3DCluster
     }
   }
 
-  return out_vec_wcps;
-  
-  
+  return out_vec_wcps;  
 }
 
 std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellPID::PR3DCluster::get_main_axis_wcps(){
@@ -159,7 +157,127 @@ std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellP
     }
   }
   return std::make_pair(highest_wcp,lowest_wcp);
+}
+
+std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> WireCellPID::PR3DCluster::get_two_boundary_wcps(){
+  Create_point_cloud();
+  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+  WCPointCloud<double>::WCPoint extreme_wcp[14];
   
+  
+  Calc_PCA();
+  Vector main_axis = get_PCA_axis(0);
+  Vector second_axis = get_PCA_axis(1);
+  double values[4];
+  
+  
+  bool flag_init = false;
+  for (size_t i=0;i<cloud.pts.size();i++){
+    if (cloud.pts[i].mcell->Estimate_total_charge() < 1500) continue;
+    if (!flag_init){
+      flag_init = true;
+      for (int j=0;j!=14;j++){
+	extreme_wcp[j] = cloud.pts[i];
+      }
+      values[0] = extreme_wcp[0].x*main_axis.x + extreme_wcp[0].y*main_axis.y + extreme_wcp[0].z*main_axis.z;
+      values[1] = extreme_wcp[1].x*main_axis.x + extreme_wcp[1].y*main_axis.y + extreme_wcp[1].z*main_axis.z;
+      values[2] = extreme_wcp[2].x*second_axis.x + extreme_wcp[2].y*second_axis.y + extreme_wcp[2].z*second_axis.z;
+      values[3] = extreme_wcp[3].x*second_axis.x + extreme_wcp[3].y*second_axis.y + extreme_wcp[3].z*second_axis.z;
+    }else{
+      // main axis points
+      double value = cloud.pts[i].x*main_axis.x + cloud.pts[i].y*main_axis.y + cloud.pts[i].z*main_axis.z;
+      if (value > values[0]){
+	values[0] = value;
+	extreme_wcp[0] = cloud.pts[i];
+      }
+      if (value < values[1]){
+	values[1] = value;
+	extreme_wcp[1] = cloud.pts[i];
+      }
+      // second axis points
+      value = cloud.pts[i].x*second_axis.x + cloud.pts[i].y*second_axis.y + cloud.pts[i].z*second_axis.z;
+      if (value > values[2]){
+	values[2] = value;
+	extreme_wcp[2] = cloud.pts[i];
+      }
+      if (value < values[3]){
+	values[3] = value;
+	extreme_wcp[3] = cloud.pts[i];
+      }
+      // early-late  x
+      if (cloud.pts[i].x > extreme_wcp[4].x){
+	extreme_wcp[4] = cloud.pts[i];
+      }
+      if (cloud.pts[i].x < extreme_wcp[5].x){
+	extreme_wcp[5] = cloud.pts[i];
+      }
+      // top-bottom  y 
+      if (cloud.pts[i].y > extreme_wcp[6].y){
+	extreme_wcp[6] = cloud.pts[i];
+      }
+      if (cloud.pts[i].y < extreme_wcp[7].y){
+	extreme_wcp[7] = cloud.pts[i];
+      }
+      // left-right  z or w
+      if (cloud.pts[i].z > extreme_wcp[8].z){
+	extreme_wcp[8] = cloud.pts[i];
+      }
+      if (cloud.pts[i].z < extreme_wcp[9].z){
+	extreme_wcp[9] = cloud.pts[i];
+      }
+      // U range
+      if (cloud.pts[i].index_u > extreme_wcp[10].index_u){
+	extreme_wcp[10] = cloud.pts[i];
+      }
+      if (cloud.pts[i].index_u < extreme_wcp[11].index_u){
+	extreme_wcp[11] = cloud.pts[i];
+      }
+      // V range
+      if (cloud.pts[i].index_v > extreme_wcp[12].index_v){
+	extreme_wcp[12] = cloud.pts[i];
+      }
+      if (cloud.pts[i].index_v < extreme_wcp[13].index_v){
+	extreme_wcp[13] = cloud.pts[i];
+      }
+    }
+  }
+  
+  if (!flag_init){
+    flag_init = true;
+    for (int i=0;i!=14;i++){
+      extreme_wcp[i] = cloud.pts[0];
+    }
+    extreme_wcp[1] = cloud.pts[1];
+  }
+
+  
+  std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> boundary_points;
+  boundary_points.first = extreme_wcp[0];
+  boundary_points.second = extreme_wcp[1];
+  double boundary_value = fabs(boundary_points.first.x-boundary_points.second.x)/(2.22*units::mm)
+    + fabs(boundary_points.first.index_u - boundary_points.second.index_u)
+    + fabs(boundary_points.first.index_v - boundary_points.second.index_v)
+    + fabs(boundary_points.first.index_w - boundary_points.second.index_w);
+  
+  for (int i=0;i<14;i++){
+    for (int j=i+1;j<14;j++){
+      double value = fabs(extreme_wcp[i].x - extreme_wcp[j].x)/(2.22*units::mm)
+	+ fabs(extreme_wcp[i].index_u - extreme_wcp[j].index_u)
+	+ fabs(extreme_wcp[i].index_v - extreme_wcp[j].index_v)
+	+ fabs(extreme_wcp[i].index_w - extreme_wcp[j].index_w);
+      if (value > boundary_value){
+	boundary_value = value;
+	if (extreme_wcp[i].y > extreme_wcp[j].y){
+	  boundary_points.first = extreme_wcp[i];
+	  boundary_points.second = extreme_wcp[j];
+	}else{
+	  boundary_points.first = extreme_wcp[j];
+	  boundary_points.second = extreme_wcp[i];
+	}
+      }
+    }
+  }
+  return boundary_points;
 }
 
 

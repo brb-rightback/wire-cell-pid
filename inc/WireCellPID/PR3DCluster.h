@@ -106,12 +106,17 @@ namespace WireCellPID{
     std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_main_axis_wcps();
 
     std::vector<std::vector<WireCell::WCPointCloud<double>::WCPoint>> get_extreme_wcps();
+    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_two_boundary_wcps();
+    
     std::pair<WireCell::Point,WireCell::Point> get_two_extreme_points();
+    
 
+    
     void dijkstra_shortest_paths(WireCell::WCPointCloud<double>::WCPoint& wcp_source);
     void cal_shortest_path(WireCell::WCPointCloud<double>::WCPoint& wcp_target);
     
   protected:
+    
     int cluster_id;
     
     WireCell::SMGCSelection mcells;

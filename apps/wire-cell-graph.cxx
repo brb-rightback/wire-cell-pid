@@ -344,7 +344,9 @@ int main(int argc, char* argv[])
       new_cluster->Create_graph(ct_point_cloud);
       new_cluster->Create_steiner_tree(gds, false);
 
-      std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_highest_lowest_wcps();
+      //      std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_highest_lowest_wcps();
+      std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps();
+      
       new_cluster->dijkstra_shortest_paths(wcps.first);
       new_cluster->cal_shortest_path(wcps.second);
     }
