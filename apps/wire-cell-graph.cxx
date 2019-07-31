@@ -320,38 +320,11 @@ int main(int argc, char* argv[])
   ct_point_cloud.AddDeadChs(dead_u_index, dead_v_index, dead_w_index);
   ct_point_cloud.build_kdtree_index();
   
-  std::map<WireCellPID::PR3DCluster*, WireCellPID::PR3DCluster*> old_new_cluster_map;
+  //  std::map<WireCellPID::PR3DCluster*, WireCellPID::PR3DCluster*> old_new_cluster_map;
   
   
   for (size_t i=0; i!=live_clusters.size();i++){
-    //    live_clusters.at(i)->Create_graph(ct_point_cloud);
-    //    std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = live_clusters.at(i)->get_highest_lowest_wcps();
-    // live_clusters.at(i)->dijkstra_shortest_paths(wcps.first);
-    // live_clusters.at(i)->cal_shortest_path(wcps.second);
-    //live_clusters.at(i)->Create_steiner_tree(gds);
-    
-    //std::cout << "NEw cluster " << std::endl; 
-    // mix dead cell ...
-    {
-      WireCellPID::PR3DCluster *new_cluster = WireCellPID::Improve_PR3DCluster_2(live_clusters.at(i),ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-      //   WireCellPID::Improve_PR3DCluster_1(live_clusters.at(i),ct_point_cloud, gds);
-      // std::cout << "New sampling points" << std::endl;
-      WireCellPID::calc_sampling_points(gds,new_cluster,nrebin, frame_length, unit_dis,false);
-      
-      new_cluster->Create_point_cloud();
-      old_new_cluster_map[live_clusters.at(i)] = new_cluster;
-
-      new_cluster->Create_graph(ct_point_cloud);
-      new_cluster->Create_steiner_tree(gds, false);
-
-      //      std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_highest_lowest_wcps();
-      std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps();
-      
-      new_cluster->dijkstra_shortest_paths(wcps.first);
-      new_cluster->cal_shortest_path(wcps.second);
-    }
-    
-    
+    live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
   }
   cout << em("Build graph for all clusters") << std::endl;
   
@@ -377,8 +350,8 @@ int main(int argc, char* argv[])
   T_cluster->SetDirectory(file1);
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-    WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
-    //WireCellPID::PR3DCluster* new_cluster = *it;
+    //WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
+    WireCellPID::PR3DCluster* new_cluster = *it;
     
     ncluster = new_cluster->get_cluster_id();
     SMGCSelection& mcells = new_cluster->get_mcells();
@@ -443,8 +416,8 @@ int main(int argc, char* argv[])
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
 
-    //WireCellPID::PR3DCluster* new_cluster = *it;
-    WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
+    WireCellPID::PR3DCluster* new_cluster = *it;
+    //WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
 
     ndf_save = new_cluster->get_cluster_id();
     charge_save = 0;
@@ -490,8 +463,8 @@ int main(int argc, char* argv[])
 
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
 
-    //WireCellPID::PR3DCluster* new_cluster = *it;
-    WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
+    WireCellPID::PR3DCluster* new_cluster = *it;
+    //WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
 
     std::set<int> steiner_terminals = new_cluster->get_steiner_terminals();
     //std::set<int> steiner_terminals = new_cluster->get_selected_terminals();

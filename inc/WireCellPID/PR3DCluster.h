@@ -76,8 +76,10 @@ namespace WireCellPID{
     void Del_graph();
 
     // Steiner tree
-    void Create_steiner_tree(WireCell::GeomDataSource& gds, bool disable_dead_mix_cell = true);
+    void create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis);
+    void Create_steiner_tree(WireCell::GeomDataSource& gds, WireCell::SMGCSelection& mcells, bool flag_path = false, bool disable_dead_mix_cell = true);
 
+    
     void find_steiner_terminals(WireCell::GeomDataSource& gds, bool disable_dead_mix_cell = true);
     void form_cell_points_map();
     std::set<int> get_steiner_terminals(){return steiner_terminal_indices;};
@@ -111,9 +113,10 @@ namespace WireCellPID{
     std::pair<WireCell::Point,WireCell::Point> get_two_extreme_points();
     
 
-    
     void dijkstra_shortest_paths(WireCell::WCPointCloud<double>::WCPoint& wcp_source);
     void cal_shortest_path(WireCell::WCPointCloud<double>::WCPoint& wcp_target);
+
+
     
   protected:
     
