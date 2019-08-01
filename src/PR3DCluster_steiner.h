@@ -1,5 +1,5 @@
 #include "WireCellPaal/graph_metrics.h"
-#include "WireCellPaal/steiner_tree_greedy_mod.h"
+#include "WireCellPaal/steiner_tree_greedy.h"
 #include "WireCellPID/ImprovePR3DCluster.h"
 #include "WireCellPID/CalcPoints.h"
 
@@ -86,6 +86,58 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds
 	 }
       }
     }
+    if (!flag_remove){
+      //+1 time slice
+      if (old_time_mcells_map.find(time_slice+1)!=old_time_mcells_map.end()){
+	for (auto it1 = old_time_mcells_map[time_slice+1].begin(); it1!= old_time_mcells_map[time_slice+1].end(); it1++){
+	  SlimMergeGeomCell *mcell = *it1;
+	  int u1_low_index = mcell->get_uwires().front()->index();
+	  int u1_high_index = mcell->get_uwires().back()->index();
+	  
+	  int v1_low_index = mcell->get_vwires().front()->index();
+	  int v1_high_index = mcell->get_vwires().back()->index();
+	  
+	  int w1_low_index = mcell->get_wwires().front()->index();
+	  int w1_high_index = mcell->get_wwires().back()->index();
+	  if (cloud.pts[*it].index_u <= u1_high_index &&
+	      cloud.pts[*it].index_u >= u1_low_index &&
+	      cloud.pts[*it].index_v <= v1_high_index &&
+	      cloud.pts[*it].index_v >= v1_low_index &&
+	      cloud.pts[*it].index_w <= w1_high_index &&
+	      cloud.pts[*it].index_w >= w1_low_index){
+	    flag_remove = false;
+	    break;
+	  }
+	}
+      }
+    }
+
+    if (!flag_remove){
+      //-1
+      if (old_time_mcells_map.find(time_slice-1)!=old_time_mcells_map.end()){
+	for (auto it1 = old_time_mcells_map[time_slice-1].begin(); it1!= old_time_mcells_map[time_slice-1].end(); it1++){
+	  SlimMergeGeomCell *mcell = *it1;
+	  int u1_low_index = mcell->get_uwires().front()->index();
+	  int u1_high_index = mcell->get_uwires().back()->index();
+	  
+	  int v1_low_index = mcell->get_vwires().front()->index();
+	  int v1_high_index = mcell->get_vwires().back()->index();
+	  
+	  int w1_low_index = mcell->get_wwires().front()->index();
+	  int w1_high_index = mcell->get_wwires().back()->index();
+	  if (cloud.pts[*it].index_u <= u1_high_index &&
+	      cloud.pts[*it].index_u >= u1_low_index &&
+	      cloud.pts[*it].index_v <= v1_high_index &&
+	      cloud.pts[*it].index_v >= v1_low_index &&
+	      cloud.pts[*it].index_w <= w1_high_index &&
+	      cloud.pts[*it].index_w >= w1_low_index){
+	    flag_remove = false;
+	    break;
+	  }
+	}
+      }
+    }
+    
     
     // within a mcell check path ...
     if (!flag_remove && flag_path){
@@ -141,7 +193,7 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds
       put(c, nonterminals.at(i), paal::Terminals::NONTERMINAL);
     }
   }
-  paal::steiner_tree_greedy_mod(*graph, std::inserter(steinerEdges, steinerEdges.begin()),
+  paal::steiner_tree_greedy(*graph, std::inserter(steinerEdges, steinerEdges.begin()),
 			    boost::vertex_color_map(boost::make_iterator_property_map(color.begin(),index)));
   auto weight = get(boost::edge_weight, *graph);
   auto sum = 0;
