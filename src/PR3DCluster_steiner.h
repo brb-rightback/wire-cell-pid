@@ -1,5 +1,5 @@
 #include "WireCellPaal/graph_metrics.h"
-#include "WireCellPaal/steiner_tree_greedy.h"
+#include "WireCellPaal/steiner_tree_greedy_mod.h"
 #include "WireCellPID/ImprovePR3DCluster.h"
 #include "WireCellPID/CalcPoints.h"
 
@@ -39,6 +39,7 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds
       std::tuple<int, int, int> wire_index = std::make_tuple((*it).index_u, (*it).index_v, (*it).index_w);
       temp_pcloud.AddPoint(p, wire_index ,0);
     }
+    temp_pcloud.build_kdtree_index();
   }
   // organize mcells
   std::map<int,SMGCSelection> old_time_mcells_map;
@@ -85,12 +86,27 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds
 	 }
       }
     }
+    
     // within a mcell check path ...
-    if (!flag_remove){
+    if (!flag_remove && flag_path){
       // examine the steiner terminals according to the path,
-      // within certain sizable distance along the path
-      // outside this distance, and also far from the projections
       
+      // if within cerntain distance in projection, but far away in 3D, remove ...
+      WireCell::Point p(cloud.pts[*it].x, cloud.pts[*it].y, cloud.pts[*it].z);
+      double dis_3d = temp_pcloud.get_closest_dis(p);
+      double dis_2du = (temp_pcloud.get_closest_2d_dis(p,0)).second;
+      double dis_2dv = (temp_pcloud.get_closest_2d_dis(p,1)).second;
+      double dis_2dw = (temp_pcloud.get_closest_2d_dis(p,2)).second;
+
+      /* if(cluster_id == 2){ */
+      /* 	std::cout << dis_3d/units::cm << " " << dis_2du/units::cm << " " << dis_2dv/units::cm << " " << dis_2dw/units::cm << std::endl; */
+      /* } */
+      
+      if ((dis_2du < 1.8*units::cm && dis_2dv < 1.8*units::cm ||
+	   dis_2du < 1.8*units::cm && dis_2dw < 1.8*units::cm ||
+	   dis_2dv < 1.8*units::cm && dis_2dw < 1.8*units::cm ) && 
+	  dis_3d > 6 * units::cm)
+	flag_remove = true;
     }
 
     if (flag_remove){
@@ -125,7 +141,7 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds
       put(c, nonterminals.at(i), paal::Terminals::NONTERMINAL);
     }
   }
-  paal::steiner_tree_greedy(*graph, std::inserter(steinerEdges, steinerEdges.begin()),
+  paal::steiner_tree_greedy_mod(*graph, std::inserter(steinerEdges, steinerEdges.begin()),
 			    boost::vertex_color_map(boost::make_iterator_property_map(color.begin(),index)));
   auto weight = get(boost::edge_weight, *graph);
   auto sum = 0;
