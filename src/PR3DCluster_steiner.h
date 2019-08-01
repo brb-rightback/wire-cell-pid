@@ -3,6 +3,8 @@
 #include "WireCellPID/ImprovePR3DCluster.h"
 #include "WireCellPID/CalcPoints.h"
 
+
+
 WireCellPID::PR3DCluster* WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis){
   
   WireCellPID::PR3DCluster *new_cluster = WireCellPID::Improve_PR3DCluster_2(this, ct_point_cloud, gds, nrebin, frame_length, unit_dis); 
@@ -180,31 +182,133 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds
   }
   //std::cout << N << " " << terminals.size() + nonterminals.size() << std::endl;
 
-  auto index = get(boost::vertex_index, *graph);
-  typedef boost::graph_traits<WireCellPID::MCUGraph>::edge_descriptor Edge; 
-  std::set<Edge> steinerEdges; 
-  std::vector<int> color(terminals.size()+nonterminals.size());
-  {
-    auto c = &color[0];
-    for (size_t i=0;i!=terminals.size();i++){
-      put(c, terminals.at(i),paal::Terminals::TERMINAL);
-    }
-    for (size_t i=0;i!=nonterminals.size();i++){
-      put(c, nonterminals.at(i), paal::Terminals::NONTERMINAL);
-    }
-  }
-  paal::steiner_tree_greedy(*graph, std::inserter(steinerEdges, steinerEdges.begin()),
-			    boost::vertex_color_map(boost::make_iterator_property_map(color.begin(),index)));
-  auto weight = get(boost::edge_weight, *graph);
-  auto sum = 0;
+  
+  //Now try to manually write the Steiner Tree Greedy algorithm ...
 
-  selected_terminal_indices.clear();
-  for (auto e : steinerEdges){
-    //sum += get(weight,e);
-    selected_terminal_indices.insert(index[source(e,*graph)]);
-    selected_terminal_indices.insert(index[target(e,*graph)]);
-    //std::cout << index[source(e,*graph)] << " " << index[target(e,*graph)] << std::endl;
+  using Vertex = typename boost::graph_traits<WireCellPID::MCUGraph>::vertex_descriptor;
+  using Edge = typename boost::graph_traits<WireCellPID::MCUGraph>::edge_descriptor;
+  using Base = typename boost::property<edge_base_t, Edge>;
+  // using EdgeWeightMap = typename boost::choose_const_pmap(boost::get_param(boost::no_named_parameters(), boost::edge_weight), *graph, boost::edge_weight);
+  using EdgeWeightMap = typename boost::property_map<WireCellPID::MCUGraph, boost::edge_weight_t>::type;
+  using Weight = typename boost::property_traits<EdgeWeightMap>::value_type;
+  using WeightProperty =
+        typename boost::property<boost::edge_weight_t, Weight, Base>;
+  using TerminalGraph =
+    boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS,
+    boost::no_property, WeightProperty>;
+  using EdgeTerminal =
+    typename boost::graph_traits<TerminalGraph>::edge_descriptor;
+
+  EdgeWeightMap edge_weight = boost::choose_pmap(boost::get_param(boost::no_named_parameters(), boost::edge_weight), *graph, boost::edge_weight);
+  
+  // distance array used in the dijkstra runs
+  std::vector<Weight> distance(N);
+
+  std::vector<Vertex> nearest_terminal(num_vertices(*graph));
+  auto index = get(boost::vertex_index, *graph);
+  auto nearest_terminal_map = boost::make_iterator_property_map(nearest_terminal.begin(), get(boost::vertex_index, *graph));
+  for (auto terminal : terminals) {
+    nearest_terminal_map[terminal] = terminal;
   }
+  // compute voronoi diagram each vertex get nearest terminal and last edge on
+  // path to nearest terminal
+  auto distance_map = make_iterator_property_map(distance.begin(), index);
+  std::vector<Edge> vpred(N);
+  auto last_edge = boost::make_iterator_property_map(vpred.begin(), get(boost::vertex_index, *graph));
+  boost::dijkstra_shortest_paths(*graph, terminals.begin(), terminals.end(), boost::dummy_property_map(),
+  				 distance_map, edge_weight, index, paal::utils::less(),
+  				 boost::closed_plus<Weight>(), std::numeric_limits<Weight>::max(), 0,
+  				 boost::make_dijkstra_visitor(paal::detail::make_nearest_recorder(
+  											    nearest_terminal_map, last_edge, boost::on_edge_relaxed{})));
+
+  // computing distances between terminals
+  // creating terminal_graph
+  TerminalGraph terminal_graph(N);
+  std::map<std::pair<int, int>, std::pair<Weight, Edge> > map_saved_edge;
+    
+  for (auto w : boost::as_array(edges(*graph))) {
+    auto const &nearest_to_source = nearest_terminal_map[source(w, *graph)];
+    auto const &nearest_to_target = nearest_terminal_map[target(w, *graph)];
+    if (nearest_to_source != nearest_to_target) {
+      Weight temp_weight = distance[source(w, *graph)] + distance[target(w, *graph)] + edge_weight[w];
+      if (map_saved_edge.find(std::make_pair(nearest_to_source, nearest_to_target))!=map_saved_edge.end()){
+	if (temp_weight < map_saved_edge[std::make_pair(nearest_to_source, nearest_to_target)].first)
+	  map_saved_edge[std::make_pair(nearest_to_source, nearest_to_target)] = std::make_pair(temp_weight,w);
+      }else if (map_saved_edge.find(std::make_pair(nearest_to_target, nearest_to_source))!=map_saved_edge.end()){
+	if (temp_weight < map_saved_edge[std::make_pair(nearest_to_target, nearest_to_source)].first)
+	  map_saved_edge[std::make_pair(nearest_to_target, nearest_to_source)] = std::make_pair(temp_weight,w);
+      }else{
+	map_saved_edge[std::make_pair(nearest_to_source, nearest_to_target)] = std::make_pair(temp_weight,w);
+      }
+    }
+  }
+
+  std::vector<Edge> terminal_edge;
+  for (auto it = map_saved_edge.begin(); it!=map_saved_edge.end(); it++){
+    std::pair<Edge, bool> p = add_edge(it->first.first, it->first.second,
+				       WeightProperty(it->second.first, Base(it->second.second)),terminal_graph);
+    terminal_edge.push_back(p.first);
+  }
+
+  // computing result
+  std::vector<Edge> tree_edges;
+  for (auto edge : terminal_edge) {
+    auto base = get(edge_base, terminal_graph, edge);
+    tree_edges.push_back(base);
+    for (auto pom : { source(base, *graph), target(base, *graph) }) {
+      while (nearest_terminal_map[pom] != pom) {
+	tree_edges.push_back(vpred[pom]);
+	pom = source(vpred[pom], *graph);
+      }
+    }
+  }
+  boost::sort(tree_edges);
+  auto unique_edges = boost::unique(tree_edges);
+
+  selected_terminal_indices.clear(); 
+  for (auto e : unique_edges){ 
+    selected_terminal_indices.insert(index[source(e,*graph)]); 
+    selected_terminal_indices.insert(index[target(e,*graph)]); 
+  } 
+
+  // STG try ...
+
+  
+
+
+
+
+
+  
+  /* auto index = get(boost::vertex_index, *graph); */
+  /* typedef boost::graph_traits<WireCellPID::MCUGraph>::edge_descriptor Edge;  */
+  /* std::set<Edge> steinerEdges;  */
+  /* std::vector<int> color(terminals.size()+nonterminals.size()); */
+  /* { */
+  /*   auto c = &color[0]; */
+  /*   for (size_t i=0;i!=terminals.size();i++){ */
+  /*     put(c, terminals.at(i),paal::Terminals::TERMINAL); */
+  /*   } */
+  /*   for (size_t i=0;i!=nonterminals.size();i++){ */
+  /*     put(c, nonterminals.at(i), paal::Terminals::NONTERMINAL); */
+  /*   } */
+  /* } */
+
+
+  /* paal::steiner_tree_greedy(*graph, std::inserter(steinerEdges, steinerEdges.begin()), */
+  /* 			    boost::vertex_color_map(boost::make_iterator_property_map(color.begin(),index))); */
+  /* auto weight = get(boost::edge_weight, *graph); */
+  /* auto sum = 0; */
+  /* selected_terminal_indices.clear(); */
+  /* for (auto e : steinerEdges){ */
+  /*   //sum += get(weight,e); */
+  /*   selected_terminal_indices.insert(index[source(e,*graph)]); */
+  /*   selected_terminal_indices.insert(index[target(e,*graph)]); */
+  /*   //std::cout << index[source(e,*graph)] << " " << index[target(e,*graph)] << std::endl; */
+  /* } */
+
+
+  
   //  std::cout << terminals.size() << " " << selected_terminal_indices.size() << std::endl;
   //  std::cout << "result " << sum/units::cm << std::endl;
 
