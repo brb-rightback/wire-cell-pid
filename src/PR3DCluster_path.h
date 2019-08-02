@@ -1,5 +1,10 @@
-std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellPID::PR3DCluster::get_highest_lowest_wcps(){
-  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellPID::PR3DCluster::get_highest_lowest_wcps(int flag){
+  ToyPointCloud *temp_point_cloud = point_cloud;
+  if (flag==2){
+    temp_point_cloud = point_cloud_steiner;
+  }
+  
+  WireCell::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
   WCPointCloud<double>::WCPoint highest_wcp = cloud.pts[0];
   WCPointCloud<double>::WCPoint lowest_wcp = cloud.pts[0];
   for (size_t i=1;i<cloud.pts.size();i++){
@@ -11,8 +16,12 @@ std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellP
   return std::make_pair(highest_wcp,lowest_wcp);
 }
 
-std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellPID::PR3DCluster::get_front_back_wcps(){
-  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellPID::PR3DCluster::get_front_back_wcps(int flag){
+  ToyPointCloud *temp_point_cloud = point_cloud;
+  if (flag==2){
+    temp_point_cloud = point_cloud_steiner;
+  }
+  WireCell::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
   WCPointCloud<double>::WCPoint highest_wcp = cloud.pts[0];
   WCPointCloud<double>::WCPoint lowest_wcp = cloud.pts[0];
   for (size_t i=1;i<cloud.pts.size();i++){
@@ -25,8 +34,12 @@ std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellP
 }
 
 
-std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellPID::PR3DCluster::get_earliest_latest_wcps(){
-  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellPID::PR3DCluster::get_earliest_latest_wcps(int flag){
+  ToyPointCloud *temp_point_cloud = point_cloud;
+  if (flag==2){
+    temp_point_cloud = point_cloud_steiner;
+  }
+  WireCell::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
   WCPointCloud<double>::WCPoint highest_wcp = cloud.pts[0];
   WCPointCloud<double>::WCPoint lowest_wcp = cloud.pts[0];
   for (size_t i=1;i<cloud.pts.size();i++){
@@ -38,9 +51,12 @@ std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellP
   return std::make_pair(lowest_wcp,highest_wcp);
 }
 
-std::vector<std::vector<WCPointCloud<double>::WCPoint>> WireCellPID::PR3DCluster::get_extreme_wcps(){
-  
-  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+std::vector<std::vector<WCPointCloud<double>::WCPoint>> WireCellPID::PR3DCluster::get_extreme_wcps(int flag){
+  ToyPointCloud *temp_point_cloud = point_cloud;
+  if (flag==2){
+    temp_point_cloud = point_cloud_steiner;
+  }
+  WireCell::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
   Calc_PCA();
   WCPointCloud<double>::WCPoint wcps[8];
   for (int i=0;i!=8;i++){
@@ -129,8 +145,13 @@ std::vector<std::vector<WCPointCloud<double>::WCPoint>> WireCellPID::PR3DCluster
   return out_vec_wcps;  
 }
 
-std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellPID::PR3DCluster::get_main_axis_wcps(){
-  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellPID::PR3DCluster::get_main_axis_wcps(int flag){
+  ToyPointCloud *temp_point_cloud = point_cloud;
+  if (flag==2){
+    temp_point_cloud = point_cloud_steiner;
+  }
+  
+  WireCell::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
   Calc_PCA();
   WCPointCloud<double>::WCPoint highest_wcp = cloud.pts[0];
   WCPointCloud<double>::WCPoint lowest_wcp = cloud.pts[0];
@@ -159,9 +180,16 @@ std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellP
   return std::make_pair(highest_wcp,lowest_wcp);
 }
 
-std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> WireCellPID::PR3DCluster::get_two_boundary_wcps(){
+std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> WireCellPID::PR3DCluster::get_two_boundary_wcps(int flag){
   Create_point_cloud();
-  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+  
+  ToyPointCloud *temp_point_cloud = point_cloud;
+  if (flag==2){
+    temp_point_cloud = point_cloud_steiner;
+  }
+  //  std::cout << temp_point_cloud << std::endl;
+  WireCell::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
+  //  std::cout << cloud.pts.size() << std::endl;
   WCPointCloud<double>::WCPoint extreme_wcp[14];
   
   
@@ -173,6 +201,7 @@ std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>
   
   bool flag_init = false;
   for (size_t i=0;i<cloud.pts.size();i++){
+    if (cloud.pts[i].mcell==0) continue;
     if (cloud.pts[i].mcell->Estimate_total_charge() < 1500) continue;
     if (!flag_init){
       flag_init = true;
@@ -281,9 +310,13 @@ std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>
 }
 
 
-std::pair<Point,Point> WireCellPID::PR3DCluster::get_two_extreme_points(){
+std::pair<Point,Point> WireCellPID::PR3DCluster::get_two_extreme_points(int flag){
   Create_point_cloud();
-  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+  ToyPointCloud *temp_point_cloud = point_cloud;
+  if (flag==2){
+    temp_point_cloud = point_cloud_steiner;
+  }
+  WireCell::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
   WCPointCloud<double>::WCPoint extreme_wcp[6];
   for (int i=0;i!=6;i++){
     extreme_wcp[i] = cloud.pts[0];
@@ -326,30 +359,51 @@ std::pair<Point,Point> WireCellPID::PR3DCluster::get_two_extreme_points(){
 }
 
 
-void WireCellPID::PR3DCluster::dijkstra_shortest_paths(WCPointCloud<double>::WCPoint& wcp){
+void WireCellPID::PR3DCluster::dijkstra_shortest_paths(WCPointCloud<double>::WCPoint& wcp, int flag){
   if (graph==(MCUGraph*)0)
     Create_graph();
-  if (wcp.index==source_wcp_index)
-    return;
-  source_wcp_index = wcp.index;
-  parents.resize(num_vertices(*graph));
-  distances.resize(num_vertices(*graph));
   
-  auto v0 = vertex(wcp.index,*graph);
-  boost::dijkstra_shortest_paths(*graph, v0,
-				 weight_map(get(edge_weight, *graph))
-				 .predecessor_map(&parents[0])
-				 .distance_map(&distances[0])
-				 );
+  //  if (wcp.index==source_wcp_index)
+  //  return;
+  source_wcp_index = wcp.index;
+  parents.clear();
+  distances.clear();
+  
+  if (flag==1){
+    parents.resize(num_vertices(*graph));
+    distances.resize(num_vertices(*graph));
+    
+    auto v0 = vertex(wcp.index,*graph);
+    boost::dijkstra_shortest_paths(*graph, v0,
+				   weight_map(get(edge_weight, *graph))
+				   .predecessor_map(&parents[0])
+				   .distance_map(&distances[0])
+				   );
+  }else if (flag==2){
+    parents.resize(num_vertices(*graph_steiner));
+    distances.resize(num_vertices(*graph_steiner));
+    
+    auto v0 = vertex(wcp.index,*graph_steiner);
+    boost::dijkstra_shortest_paths(*graph_steiner, v0,
+				   weight_map(get(edge_weight, *graph_steiner))
+				   .predecessor_map(&parents[0])
+				   .distance_map(&distances[0])
+				   );
+  }
 }
 
 
-void WireCellPID::PR3DCluster::cal_shortest_path(WCPointCloud<double>::WCPoint& wcp_target){
+void WireCellPID::PR3DCluster::cal_shortest_path(WCPointCloud<double>::WCPoint& wcp_target, int flag){
   dest_wcp_index = wcp_target.index;
   path_wcps.clear();
   path_mcells.clear();
 
-  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+  ToyPointCloud *temp_point_cloud = point_cloud;
+  if (flag==2){
+    temp_point_cloud = point_cloud_steiner;
+  }
+  
+  WireCell::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
   int prev_i = -1;
   for(int i = dest_wcp_index; i!=source_wcp_index; i = parents[i]) {
     if (path_wcps.size()==0){

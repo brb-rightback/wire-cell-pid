@@ -104,19 +104,18 @@ namespace WireCellPID{
     std::list<WireCell::SlimMergeGeomCell*>& get_path_mcells(){return path_mcells;};
 
     // get exterme points ...
-    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_highest_lowest_wcps();
-    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_front_back_wcps();
-    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_earliest_latest_wcps();
-    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_main_axis_wcps();
+    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_highest_lowest_wcps(int flag = 1);
+    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_front_back_wcps(int flag = 1);
+    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_earliest_latest_wcps(int flag = 1);
+    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_main_axis_wcps(int flag = 1);
 
-    std::vector<std::vector<WireCell::WCPointCloud<double>::WCPoint>> get_extreme_wcps();
-    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_two_boundary_wcps();
+    std::vector<std::vector<WireCell::WCPointCloud<double>::WCPoint>> get_extreme_wcps(int flag = 1);
+    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_two_boundary_wcps(int flag = 1);
     
-    std::pair<WireCell::Point,WireCell::Point> get_two_extreme_points();
+    std::pair<WireCell::Point,WireCell::Point> get_two_extreme_points(int flag = 1);
     
-
-    void dijkstra_shortest_paths(WireCell::WCPointCloud<double>::WCPoint& wcp_source);
-    void cal_shortest_path(WireCell::WCPointCloud<double>::WCPoint& wcp_target);
+    void dijkstra_shortest_paths(WireCell::WCPointCloud<double>::WCPoint& wcp_source, int flag = 1);
+    void cal_shortest_path(WireCell::WCPointCloud<double>::WCPoint& wcp_target, int flag = 1);
 
 
     
