@@ -20,9 +20,9 @@ void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& c
     new_cluster->dijkstra_shortest_paths(wcps.first); 
     new_cluster->cal_shortest_path(wcps.second);
     
-    
+    point_cloud_steiner = new ToyPointCloud();
     // steiner tree with some basic cuts ...
-    new_cluster->Create_steiner_tree(point_cloud_steiner, graph_steiner, flag_steiner_terminal, gds, mcells, true, false);
+    graph_steiner = new_cluster->Create_steiner_tree(point_cloud_steiner, flag_steiner_terminal, gds, mcells, true, false);
     
     // examine steiner tree terminals
     delete new_cluster;
@@ -31,7 +31,7 @@ void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& c
   
 }
   
-void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::ToyPointCloud *point_cloud_steiner, WireCellPID::MCUGraph* graph_steiner, std::vector<bool>& flag_steiner_terminal, WireCell::GeomDataSource& gds, WireCell::SMGCSelection& old_mcells, bool flag_path, bool disable_dead_mix_cell){
+WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::ToyPointCloud *point_cloud_steiner, std::vector<bool>& flag_steiner_terminal, WireCell::GeomDataSource& gds, WireCell::SMGCSelection& old_mcells, bool flag_path, bool disable_dead_mix_cell){
   Create_graph();
 
   // find all the steiner terminal indices ...
@@ -284,7 +284,7 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::ToyPointCloud *poin
 
   // fill the data for point_cloud_steiner, also the flag
   // terminal first, and then non-terminals ...
-  point_cloud_steiner = new ToyPointCloud();
+  
   std::map<int,int> map_old_new_indices;
   std::map<int,int> map_new_old_indices;
   
@@ -333,7 +333,7 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::ToyPointCloud *poin
   //std::cout << point_cloud_steiner->get_num_points() << " " << flag_steiner_terminal.size() << std::endl;
   
   // fill the graph ...
-  graph_steiner = new MCUGraph(flag_steiner_terminal.size());
+  MCUGraph* graph_steiner = new MCUGraph(flag_steiner_terminal.size());
   for (auto e : unique_edges){
     int index1 = map_old_new_indices[index[source(e,*graph)]];
     int index2 = map_old_new_indices[index[target(e,*graph)]];
@@ -343,7 +343,7 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::ToyPointCloud *poin
   } 
 
 
-
+  return graph_steiner;
   
 
   

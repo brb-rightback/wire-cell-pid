@@ -325,6 +325,9 @@ int main(int argc, char* argv[])
   
   for (size_t i=0; i!=live_clusters.size();i++){
      live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+     ToyPointCloud *pcloud = live_clusters.at(i)->get_point_cloud_steiner();
+     // std::cout << pcloud << std::endl;
+    
      //old_new_cluster_map[live_clusters.at(i)] = new_cluster;
   }
   cout << em("Build graph for all clusters") << std::endl;
@@ -352,37 +355,68 @@ int main(int argc, char* argv[])
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     //WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
-    WireCellPID::PR3DCluster* new_cluster = *it;
-    
+    WireCellPID::PR3DCluster* new_cluster = *it;  
     ncluster = new_cluster->get_cluster_id();
-    SMGCSelection& mcells = new_cluster->get_mcells();
-    for (size_t i=0;i!=mcells.size();i++){
-      SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)mcells.at(i);
+    
+    //ToyPointCloud *pcloud = new_cluster->get_point_cloud();
+    ToyPointCloud *pcloud = new_cluster->get_point_cloud_steiner();
+
+    if (pcloud!=0){
+      WireCell::WCPointCloud<double>& cloud = pcloud->get_cloud();
       
-      PointVector ps = mcell->get_sampling_points();
-      int time_slice = mcell->GetTimeSlice();
-      
-      
-      if (ps.size()==0){
-	std::cout << "zero sampling points!" << std::endl;
-      }else{
-	q = mcell->get_q() / ps.size();
-	nq = ps.size();
-	double offset_x = 0;
-	for (int k=0;k!=ps.size();k++){
-	  x = (ps.at(k).x- offset_x)/units::cm ;
-	  y = ps.at(k).y/units::cm;
-	  z = ps.at(k).z/units::cm;
-	  //	std::vector<int> time_chs = ct_point_cloud.convert_3Dpoint_time_ch(ps.at(k));
-	  //temp_time_slice = time_chs.at(0);
-	  //ch_u = time_chs.at(1);
-	  //ch_v = time_chs.at(2);
-	  //ch_w = time_chs.at(3);
-	  
-	  T_cluster->Fill();
+      for (size_t i=0;i!=cloud.pts.size();i++){
+	x = cloud.pts[i].x/units::cm;
+	y = cloud.pts[i].y/units::cm;
+	z = cloud.pts[i].z/units::cm;
+	SlimMergeGeomCell *mcell = cloud.pts[i].mcell;
+	ch_u = cloud.pts[i].index_u;
+	ch_v = cloud.pts[i].index_v;
+	ch_w = cloud.pts[i].index_w;
+
+	if (mcell==0){
+	  temp_time_slice = -1;
+	  q = 1;
+	  nq = 1;
+	}else{
+	  temp_time_slice = mcell->GetTimeSlice();
+	  nq = 1;
+	  const GeomWire *uwire = gds.by_planeindex(WirePlaneType_t(0),ch_u);
+	  const GeomWire *vwire = gds.by_planeindex(WirePlaneType_t(1),ch_v);
+	  const GeomWire *wwire = gds.by_planeindex(WirePlaneType_t(2),ch_w);
+	  q = (mcell->Get_Wire_Charge(uwire) + mcell->Get_Wire_Charge(vwire) + mcell->Get_Wire_Charge(wwire))/3.;
 	}
+	T_cluster->Fill();
       }
     }
+      
+    // SMGCSelection& mcells = new_cluster->get_mcells();
+    // for (size_t i=0;i!=mcells.size();i++){
+    //   SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)mcells.at(i);
+    //   PointVector ps = mcell->get_sampling_points();
+    //   int time_slice = mcell->GetTimeSlice();
+    //   if (ps.size()==0){
+    // 	std::cout << "zero sampling points!" << std::endl;
+    //   }else{
+    // 	q = mcell->get_q() / ps.size();
+    // 	nq = ps.size();
+    // 	double offset_x = 0;
+    // 	for (int k=0;k!=ps.size();k++){
+    // 	  x = (ps.at(k).x- offset_x)/units::cm ;
+    // 	  y = ps.at(k).y/units::cm;
+    // 	  z = ps.at(k).z/units::cm;
+    // 	  //	std::vector<int> time_chs = ct_point_cloud.convert_3Dpoint_time_ch(ps.at(k));
+    // 	  //temp_time_slice = time_chs.at(0);
+    // 	  //ch_u = time_chs.at(1);
+    // 	  //ch_v = time_chs.at(2);
+    // 	  //ch_w = time_chs.at(3);
+	  
+    // 	  T_cluster->Fill();
+    // 	}
+    //   }
+    // }
+    
+
+    
   }
 
   Double_t pu, pv, pw, pt;

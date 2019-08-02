@@ -47,7 +47,8 @@ namespace WireCellPID{
     // Point cloud related ...
     void Create_point_cloud(WireCell::ToyPointCloud *global_point_cloud = 0);
     WireCell::ToyPointCloud* get_point_cloud(){return point_cloud;};
-
+    WireCell::ToyPointCloud* get_point_cloud_steiner(){return point_cloud_steiner;};
+    
     WireCell::Point calc_ave_pos(WireCell::Point& p, double dis);
     WireCell::Point calc_ave_pos(WireCell::Point& p, int N);
     int get_num_points(WireCell::Point& p_test, double dis);
@@ -77,7 +78,7 @@ namespace WireCellPID{
 
     // Steiner tree
     void create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis);
-    void Create_steiner_tree(WireCell::ToyPointCloud *point_cloud_steiner, MCUGraph* graph_steiner, std::vector<bool>& flag_steiner_terminal, WireCell::GeomDataSource& gds, WireCell::SMGCSelection& mcells, bool flag_path = false, bool disable_dead_mix_cell = true);
+   MCUGraph* Create_steiner_tree(WireCell::ToyPointCloud *point_cloud_steiner, std::vector<bool>& flag_steiner_terminal, WireCell::GeomDataSource& gds, WireCell::SMGCSelection& mcells, bool flag_path = false, bool disable_dead_mix_cell = true);
 
     
     void find_steiner_terminals(WireCell::GeomDataSource& gds, bool disable_dead_mix_cell = true);
