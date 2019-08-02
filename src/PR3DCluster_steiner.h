@@ -6,29 +6,32 @@
 
 
 void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis){
-  
-  WireCellPID::PR3DCluster *new_cluster = WireCellPID::Improve_PR3DCluster_2(this, ct_point_cloud, gds, nrebin, frame_length, unit_dis); 
-  
-  WireCellPID::calc_sampling_points(gds,new_cluster,nrebin, frame_length, unit_dis,false);
-  
-  new_cluster->Create_point_cloud(); 
-  new_cluster->Create_graph(ct_point_cloud);
-  
-  // find the shortest path
-  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps(); 
-  new_cluster->dijkstra_shortest_paths(wcps.first); 
-  new_cluster->cal_shortest_path(wcps.second);
 
+  if (graph_steiner == (MCUGraph*)0){
+    WireCellPID::PR3DCluster *new_cluster = WireCellPID::Improve_PR3DCluster_2(this, ct_point_cloud, gds, nrebin, frame_length, unit_dis); 
+    
+    WireCellPID::calc_sampling_points(gds,new_cluster,nrebin, frame_length, unit_dis,false);
+    
+    new_cluster->Create_point_cloud(); 
+    new_cluster->Create_graph(ct_point_cloud);
+    
+    // find the shortest path
+    std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps(); 
+    new_cluster->dijkstra_shortest_paths(wcps.first); 
+    new_cluster->cal_shortest_path(wcps.second);
+    
+    
+    // steiner tree with some basic cuts ...
+    new_cluster->Create_steiner_tree(point_cloud_steiner, graph_steiner, flag_steiner_terminal, gds, mcells, true, false);
+    
+    // examine steiner tree terminals
+    delete new_cluster;
+    //return new_cluster;
+  }
   
-  // steiner tree with some basic cuts ...
-  new_cluster->Create_steiner_tree(gds, mcells, true, false);
-
-  // examine steiner tree terminals
-  delete new_cluster;
-  //return new_cluster;
 }
-
-void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds, WireCell::SMGCSelection& old_mcells, bool flag_path, bool disable_dead_mix_cell){
+  
+void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::ToyPointCloud *point_cloud_steiner, WireCellPID::MCUGraph* graph_steiner, std::vector<bool>& flag_steiner_terminal, WireCell::GeomDataSource& gds, WireCell::SMGCSelection& old_mcells, bool flag_path, bool disable_dead_mix_cell){
   Create_graph();
 
   // find all the steiner terminal indices ...
