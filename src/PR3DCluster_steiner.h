@@ -5,7 +5,7 @@
 
 
 
-WireCellPID::PR3DCluster* WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis){
+void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis){
   
   WireCellPID::PR3DCluster *new_cluster = WireCellPID::Improve_PR3DCluster_2(this, ct_point_cloud, gds, nrebin, frame_length, unit_dis); 
   
@@ -24,7 +24,8 @@ WireCellPID::PR3DCluster* WireCellPID::PR3DCluster::create_steiner_graph(WireCel
   new_cluster->Create_steiner_tree(gds, mcells, true, false);
 
   // examine steiner tree terminals
-  return new_cluster;
+  delete new_cluster;
+  //return new_cluster;
 }
 
 void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds, WireCell::SMGCSelection& old_mcells, bool flag_path, bool disable_dead_mix_cell){
@@ -249,6 +250,10 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds
 				       WeightProperty(it->second.first, Base(it->second.second)),terminal_graph);
     terminal_edge.push_back(p.first);
   }
+  // minimal spanning tree ...
+  //  boost::kruskal_minimum_spanning_tree(terminal_graph,
+  //				       std::back_inserter(terminal_edge));
+  
 
   // computing result
   std::vector<Edge> tree_edges;
@@ -273,11 +278,14 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds
 
   // STG try ...
 
+
+  // fill the data for point_cloud_steiner, also the flag
+
   
 
 
 
-
+  
 
   
   /* auto index = get(boost::vertex_index, *graph); */
@@ -293,8 +301,7 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::GeomDataSource& gds
   /*     put(c, nonterminals.at(i), paal::Terminals::NONTERMINAL); */
   /*   } */
   /* } */
-
-
+  
   /* paal::steiner_tree_greedy(*graph, std::inserter(steinerEdges, steinerEdges.begin()), */
   /* 			    boost::vertex_color_map(boost::make_iterator_property_map(color.begin(),index))); */
   /* auto weight = get(boost::edge_weight, *graph); */

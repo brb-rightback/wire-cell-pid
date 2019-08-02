@@ -76,7 +76,7 @@ namespace WireCellPID{
     void Del_graph();
 
     // Steiner tree
-    WireCellPID::PR3DCluster* create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis);
+    void create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis);
     void Create_steiner_tree(WireCell::GeomDataSource& gds, WireCell::SMGCSelection& mcells, bool flag_path = false, bool disable_dead_mix_cell = true);
 
     
@@ -135,11 +135,19 @@ namespace WireCellPID{
     // graph
     MCUGraph *graph;
 
+    // saved steiner tree related products
+    
+    
     // prepare for steiner tree
     std::map<WireCell::SlimMergeGeomCell*, std::set<int>> cell_point_indices_map;
     std::set<int> steiner_terminal_indices;
     std::set<int> selected_terminal_indices;
 
+    // data product for Steinter Tree Results
+    MCUGraph *graph_steiner;
+    WireCell::ToyPointCloud *point_cloud_steiner;
+    std::vector<bool> flag_steiner_terminal;
+    // more derived quantities to come ...
 
     //path related
     std::list<WireCell::WCPointCloud<double>::WCPoint> path_wcps;
