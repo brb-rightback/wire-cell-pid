@@ -283,8 +283,64 @@ void WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::ToyPointCloud *poin
 
 
   // fill the data for point_cloud_steiner, also the flag
-
+  // terminal first, and then non-terminals ...
+  point_cloud_steiner = new ToyPointCloud();
+  std::map<int,int> map_old_new_indices;
+  std::map<int,int> map_new_old_indices;
   
+  for (auto it = selected_terminal_indices.begin(); it!=selected_terminal_indices.end(); it++){
+    int index = *it;
+    WireCell::SlimMergeGeomCell *mcell = 0;
+    
+    int time_slice = cloud.pts[index].mcell->GetTimeSlice();
+    if (old_time_mcells_map.find(time_slice)!=old_time_mcells_map.end()){
+      for (auto it1 = old_time_mcells_map[time_slice].begin(); it1!= old_time_mcells_map[time_slice].end(); it1++){
+	SlimMergeGeomCell *mcell1 = *it1;
+	int u1_low_index = mcell1->get_uwires().front()->index();
+	int u1_high_index = mcell1->get_uwires().back()->index();
+	 
+	int v1_low_index = mcell1->get_vwires().front()->index();
+	int v1_high_index = mcell1->get_vwires().back()->index();
+	 
+	int w1_low_index = mcell1->get_wwires().front()->index();
+	int w1_high_index = mcell1->get_wwires().back()->index();
+	 if (cloud.pts[index].index_u <= u1_high_index &&
+	     cloud.pts[index].index_u >= u1_low_index &&
+	     cloud.pts[index].index_v <= v1_high_index &&
+	     cloud.pts[index].index_v >= v1_low_index &&
+	     cloud.pts[index].index_w <= w1_high_index &&
+	     cloud.pts[index].index_w >= w1_low_index){
+	   mcell = mcell1;
+	   break;
+	 }
+      }
+    }
+
+    Point p(cloud.pts[index].x,cloud.pts[index].y,cloud.pts[index].z);
+    std::tuple<int,int,int> temp_indices = std::make_tuple(cloud.pts[index].index_u, cloud.pts[index].index_v, cloud.pts[index].index_w);
+    point_cloud_steiner->AddPoint(p,temp_indices, mcell);
+    //std::cout << index << " " << cloud.pts[*it].index << std::endl;
+    map_old_new_indices[index] = flag_steiner_terminal.size();
+    map_new_old_indices[flag_steiner_terminal.size()] = index;
+    
+    if (steiner_terminal_indices.find(index)==steiner_terminal_indices.end()){
+      flag_steiner_terminal.push_back(false);
+    }else{
+      flag_steiner_terminal.push_back(true);
+    }
+    
+  }
+  //std::cout << point_cloud_steiner->get_num_points() << " " << flag_steiner_terminal.size() << std::endl;
+  
+  // fill the graph ...
+  graph_steiner = new MCUGraph(flag_steiner_terminal.size());
+  for (auto e : unique_edges){
+    int index1 = map_old_new_indices[index[source(e,*graph)]];
+    int index2 = map_old_new_indices[index[target(e,*graph)]];
+    float dis = get(boost::edge_weight_t(), *graph, e);
+    //std::cout << dis << std::endl;
+    auto edge = add_edge(index1, index2, dis, *graph_steiner);
+  } 
 
 
 
