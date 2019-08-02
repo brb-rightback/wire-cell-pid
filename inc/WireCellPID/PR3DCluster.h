@@ -79,13 +79,19 @@ namespace WireCellPID{
 
     // Steiner tree
     void create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis);
-   MCUGraph* Create_steiner_tree(WireCell::ToyPointCloud *point_cloud_steiner, std::vector<bool>& flag_steiner_terminal, WireCell::GeomDataSource& gds, WireCell::SMGCSelection& mcells, bool flag_path = false, bool disable_dead_mix_cell = true);
+    MCUGraph* Create_steiner_tree(WireCell::ToyPointCloud *point_cloud_steiner, std::vector<bool>& flag_steiner_terminal, WireCell::GeomDataSource& gds, WireCell::SMGCSelection& mcells, bool flag_path = false, bool disable_dead_mix_cell = true);
+    // example for more sophisticated algorithm later ...
+    // use the full steiner terminal graph ...
+    void recover_steiner_graph();
 
     
     void find_steiner_terminals(WireCell::GeomDataSource& gds, bool disable_dead_mix_cell = true);
     void form_cell_points_map();
     std::set<int> get_steiner_terminals(){return steiner_terminal_indices;};
     std::set<int> get_selected_terminals(){return selected_terminal_indices;};
+
+    std::set<int> get_steiner_graph_terminals(){return steiner_graph_terminal_indices;};
+    std::set<int> get_steiner_graph_selected_terminals(){return steiner_graph_selected_terminal_indices;};
     
     // find peak points within the mcells ...
     std::set<int> find_peak_point_indices(WireCell::SMGCSelection mcells,WireCell::GeomDataSource& gds, bool disable_dead_mix_cell = true, int nlevel = 1);
@@ -150,7 +156,9 @@ namespace WireCellPID{
     WireCell::ToyPointCloud *point_cloud_steiner_terminal;
     std::vector<bool> flag_steiner_terminal;
     // more derived quantities to come ...
-
+    std::set<int> steiner_graph_terminal_indices;
+    std::set<int> steiner_graph_selected_terminal_indices;
+    
     //path related
     std::list<WireCell::WCPointCloud<double>::WCPoint> path_wcps;
     std::list<WireCell::SlimMergeGeomCell*> path_mcells;

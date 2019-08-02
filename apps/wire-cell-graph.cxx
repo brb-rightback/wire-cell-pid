@@ -325,6 +325,7 @@ int main(int argc, char* argv[])
   
   for (size_t i=0; i!=live_clusters.size();i++){
      live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+     live_clusters.at(i)->recover_steiner_graph();
      //ToyPointCloud *pcloud = live_clusters.at(i)->get_point_cloud_steiner();
      // std::cout << pcloud << std::endl;
     
@@ -507,25 +508,32 @@ int main(int argc, char* argv[])
 
     WireCellPID::PR3DCluster* new_cluster = *it;
     //WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
-
-    std::set<int> steiner_terminals = new_cluster->get_steiner_terminals();
-    //std::set<int> steiner_terminals = new_cluster->get_selected_terminals();
-    WireCell::ToyPointCloud* point_cloud = new_cluster->get_point_cloud();
-    WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
     
-    for (auto it1 = steiner_terminals.begin();it1!=steiner_terminals.end();it1++){
-      x = cloud.pts[*it1].x/units::cm;
-      y = cloud.pts[*it1].y/units::cm;
-      z = cloud.pts[*it1].z/units::cm;
-      pu = cloud.pts[*it1].index_u;
-      pv = cloud.pts[*it1].index_v;
-      pw = cloud.pts[*it1].index_w;
-      pt = cloud.pts[*it1].mcell->GetTimeSlice();
-      ndf_save = (*it)->get_cluster_id();
-      charge_save = 0;
-      ncharge_save = 0;
-      chi2_save = 0;
-      t_rec_charge->Fill();
+    std::set<int> steiner_terminals = new_cluster->get_steiner_graph_selected_terminals();
+    ToyPointCloud *point_cloud = new_cluster->get_point_cloud_steiner();
+    //std::set<int> steiner_terminals = new_cluster->get_selected_terminals();
+    //    WireCell::ToyPointCloud* point_cloud = new_cluster->get_point_cloud();
+
+    if (point_cloud->get_num_points()>0){
+      WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+      
+      for (auto it1 = steiner_terminals.begin();it1!=steiner_terminals.end();it1++){
+	x = cloud.pts[*it1].x/units::cm;
+	y = cloud.pts[*it1].y/units::cm;
+	z = cloud.pts[*it1].z/units::cm;
+	pu = cloud.pts[*it1].index_u;
+	pv = cloud.pts[*it1].index_v;
+	pw = cloud.pts[*it1].index_w;
+	if (cloud.pts[*it1].mcell!=0)
+	  pt = cloud.pts[*it1].mcell->GetTimeSlice();
+	else
+	  pt = 0;
+	ndf_save = (*it)->get_cluster_id();
+	charge_save = 0;
+	ncharge_save = 0;
+	chi2_save = 0;
+	t_rec_charge->Fill();
+      }
     }
   }
   

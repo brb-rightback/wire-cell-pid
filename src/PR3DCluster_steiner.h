@@ -41,7 +41,110 @@ void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& c
   }
   
 }
+
+void WireCellPID::PR3DCluster::recover_steiner_graph(){
+  // holder for more sophisticated algorithm later ...
+  if (graph_steiner != (MCUGraph*)0){
+    steiner_graph_terminal_indices.clear();
+    std::vector<int> terminals;
+    for (size_t i = 0;i!=flag_steiner_terminal.size();i++){
+      if (flag_steiner_terminal[i]){
+	terminals.push_back(i);
+	steiner_graph_terminal_indices.insert(i);
+      }
+    }
+    const int N = point_cloud_steiner->get_num_points();
+    using Vertex = typename boost::graph_traits<WireCellPID::MCUGraph>::vertex_descriptor;
+    using Edge = typename boost::graph_traits<WireCellPID::MCUGraph>::edge_descriptor;
+    using Base = typename boost::property<edge_base_t, Edge>;
+    using EdgeWeightMap = typename boost::property_map<WireCellPID::MCUGraph, boost::edge_weight_t>::type;
+    using Weight = typename boost::property_traits<EdgeWeightMap>::value_type;
+    using WeightProperty =
+      typename boost::property<boost::edge_weight_t, Weight, Base>;
+    using TerminalGraph =
+      boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS,
+      boost::no_property, WeightProperty>;
+    using EdgeTerminal =
+      typename boost::graph_traits<TerminalGraph>::edge_descriptor;
+
+    EdgeWeightMap edge_weight = boost::choose_pmap(boost::get_param(boost::no_named_parameters(), boost::edge_weight), *graph_steiner, boost::edge_weight);
   
+    // distance array used in the dijkstra runs
+    std::vector<Weight> distance(N);
+
+    std::vector<Vertex> nearest_terminal(num_vertices(*graph_steiner));
+    auto index = get(boost::vertex_index, *graph_steiner);
+    auto nearest_terminal_map = boost::make_iterator_property_map(nearest_terminal.begin(), get(boost::vertex_index, *graph_steiner));
+    for (auto terminal : terminals) {
+      nearest_terminal_map[terminal] = terminal;
+    }
+    // compute voronoi diagram each vertex get nearest terminal and last edge on
+    // path to nearest terminal
+    auto distance_map = make_iterator_property_map(distance.begin(), index);
+    std::vector<Edge> vpred(N);
+    auto last_edge = boost::make_iterator_property_map(vpred.begin(), get(boost::vertex_index, *graph_steiner));
+    boost::dijkstra_shortest_paths(*graph_steiner, terminals.begin(), terminals.end(), boost::dummy_property_map(),
+				   distance_map, edge_weight, index, paal::utils::less(),
+				   boost::closed_plus<Weight>(), std::numeric_limits<Weight>::max(), 0,
+				   boost::make_dijkstra_visitor(paal::detail::make_nearest_recorder(
+												    nearest_terminal_map, last_edge, boost::on_edge_relaxed{})));
+    
+    // computing distances between terminals
+    // creating terminal_graph
+    TerminalGraph terminal_graph(N);
+    std::map<std::pair<int, int>, std::pair<Weight, Edge> > map_saved_edge;
+    
+    for (auto w : boost::as_array(edges(*graph_steiner))) {
+      auto const &nearest_to_source = nearest_terminal_map[source(w, *graph_steiner)];
+      auto const &nearest_to_target = nearest_terminal_map[target(w, *graph_steiner)];
+      if (nearest_to_source != nearest_to_target) {
+	Weight temp_weight = distance[source(w, *graph_steiner)] + distance[target(w, *graph_steiner)] + edge_weight[w];
+	if (map_saved_edge.find(std::make_pair(nearest_to_source, nearest_to_target))!=map_saved_edge.end()){
+	  if (temp_weight < map_saved_edge[std::make_pair(nearest_to_source, nearest_to_target)].first)
+	    map_saved_edge[std::make_pair(nearest_to_source, nearest_to_target)] = std::make_pair(temp_weight,w);
+	}else if (map_saved_edge.find(std::make_pair(nearest_to_target, nearest_to_source))!=map_saved_edge.end()){
+	  if (temp_weight < map_saved_edge[std::make_pair(nearest_to_target, nearest_to_source)].first)
+	    map_saved_edge[std::make_pair(nearest_to_target, nearest_to_source)] = std::make_pair(temp_weight,w);
+	}else{
+	  map_saved_edge[std::make_pair(nearest_to_source, nearest_to_target)] = std::make_pair(temp_weight,w);
+	}
+      }
+    }
+
+    std::vector<Edge> terminal_edge;
+    for (auto it = map_saved_edge.begin(); it!=map_saved_edge.end(); it++){
+      std::pair<Edge, bool> p = add_edge(it->first.first, it->first.second,
+					 WeightProperty(it->second.first, Base(it->second.second)),terminal_graph);
+      //      terminal_edge.push_back(p.first);
+    }
+    // minimal spanning tree ...
+    boost::kruskal_minimum_spanning_tree(terminal_graph,
+					 std::back_inserter(terminal_edge));
+  
+
+    // computing result
+    std::vector<Edge> tree_edges;
+    for (auto edge : terminal_edge) {
+      auto base = get(edge_base, terminal_graph, edge);
+      tree_edges.push_back(base);
+      for (auto pom : { source(base, *graph), target(base, *graph) }) {
+	while (nearest_terminal_map[pom] != pom) {
+	  tree_edges.push_back(vpred[pom]);
+	  pom = source(vpred[pom], *graph);
+	}
+      }
+    }
+    boost::sort(tree_edges);
+    auto unique_edges = boost::unique(tree_edges);
+
+    steiner_graph_selected_terminal_indices.clear(); 
+    for (auto e : unique_edges){ 
+      steiner_graph_selected_terminal_indices.insert(index[source(e,*graph)]); 
+      steiner_graph_selected_terminal_indices.insert(index[target(e,*graph)]); 
+    } 
+  }
+}
+
 WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::ToyPointCloud *point_cloud_steiner, std::vector<bool>& flag_steiner_terminal, WireCell::GeomDataSource& gds, WireCell::SMGCSelection& old_mcells, bool flag_path, bool disable_dead_mix_cell){
   Create_graph();
 
@@ -190,11 +293,11 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
   // form the tree ... 
   std::vector<int> terminals(steiner_terminal_indices.begin(), steiner_terminal_indices.end());
   const int N = point_cloud->get_num_points();
-  std::vector<int> nonterminals;
-  for (int i=0;i!=N;i++){
-    if (steiner_terminal_indices.find(i)==steiner_terminal_indices.end())
-      nonterminals.push_back(i);
-  }
+  /* std::vector<int> nonterminals; */
+  /* for (int i=0;i!=N;i++){ */
+  /*   if (steiner_terminal_indices.find(i)==steiner_terminal_indices.end()) */
+  /*     nonterminals.push_back(i); */
+  /* } */
   //std::cout << N << " " << terminals.size() + nonterminals.size() << std::endl;
 
   
