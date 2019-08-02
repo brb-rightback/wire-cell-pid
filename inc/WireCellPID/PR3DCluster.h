@@ -48,6 +48,7 @@ namespace WireCellPID{
     void Create_point_cloud(WireCell::ToyPointCloud *global_point_cloud = 0);
     WireCell::ToyPointCloud* get_point_cloud(){return point_cloud;};
     WireCell::ToyPointCloud* get_point_cloud_steiner(){return point_cloud_steiner;};
+    WireCell::ToyPointCloud* get_point_cloud_steiner_terminal(){return point_cloud_steiner_terminal;};
     
     WireCell::Point calc_ave_pos(WireCell::Point& p, double dis);
     WireCell::Point calc_ave_pos(WireCell::Point& p, int N);
@@ -147,6 +148,7 @@ namespace WireCellPID{
     // data product for Steinter Tree Results
     MCUGraph *graph_steiner;
     WireCell::ToyPointCloud *point_cloud_steiner;
+    WireCell::ToyPointCloud *point_cloud_steiner_terminal;
     std::vector<bool> flag_steiner_terminal;
     // more derived quantities to come ...
 

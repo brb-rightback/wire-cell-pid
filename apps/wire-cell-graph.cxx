@@ -325,7 +325,7 @@ int main(int argc, char* argv[])
   
   for (size_t i=0; i!=live_clusters.size();i++){
      live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-     ToyPointCloud *pcloud = live_clusters.at(i)->get_point_cloud_steiner();
+     //ToyPointCloud *pcloud = live_clusters.at(i)->get_point_cloud_steiner();
      // std::cout << pcloud << std::endl;
     
      //old_new_cluster_map[live_clusters.at(i)] = new_cluster;
@@ -359,7 +359,8 @@ int main(int argc, char* argv[])
     ncluster = new_cluster->get_cluster_id();
     
     //ToyPointCloud *pcloud = new_cluster->get_point_cloud();
-    ToyPointCloud *pcloud = new_cluster->get_point_cloud_steiner();
+    //ToyPointCloud *pcloud = new_cluster->get_point_cloud_steiner();
+    ToyPointCloud *pcloud = new_cluster->get_point_cloud_steiner_terminal();
 
     if (pcloud!=0){
       WireCell::WCPointCloud<double>& cloud = pcloud->get_cloud();

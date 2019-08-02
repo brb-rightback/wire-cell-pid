@@ -25,6 +25,7 @@ WireCellPID::PR3DCluster::PR3DCluster(int cluster_id)
   graph = 0;
   point_cloud_steiner = 0;
   graph_steiner = 0;
+  point_cloud_steiner_terminal = 0;
   source_wcp_index = -1;
   // flag_fine_tracking = false;
 }
@@ -37,6 +38,8 @@ WireCellPID::PR3DCluster::~PR3DCluster(){
 
   if (point_cloud_steiner != (ToyPointCloud*)0)
     delete point_cloud_steiner;
+  if (point_cloud_steiner_terminal !=(ToyPointCloud*)0)
+    delete point_cloud_steiner_terminal;
   if (graph_steiner!=(WireCellPID::MCUGraph*)0)
     delete graph_steiner;
 }
