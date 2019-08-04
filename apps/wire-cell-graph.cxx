@@ -324,8 +324,10 @@ int main(int argc, char* argv[])
   
   
   for (size_t i=0; i!=live_clusters.size();i++){
-     live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-     live_clusters.at(i)->recover_steiner_graph();
+    //if (live_clusters.at(i)->get_cluster_id()==8){
+    live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+    live_clusters.at(i)->recover_steiner_graph();
+      //}
      //ToyPointCloud *pcloud = live_clusters.at(i)->get_point_cloud_steiner();
      // std::cout << pcloud << std::endl;
     

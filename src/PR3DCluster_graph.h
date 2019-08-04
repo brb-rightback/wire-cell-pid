@@ -29,6 +29,7 @@ void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyCTPointCloud& ct_point
       //   std::cout << "Vertex " << i << " " << cloud.pts[i].x << " " << cloud.pts[i].y << " " << cloud.pts[i].z << " " << cloud.pts[i].index_u << " " << cloud.pts[i].index_v << " " << cloud.pts[i].index_w << " " << cloud.pts[i].mcell << " " << cloud.pts[i].mcell->GetTimeSlice()  << " is in component " << component[i] << std::endl;
     }
     for (int j=0;j!=num;j++){
+      //      std::cout << j << " " << pt_clouds.at(j)->get_cloud().pts.size() << std::endl;
       pt_clouds.at(j)->build_kdtree_index();
     }
     
@@ -55,6 +56,8 @@ void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyCTPointCloud& ct_point
     // no need to have MST ... 
     for (int j=0;j!=num;j++){
       for (int k=j+1;k!=num;k++){
+	if (pt_clouds.at(j)->get_cloud().pts.size() == 0 || pt_clouds.at(k)->get_cloud().pts.size() ==0 ) continue;
+	
   	index_index_dis[j][k] = pt_clouds.at(j)->get_closest_points(pt_clouds.at(k));
 
 	// if (cluster_id==6)
@@ -937,6 +940,7 @@ void WireCellPID::PR3DCluster::Connect_graph(){
     
     for (int j=0;j!=num;j++){
       for (int k=j+1;k!=num;k++){
+	if (pt_clouds.at(j)->get_cloud().pts.size() == 0 || pt_clouds.at(k)->get_cloud().pts.size() ==0 ) continue;
 	index_index_dis[j][k] = pt_clouds.at(j)->get_closest_points(pt_clouds.at(k));
 	int index1 = j;
 	int index2 = k;
@@ -966,6 +970,7 @@ void WireCellPID::PR3DCluster::Connect_graph(){
     // short distance part
     for (int j=0;j!=num;j++){
       for (int k=j+1;k!=num;k++){
+	if (pt_clouds.at(j)->get_cloud().pts.size() == 0 || pt_clouds.at(k)->get_cloud().pts.size() ==0 ) continue;
 	// closest distance one ... 
 	if (std::get<2>(index_index_dis[j][k])<3*units::cm){
 	  index_index_dis_mst[j][k] = index_index_dis[j][k];
