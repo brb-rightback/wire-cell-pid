@@ -24,8 +24,11 @@ void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyCTPointCloud& ct_point
     
     std::vector<int>::size_type i;
     for (i=0;i!=component.size(); ++i){
-      if (cloud.pts[i].mcell->Estimate_total_charge() > 0)
-	pt_clouds.at(component[i])->AddPoint(cloud.pts[i],cloud_u.pts[i],cloud_v.pts[i],cloud_w.pts[i]);
+      if(cloud.pts[i].mcell!=0){
+	//if (cloud.pts[i].mcell->Estimate_total_charge() > 0)
+	if (cloud.pts[i].mcell->IsPointGood(cloud.pts[i].index_u, cloud.pts[i].index_v, cloud.pts[i].index_w, 2))
+	  pt_clouds.at(component[i])->AddPoint(cloud.pts[i],cloud_u.pts[i],cloud_v.pts[i],cloud_w.pts[i]);
+      }
       //   std::cout << "Vertex " << i << " " << cloud.pts[i].x << " " << cloud.pts[i].y << " " << cloud.pts[i].z << " " << cloud.pts[i].index_u << " " << cloud.pts[i].index_v << " " << cloud.pts[i].index_w << " " << cloud.pts[i].mcell << " " << cloud.pts[i].mcell->GetTimeSlice()  << " is in component " << component[i] << std::endl;
     }
     for (int j=0;j!=num;j++){
@@ -896,8 +899,11 @@ void WireCellPID::PR3DCluster::Connect_graph(){
     
     std::vector<int>::size_type i;
     for (i=0;i!=component.size(); ++i){
-      if (cloud.pts[i].mcell->Estimate_total_charge() > 0)
-	pt_clouds.at(component[i])->AddPoint(cloud.pts[i],cloud_u.pts[i],cloud_v.pts[i],cloud_w.pts[i]);
+      if(cloud.pts[i].mcell!=0){
+	//	if (cloud.pts[i].mcell->Estimate_total_charge() > 0)
+	if (cloud.pts[i].mcell->IsPointGood(cloud.pts[i].index_u, cloud.pts[i].index_v, cloud.pts[i].index_w,2))
+	  pt_clouds.at(component[i])->AddPoint(cloud.pts[i],cloud_u.pts[i],cloud_v.pts[i],cloud_w.pts[i]);
+      }
       //   std::cout << "Vertex " << i << " " << cloud.pts[i].x << " " << cloud.pts[i].y << " " << cloud.pts[i].z << " " << cloud.pts[i].index_u << " " << cloud.pts[i].index_v << " " << cloud.pts[i].index_w << " " << cloud.pts[i].mcell << " " << cloud.pts[i].mcell->GetTimeSlice()  << " is in component " << component[i] << std::endl;
     }
     for (int j=0;j!=num;j++){
