@@ -31,6 +31,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_2(WireCellPID::PR3DCl
    std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps1 = cluster->get_two_boundary_wcps();
    cluster->dijkstra_shortest_paths(wcps1.first);
    cluster->cal_shortest_path(wcps1.second);
+   cluster->Del_graph();
    
    // include original inefficient channels ... 
    WireCellPID::PR3DCluster *new_cluster = Improve_PR3DCluster(cluster, temp_cluster, ct_point_cloud, gds);
@@ -631,6 +632,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
     std::pair<int,int> wch_limits = ct_point_cloud.get_wch_limits();
 
     std::vector<bool> path_pts_flag;
+    // std::vector<int> path_pts_counts;
     for (auto it=path_pts.begin(); it!=path_pts.end(); it++){
       std::vector<int> results = ct_point_cloud.convert_3Dpoint_time_ch((*it));
 
@@ -655,6 +657,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
       }else{
 	path_pts_flag.push_back(false);
       }
+      // path_pts_counts.push_back(nu+nv+nw);
       
       //  std::cout << "Path: " << (*it).x/units::cm << " " << (*it).y/units::cm << " " << (*it).z/units::cm << " " << path_pts_flag.back() << std::endl;
     }
@@ -982,168 +985,273 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
   
   //  std::cout << u_time_chs.size() << " Xin1: " << v_time_chs.size() << " " << w_time_chs.size() << " " << time_ch_charge_map.size() << std::endl;
 
-  std::vector<Point> path_pts;
+  
 
   {
     std::list<WCPointCloud<double>::WCPoint>& wcps = cluster2->get_path_wcps();
-    // add in missing pieces based on trajectory points
-    double low_dis_limit = 0.3*units::cm;
-    for (auto it = wcps.begin(); it!=wcps.end(); it++){
-      Point p((*it).x,(*it).y,(*it).z);
-      if (path_pts.size()==0){
-	path_pts.push_back(p);
-      }else{
-	double dis = sqrt(pow(p.x-path_pts.back().x,2) +
-			  pow(p.y-path_pts.back().y,2) +
-			  pow(p.z-path_pts.back().z,2) );
-	if (dis < low_dis_limit ){
+    if (wcps.size()>1){ 
+      std::vector<Point> path_pts;
+      // add in missing pieces based on trajectory points
+      double low_dis_limit = 0.3*units::cm;
+      for (auto it = wcps.begin(); it!=wcps.end(); it++){
+	Point p((*it).x,(*it).y,(*it).z);
+	if (path_pts.size()==0){
 	  path_pts.push_back(p);
 	}else{
-	  int ncount = int(dis/low_dis_limit)+1;
-	  
-	  for (int i=0; i != ncount; i++){
-	    Point p1;
-	    p1.x = path_pts.back().x + (p.x - path_pts.back().x) * (i+1)/ncount;
-	    p1.y = path_pts.back().y + (p.y - path_pts.back().y) * (i+1)/ncount;
-	    p1.z = path_pts.back().z + (p.z - path_pts.back().z) * (i+1)/ncount;
-	    path_pts.push_back(p1);
+	  double dis = sqrt(pow(p.x-path_pts.back().x,2) +
+			    pow(p.y-path_pts.back().y,2) +
+			    pow(p.z-path_pts.back().z,2) );
+	  if (dis < low_dis_limit ){
+	    path_pts.push_back(p);
+	  }else{
+	    int ncount = int(dis/low_dis_limit)+1;
+	    
+	    for (int i=0; i != ncount; i++){
+	      Point p1;
+	      p1.x = path_pts.back().x + (p.x - path_pts.back().x) * (i+1)/ncount;
+	      p1.y = path_pts.back().y + (p.y - path_pts.back().y) * (i+1)/ncount;
+	      p1.z = path_pts.back().z + (p.z - path_pts.back().z) * (i+1)/ncount;
+	      path_pts.push_back(p1);
+	    }
 	  }
 	}
       }
-    }
-  }
-
-  {
-    std::list<WCPointCloud<double>::WCPoint>& wcps = cluster1->get_path_wcps();
-    // add in missing pieces based on trajectory points
-    double low_dis_limit = 0.3*units::cm;
-    for (auto it = wcps.begin(); it!=wcps.end(); it++){
-      Point p((*it).x,(*it).y,(*it).z);
-      if (path_pts.size()==0){
-	path_pts.push_back(p);
-      }else{
-	double dis = sqrt(pow(p.x-path_pts.back().x,2) +
-			  pow(p.y-path_pts.back().y,2) +
-			  pow(p.z-path_pts.back().z,2) );
-	if (dis < low_dis_limit ){
-	  path_pts.push_back(p);
-	}else{
-	  int ncount = int(dis/low_dis_limit)+1;
-	  
-	  for (int i=0; i != ncount; i++){
-	    Point p1;
-	    p1.x = path_pts.back().x + (p.x - path_pts.back().x) * (i+1)/ncount;
-	    p1.y = path_pts.back().y + (p.y - path_pts.back().y) * (i+1)/ncount;
-	    p1.z = path_pts.back().z + (p.z - path_pts.back().z) * (i+1)/ncount;
-	    path_pts.push_back(p1);
-	  }
-	}
-      }
-    }
-  }
-    
-
-
-    if (path_pts.size()>2){
-
-    std::pair<int,int> uch_limits = ct_point_cloud.get_uch_limits();
-    std::pair<int,int> vch_limits = ct_point_cloud.get_vch_limits();
-    std::pair<int,int> wch_limits = ct_point_cloud.get_wch_limits();
-
-    std::vector<bool> path_pts_flag;
-    for (auto it=path_pts.begin(); it!=path_pts.end(); it++){
-      std::vector<int> results = ct_point_cloud.convert_3Dpoint_time_ch((*it));
-
-      int nu = 0;
-      int nv = 0;
-      int nw = 0;
-
-      if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(1)))!=time_ch_charge_map.end()) nu +=2;
-      if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(1)-1))!=time_ch_charge_map.end()) nu ++;
-      if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(1)+1))!=time_ch_charge_map.end()) nu ++;
-
-      if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(2)))!=time_ch_charge_map.end()) nv +=2;
-      if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(2)-1))!=time_ch_charge_map.end()) nv++;
-      if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(2)+1))!=time_ch_charge_map.end()) nv++;
       
-      if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(3)))!=time_ch_charge_map.end()) nw+=2;
-      if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(3)-1))!=time_ch_charge_map.end()) nw ++;
-      if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(3)+1))!=time_ch_charge_map.end()) nw ++;
-
-      if (nu>=2&&nv>=2&&nw>=2){
-	path_pts_flag.push_back(true);
-      }else{
-	path_pts_flag.push_back(false);
-      }
+      std::pair<int,int> uch_limits = ct_point_cloud.get_uch_limits();
+      std::pair<int,int> vch_limits = ct_point_cloud.get_vch_limits();
+      std::pair<int,int> wch_limits = ct_point_cloud.get_wch_limits();
       
-      //  std::cout << "Path: " << (*it).x/units::cm << " " << (*it).y/units::cm << " " << (*it).z/units::cm << " " << path_pts_flag.back() << std::endl;
-    }
-
-    // std::cout << path_pts.size() << " " << path_pts_flag.size() << " " << cluster->get_cluster_id() << std::endl;
-    
-    for (size_t i=0;i!=path_pts.size();i++){
-      std::vector<int> results = ct_point_cloud.convert_3Dpoint_time_ch(path_pts.at(i));
-
-      if (i==0){
-	if (path_pts_flag.at(i) && path_pts_flag.at(i+1)) continue;
-      }else if (i+1==path_pts.size()){
-	if (path_pts_flag.at(i) && path_pts_flag.at(i-1)) continue;
-      }else{
-	if (path_pts_flag.at(i-1) && path_pts_flag.at(i) && path_pts_flag.at(i+1)) continue;
-      }
-      
-
-      int range = 3;
-      
-      for (int time_slice = results.at(0)-range; time_slice<=results.at(0)+range; time_slice ++){
-	if (time_slice <0) continue;
+      std::vector<bool> path_pts_flag;
+      for (auto it=path_pts.begin(); it!=path_pts.end(); it++){
+	std::vector<int> results = ct_point_cloud.convert_3Dpoint_time_ch((*it));
 	
-	if (u_time_chs.find(time_slice)==u_time_chs.end()){
-	  std::set<int> uchs;
-	  u_time_chs[time_slice] = uchs;
-	  std::set<int> vchs;
-	  v_time_chs[time_slice] = vchs;
-	  std::set<int> wchs;
-	  w_time_chs[time_slice] = wchs;
+	int nu = 0;
+	int nv = 0;
+	int nw = 0;
+	
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(1)))!=time_ch_charge_map.end()) nu +=2;
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(1)-1))!=time_ch_charge_map.end()) nu ++;
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(1)+1))!=time_ch_charge_map.end()) nu ++;
+	
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(2)))!=time_ch_charge_map.end()) nv +=2;
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(2)-1))!=time_ch_charge_map.end()) nv++;
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(2)+1))!=time_ch_charge_map.end()) nv++;
+	
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(3)))!=time_ch_charge_map.end()) nw+=2;
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(3)-1))!=time_ch_charge_map.end()) nw ++;
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(3)+1))!=time_ch_charge_map.end()) nw ++;
+	
+	if (nu>=2&&nv>=2&&nw>=2){
+	  path_pts_flag.push_back(true);
+	}else{
+	  path_pts_flag.push_back(false);
 	}
-	for (int ch = results.at(1)-range; ch<=results.at(1)+range; ch++){
-	  if (ch < uch_limits.first || ch > uch_limits.second ||
-	      pow(ch - results.at(1),2) + pow(time_slice -results.at(0),2)> range*range)
-	    continue;
-	  u_time_chs[time_slice].insert(ch);
-	  if (time_ch_charge_map.find(std::make_pair(time_slice,ch))==time_ch_charge_map.end()){
-	    time_ch_charge_map[std::make_pair(time_slice,ch)]=0;
-	    time_ch_charge_err_map[std::make_pair(time_slice,ch)]=0;
-	    //std::cout << time_slice << " " << ch << std::endl;
-	  }
-	}
-	for (int ch = results.at(2)-range; ch<=results.at(2)+range; ch++){
-	  if (ch < vch_limits.first || ch > vch_limits.second ||
-	      pow(ch - results.at(2),2) + pow(time_slice -results.at(0),2)>range*range)
-	    continue;
-	  v_time_chs[time_slice].insert(ch);
-	  if (time_ch_charge_map.find(std::make_pair(time_slice,ch))==time_ch_charge_map.end()){
-	    time_ch_charge_map[std::make_pair(time_slice,ch)]=0;
-	    time_ch_charge_err_map[std::make_pair(time_slice,ch)]=0;
-	    //std::cout << time_slice << " " << ch << std::endl;
-	  }
-	}
-	for (int ch = results.at(3)-range; ch<=results.at(3)+range; ch++){
-	  if (ch < wch_limits.first || ch > wch_limits.second ||
-	      pow(ch - results.at(3),2) + pow(time_slice -results.at(0),2)>range*range)
-	    continue;
-	  w_time_chs[time_slice].insert(ch);
-	  if (time_ch_charge_map.find(std::make_pair(time_slice,ch))==time_ch_charge_map.end()){
-	    time_ch_charge_map[std::make_pair(time_slice,ch)]=0;
-	    time_ch_charge_err_map[std::make_pair(time_slice,ch)]=0;
-	    //std::cout << time_slice << " " << ch << std::endl;
-	  }
-	}	
+	
+	//  std::cout << "Path: " << (*it).x/units::cm << " " << (*it).y/units::cm << " " << (*it).z/units::cm << " " << path_pts_flag.back() << std::endl;
       }
+      
+      // std::cout << path_pts.size() << " " << path_pts_flag.size() << " " << cluster->get_cluster_id() << std::endl;
+      
+      for (size_t i=0;i!=path_pts.size();i++){
+	std::vector<int> results = ct_point_cloud.convert_3Dpoint_time_ch(path_pts.at(i));
+	
+	if (i==0){
+	  if (path_pts_flag.at(i) && path_pts_flag.at(i+1)) continue;
+	}else if (i+1==path_pts.size()){
+	  if (path_pts_flag.at(i) && path_pts_flag.at(i-1)) continue;
+	}else{
+	  if (path_pts_flag.at(i-1) && path_pts_flag.at(i) && path_pts_flag.at(i+1)) continue;
+	}
+	
+	
+	int range = 3;
+	
+	for (int time_slice = results.at(0)-range; time_slice<=results.at(0)+range; time_slice ++){
+	  if (time_slice <0) continue;
+	  
+	  if (u_time_chs.find(time_slice)==u_time_chs.end()){
+	    std::set<int> uchs;
+	    u_time_chs[time_slice] = uchs;
+	    std::set<int> vchs;
+	    v_time_chs[time_slice] = vchs;
+	    std::set<int> wchs;
+	    w_time_chs[time_slice] = wchs;
+	  }
+	  for (int ch = results.at(1)-range; ch<=results.at(1)+range; ch++){
+	    if (ch < uch_limits.first || ch > uch_limits.second ||
+		pow(ch - results.at(1),2) + pow(time_slice -results.at(0),2)> range*range)
+	      continue;
+	    u_time_chs[time_slice].insert(ch);
+	    if (time_ch_charge_map.find(std::make_pair(time_slice,ch))==time_ch_charge_map.end()){
+	      time_ch_charge_map[std::make_pair(time_slice,ch)]=0;
+	      time_ch_charge_err_map[std::make_pair(time_slice,ch)]=0;
+	      //std::cout << time_slice << " " << ch << std::endl;
+	    }
+	  }
+	  for (int ch = results.at(2)-range; ch<=results.at(2)+range; ch++){
+	    if (ch < vch_limits.first || ch > vch_limits.second ||
+		pow(ch - results.at(2),2) + pow(time_slice -results.at(0),2)>range*range)
+	      continue;
+	    v_time_chs[time_slice].insert(ch);
+	    if (time_ch_charge_map.find(std::make_pair(time_slice,ch))==time_ch_charge_map.end()){
+	      time_ch_charge_map[std::make_pair(time_slice,ch)]=0;
+	      time_ch_charge_err_map[std::make_pair(time_slice,ch)]=0;
+	      //std::cout << time_slice << " " << ch << std::endl;
+	    }
+	  }
+	  for (int ch = results.at(3)-range; ch<=results.at(3)+range; ch++){
+	    if (ch < wch_limits.first || ch > wch_limits.second ||
+		pow(ch - results.at(3),2) + pow(time_slice -results.at(0),2)>range*range)
+	      continue;
+	    w_time_chs[time_slice].insert(ch);
+	    if (time_ch_charge_map.find(std::make_pair(time_slice,ch))==time_ch_charge_map.end()){
+	      time_ch_charge_map[std::make_pair(time_slice,ch)]=0;
+	      time_ch_charge_err_map[std::make_pair(time_slice,ch)]=0;
+	      //std::cout << time_slice << " " << ch << std::endl;
+	    }
+	  }	
+	}
+      }
+      //std::cout << path_pts.size() << std::endl;
+      //   std::cout << u_time_chs.size() << " Xin2: " << v_time_chs.size() << " " << w_time_chs.size() << " " << time_ch_charge_map.size() << std::endl;
     }
-    //std::cout << path_pts.size() << std::endl;
-    //   std::cout << u_time_chs.size() << " Xin2: " << v_time_chs.size() << " " << w_time_chs.size() << " " << time_ch_charge_map.size() << std::endl;
   }
+
+
+
+  
+    {
+    std::list<WCPointCloud<double>::WCPoint>& wcps = cluster1->get_path_wcps();
+    if (wcps.size()>1){ 
+      std::vector<Point> path_pts;
+      // add in missing pieces based on trajectory points
+      double low_dis_limit = 0.3*units::cm;
+      for (auto it = wcps.begin(); it!=wcps.end(); it++){
+	Point p((*it).x,(*it).y,(*it).z);
+	if (path_pts.size()==0){
+	  path_pts.push_back(p);
+	}else{
+	  double dis = sqrt(pow(p.x-path_pts.back().x,2) +
+			    pow(p.y-path_pts.back().y,2) +
+			    pow(p.z-path_pts.back().z,2) );
+	  if (dis < low_dis_limit ){
+	    path_pts.push_back(p);
+	  }else{
+	    int ncount = int(dis/low_dis_limit)+1;
+	    
+	    for (int i=0; i != ncount; i++){
+	      Point p1;
+	      p1.x = path_pts.back().x + (p.x - path_pts.back().x) * (i+1)/ncount;
+	      p1.y = path_pts.back().y + (p.y - path_pts.back().y) * (i+1)/ncount;
+	      p1.z = path_pts.back().z + (p.z - path_pts.back().z) * (i+1)/ncount;
+	      path_pts.push_back(p1);
+	    }
+	  }
+	}
+      }
+      
+      std::pair<int,int> uch_limits = ct_point_cloud.get_uch_limits();
+      std::pair<int,int> vch_limits = ct_point_cloud.get_vch_limits();
+      std::pair<int,int> wch_limits = ct_point_cloud.get_wch_limits();
+      
+      std::vector<bool> path_pts_flag;
+      for (auto it=path_pts.begin(); it!=path_pts.end(); it++){
+	std::vector<int> results = ct_point_cloud.convert_3Dpoint_time_ch((*it));
+	
+	int nu = 0;
+	int nv = 0;
+	int nw = 0;
+	
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(1)))!=time_ch_charge_map.end()) nu +=2;
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(1)-1))!=time_ch_charge_map.end()) nu ++;
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(1)+1))!=time_ch_charge_map.end()) nu ++;
+	
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(2)))!=time_ch_charge_map.end()) nv +=2;
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(2)-1))!=time_ch_charge_map.end()) nv++;
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(2)+1))!=time_ch_charge_map.end()) nv++;
+	
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(3)))!=time_ch_charge_map.end()) nw+=2;
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(3)-1))!=time_ch_charge_map.end()) nw ++;
+	if (time_ch_charge_map.find(std::make_pair(results.at(0),results.at(3)+1))!=time_ch_charge_map.end()) nw ++;
+	
+	if (nu>=2&&nv>=2&&nw>=2){
+	  path_pts_flag.push_back(true);
+	}else{
+	  path_pts_flag.push_back(false);
+	}
+	
+	//  std::cout << "Path: " << (*it).x/units::cm << " " << (*it).y/units::cm << " " << (*it).z/units::cm << " " << path_pts_flag.back() << std::endl;
+      }
+      
+      // std::cout << path_pts.size() << " " << path_pts_flag.size() << " " << cluster->get_cluster_id() << std::endl;
+      
+      for (size_t i=0;i!=path_pts.size();i++){
+	std::vector<int> results = ct_point_cloud.convert_3Dpoint_time_ch(path_pts.at(i));
+	
+	if (i==0){
+	  if (path_pts_flag.at(i) && path_pts_flag.at(i+1)) continue;
+	}else if (i+1==path_pts.size()){
+	  if (path_pts_flag.at(i) && path_pts_flag.at(i-1)) continue;
+	}else{
+	  if (path_pts_flag.at(i-1) && path_pts_flag.at(i) && path_pts_flag.at(i+1)) continue;
+	}
+	
+	
+	int range = 3;
+	
+	for (int time_slice = results.at(0)-range; time_slice<=results.at(0)+range; time_slice ++){
+	  if (time_slice <0) continue;
+	  
+	  if (u_time_chs.find(time_slice)==u_time_chs.end()){
+	    std::set<int> uchs;
+	    u_time_chs[time_slice] = uchs;
+	    std::set<int> vchs;
+	    v_time_chs[time_slice] = vchs;
+	    std::set<int> wchs;
+	    w_time_chs[time_slice] = wchs;
+	  }
+	  for (int ch = results.at(1)-range; ch<=results.at(1)+range; ch++){
+	    if (ch < uch_limits.first || ch > uch_limits.second ||
+		pow(ch - results.at(1),2) + pow(time_slice -results.at(0),2)> range*range)
+	      continue;
+	    u_time_chs[time_slice].insert(ch);
+	    if (time_ch_charge_map.find(std::make_pair(time_slice,ch))==time_ch_charge_map.end()){
+	      time_ch_charge_map[std::make_pair(time_slice,ch)]=0;
+	      time_ch_charge_err_map[std::make_pair(time_slice,ch)]=0;
+	      //std::cout << time_slice << " " << ch << std::endl;
+	    }
+	  }
+	  for (int ch = results.at(2)-range; ch<=results.at(2)+range; ch++){
+	    if (ch < vch_limits.first || ch > vch_limits.second ||
+		pow(ch - results.at(2),2) + pow(time_slice -results.at(0),2)>range*range)
+	      continue;
+	    v_time_chs[time_slice].insert(ch);
+	    if (time_ch_charge_map.find(std::make_pair(time_slice,ch))==time_ch_charge_map.end()){
+	      time_ch_charge_map[std::make_pair(time_slice,ch)]=0;
+	      time_ch_charge_err_map[std::make_pair(time_slice,ch)]=0;
+	      //std::cout << time_slice << " " << ch << std::endl;
+	    }
+	  }
+	  for (int ch = results.at(3)-range; ch<=results.at(3)+range; ch++){
+	    if (ch < wch_limits.first || ch > wch_limits.second ||
+		pow(ch - results.at(3),2) + pow(time_slice -results.at(0),2)>range*range)
+	      continue;
+	    w_time_chs[time_slice].insert(ch);
+	    if (time_ch_charge_map.find(std::make_pair(time_slice,ch))==time_ch_charge_map.end()){
+	      time_ch_charge_map[std::make_pair(time_slice,ch)]=0;
+	      time_ch_charge_err_map[std::make_pair(time_slice,ch)]=0;
+	      //std::cout << time_slice << " " << ch << std::endl;
+	    }
+	  }	
+	}
+      }
+      //std::cout << path_pts.size() << std::endl;
+      //   std::cout << u_time_chs.size() << " Xin2: " << v_time_chs.size() << " " << w_time_chs.size() << " " << time_ch_charge_map.size() << std::endl;
+    }
+  }
+
+  
+  
 
   
   WireCell2dToy::WireCellHolder *WCholder = new WireCell2dToy::WireCellHolder();
