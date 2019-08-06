@@ -70,11 +70,11 @@ namespace WireCellPID{
     TVector3 VHoughTrans(WireCell::Point& p, double dis, WireCell::ToyPointCloud *point_cloud1);
 
     // graph related ...
-    void Create_graph();
-    void Create_graph(WireCell::ToyCTPointCloud& ct_point_cloud);
+    void Create_graph(WireCell::ToyPointCloud* ref_point_cloud = 0);
+    void Create_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCell::ToyPointCloud* ref_point_cloud = 0);
     void Establish_close_connected_graph();
-    void Connect_graph();
-    void Connect_graph(WireCell::ToyCTPointCloud& ct_point_cloud);
+    void Connect_graph(WireCell::ToyPointCloud* ref_point_cloud = 0);
+    void Connect_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCell::ToyPointCloud* ref_point_cloud = 0);
     void Del_graph();
 
     // Steiner tree

@@ -324,14 +324,14 @@ int main(int argc, char* argv[])
   
   
   for (size_t i=0; i!=live_clusters.size();i++){
-    //if (live_clusters.at(i)->get_cluster_id()==8){
+    
     live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
     live_clusters.at(i)->recover_steiner_graph();
-      //}
-     //ToyPointCloud *pcloud = live_clusters.at(i)->get_point_cloud_steiner();
-     // std::cout << pcloud << std::endl;
     
-     //old_new_cluster_map[live_clusters.at(i)] = new_cluster;
+    // WireCellPID::PR3DCluster *temp_cluster = WireCellPID::Improve_PR3DCluster_1(live_clusters.at(i),ct_point_cloud, gds);
+    // WireCellPID::calc_sampling_points(gds,temp_cluster,nrebin, frame_length, unit_dis,false);
+    // temp_cluster->Create_point_cloud();
+    // old_new_cluster_map[live_clusters.at(i)] = temp_cluster;
   }
   cout << em("Build graph for all clusters") << std::endl;
   
@@ -511,7 +511,7 @@ int main(int argc, char* argv[])
     WireCellPID::PR3DCluster* new_cluster = *it;
     //WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
     
-    std::set<int> steiner_terminals = new_cluster->get_steiner_graph_selected_terminals();
+    std::set<int> steiner_terminals = new_cluster->get_steiner_graph_terminals();
     ToyPointCloud *point_cloud = new_cluster->get_point_cloud_steiner();
     //std::set<int> steiner_terminals = new_cluster->get_selected_terminals();
     //    WireCell::ToyPointCloud* point_cloud = new_cluster->get_point_cloud();

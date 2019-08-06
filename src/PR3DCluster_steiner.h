@@ -13,7 +13,7 @@ void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& c
     WireCellPID::calc_sampling_points(gds,new_cluster,nrebin, frame_length, unit_dis,false);
     
     new_cluster->Create_point_cloud(); 
-    new_cluster->Create_graph(ct_point_cloud);
+    new_cluster->Create_graph(ct_point_cloud, point_cloud);
     
     // find the shortest path
     std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps(); 
@@ -540,10 +540,12 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
     //std::cout << all_indices.size() << std::endl;
     WCPointCloud<double>::WCPoint& wcp = cloud.pts[(*it)];
     std::pair<bool, double> temp_charge = calc_charge_wcp(wcp,gds, disable_dead_mix_cell);
+
+    //    bool flag_good_point = wcp.mcell->IsPointGood(wcp.index_u, wcp.index_v, wcp.index_w,2);
     
     double charge = temp_charge.second;
     map_index_charge[(*it)] = charge;
-    if ((charge > 4000 ) && temp_charge.first){
+    if ((charge > 4000 ) && temp_charge.first ){
     // if ((charge > 4000 || charge == 0 && (!disable_dead_mix_cell) ) && temp_charge.first){
       candidates_set.insert(std::make_pair(charge,*it));
     }

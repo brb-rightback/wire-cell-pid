@@ -6,7 +6,7 @@ void WireCellPID::PR3DCluster::Del_graph(){
   }
 }
 
-void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyCTPointCloud& ct_point_cloud){
+void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCell::ToyPointCloud* ref_point_cloud){
   WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
   WireCell::WC2DPointCloud<double>& cloud_u = point_cloud->get_cloud_u();
   WireCell::WC2DPointCloud<double>& cloud_v = point_cloud->get_cloud_v();
@@ -26,8 +26,15 @@ void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyCTPointCloud& ct_point
     for (i=0;i!=component.size(); ++i){
       if(cloud.pts[i].mcell!=0){
 	//if (cloud.pts[i].mcell->Estimate_total_charge() > 0)
-	if (cloud.pts[i].mcell->IsPointGood(cloud.pts[i].index_u, cloud.pts[i].index_v, cloud.pts[i].index_w, 2))
-	  pt_clouds.at(component[i])->AddPoint(cloud.pts[i],cloud_u.pts[i],cloud_v.pts[i],cloud_w.pts[i]);
+	if (cloud.pts[i].mcell->IsPointGood(cloud.pts[i].index_u, cloud.pts[i].index_v, cloud.pts[i].index_w, 2)){
+	  double temp_min_dis = 0;
+	  if (ref_point_cloud!=0){
+	    Point temp_p(cloud.pts[i].x,cloud.pts[i].y,cloud.pts[i].z);
+	    temp_min_dis = ref_point_cloud->get_closest_dis(temp_p);
+	  }
+	  if (temp_min_dis < 1.0*units::cm)
+	    pt_clouds.at(component[i])->AddPoint(cloud.pts[i],cloud_u.pts[i],cloud_v.pts[i],cloud_w.pts[i]);
+	}
       }
       //   std::cout << "Vertex " << i << " " << cloud.pts[i].x << " " << cloud.pts[i].y << " " << cloud.pts[i].z << " " << cloud.pts[i].index_u << " " << cloud.pts[i].index_v << " " << cloud.pts[i].index_w << " " << cloud.pts[i].mcell << " " << cloud.pts[i].mcell->GetTimeSlice()  << " is in component " << component[i] << std::endl;
     }
@@ -372,7 +379,7 @@ void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyCTPointCloud& ct_point
 }
 
 
-void WireCellPID::PR3DCluster::Create_graph(WireCell::ToyCTPointCloud& ct_point_cloud){
+void WireCellPID::PR3DCluster::Create_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCell::ToyPointCloud* ref_point_cloud){
   if (graph!=(MCUGraph*)0)
     return;
 
@@ -388,13 +395,13 @@ void WireCellPID::PR3DCluster::Create_graph(WireCell::ToyCTPointCloud& ct_point_
   std::cout <<"Create Graph! " << cluster_id  << " " << N << std::endl;
   
   Establish_close_connected_graph();
-  Connect_graph(ct_point_cloud);
-  Connect_graph();
+  Connect_graph(ct_point_cloud, ref_point_cloud);
+  Connect_graph(ref_point_cloud);
     
 }
 
 
-void WireCellPID::PR3DCluster::Create_graph(){
+void WireCellPID::PR3DCluster::Create_graph(WireCell::ToyPointCloud* ref_point_cloud){
   
   
   if (graph!=(WireCellPID::MCUGraph*)0)
@@ -410,7 +417,7 @@ void WireCellPID::PR3DCluster::Create_graph(){
   //  std::cout <<"Create Graph! " << cluster_id  << " " << N << std::endl; 
   
   Establish_close_connected_graph();
-  Connect_graph();
+  Connect_graph(ref_point_cloud);
   
 }
 
@@ -879,7 +886,7 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 
 
 
-void WireCellPID::PR3DCluster::Connect_graph(){
+void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyPointCloud* ref_point_cloud){
   WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
   WireCell::WC2DPointCloud<double>& cloud_u = point_cloud->get_cloud_u();
   WireCell::WC2DPointCloud<double>& cloud_v = point_cloud->get_cloud_v();
@@ -901,8 +908,16 @@ void WireCellPID::PR3DCluster::Connect_graph(){
     for (i=0;i!=component.size(); ++i){
       if(cloud.pts[i].mcell!=0){
 	//	if (cloud.pts[i].mcell->Estimate_total_charge() > 0)
-	if (cloud.pts[i].mcell->IsPointGood(cloud.pts[i].index_u, cloud.pts[i].index_v, cloud.pts[i].index_w,2))
-	  pt_clouds.at(component[i])->AddPoint(cloud.pts[i],cloud_u.pts[i],cloud_v.pts[i],cloud_w.pts[i]);
+	if (cloud.pts[i].mcell->IsPointGood(cloud.pts[i].index_u, cloud.pts[i].index_v, cloud.pts[i].index_w,2)){
+	  double temp_min_dis = 0;
+	  if (ref_point_cloud!=0){
+	    Point temp_p(cloud.pts[i].x,cloud.pts[i].y,cloud.pts[i].z);
+	    temp_min_dis = ref_point_cloud->get_closest_dis(temp_p);
+	  }
+	  if (temp_min_dis < 1.0*units::cm)
+	    pt_clouds.at(component[i])->AddPoint(cloud.pts[i],cloud_u.pts[i],cloud_v.pts[i],cloud_w.pts[i]);
+
+	}
       }
       //   std::cout << "Vertex " << i << " " << cloud.pts[i].x << " " << cloud.pts[i].y << " " << cloud.pts[i].z << " " << cloud.pts[i].index_u << " " << cloud.pts[i].index_v << " " << cloud.pts[i].index_w << " " << cloud.pts[i].mcell << " " << cloud.pts[i].mcell->GetTimeSlice()  << " is in component " << component[i] << std::endl;
     }
