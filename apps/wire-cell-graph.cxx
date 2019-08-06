@@ -324,7 +324,7 @@ int main(int argc, char* argv[])
   
   
   for (size_t i=0; i!=live_clusters.size();i++){
-    //    if (live_clusters.at(i)->get_cluster_id()!=28) continue;
+    //if (live_clusters.at(i)->get_cluster_id()!=14) continue;
     live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
     live_clusters.at(i)->recover_steiner_graph();
     

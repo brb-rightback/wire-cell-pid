@@ -400,9 +400,23 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
   auto unique_edges = boost::unique(tree_edges);
 
   selected_terminal_indices.clear(); 
+  std::map<int, float> map_index_charge;
   for (auto e : unique_edges){ 
-    selected_terminal_indices.insert(index[source(e,*graph)]); 
-    selected_terminal_indices.insert(index[target(e,*graph)]); 
+    if (map_index_charge.find(index[source(e,*graph)]) == map_index_charge.end()){
+      selected_terminal_indices.insert(index[source(e,*graph)]);
+      WCPointCloud<double>::WCPoint& wcp = cloud.pts[index[source(e,*graph)]];
+      std::pair<bool, double> temp_charge = calc_charge_wcp(wcp,gds, disable_dead_mix_cell);
+      map_index_charge[index[source(e,*graph)]] = temp_charge.second;
+      //std::cout << index[source(e,*graph)] << " " << temp_charge.second << std::endl;
+    }
+    if (map_index_charge.find(index[target(e,*graph)]) == map_index_charge.end()){
+      selected_terminal_indices.insert(index[target(e,*graph)]);
+      WCPointCloud<double>::WCPoint& wcp = cloud.pts[index[target(e,*graph)]];
+      std::pair<bool, double> temp_charge = calc_charge_wcp(wcp,gds, disable_dead_mix_cell);
+      map_index_charge[index[target(e,*graph)]] = temp_charge.second;
+      //std::cout << index[target(e,*graph)] << " " << temp_charge.second << std::endl;
+    }
+
   } 
 
   // STG try ...
@@ -464,8 +478,34 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
     int index1 = map_old_new_indices[index[source(e,*graph)]];
     int index2 = map_old_new_indices[index[target(e,*graph)]];
     float dis = get(boost::edge_weight_t(), *graph, e);
+
+
+    float Q0 = 10000; // constant term ...
+    float Qs = map_index_charge[index[source(e,*graph)]];
+    float Qt = map_index_charge[index[target(e,*graph)]];
+     float factor1=0.8, factor2=0.4; 
+    
+    /* int nsteiner = 0; */
+    /* if (steiner_terminal_indices.find(index[source(e,*graph)])!=steiner_terminal_indices.end()) */
+    /*   nsteiner ++; */
+    /* if (steiner_terminal_indices.find(index[target(e,*graph)])!=steiner_terminal_indices.end()) */
+    /*   nsteiner ++; */
+    /* if (nsteiner==1){ */
+    /*   factor1 = 0.5; */
+    /*   factor2 = 0.5; */
+    /* }else if (nsteiner==2){ */
+    /*   factor1 = 0.25; */
+    /*   factor2 = 0.75; */
+    /* } */
+    
+    
+    
+    float temp_dis = dis * (factor1 + factor2 * (0.5*Q0/(Qs+Q0) + 0.5*Q0/(Qt+Q0)));
+    //    if (Qs>0 || Qt>0)
+    //  std::cout << Qs << " " << Qt << std::endl;
+    
     //std::cout << dis << std::endl;
-    auto edge = add_edge(index1, index2, dis, *graph_steiner);
+    auto edge = add_edge(index1, index2, temp_dis , *graph_steiner);
   } 
 
 
