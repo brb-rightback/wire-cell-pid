@@ -279,22 +279,140 @@ std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>
     extreme_wcp[1] = cloud.pts[1];
   }
 
+  // count live channels
+  std::set<int> live_u_index;
+  std::set<int> live_v_index;
+  std::set<int> live_w_index;
+  for (auto it = mcells.begin();  it!=mcells.end(); it++){
+    SlimMergeGeomCell *mcell = *it;
+    GeomWireSelection& uwires = mcell->get_uwires();
+    GeomWireSelection& vwires = mcell->get_vwires();
+    GeomWireSelection& wwires = mcell->get_wwires();
+
+    std::vector<WirePlaneType_t> bad_planes = mcell->get_bad_planes();
+
+    if (find(bad_planes.begin(), bad_planes.end(), WirePlaneType_t(0))==bad_planes.end()){
+      for (auto it1 = uwires.begin(); it1!=uwires.end(); it1++){
+	live_u_index.insert((*it1)->index());
+      }
+    }
+
+    if (find(bad_planes.begin(), bad_planes.end(), WirePlaneType_t(1))==bad_planes.end()){
+      for (auto it1 = vwires.begin(); it1!=vwires.end(); it1++){
+	live_v_index.insert((*it1)->index());
+      }
+    }
+
+    if (find(bad_planes.begin(), bad_planes.end(), WirePlaneType_t(2))==bad_planes.end()){
+      for (auto it1 = wwires.begin(); it1!=wwires.end(); it1++){
+	live_w_index.insert((*it1)->index());
+      }
+    }
+    //    std::cout << live_u_index.size() << " " << live_v_index.size() << " " << live_w_index.size() << std::endl;
+    /* for (auto it = bad_planes.begin(); it!=bad_planes.end(); it++){ */
+    /*   std::cout << *it << std::endl; */
+    /* } */
+  }
+  //  std::cout << live_u_index.size() << " " << live_v_index.size() << " " << live_w_index.size() << std::endl;
+
   
   std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> boundary_points;
   boundary_points.first = extreme_wcp[0];
   boundary_points.second = extreme_wcp[1];
+  int ncount_live_u = 0;
+  int ncount_live_v = 0;
+  int ncount_live_w = 0;
+  int temp_min_u, temp_max_u;
+  int temp_min_v, temp_max_v;
+  int temp_min_w, temp_max_w;
+  if (boundary_points.first.index_u < boundary_points.second.index_u){
+    temp_min_u = boundary_points.first.index_u;
+    temp_max_u = boundary_points.second.index_u;
+  }else{
+    temp_max_u = boundary_points.first.index_u;
+    temp_min_u = boundary_points.second.index_u;
+  }
+  if (boundary_points.first.index_v < boundary_points.second.index_v){
+    temp_min_v = boundary_points.first.index_v;
+    temp_max_v = boundary_points.second.index_v;
+  }else{
+    temp_max_v = boundary_points.first.index_v;
+    temp_min_v = boundary_points.second.index_v;
+  }
+  if (boundary_points.first.index_w < boundary_points.second.index_w){
+    temp_min_w = boundary_points.first.index_w;
+    temp_max_w = boundary_points.second.index_w;
+  }else{
+    temp_max_w = boundary_points.first.index_w;
+    temp_min_w = boundary_points.second.index_w;
+  }
+  
+  for (int temp_index = temp_min_u; temp_index <= temp_max_u; temp_index ++ ){
+    if (live_u_index.find(temp_index)!=live_u_index.end()) ncount_live_u++;
+  }
+  for (int temp_index = temp_min_v; temp_index <= temp_max_v; temp_index ++ ){
+    if (live_v_index.find(temp_index)!=live_v_index.end()) ncount_live_v++;
+  }
+  for (int temp_index = temp_min_w; temp_index <= temp_max_w; temp_index ++ ){
+    if (live_w_index.find(temp_index)!=live_w_index.end()) ncount_live_w++;
+  }
+  
   double boundary_value = fabs(boundary_points.first.x-boundary_points.second.x)/(2.22*units::mm)
-    + fabs(boundary_points.first.index_u - boundary_points.second.index_u)
-    + fabs(boundary_points.first.index_v - boundary_points.second.index_v)
-    + fabs(boundary_points.first.index_w - boundary_points.second.index_w);
+    + fabs(boundary_points.first.index_u - boundary_points.second.index_u) * 0.0 + ncount_live_u * 1.0
+    + fabs(boundary_points.first.index_v - boundary_points.second.index_v) * 0.0 + ncount_live_v * 1.0
+    + fabs(boundary_points.first.index_w - boundary_points.second.index_w) * 0.0 + ncount_live_w * 1.0;
   
   for (int i=0;i<14;i++){
     for (int j=i+1;j<14;j++){
+      ncount_live_u = 0;
+      ncount_live_v = 0;
+      ncount_live_w = 0;
+     
+      if (extreme_wcp[i].index_u < extreme_wcp[j].index_u){
+	temp_min_u = extreme_wcp[i].index_u;
+	temp_max_u = extreme_wcp[j].index_u;
+      }else{
+	temp_max_u = extreme_wcp[i].index_u;
+	temp_min_u = extreme_wcp[j].index_u;
+      }
+      if (extreme_wcp[i].index_v < extreme_wcp[j].index_v){
+	temp_min_v = extreme_wcp[i].index_v;
+	temp_max_v = extreme_wcp[j].index_v;
+      }else{
+	temp_max_v = extreme_wcp[i].index_v;
+	temp_min_v = extreme_wcp[j].index_v;
+      }
+      if (extreme_wcp[i].index_w < extreme_wcp[j].index_w){
+	temp_min_w = extreme_wcp[i].index_w;
+	temp_max_w = extreme_wcp[j].index_w;
+      }else{
+	temp_max_w = extreme_wcp[i].index_w;
+	temp_min_w = extreme_wcp[j].index_w;
+      }
+      
+      for (int temp_index = temp_min_u; temp_index <= temp_max_u; temp_index ++ ){
+	if (live_u_index.find(temp_index)!=live_u_index.end()) ncount_live_u++;
+      }
+      for (int temp_index = temp_min_v; temp_index <= temp_max_v; temp_index ++ ){
+	if (live_v_index.find(temp_index)!=live_v_index.end()) ncount_live_v++;
+      }
+      for (int temp_index = temp_min_w; temp_index <= temp_max_w; temp_index ++ ){
+	if (live_w_index.find(temp_index)!=live_w_index.end()) ncount_live_w++;
+      }
+      
+      
       double value = fabs(extreme_wcp[i].x - extreme_wcp[j].x)/(2.22*units::mm)
-	+ fabs(extreme_wcp[i].index_u - extreme_wcp[j].index_u)
-	+ fabs(extreme_wcp[i].index_v - extreme_wcp[j].index_v)
-	+ fabs(extreme_wcp[i].index_w - extreme_wcp[j].index_w);
+	+ fabs(extreme_wcp[i].index_u - extreme_wcp[j].index_u) * 0 + ncount_live_u * 1.0
+	+ fabs(extreme_wcp[i].index_v - extreme_wcp[j].index_v) * 0 + ncount_live_v * 1.0
+	+ fabs(extreme_wcp[i].index_w - extreme_wcp[j].index_w) * 0 + ncount_live_w * 1.0;
+      
+      
+
       if (value > boundary_value){
+	/* if (cluster_id==28&& value > 275) */
+	/* std::cout << extreme_wcp[i].x/units::cm << " " << extreme_wcp[i].y/units::cm << " " << extreme_wcp[i].z/units::cm << " " */
+	/* 	  << extreme_wcp[j].x/units::cm << " " << extreme_wcp[j].y/units::cm << " " << extreme_wcp[j].z/units::cm << " " << value << " " << ncount_live_u << " " << ncount_live_v << " " << ncount_live_w << std::endl; */
+	
 	boundary_value = value;
 	if (extreme_wcp[i].y > extreme_wcp[j].y){
 	  boundary_points.first = extreme_wcp[i];

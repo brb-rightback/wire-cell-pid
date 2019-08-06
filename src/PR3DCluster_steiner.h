@@ -150,7 +150,8 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
 
   // find all the steiner terminal indices ...
   find_steiner_terminals(gds, disable_dead_mix_cell);
-
+  
+  
   // form point cloud 
   WireCell::ToyPointCloud temp_pcloud;
   if (flag_path){
@@ -195,18 +196,25 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
 	 
 	 int w1_low_index = mcell->get_wwires().front()->index();
 	 int w1_high_index = mcell->get_wwires().back()->index();
-	 if (cloud.pts[*it].index_u <= u1_high_index &&
-	     cloud.pts[*it].index_u >= u1_low_index &&
-	     cloud.pts[*it].index_v <= v1_high_index &&
-	     cloud.pts[*it].index_v >= v1_low_index &&
-	     cloud.pts[*it].index_w <= w1_high_index &&
-	     cloud.pts[*it].index_w >= w1_low_index){
+
+	  /* if (cloud.pts[*it].y/units::cm <-100) */
+	  /*   std::cout << cloud.pts[*it].index_u << " " << u1_low_index << " " << u1_high_index << ", " */
+	  /* 	      << cloud.pts[*it].index_v << " " << v1_low_index << " " << v1_high_index << ", " */
+	  /* 	      << cloud.pts[*it].index_w << " " << w1_low_index << " " << w1_high_index << ", " << std::endl; */
+	 
+	 if (cloud.pts[*it].index_u <= u1_high_index +1&&
+	     cloud.pts[*it].index_u >= u1_low_index -1&&
+	     cloud.pts[*it].index_v <= v1_high_index +1&&
+	     cloud.pts[*it].index_v >= v1_low_index -1&&
+	     cloud.pts[*it].index_w <= w1_high_index +1&&
+	     cloud.pts[*it].index_w >= w1_low_index -1){
 	   flag_remove = false;
 	   break;
 	 }
       }
     }
-    if (!flag_remove){
+    
+    if (flag_remove){
       //+1 time slice
       if (old_time_mcells_map.find(time_slice+1)!=old_time_mcells_map.end()){
 	for (auto it1 = old_time_mcells_map[time_slice+1].begin(); it1!= old_time_mcells_map[time_slice+1].end(); it1++){
@@ -219,12 +227,12 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
 	  
 	  int w1_low_index = mcell->get_wwires().front()->index();
 	  int w1_high_index = mcell->get_wwires().back()->index();
-	  if (cloud.pts[*it].index_u <= u1_high_index &&
-	      cloud.pts[*it].index_u >= u1_low_index &&
-	      cloud.pts[*it].index_v <= v1_high_index &&
-	      cloud.pts[*it].index_v >= v1_low_index &&
-	      cloud.pts[*it].index_w <= w1_high_index &&
-	      cloud.pts[*it].index_w >= w1_low_index){
+	  if (cloud.pts[*it].index_u <= u1_high_index +1&&
+	      cloud.pts[*it].index_u >= u1_low_index -1&&
+	      cloud.pts[*it].index_v <= v1_high_index +1&&
+	      cloud.pts[*it].index_v >= v1_low_index -1&&
+	      cloud.pts[*it].index_w <= w1_high_index +1&&
+	      cloud.pts[*it].index_w >= w1_low_index -1){
 	    flag_remove = false;
 	    break;
 	  }
@@ -232,7 +240,7 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
       }
     }
 
-    if (!flag_remove){
+    if (flag_remove){
       //-1
       if (old_time_mcells_map.find(time_slice-1)!=old_time_mcells_map.end()){
 	for (auto it1 = old_time_mcells_map[time_slice-1].begin(); it1!= old_time_mcells_map[time_slice-1].end(); it1++){
@@ -245,12 +253,12 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
 	  
 	  int w1_low_index = mcell->get_wwires().front()->index();
 	  int w1_high_index = mcell->get_wwires().back()->index();
-	  if (cloud.pts[*it].index_u <= u1_high_index &&
-	      cloud.pts[*it].index_u >= u1_low_index &&
-	      cloud.pts[*it].index_v <= v1_high_index &&
-	      cloud.pts[*it].index_v >= v1_low_index &&
-	      cloud.pts[*it].index_w <= w1_high_index &&
-	      cloud.pts[*it].index_w >= w1_low_index){
+	  if (cloud.pts[*it].index_u <= u1_high_index +1&&
+	      cloud.pts[*it].index_u >= u1_low_index -1&&
+	      cloud.pts[*it].index_v <= v1_high_index +1&&
+	      cloud.pts[*it].index_v >= v1_low_index -1&&
+	      cloud.pts[*it].index_w <= w1_high_index +1&&
+	      cloud.pts[*it].index_w >= w1_low_index -1){
 	    flag_remove = false;
 	    break;
 	  }
@@ -260,7 +268,7 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
     
     
     // within a mcell check path ...
-    if (!flag_remove && flag_path){
+    if ((!flag_remove) && flag_path){
       // examine the steiner terminals according to the path,
       
       // if within cerntain distance in projection, but far away in 3D, remove ...
@@ -271,8 +279,8 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
       double dis_2dw = (temp_pcloud.get_closest_2d_dis(p,2)).second;
 
       /* if(cluster_id == 2){ */
-      /* 	std::cout << dis_3d/units::cm << " " << dis_2du/units::cm << " " << dis_2dv/units::cm << " " << dis_2dw/units::cm << std::endl; */
-      /* } */
+      
+      //}
       
       if ((dis_2du < 1.8*units::cm && dis_2dv < 1.8*units::cm ||
 	   dis_2du < 1.8*units::cm && dis_2dw < 1.8*units::cm ||
@@ -281,6 +289,10 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
 	flag_remove = true;
     }
 
+    //    if (cloud.pts[*it].y/units::cm <-100)
+    //  std::cout << cloud.pts[*it].x/units::cm << " " <<cloud.pts[*it].y/units::cm << " " << cloud.pts[*it].z/units::cm<< " " << flag_remove << " " << old_time_mcells_map[time_slice].size() << std::endl;
+    
+    
     if (flag_remove){
       indices_to_be_removal.insert(*it);
     }
@@ -545,6 +557,10 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
     
     double charge = temp_charge.second;
     map_index_charge[(*it)] = charge;
+
+    /* if ( cloud.pts[(*it)].y<-80*units::cm) */
+    /*   std::cout << cloud.pts[(*it)].y/units::cm << " " << cloud.pts[(*it)].z/units::cm << " " << charge << " " << temp_charge.first << std::endl; */
+    
     if ((charge > 4000 ) && temp_charge.first ){
     // if ((charge > 4000 || charge == 0 && (!disable_dead_mix_cell) ) && temp_charge.first){
       candidates_set.insert(std::make_pair(charge,*it));
@@ -559,11 +575,18 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
   typedef boost::property_map<MCUGraph, boost::vertex_index_t>::type IndexMap;
   IndexMap index = get(boost::vertex_index,*graph);
   typedef boost::graph_traits<MCUGraph>::adjacency_iterator adjacency_iterator;
+
+  
+
   
   for (auto it = candidates_set.begin(); it!=candidates_set.end(); it++){
     int current_index = it->second;
     double current_charge = it->first;
 
+    /* if (cloud.pts[current_index].y/units::cm < -100) */
+    /*   std::cout << cloud.pts[current_index].x/units::cm << " " << cloud.pts[current_index].y/units::cm << " " << cloud.pts[current_index].z/units::cm << " " << current_charge << std::endl;  */
+    
+    
     std::set<int> total_vertices_found;
     total_vertices_found.insert(current_index);
     {
@@ -589,8 +612,6 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
     
     // find the vertices with the point
     // std::pair<adjacency_iterator, adjacency_iterator> neighbors = boost::adjacent_vertices(vertex(current_index,*graph),*graph);
-
-    
 
     if (peak_indices.size()==0){
       // if the current's charge is the biggest, push into good list 
@@ -621,13 +642,17 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
 	}
       }
 
+
+       /* if (cloud.pts[current_index].y/units::cm < -100) */
+      /* std::cout << cloud.pts[current_index].x/units::cm << " " << cloud.pts[current_index].y/units::cm << " " << cloud.pts[current_index].z/units::cm << " " << current_charge << " " << flag_insert << std::endl; */
+      
       if (flag_insert)
 	peak_indices.insert(current_index);
     }
     
   }
 
-   /* std::cout << peak_indices.size() << " " << non_peak_indices.size() << " " << candidates_set.size() << " " << all_indices.size() << std::endl; */
+  /*  std::cout << peak_indices.size() << " " << non_peak_indices.size() << " " << candidates_set.size() << " " << all_indices.size() << std::endl; */
   /* for (auto it = peak_indices.begin(); it!=peak_indices.end(); it++){ */
   /*   int current_index = *it; */
   /*   std::cout << "Peak: " << current_index << " " << map_index_charge[current_index] << std::endl; */
@@ -637,6 +662,11 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
   /*     std::cout << *neighbors.first << " " << map_index_charge[*neighbors.first] << std::endl; */
   /*   } */
   /* } */
+
+ 
+    /* for (auto it = peak_indices.begin();  it!= peak_indices.end(); it++){ */
+    /*   std::cout <<  cloud.pts[(*it)].x/units::cm << " " << cloud.pts[(*it)].y/units::cm << " " << cloud.pts[(*it)].z/units::cm  << std::endl; */
+    /* } */
   
   
   // form a graph to find the independent component ... 
@@ -651,10 +681,10 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
       temp_graph(N);
     for (int j=0;j!=N;j++){
       for (int k=0;k!=N;k++){
-	int index1 = j;
-	int index2 = k;
-	if (boost::edge(vertex(vec_peak_indices.at(index1),*graph), vertex(vec_peak_indices.at(index2),*graph), *graph).second)
-	  add_edge(index1, index2, temp_graph);
+  	int index1 = j;
+  	int index2 = k;
+  	if (boost::edge(vertex(vec_peak_indices.at(index1),*graph), vertex(vec_peak_indices.at(index2),*graph), *graph).second)
+  	  add_edge(index1, index2, temp_graph);
       }
     }
     std::vector<int> component(num_vertices(temp_graph));
@@ -689,11 +719,11 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
 
     for (i=0;i!=component.size(); ++i){
       double dis = pow( points.at(component[i]).x - cloud.pts[vec_peak_indices.at(i)].x,2) +
-	pow( points.at(component[i]).y - cloud.pts[vec_peak_indices.at(i)].y,2) +
-	pow( points.at(component[i]).z - cloud.pts[vec_peak_indices.at(i)].z,2) ;
+  	pow( points.at(component[i]).y - cloud.pts[vec_peak_indices.at(i)].y,2) +
+  	pow( points.at(component[i]).z - cloud.pts[vec_peak_indices.at(i)].z,2) ;
       if (dis < min_dis[component[i]]){
-	min_dis[component[i]] = dis;
-	min_index[component[i]] = vec_peak_indices.at(i);
+  	min_dis[component[i]] = dis;
+  	min_index[component[i]] = vec_peak_indices.at(i);
       }
     }
 
@@ -713,7 +743,10 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
     /* } */
   }
  
-
+   /* for (auto it = peak_indices.begin();  it!= peak_indices.end(); it++){ */
+   /*   if (cloud.pts[(*it)].y/units::cm < -100) */
+   /*     std::cout <<  cloud.pts[(*it)].x/units::cm << " " << cloud.pts[(*it)].y/units::cm << " " << cloud.pts[(*it)].z/units::cm  << std::endl; */
+   /* } */
 
   return peak_indices;
 }

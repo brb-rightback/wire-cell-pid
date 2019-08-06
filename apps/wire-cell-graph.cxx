@@ -324,7 +324,7 @@ int main(int argc, char* argv[])
   
   
   for (size_t i=0; i!=live_clusters.size();i++){
-    
+    //    if (live_clusters.at(i)->get_cluster_id()!=28) continue;
     live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
     live_clusters.at(i)->recover_steiner_graph();
     
@@ -457,9 +457,11 @@ int main(int argc, char* argv[])
 
     WireCellPID::PR3DCluster* new_cluster = *it;
     //WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
-
+    if (new_cluster->get_point_cloud_steiner()==0) continue;
     if (new_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
       std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps(2); 
+      // std::cout << wcps.first.x/units::cm << " " << wcps.first.y/units::cm << " " << wcps.first.z/units::cm << std::endl;
+      // std::cout << wcps.second.x/units::cm << " " << wcps.second.y/units::cm << " " << wcps.second.z/units::cm << std::endl;
       new_cluster->dijkstra_shortest_paths(wcps.first,2); 
       new_cluster->cal_shortest_path(wcps.second,2);
     }
@@ -515,7 +517,7 @@ int main(int argc, char* argv[])
     ToyPointCloud *point_cloud = new_cluster->get_point_cloud_steiner();
     //std::set<int> steiner_terminals = new_cluster->get_selected_terminals();
     //    WireCell::ToyPointCloud* point_cloud = new_cluster->get_point_cloud();
-
+    if (point_cloud==0) continue;
     if (point_cloud->get_num_points()>0){
       WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
       
