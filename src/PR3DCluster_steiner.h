@@ -26,6 +26,9 @@ void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& c
     // steiner tree with some basic cuts ...
     graph_steiner = new_cluster->Create_steiner_tree(point_cloud_steiner, flag_steiner_terminal, gds, mcells, true, false);
 
+    delete new_cluster;
+    delete temp_holder;
+    
     point_cloud_steiner_terminal = new ToyPointCloud();
     WireCell::WCPointCloud<double>& cloud = point_cloud_steiner->get_cloud();
     WireCell::WC2DPointCloud<double>& cloud_u = point_cloud_steiner->get_cloud_u();
@@ -38,8 +41,7 @@ void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& c
     }
     
     // examine steiner tree terminals
-    delete temp_holder;
-    delete new_cluster;
+    
     //return new_cluster;
   }
   

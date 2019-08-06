@@ -41,8 +41,6 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_2(WireCellPID::PR3DCl
    // include original inefficient channels ... 
    WireCellPID::PR3DCluster *new_cluster = Improve_PR3DCluster(cluster, temp_cluster, ct_point_cloud, gds, holder);
 
-   
-  
    delete temp_cluster;
    delete temp_holder1;
      
