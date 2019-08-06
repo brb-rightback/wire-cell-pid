@@ -6,9 +6,18 @@
 
 using namespace WireCell;
 
-WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_2(WireCellPID::PR3DCluster* cluster, ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis){
-  // include dead channels ...
-  WireCellPID::PR3DCluster *temp_cluster = WireCellPID::Improve_PR3DCluster_1(cluster,ct_point_cloud, gds);
+WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_2(WireCellPID::PR3DCluster* cluster, ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, WireCell2dToy::WireCellHolder *holder, int nrebin, int frame_length, double unit_dis){
+  cluster->Create_graph(ct_point_cloud);
+  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps1 = cluster->get_two_boundary_wcps();
+  cluster->dijkstra_shortest_paths(wcps1.first);
+  cluster->cal_shortest_path(wcps1.second);
+  cluster->Del_graph();
+  //cluster->Del_point_cloud();
+  
+
+   // include dead channels ...
+  WireCell2dToy::WireCellHolder *temp_holder1 = new WireCell2dToy::WireCellHolder();
+  WireCellPID::PR3DCluster *temp_cluster = WireCellPID::Improve_PR3DCluster_1(cluster,ct_point_cloud, gds,temp_holder1);
   WireCellPID::calc_sampling_points(gds,temp_cluster,nrebin, frame_length, unit_dis,false);
 
   ToyPointCloud* ref_point_cloud = cluster->get_point_cloud();
@@ -25,25 +34,23 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_2(WireCellPID::PR3DCl
   
    temp_cluster->dijkstra_shortest_paths(wcps.first);
    temp_cluster->cal_shortest_path(wcps.second);
-   //WireCellPID::PR3DCluster *new_cluster = Improve_PR3DCluster(temp_cluster, ct_point_cloud, gds);
+   //WireCellPID::PR3DCluster *new_cluster = Improve_PR3DCluster(temp_cluster, ct_point_cloud, gds, holder);
    
-   cluster->Create_graph(ct_point_cloud);
-   std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps1 = cluster->get_two_boundary_wcps();
-   cluster->dijkstra_shortest_paths(wcps1.first);
-   cluster->cal_shortest_path(wcps1.second);
-   cluster->Del_graph();
+   
    
    // include original inefficient channels ... 
-   WireCellPID::PR3DCluster *new_cluster = Improve_PR3DCluster(cluster, temp_cluster, ct_point_cloud, gds);
+   WireCellPID::PR3DCluster *new_cluster = Improve_PR3DCluster(cluster, temp_cluster, ct_point_cloud, gds, holder);
 
    
-
+  
    delete temp_cluster;
+   delete temp_holder1;
+     
    return new_cluster;
    //return temp_cluster;
 }
 
-WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCluster* cluster, ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds){
+WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCluster* cluster, ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, WireCell2dToy::WireCellHolder *holder){
 
   std::map<int,std::set<int>> u_time_chs; // time chs
   std::map<int,std::set<int>> v_time_chs; // time chs
@@ -338,10 +345,10 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
   // }
   
   
-  WireCell2dToy::WireCellHolder *WCholder = new WireCell2dToy::WireCellHolder();
+  //  WireCell2dToy::WireCellHolder *WCholder = new WireCell2dToy::WireCellHolder();
   for (auto it = u_time_chs.begin(); it!= u_time_chs.end(); it++){
     int time_slice = it->first;
-    WireCell2dToy::LowmemTiling tiling(time_slice,gds,*WCholder);
+    WireCell2dToy::LowmemTiling tiling(time_slice,gds,*holder);
     // recreate the merged wires
     // recreate the merge cells
     tiling.init_good_cells_with_charge(u_time_chs, v_time_chs, w_time_chs, time_ch_charge_map, time_ch_charge_err_map);  
@@ -365,7 +372,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
   std::map<int, SMGCSelection> new_time_mcells_map;
   std::map<int,SlimMergeGeomCell*> map_index_mcell;
   std::map<SlimMergeGeomCell*,int> map_mcell_index;
-  GeomCellSelection& temp_cells = WCholder->get_cells();
+  GeomCellSelection& temp_cells = holder->get_cells();
   int index = 0;
   for (auto it = temp_cells.begin(); it!=temp_cells.end(); it++){
     SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)(*it);
@@ -495,7 +502,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
 	    new_time_mcells_map[time_slice].push_back(mcell);
 	  }
 	}else{
-	  delete mcell;
+	  //	  delete mcell;
 	}
       }
       
@@ -532,7 +539,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
   
 }
 
-WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DCluster* cluster, ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds){
+WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DCluster* cluster, ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, WireCell2dToy::WireCellHolder *holder){
 
   std::map<int,std::set<int>> u_time_chs; // time chs
   std::map<int,std::set<int>> v_time_chs; // time chs
@@ -729,10 +736,10 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
   }
 
   
-  WireCell2dToy::WireCellHolder *WCholder = new WireCell2dToy::WireCellHolder();
+  //  WireCell2dToy::WireCellHolder *WCholder = new WireCell2dToy::WireCellHolder();
   for (auto it = u_time_chs.begin(); it!= u_time_chs.end(); it++){
     int time_slice = it->first;
-    WireCell2dToy::LowmemTiling tiling(time_slice,gds,*WCholder);
+    WireCell2dToy::LowmemTiling tiling(time_slice,gds,*holder);
     // recreate the merged wires
     // recreate the merge cells
     tiling.init_good_cells_with_charge(u_time_chs, v_time_chs, w_time_chs, time_ch_charge_map, time_ch_charge_err_map);  
@@ -756,7 +763,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
   std::map<int, SMGCSelection> new_time_mcells_map;
   std::map<int,SlimMergeGeomCell*> map_index_mcell;
   std::map<SlimMergeGeomCell*,int> map_mcell_index;
-  GeomCellSelection& temp_cells = WCholder->get_cells();
+  GeomCellSelection& temp_cells = holder->get_cells();
   int index = 0;
   for (auto it = temp_cells.begin(); it!=temp_cells.end(); it++){
     SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)(*it);
@@ -886,7 +893,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
 	    new_time_mcells_map[time_slice].push_back(mcell);
 	  }
 	}else{
-	  delete mcell;
+	  //	  delete mcell;
 	}
       }
       
@@ -920,7 +927,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
 
 
 
-WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DCluster* cluster1, WireCellPID::PR3DCluster* cluster2, ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds){
+WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DCluster* cluster1, WireCellPID::PR3DCluster* cluster2, ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, WireCell2dToy::WireCellHolder *holder){
 
   std::map<int,std::set<int>> u_time_chs; // time chs
   std::map<int,std::set<int>> v_time_chs; // time chs
@@ -1254,10 +1261,10 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
   
 
   
-  WireCell2dToy::WireCellHolder *WCholder = new WireCell2dToy::WireCellHolder();
+    //  WireCell2dToy::WireCellHolder *WCholder = new WireCell2dToy::WireCellHolder();
   for (auto it = u_time_chs.begin(); it!= u_time_chs.end(); it++){
     int time_slice = it->first;
-    WireCell2dToy::LowmemTiling tiling(time_slice,gds,*WCholder);
+    WireCell2dToy::LowmemTiling tiling(time_slice,gds,*holder);
     // recreate the merged wires
     // recreate the merge cells
     tiling.init_good_cells_with_charge(u_time_chs, v_time_chs, w_time_chs, time_ch_charge_map, time_ch_charge_err_map);  
@@ -1281,7 +1288,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
   std::map<int, SMGCSelection> new_time_mcells_map;
   std::map<int,SlimMergeGeomCell*> map_index_mcell;
   std::map<SlimMergeGeomCell*,int> map_mcell_index;
-  GeomCellSelection& temp_cells = WCholder->get_cells();
+  GeomCellSelection& temp_cells = holder->get_cells();
   int index = 0;
   for (auto it = temp_cells.begin(); it!=temp_cells.end(); it++){
     SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)(*it);
@@ -1390,7 +1397,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
 	    new_time_mcells_map[time_slice].push_back(mcell);
 	  }
 	}else{
-	  delete mcell;
+	  //	  delete mcell;
 	}
       }
       

@@ -46,6 +46,7 @@ namespace WireCellPID{
 
     // Point cloud related ...
     void Create_point_cloud(WireCell::ToyPointCloud *global_point_cloud = 0);
+    void Del_point_cloud();
     WireCell::ToyPointCloud* get_point_cloud(){return point_cloud;};
     WireCell::ToyPointCloud* get_point_cloud_steiner(){return point_cloud_steiner;};
     WireCell::ToyPointCloud* get_point_cloud_steiner_terminal(){return point_cloud_steiner_terminal;};

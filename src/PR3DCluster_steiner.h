@@ -1,6 +1,7 @@
 #include "WireCellPaal/graph_metrics.h"
 #include "WireCellPaal/steiner_tree_greedy.h"
 #include "WireCellPID/ImprovePR3DCluster.h"
+#include "WireCell2dToy/WireCellHolder.h"
 #include "WireCellPID/CalcPoints.h"
 
 
@@ -8,7 +9,8 @@
 void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis){
 
   if (graph_steiner == (MCUGraph*)0){
-    WireCellPID::PR3DCluster *new_cluster = WireCellPID::Improve_PR3DCluster_2(this, ct_point_cloud, gds, nrebin, frame_length, unit_dis); 
+    WireCell2dToy::WireCellHolder *temp_holder = new WireCell2dToy::WireCellHolder();
+    WireCellPID::PR3DCluster *new_cluster = WireCellPID::Improve_PR3DCluster_2(this, ct_point_cloud, gds, temp_holder, nrebin, frame_length, unit_dis); 
     
     WireCellPID::calc_sampling_points(gds,new_cluster,nrebin, frame_length, unit_dis,false);
     
@@ -36,6 +38,7 @@ void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& c
     }
     
     // examine steiner tree terminals
+    delete temp_holder;
     delete new_cluster;
     //return new_cluster;
   }

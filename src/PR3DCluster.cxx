@@ -72,6 +72,11 @@ void WireCellPID::PR3DCluster::AddCell(SlimMergeGeomCell* mcell, int time_slice)
   }
 }
 
+void WireCellPID::PR3DCluster::Del_point_cloud(){
+  if (point_cloud!=(ToyPointCloud*)0)
+    delete point_cloud;
+  point_cloud = 0;
+}
 
 void WireCellPID::PR3DCluster::Create_point_cloud(WireCell::ToyPointCloud *global_point_cloud){
   if (point_cloud!=(ToyPointCloud*)0)
