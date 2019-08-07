@@ -129,7 +129,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
   }
 
   WireCell::ToyPointCloud *orig_point_cloud = cluster->get_point_cloud();
-  double dis_cut = 15*units::cm;
+  double dis_cut = 20*units::cm;
 
   // fill in the dead channels ...
   std::vector<std::pair<int, int> > dead_uch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_uch, max_uch, 0);
