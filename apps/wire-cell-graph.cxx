@@ -26,6 +26,15 @@ int main(int argc, char* argv[])
   }
   TH1::AddDirectory(kFALSE);
 
+  bool flag_in_time_only = false;
+  for (Int_t i=1;i!=argc;i++){
+    switch(argv[i][1]){
+    case 't':
+      flag_in_time_only = atoi(&argv[i][2]); 
+      break;
+    }
+  }
+    
   WireCellPID::ExecMon em("starting");
   cout << em("load geometry") << endl;
   
@@ -65,6 +74,8 @@ int main(int argc, char* argv[])
   Trun->SetBranchAddress("eventNo",&event_no);
   Trun->SetBranchAddress("runNo",&run_no);
   Trun->SetBranchAddress("subRunNo",&subrun_no);
+  unsigned int triggerbits;
+  Trun->SetBranchAddress("triggerBits",&triggerbits);
   Trun->SetBranchAddress("unit_dis",&unit_dis);
   Trun->SetBranchAddress("frame_length",&frame_length);
   Trun->SetBranchAddress("eve_num",&eve_num);
@@ -77,6 +88,10 @@ int main(int argc, char* argv[])
   Trun->SetBranchAddress("raw_charge_err",&raw_charge_err);
     
   Trun->GetEntry(0);
+  double lowerwindow = 0;
+  double upperwindow = 0;
+  if(triggerbits==2048) { lowerwindow = 3.0; upperwindow = 5.0; }// bnb  
+  if(triggerbits==512) { lowerwindow = 3.45; upperwindow = 5.45; } // extbnb
   
    // define singleton ... 
   TPCParams& mp = Singleton<TPCParams>::Instance();
@@ -114,8 +129,46 @@ int main(int argc, char* argv[])
   std::map<int,std::pair<double,double>> dead_u_index;
   std::map<int,std::pair<double,double>> dead_v_index;
   std::map<int,std::pair<double,double>> dead_w_index;
-  // load mcell
+
+  TTree *T_flash = (TTree*)file->Get("T_flash");
+  Double_t time;
+  Int_t type;
+  Int_t flash_id;
+  T_flash->SetBranchAddress("time",&time);
+  T_flash->SetBranchAddress("type",&type);
+  T_flash->SetBranchAddress("flash_id",&flash_id);
   
+  TTree *T_match = (TTree*)file->Get("T_match");
+  Int_t tpc_cluster_id;
+  Int_t event_type;
+  T_match->SetBranchAddress("tpc_cluster_id",&tpc_cluster_id);
+  T_match->SetBranchAddress("flash_id",&flash_id);
+  T_match->SetBranchAddress("event_type",&event_type);
+
+  std::set<int> saved_flash_ids;
+  std::map<int,double> saved_id_time_map;
+  std::set<int> saved_parent_tpc_cluster_ids;
+  for (int i=0;i!=T_flash->GetEntries();i++){
+    T_flash->GetEntry(i);
+    if (flag_in_time_only){
+      if (type==2 && (time >= lowerwindow && time <=upperwindow) ){
+	saved_flash_ids.insert(flash_id);
+	saved_id_time_map[flash_id]=time;
+      }
+    }else{
+      saved_flash_ids.insert(flash_id);
+      saved_id_time_map[flash_id]=time;
+    }
+  }
+  for (int i=0;i!=T_match->GetEntries();i++){
+    T_match->GetEntry(i);
+    if (saved_flash_ids.find(flash_id)!=saved_flash_ids.end()){
+      saved_parent_tpc_cluster_ids.insert(tpc_cluster_id);
+    }
+  }
+  //std::cout << flag_in_time_only << " " << saved_parent_tpc_cluster_ids.size() << std::endl;
+
+  // load mcell
   TTree *TC = (TTree*)file->Get("TC");
   std::vector<int> *cluster_id_vec = new std::vector<int>;
   std::vector<int> *parent_cluster_id = new std::vector<int>;
@@ -194,6 +247,7 @@ int main(int argc, char* argv[])
   //  CellIndexMap map_mcell_cluster_id;
   WireCellPID::PR3DClusterSelection live_clusters;
   WireCellPID::PR3DCluster *cluster;
+  std::map<WireCellPID::PR3DCluster*, int> map_cluster_parent_id;
   int prev_cluster_id=-1;
   int ident = 0;
   TC->GetEntry(0);
@@ -287,6 +341,7 @@ int main(int argc, char* argv[])
 
     if (cluster_id != prev_cluster_id){
       cluster = new WireCellPID::PR3DCluster(cluster_id);
+      map_cluster_parent_id[cluster] = parent_cluster_id->at(i);
       live_clusters.push_back(cluster);
     }
     cluster->AddCell(mcell,time_slice);
@@ -322,14 +377,18 @@ int main(int argc, char* argv[])
   
   std::map<WireCellPID::PR3DCluster*, WireCellPID::PR3DCluster*> old_new_cluster_map;
   
-  
+  // std::cout << saved_parent_tpc_cluster_ids.size() << std::endl;
   for (size_t i=0; i!=live_clusters.size();i++){
     //if (live_clusters.at(i)->get_cluster_id()!=14) continue;
-    live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-    live_clusters.at(i)->recover_steiner_graph();
-
-    
-    
+    if (flag_in_time_only){
+      if ( saved_parent_tpc_cluster_ids.find(map_cluster_parent_id[live_clusters.at(i)])!=saved_parent_tpc_cluster_ids.end()){
+	live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+	live_clusters.at(i)->recover_steiner_graph();
+      }
+    }else{
+      live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+      live_clusters.at(i)->recover_steiner_graph();
+    }
     // WireCellPID::PR3DCluster *temp_cluster = WireCellPID::Improve_PR3DCluster_1(live_clusters.at(i),ct_point_cloud, gds);
     // WireCellPID::calc_sampling_points(gds,temp_cluster,nrebin, frame_length, unit_dis,false);
     // temp_cluster->Create_point_cloud();
