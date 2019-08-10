@@ -132,13 +132,13 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
   double dis_cut = 20*units::cm;
 
   // fill in the dead channels ...
-  std::vector<std::pair<int, int> > dead_uch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_uch, max_uch, 0);
-  std::vector<std::pair<int, int> > dead_vch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_vch, max_vch, 1);
-  std::vector<std::pair<int, int> > dead_wch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_wch, max_wch, 2);
+  std::vector<std::pair<int, int> > dead_uch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_uch, max_uch, 0, true);
+  std::vector<std::pair<int, int> > dead_vch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_vch, max_vch, 1, true);
+  std::vector<std::pair<int, int> > dead_wch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_wch, max_wch, 2,true);
 
   // {
-  //   for (auto it = dead_uch_ranges.begin(); it!= dead_uch_ranges.end(); it++){
-  //     std::cout << it->first << " " << it->second << std::endl;
+  //   for (auto it = dead_wch_ranges.begin(); it!= dead_wch_ranges.end(); it++){
+  //     std::cout << "final: " <<  it->first << " " << it->second << std::endl;
   //   }
   // }
   
