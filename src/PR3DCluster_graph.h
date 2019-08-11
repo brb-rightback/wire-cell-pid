@@ -34,8 +34,15 @@ void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyCTPointCloud& ct_point
 	  }
 	  if (temp_min_dis < 1.0*units::cm)
 	    pt_clouds.at(component[i])->AddPoint(cloud.pts[i],cloud_u.pts[i],cloud_v.pts[i],cloud_w.pts[i]);
+	  else
+	    excluded_points.insert(i);
+	}else{
+	  excluded_points.insert(i);
 	}
+      }else{
+	excluded_points.insert(i);
       }
+      
       //   std::cout << "Vertex " << i << " " << cloud.pts[i].x << " " << cloud.pts[i].y << " " << cloud.pts[i].z << " " << cloud.pts[i].index_u << " " << cloud.pts[i].index_v << " " << cloud.pts[i].index_w << " " << cloud.pts[i].mcell << " " << cloud.pts[i].mcell->GetTimeSlice()  << " is in component " << component[i] << std::endl;
     }
     for (int j=0;j!=num;j++){
@@ -942,8 +949,14 @@ void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyPointCloud* ref_point_
 	  }
 	  if (temp_min_dis < 1.0*units::cm)
 	    pt_clouds.at(component[i])->AddPoint(cloud.pts[i],cloud_u.pts[i],cloud_v.pts[i],cloud_w.pts[i]);
+	  else
+	    excluded_points.insert(i);
 
+	}else{
+	  excluded_points.insert(i);
 	}
+      }else{
+	excluded_points.insert(i);
       }
       //   std::cout << "Vertex " << i << " " << cloud.pts[i].x << " " << cloud.pts[i].y << " " << cloud.pts[i].z << " " << cloud.pts[i].index_u << " " << cloud.pts[i].index_v << " " << cloud.pts[i].index_w << " " << cloud.pts[i].mcell << " " << cloud.pts[i].mcell->GetTimeSlice()  << " is in component " << component[i] << std::endl;
     }

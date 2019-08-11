@@ -143,6 +143,7 @@ namespace WireCellPID{
     // graph
     MCUGraph *graph;
 
+    std::set<int> excluded_points;
     // saved steiner tree related products
     
     

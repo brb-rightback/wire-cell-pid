@@ -7,11 +7,21 @@ std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellP
   WireCell::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
   WCPointCloud<double>::WCPoint highest_wcp = cloud.pts[0];
   WCPointCloud<double>::WCPoint lowest_wcp = cloud.pts[0];
-  for (size_t i=1;i<cloud.pts.size();i++){
-    if (cloud.pts[i].y > highest_wcp.y)
+
+  bool flag_init = false;
+  
+  for (size_t i=0;i<cloud.pts.size();i++){
+    if (excluded_points.find(i)!=excluded_points.end()) continue;
+    if (!flag_init){
       highest_wcp = cloud.pts[i];
-    if (cloud.pts[i].y < lowest_wcp.y)
       lowest_wcp = cloud.pts[i];
+      flag_init = true;
+    }else{
+      if (cloud.pts[i].y > highest_wcp.y)
+	highest_wcp = cloud.pts[i];
+      if (cloud.pts[i].y < lowest_wcp.y)
+	lowest_wcp = cloud.pts[i];
+    }
   }
   return std::make_pair(highest_wcp,lowest_wcp);
 }
@@ -24,11 +34,19 @@ std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellP
   WireCell::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
   WCPointCloud<double>::WCPoint highest_wcp = cloud.pts[0];
   WCPointCloud<double>::WCPoint lowest_wcp = cloud.pts[0];
-  for (size_t i=1;i<cloud.pts.size();i++){
-    if (cloud.pts[i].z > highest_wcp.z)
+  bool flag_init = false;
+  for (size_t i=0;i<cloud.pts.size();i++){
+    if (excluded_points.find(i)!=excluded_points.end()) continue;
+    if (!flag_init){
       highest_wcp = cloud.pts[i];
-    if (cloud.pts[i].z < lowest_wcp.z)
       lowest_wcp = cloud.pts[i];
+      flag_init = true;
+    }else{
+      if (cloud.pts[i].z > highest_wcp.z)
+	highest_wcp = cloud.pts[i];
+      if (cloud.pts[i].z < lowest_wcp.z)
+	lowest_wcp = cloud.pts[i];
+    }
   }
   return std::make_pair(highest_wcp,lowest_wcp);
 }
@@ -42,11 +60,19 @@ std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellP
   WireCell::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
   WCPointCloud<double>::WCPoint highest_wcp = cloud.pts[0];
   WCPointCloud<double>::WCPoint lowest_wcp = cloud.pts[0];
-  for (size_t i=1;i<cloud.pts.size();i++){
-    if (cloud.pts[i].x > highest_wcp.x)
+  bool flag_init = false;
+  for (size_t i=0;i<cloud.pts.size();i++){
+    if (excluded_points.find(i)!=excluded_points.end()) continue;
+    if (!flag_init){
       highest_wcp = cloud.pts[i];
-    if (cloud.pts[i].x < lowest_wcp.x)
       lowest_wcp = cloud.pts[i];
+      flag_init = true;
+    }else{
+      if (cloud.pts[i].x > highest_wcp.x)
+	highest_wcp = cloud.pts[i];
+      if (cloud.pts[i].x < lowest_wcp.x)
+	lowest_wcp = cloud.pts[i];
+    }
   }
   return std::make_pair(lowest_wcp,highest_wcp);
 }
@@ -71,33 +97,45 @@ std::vector<std::vector<WCPointCloud<double>::WCPoint>> WireCellPID::PR3DCluster
   double high_value = wcps[0].x*main_axis.x + wcps[0].y*main_axis.y + wcps[0].z*main_axis.z;
   double low_value = wcps[1].x * main_axis.x + wcps[1].y * main_axis.y + wcps[1].z * main_axis.z ;
 
-  for (size_t i=1;i<cloud.pts.size();i++){
-    double value = cloud.pts[i].x*main_axis.x + cloud.pts[i].y*main_axis.y + cloud.pts[i].z*main_axis.z;
-    if (value > high_value){
-      wcps[0] = cloud.pts[i];
-      high_value = value;
+  bool flag_init = false;
+  
+  for (size_t i=0;i<cloud.pts.size();i++){
+    if (excluded_points.find(i)!=excluded_points.end()) continue;
+    if (!flag_init){
+      for (int j=0;j!=8;j++){
+	wcps[j] = cloud.pts[i];
+      }
+      high_value = wcps[0].x*main_axis.x + wcps[0].y*main_axis.y + wcps[0].z*main_axis.z;
+      low_value = wcps[1].x * main_axis.x + wcps[1].y * main_axis.y + wcps[1].z * main_axis.z ;
+      flag_init = true;
+    }else{
+      double value = cloud.pts[i].x*main_axis.x + cloud.pts[i].y*main_axis.y + cloud.pts[i].z*main_axis.z;
+      if (value > high_value){
+	wcps[0] = cloud.pts[i];
+	high_value = value;
+      }
+      if (value < low_value){
+	wcps[1] = cloud.pts[i];
+	low_value = value;
+      }
+      // top down
+      if (cloud.pts[i].y > wcps[2].y)
+	wcps[2] = cloud.pts[i];
+      if (cloud.pts[i].y < wcps[3].y)
+	wcps[3] = cloud.pts[i];
+      
+      // front back
+      if (cloud.pts[i].z > wcps[4].z)
+	wcps[4] = cloud.pts[i];
+      if (cloud.pts[i].z < wcps[5].z)
+	wcps[5] = cloud.pts[i];
+      
+      // early late
+      if (cloud.pts[i].x > wcps[6].x)
+	wcps[6] = cloud.pts[i];
+      if (cloud.pts[i].x < wcps[7].x)
+	wcps[7] = cloud.pts[i];
     }
-    if (value < low_value){
-      wcps[1] = cloud.pts[i];
-      low_value = value;
-    }
-    // top down
-    if (cloud.pts[i].y > wcps[2].y)
-      wcps[2] = cloud.pts[i];
-    if (cloud.pts[i].y < wcps[3].y)
-      wcps[3] = cloud.pts[i];
-    
-    // front back
-    if (cloud.pts[i].z > wcps[4].z)
-      wcps[4] = cloud.pts[i];
-    if (cloud.pts[i].z < wcps[5].z)
-      wcps[5] = cloud.pts[i];
-    
-    // early late
-    if (cloud.pts[i].x > wcps[6].x)
-      wcps[6] = cloud.pts[i];
-    if (cloud.pts[i].x < wcps[7].x)
-      wcps[7] = cloud.pts[i];
   }
 
   
@@ -164,18 +202,29 @@ std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellP
   
   double high_value = highest_wcp.x*main_axis.x + highest_wcp.y*main_axis.y + highest_wcp.z*main_axis.z;
   double low_value = lowest_wcp.x * main_axis.x + lowest_wcp.y * main_axis.y + lowest_wcp.z * main_axis.z ;
+
+  bool flag_init = false;
   
-  for (size_t i=1;i<cloud.pts.size();i++){
-    double value = cloud.pts[i].x*main_axis.x + cloud.pts[i].y*main_axis.y + cloud.pts[i].z*main_axis.z;
-    if (value > high_value){
-      highest_wcp = cloud.pts[i];
-      high_value = value;
-    }
-    
-    if (value < low_value){
-      lowest_wcp = cloud.pts[i];
-      low_value = value;
-    }
+  for (size_t i=0;i<cloud.pts.size();i++){
+     if (excluded_points.find(i)!=excluded_points.end()) continue;
+     if (!flag_init){
+       highest_wcp = cloud.pts[i];
+       lowest_wcp = cloud.pts[i];
+       high_value = highest_wcp.x*main_axis.x + highest_wcp.y*main_axis.y + highest_wcp.z*main_axis.z;
+       low_value = lowest_wcp.x * main_axis.x + lowest_wcp.y * main_axis.y + lowest_wcp.z * main_axis.z ;
+       flag_init = true;
+    }else{
+       double value = cloud.pts[i].x*main_axis.x + cloud.pts[i].y*main_axis.y + cloud.pts[i].z*main_axis.z;
+       if (value > high_value){
+	 highest_wcp = cloud.pts[i];
+	 high_value = value;
+       }
+       
+       if (value < low_value){
+	 lowest_wcp = cloud.pts[i];
+	 low_value = value;
+       }
+     }
   }
   return std::make_pair(highest_wcp,lowest_wcp);
 }
@@ -203,6 +252,7 @@ std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>
   for (size_t i=0;i<cloud.pts.size();i++){
     if (cloud.pts[i].mcell==0) continue;
     if (cloud.pts[i].mcell->Estimate_total_charge() < 1500) continue;
+    if (excluded_points.find(i)!=excluded_points.end()) continue;
     if (!flag_init){
       flag_init = true;
       for (int j=0;j!=14;j++){
@@ -439,21 +489,32 @@ std::pair<Point,Point> WireCellPID::PR3DCluster::get_two_extreme_points(int flag
   for (int i=0;i!=6;i++){
     extreme_wcp[i] = cloud.pts[0];
   }
-  for (size_t i=1;i< cloud.pts.size();i++){
-    if (cloud.pts[i].y > extreme_wcp[0].y)
-      extreme_wcp[0] = cloud.pts[i];
-    if (cloud.pts[i].y < extreme_wcp[1].y)
-      extreme_wcp[1] = cloud.pts[i];
-    
-    if (cloud.pts[i].x > extreme_wcp[2].x)
-      extreme_wcp[2] = cloud.pts[i];
-    if (cloud.pts[i].x < extreme_wcp[3].x)
-      extreme_wcp[3] = cloud.pts[i];
-    
-    if (cloud.pts[i].z > extreme_wcp[4].z)
-      extreme_wcp[4] = cloud.pts[i];
-    if (cloud.pts[i].z < extreme_wcp[5].z)
-      extreme_wcp[5] = cloud.pts[i];
+
+  bool flag_init = false;
+  
+  for (size_t i=0;i< cloud.pts.size();i++){
+    if (excluded_points.find(i)!=excluded_points.end()) continue;
+    if (!flag_init){
+      flag_init = true;
+      for (int j=0;j!=6;j++){
+	extreme_wcp[j] = cloud.pts[i];
+      }
+    }else{
+      if (cloud.pts[i].y > extreme_wcp[0].y)
+	extreme_wcp[0] = cloud.pts[i];
+      if (cloud.pts[i].y < extreme_wcp[1].y)
+	extreme_wcp[1] = cloud.pts[i];
+      
+      if (cloud.pts[i].x > extreme_wcp[2].x)
+	extreme_wcp[2] = cloud.pts[i];
+      if (cloud.pts[i].x < extreme_wcp[3].x)
+	extreme_wcp[3] = cloud.pts[i];
+      
+      if (cloud.pts[i].z > extreme_wcp[4].z)
+	extreme_wcp[4] = cloud.pts[i];
+      if (cloud.pts[i].z < extreme_wcp[5].z)
+	extreme_wcp[5] = cloud.pts[i];
+    }
   }
 
   double max_dis = -1;
