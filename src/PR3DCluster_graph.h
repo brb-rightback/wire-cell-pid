@@ -457,7 +457,22 @@ void WireCellPID::PR3DCluster::Create_graph(WireCell::ToyPointCloud* ref_point_c
 
 
 void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
+ 
+
+  
   WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+
+  bool flag_reduce_memory = false;
+  const int max_num_edges = 8;
+  double ref_dir_y[max_num_edges];// = {0,-1./sqrt(2.),-1, -1./sqrt(2.),  0,  1./sqrt(2.), 1, 1./sqrt(2.)};
+  double ref_dir_z[max_num_edges];// = {1, 1./sqrt(2.), 0, -1./sqrt(2.), -1, -1./sqrt(2.), 0, 1./sqrt(2.)};
+  for (size_t i=0;i!=8;i++){
+    ref_dir_z[i] = cos(2*3.1415926/max_num_edges * i);
+    ref_dir_y[i] = sin(2*3.1415926/max_num_edges * i);
+  }
+  if (cloud.pts.size()>=100000){
+    flag_reduce_memory = true;
+  }
   
   std::map<SlimMergeGeomCell*, std::map<int, std::set<int>>> map_mcell_uindex_wcps;
   std::map<SlimMergeGeomCell*, std::map<int, std::set<int>>> map_mcell_vindex_wcps;
@@ -581,31 +596,54 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
       
       
       // std::cout << max_wcps_set.size() << " " << min_wcps_set.size() << std::endl;
-      // for (auto it2 = max_wcps_set.begin(); it2!=max_wcps_set.end(); it2++){
-      //	for (auto it3 = min_wcps_set.begin(); it3!=min_wcps_set.end(); it3++){
       {
 	std::set<int> common_set;
 	set_intersection(wcps_set1.begin(), wcps_set1.end(), wcps_set2.begin(), wcps_set2.end(),std::inserter(common_set,common_set.begin()));
 
 	//	std::cout << "S0: " << common_set.size() << std::endl;
-
-	for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){
-	  WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
-	  if (wcp2.index != wcp1.index){
-	    int index2 = wcp2.index;
-	    //
-	    // add edge ...
-	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph);
-	    //	    std::cout << index1 << " " << index2 << " " << edge.second << std::endl;
-	    if (edge.second){
-	      //	      (*graph)[edge.first] = WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2)));
-	      //  (*graph)[edge.first].dist = sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2));
-	      num_edges ++;
-	      // std::cout << wcp1.x << " " << wcp1.y << " " << wcp1.z << " " << wcp1.index_u << " " << wcp1.index_v << " " << wcp1.index_w << " " << wcp2.index_u << " " << wcp2.index_v << " " << wcp2.index_w << std::endl;
+	if (common_set.size() <= max_num_edges){
+	  for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){
+	    WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
+	    if (wcp2.index != wcp1.index){
+	      int index2 = wcp2.index;
+	      // add edge ...
+	      auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph);
+	      //	    std::cout << index1 << " " << index2 << " " << edge.second << std::endl;
+	      if (edge.second){
+		num_edges ++;
+	      }
 	    }
 	  }
+	}else{
+	  std::vector<int> temp_saved_indices;
+	  std::vector<int> temp_saved_dis;
+	  temp_saved_indices.resize(max_num_edges,-1);
+	  temp_saved_dis.resize(max_num_edges,1e9);
+	  for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){
+	    WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
+	    if (wcp2.index != wcp1.index){
+	      for (int qx = 0;qx!=max_num_edges; qx++){
+		double dis = (wcp2.y-wcp1.y) * ref_dir_y[qx] + (wcp2.z-wcp1.z)*ref_dir_z[qx];
+		if (dis > 0 && dis < temp_saved_dis.at(qx)){
+		  temp_saved_dis[qx] = dis;
+		  temp_saved_indices[qx] = (*it4);
+		}
+	      }
+	    }
+	  }
+	  for (int qx = 0; qx!=max_num_edges;qx++){
+	    if (temp_saved_indices[qx] >=0){
+	      WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[temp_saved_indices[qx]];
+	      int index2 = wcp2.index;
+	      // add edge ...
+	      auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph);
+	      if (edge.second){
+		num_edges ++;
+	      }
+	    }
+	  }
+	  
 	}
-	//}
       }
     }
   }
@@ -646,9 +684,13 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
     if (i+1 < time_slices.size()){
       if (time_slices.at(i+1)-time_slices.at(i)==1){
 	vec_mcells_set.push_back(time_cells_set_map[time_slices.at(i+1)]);
-	if (i+2 < time_slices.size())
-	  if (time_slices.at(i+2)-time_slices.at(i)==2)
-	    vec_mcells_set.push_back(time_cells_set_map[time_slices.at(i+2)]);
+
+	if (flag_reduce_memory){ // reduce memory ...
+	}else{
+	  if (i+2 < time_slices.size())
+	    if (time_slices.at(i+2)-time_slices.at(i)==2)
+	      vec_mcells_set.push_back(time_cells_set_map[time_slices.at(i+2)]);
+	}
       }else if (time_slices.at(i+1) - time_slices.at(i)==2){
 	vec_mcells_set.push_back(time_cells_set_map[time_slices.at(i+1)]);
       }
@@ -747,17 +789,13 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
       }
 
       
-      //   for (auto it2 = max_wcps_set.begin(); it2!=max_wcps_set.end(); it2++){
-      //	for (auto it3 = min_wcps_set.begin(); it3!=min_wcps_set.end(); it3++){
       {
 	std::set<int> common_set;
 	set_intersection(wcps_set1.begin(), wcps_set1.end(), wcps_set2.begin(), wcps_set2.end(),std::inserter(common_set,common_set.begin()));
 
 	//	std::cout << "S1: " << common_set.size() << std::endl;
 	//	  std::cout << common_set.size() << std::endl;
-
 	//	std::map<int,std::pair<int,double> > closest_index;
-	
 	/* for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){ */
 	/*   WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4]; */
 	/*   if (wcp2.index != wcp1.index){ */
@@ -773,32 +811,50 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 	/*   } */
 	/* } */
 
-	//	std::cout << closest_index.size() << std::endl;
-	// for (auto it4 = closest_index.begin(); it4!=closest_index.end(); it4++){
-	//   int index2 = it4->second.first;
-	//   double dis = it4->second.second;
-	//   auto edge = add_edge(index1,index2,*graph);
-	//   if (edge.second){
-	//     (*graph)[edge.first].dist = dis;
-	//     num_edges ++;
-	//   }
-	// }
-
-	for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){
-	  WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
-	  if (wcp2.index != wcp1.index){
-	    int index2 = wcp2.index;
-	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph);
-	    if (edge.second){
-	      //	      (*graph)[edge.first].dist = sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2));
-	      num_edges ++;
+	
+	if (common_set.size() <= max_num_edges){
+	  for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){
+	    WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
+	    if (wcp2.index != wcp1.index){
+	      int index2 = wcp2.index;
+	      auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph);
+	      if (edge.second){
+		num_edges ++;
+	      }
+	    }
+	  }
+	}else{
+	  std::vector<int> temp_saved_indices;
+	  std::vector<int> temp_saved_dis;
+	  temp_saved_indices.resize(max_num_edges,-1);
+	  temp_saved_dis.resize(max_num_edges,1e9);
+	  for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){
+	    WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
+	    if (wcp2.index != wcp1.index){
+	      for (int qx = 0;qx!=max_num_edges; qx++){
+		double dis = (wcp2.y-wcp1.y) * ref_dir_y[qx] + (wcp2.z-wcp1.z)*ref_dir_z[qx];
+		if (dis > 0 && dis < temp_saved_dis.at(qx)){
+		  temp_saved_dis[qx] = dis;
+		  temp_saved_indices[qx] = (*it4);
+		}
+	      }
+	    }
+	  }
+	  for (int qx = 0; qx!=max_num_edges;qx++){
+	    if (temp_saved_indices[qx] >=0){
+	      WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[temp_saved_indices[qx]];
+	      int index2 = wcp2.index;
+	      // add edge ...
+	      auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph);
+	      if (edge.second){
+		num_edges ++;
+	      }
 	    }
 	  }
 	}
+
 	
       }
-      //}
-      
     }
 
 
@@ -864,16 +920,12 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
       }
 
       
-      // for (auto it2 = max_wcps_set.begin(); it2!=max_wcps_set.end(); it2++){
-      // 	for (auto it3 = min_wcps_set.begin(); it3!=min_wcps_set.end(); it3++){
       {
 	std::set<int> common_set;
 	set_intersection(wcps_set1.begin(), wcps_set1.end(), wcps_set2.begin(), wcps_set2.end(),std::inserter(common_set,common_set.begin()));
 
 	//	std::cout << "S2: " << common_set.size() << std::endl;
-
 	//	std::map<int,std::pair<int,double> > closest_index;
-	
 	/* for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){ */
 	/*   WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4]; */
 	/*   if (wcp2.index != wcp1.index){ */
@@ -889,33 +941,48 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 	/*   } */
 	/* } */
 
-	//std::cout << closest_index.size() << std::endl;
-	// for (auto it4 = closest_index.begin(); it4!=closest_index.end(); it4++){
-	//   int index2 = it4->second.first;
-	//   double dis = it4->second.second;
-	//   auto edge = add_edge(index1,index2,*graph);
-	//   if (edge.second){
-	//     (*graph)[edge.first].dist = dis;
-	//     num_edges ++;
-	//   }
-	// }
-
-	
-	for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){
-	  WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
-	  if (wcp2.index != wcp1.index){
-	    int index2 = wcp2.index;
-	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph);
-	    if (edge.second){
-	      //(*graph)[edge.first].dist = sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2));
-	      num_edges ++;
+	if (common_set.size() <= max_num_edges){
+	  for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){
+	    WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
+	    if (wcp2.index != wcp1.index){
+	      int index2 = wcp2.index;
+	      auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph);
+	      if (edge.second){
+		num_edges ++;
+	      }
+	    }
+	  }
+	}else{
+	  std::vector<int> temp_saved_indices;
+	  std::vector<int> temp_saved_dis;
+	  temp_saved_indices.resize(max_num_edges,-1);
+	  temp_saved_dis.resize(max_num_edges,1e9);
+	  for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){
+	    WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
+	    if (wcp2.index != wcp1.index){
+	      for (int qx = 0;qx!=max_num_edges; qx++){
+		double dis = (wcp2.y-wcp1.y) * ref_dir_y[qx] + (wcp2.z-wcp1.z)*ref_dir_z[qx];
+		if (dis > 0 && dis < temp_saved_dis.at(qx)){
+		  temp_saved_dis[qx] = dis;
+		  temp_saved_indices[qx] = (*it4);
+		}
+	      }
+	    }
+	  }
+	  for (int qx = 0; qx!=max_num_edges;qx++){
+	    if (temp_saved_indices[qx] >=0){
+	      WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[temp_saved_indices[qx]];
+	      int index2 = wcp2.index;
+	      // add edge ...
+	      auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph);
+	      if (edge.second){
+		num_edges ++;
+	      }
 	    }
 	  }
 	}
-
 	
       }
-      //      }
     }
   }
 

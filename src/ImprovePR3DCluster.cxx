@@ -12,7 +12,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_2(WireCellPID::PR3DCl
   cluster->dijkstra_shortest_paths(wcps1.first);
   cluster->cal_shortest_path(wcps1.second);
   cluster->Del_graph();
-  //cluster->Del_point_cloud();
+
   
 
    // include dead channels ...
@@ -34,6 +34,8 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_2(WireCellPID::PR3DCl
   
    temp_cluster->dijkstra_shortest_paths(wcps.first);
    temp_cluster->cal_shortest_path(wcps.second);
+   temp_cluster->Del_graph();
+   temp_cluster->Del_point_cloud();
    //WireCellPID::PR3DCluster *new_cluster = Improve_PR3DCluster(temp_cluster, ct_point_cloud, gds, holder);
    
    
