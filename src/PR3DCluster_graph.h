@@ -758,20 +758,20 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 
 	//	std::map<int,std::pair<int,double> > closest_index;
 	
-	for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){
-	  WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
-	  if (wcp2.index != wcp1.index){
-	    int index2 = wcp2.index;
-	    double dis = sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2));
+	/* for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){ */
+	/*   WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4]; */
+	/*   if (wcp2.index != wcp1.index){ */
+	/*     int index2 = wcp2.index; */
+	/*     double dis = sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2)); */
 	    
-	    if (closest_index.find(std::make_pair(index1,wcp2.mcell->GetTimeSlice()))==closest_index.end()){
-	      closest_index[std::make_pair(index1,wcp2.mcell->GetTimeSlice())] = std::make_pair(index2,dis);
-	    }else{
-	      if (dis < closest_index[std::make_pair(index1,wcp2.mcell->GetTimeSlice())].second)
-		closest_index[std::make_pair(index1,wcp2.mcell->GetTimeSlice())] = std::make_pair(index2,dis);
-	    }
-	  }
-	}
+	/*     if (closest_index.find(std::make_pair(index1,wcp2.mcell->GetTimeSlice()))==closest_index.end()){ */
+	/*       closest_index[std::make_pair(index1,wcp2.mcell->GetTimeSlice())] = std::make_pair(index2,dis); */
+	/*     }else{ */
+	/*       if (dis < closest_index[std::make_pair(index1,wcp2.mcell->GetTimeSlice())].second) */
+	/* 	closest_index[std::make_pair(index1,wcp2.mcell->GetTimeSlice())] = std::make_pair(index2,dis); */
+	/*     } */
+	/*   } */
+	/* } */
 
 	//	std::cout << closest_index.size() << std::endl;
 	// for (auto it4 = closest_index.begin(); it4!=closest_index.end(); it4++){
@@ -783,6 +783,19 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 	//     num_edges ++;
 	//   }
 	// }
+
+	for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){
+	  WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
+	  if (wcp2.index != wcp1.index){
+	    int index2 = wcp2.index;
+	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph);
+	    if (edge.second){
+	      //	      (*graph)[edge.first].dist = sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2));
+	      num_edges ++;
+	    }
+	  }
+	}
+	
       }
       //}
       
@@ -861,20 +874,20 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 
 	//	std::map<int,std::pair<int,double> > closest_index;
 	
-	for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){
-	  WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
-	  if (wcp2.index != wcp1.index){
-	    int index2 = wcp2.index;
-	    double dis = sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2));
+	/* for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){ */
+	/*   WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4]; */
+	/*   if (wcp2.index != wcp1.index){ */
+	/*     int index2 = wcp2.index; */
+	/*     double dis = sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2)); */
 	    
-	    if (closest_index.find(std::make_pair(index1,wcp2.mcell->GetTimeSlice()))==closest_index.end()){
-	      closest_index[std::make_pair(index1,wcp2.mcell->GetTimeSlice())] = std::make_pair(index2,dis);
-	    }else{
-	      if (dis < closest_index[std::make_pair(index1,wcp2.mcell->GetTimeSlice())].second)
-		closest_index[std::make_pair(index1,wcp2.mcell->GetTimeSlice())] = std::make_pair(index2,dis);
-	    }
-	  }
-	}
+	/*     if (closest_index.find(std::make_pair(index1,wcp2.mcell->GetTimeSlice()))==closest_index.end()){ */
+	/*       closest_index[std::make_pair(index1,wcp2.mcell->GetTimeSlice())] = std::make_pair(index2,dis); */
+	/*     }else{ */
+	/*       if (dis < closest_index[std::make_pair(index1,wcp2.mcell->GetTimeSlice())].second) */
+	/* 	closest_index[std::make_pair(index1,wcp2.mcell->GetTimeSlice())] = std::make_pair(index2,dis); */
+	/*     } */
+	/*   } */
+	/* } */
 
 	//std::cout << closest_index.size() << std::endl;
 	// for (auto it4 = closest_index.begin(); it4!=closest_index.end(); it4++){
@@ -888,32 +901,34 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 	// }
 
 	
-	// for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){
-	//   WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
-	//   if (wcp2.index != wcp1.index){
-	//     int index2 = wcp2.index;
-	//     auto edge = add_edge(index1,index2,*graph);
-	//     if (edge.second){
-	//       (*graph)[edge.first].dist = sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2));
-	//       num_edges ++;
-	//     }
-	//   }
-	// }
+	for (auto it4 = common_set.begin(); it4!=common_set.end(); it4++){
+	  WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4];
+	  if (wcp2.index != wcp1.index){
+	    int index2 = wcp2.index;
+	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph);
+	    if (edge.second){
+	      //(*graph)[edge.first].dist = sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2));
+	      num_edges ++;
+	    }
+	  }
+	}
+
+	
       }
       //      }
     }
   }
 
-  for (auto it4 = closest_index.begin(); it4!=closest_index.end(); it4++){
-    int index1 = it4->first.first;
-    int index2 = it4->second.first;
-    double dis = it4->second.second;
-    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(dis),*graph);
-    if (edge.second){
-      //      (*graph)[edge.first].dist = dis;
-      num_edges ++;
-    }
-  }
+  /* for (auto it4 = closest_index.begin(); it4!=closest_index.end(); it4++){ */
+  /*   int index1 = it4->first.first; */
+  /*   int index2 = it4->second.first; */
+  /*   double dis = it4->second.second; */
+  /*   auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(dis),*graph); */
+  /*   if (edge.second){ */
+  /*     //      (*graph)[edge.first].dist = dis; */
+  /*     num_edges ++; */
+  /*   } */
+  /* } */
   // end of copying ... 
 }
 
