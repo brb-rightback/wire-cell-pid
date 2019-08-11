@@ -391,7 +391,7 @@ int main(int argc, char* argv[])
   
   //std::cout << saved_parent_tpc_cluster_ids.size() << std::endl;
   for (size_t i=0; i!=live_clusters.size();i++){
-    //    if (live_clusters.at(i)->get_cluster_id()!=99) continue;
+    // if (live_clusters.at(i)->get_cluster_id()!=63) continue;
     if (flag_in_time_only){
       if ( saved_parent_tpc_cluster_ids.find(map_cluster_parent_id[live_clusters.at(i)])!=saved_parent_tpc_cluster_ids.end()){
 	live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
@@ -403,7 +403,10 @@ int main(int argc, char* argv[])
     }
 
     // WireCell2dToy::WireCellHolder *holder = new WireCell2dToy::WireCellHolder();
-    // WireCellPID::PR3DCluster *temp_cluster = WireCellPID::Improve_PR3DCluster_1(live_clusters.at(i),ct_point_cloud, gds, holder);
+
+    // //WireCellPID::PR3DCluster *temp_cluster = WireCellPID::Improve_PR3DCluster_1(live_clusters.at(i),ct_point_cloud, gds, holder);
+    // WireCellPID::PR3DCluster *temp_cluster = WireCellPID::Improve_PR3DCluster_2(live_clusters.at(i),ct_point_cloud, gds, holder, nrebin, frame_length, unit_dis);
+    
     // WireCellPID::calc_sampling_points(gds,temp_cluster,nrebin, frame_length, unit_dis,false);
     // temp_cluster->Create_point_cloud();
     // old_new_cluster_map[live_clusters.at(i)] = temp_cluster;
@@ -434,7 +437,7 @@ int main(int argc, char* argv[])
   T_cluster->SetDirectory(file1);
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-    //if (old_new_cluster_map.find(*it)==old_new_cluster_map.end()) continue;
+    // if (old_new_cluster_map.find(*it)==old_new_cluster_map.end()) continue;
     //WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
     WireCellPID::PR3DCluster* new_cluster = *it;  
     ncluster = new_cluster->get_cluster_id();
