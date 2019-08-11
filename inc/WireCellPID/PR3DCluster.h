@@ -27,7 +27,7 @@ namespace WireCellPID{
   
   typedef adjacency_list<setS, vecS, undirectedS, VertexProp, EdgeProp> MCUGraph;
   typedef graph_traits<MCUGraph>::vertex_descriptor vertex_descriptor;
-  typedef graph_traits<MCUGraph>::edge_descriptor edge_descriptor;
+  typedef graph_traits<MCUGraph>::edge_descriptor edge_descriptor; 
   
 
   

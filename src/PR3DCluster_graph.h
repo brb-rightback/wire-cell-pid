@@ -470,9 +470,9 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
     ref_dir_z[i] = cos(2*3.1415926/max_num_edges * i);
     ref_dir_y[i] = sin(2*3.1415926/max_num_edges * i);
   }
-  if (cloud.pts.size()>=100000){
-    flag_reduce_memory = true;
-  }
+  //  if (cloud.pts.size()>=100000){
+  //  flag_reduce_memory = true;
+  // }
   
   std::map<SlimMergeGeomCell*, std::map<int, std::set<int>>> map_mcell_uindex_wcps;
   std::map<SlimMergeGeomCell*, std::map<int, std::set<int>>> map_mcell_vindex_wcps;

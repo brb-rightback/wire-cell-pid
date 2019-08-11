@@ -538,7 +538,7 @@ int main(int argc, char* argv[])
     // if (old_new_cluster_map.find(*it)==old_new_cluster_map.end()) continue;
     WireCellPID::PR3DCluster* new_cluster = *it;
     //WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
-     if (new_cluster->get_point_cloud_steiner()==0) continue;
+    if (new_cluster->get_point_cloud_steiner()==0) continue;
     if (new_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
       std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps(2); 
       // std::cout << wcps.first.x/units::cm << " " << wcps.first.y/units::cm << " " << wcps.first.z/units::cm << std::endl;

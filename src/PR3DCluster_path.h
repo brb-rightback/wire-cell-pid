@@ -599,7 +599,9 @@ void WireCellPID::PR3DCluster::cal_shortest_path(WCPointCloud<double>::WCPoint& 
   path_wcps.push_front(cloud.pts[source_wcp_index]);
   if (cloud.pts[source_wcp_index].mcell!=path_mcells.front())
     path_mcells.push_front(cloud.pts[source_wcp_index].mcell);
-  
+
+  parents.clear();
+  distances.clear();
 }
 
 
