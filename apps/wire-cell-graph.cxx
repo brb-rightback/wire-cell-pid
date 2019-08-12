@@ -266,6 +266,7 @@ int main(int argc, char* argv[])
     std::vector<double> wire_charge_err_w = wire_charge_err_w_vec->at(i);
 
     
+    
     mcell->SetTimeSlice(time_slice);
     
     mcell->set_uq(uq_vec->at(i));
@@ -312,6 +313,8 @@ int main(int argc, char* argv[])
     if (flag_w_vec->at(i)==0){
       mcell->add_bad_planes(WirePlaneType_t(2));
       for (int j=0;j!=nwire_w_vec->at(i);j++){
+	//	if (wire_index_w.at(j)>350&&wire_index_w.at(j)<500) 
+	//  std::cout << wire_index_w.at(j) << std::endl;
 	if (dead_w_index.find(wire_index_w.at(j))==dead_w_index.end()){
 	  dead_w_index[wire_index_w.at(j)] = std::make_pair(temp_x-0.1*units::cm,temp_x+0.1*units::cm);
 	}else{
@@ -353,7 +356,78 @@ int main(int argc, char* argv[])
   }
   
   prev_cluster_id = -1;
+  cluster_id_vec->clear();
+  wire_index_u_vec->clear();
+  wire_index_v_vec->clear();
+  wire_index_w_vec->clear();
+  nwire_u_vec->clear();
+  nwire_v_vec->clear();
+  nwire_w_vec->clear();
+  flag_u_vec->clear();
+  flag_v_vec->clear();
+  flag_w_vec->clear();
 
+  TDC->GetEntry(0);
+  for (int i=0;i!=cluster_id_vec->size();i++){
+    int cluster_id = cluster_id_vec->at(i);
+    std::vector<int> time_slices = time_slices_vec->at(i);
+    std::vector<int> wire_index_u = wire_index_u_vec->at(i);
+    std::vector<int> wire_index_v = wire_index_v_vec->at(i);
+    std::vector<int> wire_index_w = wire_index_w_vec->at(i);
+    
+    
+    double temp_x1 = (time_slices.front()*nrebin/2.*unit_dis/10. - frame_length/2.*unit_dis/10.) * units::cm;
+    double temp_x2 = (time_slices.back()*nrebin/2.*unit_dis/10. - frame_length/2.*unit_dis/10.) * units::cm;
+    // std::cout << temp_x1/units::cm << " " << temp_x2/units::cm << std::endl;
+    
+    if (flag_u_vec->at(i)==0){
+    
+      for (int j=0;j!=nwire_u_vec->at(i);j++){
+	if (dead_u_index.find(wire_index_u.at(j))==dead_u_index.end()){
+	  dead_u_index[wire_index_u.at(j)] = std::make_pair(temp_x1-0.1*units::cm,temp_x2+0.1*units::cm);
+	}else{
+	  if (temp_x1-0.1*units::cm < dead_u_index[wire_index_u.at(j)].first){
+	    dead_u_index[wire_index_u.at(j)].first = temp_x1 - 0.1*units::cm;
+	  }else if (temp_x2+0.1*units::cm > dead_u_index[wire_index_u.at(j)].second){
+	    dead_u_index[wire_index_u.at(j)].second = temp_x2 + 0.1*units::cm;
+	  }
+	}
+      }
+    }
+    if (flag_v_vec->at(i)==0){
+    
+      for (int j=0;j!=nwire_v_vec->at(i);j++){
+	if (dead_v_index.find(wire_index_v.at(j))==dead_v_index.end()){
+	  dead_v_index[wire_index_v.at(j)] = std::make_pair(temp_x1-0.1*units::cm,temp_x2+0.1*units::cm);
+	}else{
+	  if (temp_x1-0.1*units::cm < dead_v_index[wire_index_v.at(j)].first){
+	    dead_v_index[wire_index_v.at(j)].first = temp_x1 - 0.1*units::cm;
+	  }else if (temp_x2+0.1*units::cm > dead_v_index[wire_index_v.at(j)].second){
+	    dead_v_index[wire_index_v.at(j)].second = temp_x2 + 0.1*units::cm;
+	  }
+	}
+      }
+    }
+    if (flag_w_vec->at(i)==0){
+    
+      for (int j=0;j!=nwire_w_vec->at(i);j++){
+	if (dead_w_index.find(wire_index_w.at(j))==dead_w_index.end()){
+	  dead_w_index[wire_index_w.at(j)] = std::make_pair(temp_x1-0.1*units::cm,temp_x2+0.1*units::cm);
+	}else{
+	  if (temp_x1-0.1*units::cm < dead_w_index[wire_index_w.at(j)].first){
+	    dead_w_index[wire_index_w.at(j)].first = temp_x1 - 0.1*units::cm;
+	  }else if (temp_x2+0.1*units::cm > dead_w_index[wire_index_w.at(j)].second){
+	    dead_w_index[wire_index_w.at(j)].second = temp_x2 + 0.1*units::cm;
+	  }
+	}
+      }
+    }
+    
+    ident++;
+  }
+
+
+  
   cout << em("load clusters from file") << endl;
 
   // for (auto it = dead_w_index.begin(); it!=dead_w_index.end();it++){
@@ -391,7 +465,7 @@ int main(int argc, char* argv[])
   
   //std::cout << saved_parent_tpc_cluster_ids.size() << std::endl;
   for (size_t i=0; i!=live_clusters.size();i++){
-    //if (live_clusters.at(i)->get_cluster_id()!=80) continue;
+    //    if (live_clusters.at(i)->get_cluster_id()!=25) continue;
 
     if (live_clusters.at(i)->get_num_points()<=2) continue;
     if (flag_in_time_only){
@@ -439,8 +513,8 @@ int main(int argc, char* argv[])
   T_cluster->SetDirectory(file1);
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-    //if (old_new_cluster_map.find(*it)==old_new_cluster_map.end()) continue;
-    //WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
+    //    if (old_new_cluster_map.find(*it)==old_new_cluster_map.end()) continue;
+    //    WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
     WireCellPID::PR3DCluster* new_cluster = *it;  
     ncluster = new_cluster->get_cluster_id();
     

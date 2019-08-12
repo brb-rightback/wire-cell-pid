@@ -139,9 +139,11 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
   std::vector<std::pair<int, int> > dead_wch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_wch, max_wch, 2,true);
 
   // {
+  //   std::cout << min_wch << " " << max_wch << std::endl;
   //   for (auto it = dead_wch_ranges.begin(); it!= dead_wch_ranges.end(); it++){
-  //     std::cout << "final: " <<  it->first << " " << it->second << std::endl;
+  //     std::cout << "final W: " <<  it->first << " " << it->second << std::endl;
   //   }
+    
   // }
   
   for (int time_slice = min_time; time_slice <= max_time; time_slice ++){
@@ -594,6 +596,15 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
   std::map<std::pair<int,int>,double> time_ch_charge_map;
   std::map<std::pair<int,int>,double> time_ch_charge_err_map;
 
+  int min_time = 1e9;
+  int max_time = -1e9;
+  int min_uch = 1e9;
+  int max_uch = -1e9;
+  int min_vch = 1e9;
+  int max_vch = -1e9;
+  int min_wch = 1e9;
+  int max_wch = -1e9;
+  
   // fill all map according to existing mcells
   SMGCSelection& old_mcells = cluster->get_mcells();
   for (auto it=old_mcells.begin(); it!=old_mcells.end(); it++){
@@ -611,7 +622,9 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
       std::set<int> wchs;
       w_time_chs[time_slice] = wchs;
     }
-    
+
+    if (time_slice < min_time) min_time = time_slice;
+    if (time_slice > max_time) max_time = time_slice;
 
     for (auto it1 = uwires.begin(); it1!=uwires.end(); it1++){
       const GeomWire *wire = (*it1); 
@@ -620,6 +633,8 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
       u_time_chs[time_slice].insert(wire->channel());
       time_ch_charge_map[std::make_pair(time_slice,wire->channel())] = charge;
       time_ch_charge_err_map[std::make_pair(time_slice,wire->channel())] = charge_err;
+      if (wire->channel() < min_uch) min_uch = wire->channel();
+      if (wire->channel() > max_uch) max_uch = wire->channel();
       // std::cout << time_slice << " " << wire->channel() << " " << charge << " " << charge_err << std::endl;
     }
 
@@ -630,6 +645,8 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
       v_time_chs[time_slice].insert(wire->channel());
       time_ch_charge_map[std::make_pair(time_slice,wire->channel())] = charge;
       time_ch_charge_err_map[std::make_pair(time_slice,wire->channel())] = charge_err;
+      if (wire->channel() < min_vch) min_vch = wire->channel();
+      if (wire->channel() > max_vch) max_vch = wire->channel();
       // std::cout << time_slice << " " << wire->channel() << " " << charge << " " << charge_err << std::endl;
     }
 
@@ -640,10 +657,206 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
       w_time_chs[time_slice].insert(wire->channel());
       time_ch_charge_map[std::make_pair(time_slice,wire->channel())] = charge;
       time_ch_charge_err_map[std::make_pair(time_slice,wire->channel())] = charge_err;
+      if (wire->channel() < min_wch) min_wch = wire->channel();
+      if (wire->channel() > max_wch) max_wch = wire->channel();
       // std::cout << time_slice << " " << wire->channel() << " " << charge << " " << charge_err << std::endl;
     }
   }
 
+   WireCell::ToyPointCloud *orig_point_cloud = cluster->get_point_cloud();
+  double dis_cut = 20*units::cm;
+
+  // fill in the dead channels ...
+  std::vector<std::pair<int, int> > dead_uch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_uch, max_uch, 0, true);
+  std::vector<std::pair<int, int> > dead_vch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_vch, max_vch, 1, true);
+  std::vector<std::pair<int, int> > dead_wch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_wch, max_wch, 2,true);
+
+  
+  for (int time_slice = min_time; time_slice <= max_time; time_slice ++){
+    // U plane 
+    if (u_time_chs.find(time_slice)==u_time_chs.end()){
+      std::set<int> uchs;
+      for (auto it = dead_uch_ranges.begin(); it!=dead_uch_ranges.end(); it++){
+	for (int ch = (*it).first; ch<=(*it).second; ch++){
+	  std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 0);
+	  double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 0);
+	  if (temp_min_dis > dis_cut) continue;
+	  uchs.insert(ch);
+	  time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
+	  time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
+	}
+      }
+      u_time_chs[time_slice] = uchs;
+    }else{
+      for (auto it = dead_uch_ranges.begin(); it!=dead_uch_ranges.end(); it++){
+	for (int ch = (*it).first; ch<=(*it).second; ch++){
+	  if (u_time_chs[time_slice].find(ch)==u_time_chs[time_slice].end()){
+	    std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 0);
+	    double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 0);
+	    if (temp_min_dis > dis_cut) continue;
+	    
+	    u_time_chs[time_slice].insert(ch);
+	    time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
+	    time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
+	  }
+	}
+      }
+    }
+
+    // V plane
+     if (v_time_chs.find(time_slice)==v_time_chs.end()){
+      std::set<int> vchs;
+      for (auto it = dead_vch_ranges.begin(); it!=dead_vch_ranges.end(); it++){
+	for (int ch = (*it).first; ch<=(*it).second; ch++){
+	  std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 1);
+	  double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 1);
+	  if (temp_min_dis > dis_cut) continue;
+	  
+	  vchs.insert(ch);
+	  time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
+	  time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
+	}
+      }
+      v_time_chs[time_slice] = vchs;
+    }else{
+      for (auto it = dead_vch_ranges.begin(); it!=dead_vch_ranges.end(); it++){
+	for (int ch = (*it).first; ch<=(*it).second; ch++){
+	  if (v_time_chs[time_slice].find(ch)==v_time_chs[time_slice].end()){
+	    std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 1);
+	    double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 1);
+	    if (temp_min_dis > dis_cut) continue;
+	  
+	    v_time_chs[time_slice].insert(ch);
+	    time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
+	    time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
+	  }
+	}
+      }
+    }
+
+     // W plane
+     if (w_time_chs.find(time_slice)==w_time_chs.end()){
+      std::set<int> wchs;
+      for (auto it = dead_wch_ranges.begin(); it!=dead_wch_ranges.end(); it++){
+	for (int ch = (*it).first; ch<=(*it).second; ch++){
+	  std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 2);
+	  double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 2);
+	  if (temp_min_dis > dis_cut) continue;
+	  
+	  wchs.insert(ch);
+	  time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
+	  time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
+	}
+      }
+      w_time_chs[time_slice] = wchs;
+    }else{
+      for (auto it = dead_wch_ranges.begin(); it!=dead_wch_ranges.end(); it++){
+	for (int ch = (*it).first; ch<=(*it).second; ch++){
+	  if (w_time_chs[time_slice].find(ch)==w_time_chs[time_slice].end()){
+	    std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 2);
+	    double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 2);
+	    if (temp_min_dis > dis_cut) continue;
+	    w_time_chs[time_slice].insert(ch);
+	    time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
+	    time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
+	  }
+	}
+      }
+    }
+  }
+
+  
+  // deal with the good channels using WCPoint Cloud ...
+  std::map<std::pair<int,int>, std::pair<double,double> > map_u_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_uch, max_uch, 0);
+  std::map<std::pair<int,int>, std::pair<double,double> > map_v_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_vch, max_vch, 1);
+  std::map<std::pair<int,int>, std::pair<double,double> > map_w_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_wch, max_wch, 2);
+  //std::cout << map_u_tcc.size() << " " << map_v_tcc.size() << " " << map_w_tcc.size() << std::endl;
+  // Form a connected graph for each view ??? 
+
+  // U plane 
+  for (auto it = map_u_tcc.begin(); it!=map_u_tcc.end(); it++){
+    int time_slice = (*it).first.first;
+    int ch = (*it).first.second;
+    double charge = (*it).second.first;
+    double charge_err = (*it).second.second;
+    if (u_time_chs.find(time_slice)==u_time_chs.end()){
+      std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 0);
+      double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 0);
+      if (temp_min_dis > dis_cut) continue;
+	  
+      std::set<int> uchs;
+      uchs.insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+      u_time_chs[time_slice] = uchs;
+    }else{
+      std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 0);
+      double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 0);
+      if (temp_min_dis > dis_cut) continue;
+      
+      u_time_chs[time_slice].insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+    }
+  }
+  // V plane
+  for (auto it = map_v_tcc.begin(); it!=map_v_tcc.end(); it++){
+    int time_slice = (*it).first.first;
+    int ch = (*it).first.second;
+    double charge = (*it).second.first;
+    double charge_err = (*it).second.second;
+    if (v_time_chs.find(time_slice)==v_time_chs.end()){
+      std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 1);
+      double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 1);
+      if (temp_min_dis > dis_cut) continue;
+	  
+      std::set<int> vchs;
+      vchs.insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+      v_time_chs[time_slice] = vchs;
+    }else{
+      std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 1);
+      double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 1);
+      if (temp_min_dis > dis_cut) continue;
+	  
+      v_time_chs[time_slice].insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+    }
+  }
+
+  // W plane
+  for (auto it = map_w_tcc.begin(); it!=map_w_tcc.end(); it++){
+    int time_slice = (*it).first.first;
+    int ch = (*it).first.second;
+    double charge = (*it).second.first;
+    double charge_err = (*it).second.second;
+    if (w_time_chs.find(time_slice)==w_time_chs.end()){
+      std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 2);
+      double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 2);
+      if (temp_min_dis > dis_cut) continue;
+	  
+      std::set<int> wchs;
+      wchs.insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+      w_time_chs[time_slice] = wchs;
+    }else{
+      std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 2);
+      double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 2);
+      if (temp_min_dis > dis_cut) continue;
+	  
+      w_time_chs[time_slice].insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+    }
+  }
+  
+
+  
+
+  
   // for (auto it = time_ch_charge_map.begin(); it!= time_ch_charge_map.end(); it++){
   //   std::cout << it->first.first << " " << it->first.second << std::endl;
   // }
@@ -982,6 +1195,15 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
   std::map<std::pair<int,int>,double> time_ch_charge_map;
   std::map<std::pair<int,int>,double> time_ch_charge_err_map;
 
+  int min_time = 1e9;
+  int max_time = -1e9;
+  int min_uch = 1e9;
+  int max_uch = -1e9;
+  int min_vch = 1e9;
+  int max_vch = -1e9;
+  int min_wch = 1e9;
+  int max_wch = -1e9;
+  
   // fill all map according to existing mcells
   SMGCSelection& old_mcells = cluster2->get_mcells();
   for (auto it=old_mcells.begin(); it!=old_mcells.end(); it++){
@@ -991,6 +1213,9 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
     GeomWireSelection& wwires = mcell->get_wwires();
     int time_slice = mcell->GetTimeSlice();
 
+    if (time_slice < min_time) min_time = time_slice;
+    if (time_slice > max_time) max_time = time_slice;
+    
     if (u_time_chs.find(time_slice)==u_time_chs.end()){
       std::set<int> uchs;
       u_time_chs[time_slice] = uchs;
@@ -1009,6 +1234,8 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
       time_ch_charge_map[std::make_pair(time_slice,wire->channel())] = charge;
       time_ch_charge_err_map[std::make_pair(time_slice,wire->channel())] = charge_err;
       // std::cout << time_slice << " " << wire->channel() << " " << charge << " " << charge_err << std::endl;
+      if (wire->channel() < min_uch) min_uch = wire->channel();
+      if (wire->channel() > max_uch) max_uch = wire->channel();
     }
 
     for (auto it1 = vwires.begin(); it1!=vwires.end(); it1++){
@@ -1019,6 +1246,8 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
       time_ch_charge_map[std::make_pair(time_slice,wire->channel())] = charge;
       time_ch_charge_err_map[std::make_pair(time_slice,wire->channel())] = charge_err;
       // std::cout << time_slice << " " << wire->channel() << " " << charge << " " << charge_err << std::endl;
+      if (wire->channel() < min_vch) min_vch = wire->channel();
+      if (wire->channel() > max_vch) max_vch = wire->channel();
     }
 
     for (auto it1 = wwires.begin(); it1!=wwires.end(); it1++){
@@ -1029,12 +1258,207 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
       time_ch_charge_map[std::make_pair(time_slice,wire->channel())] = charge;
       time_ch_charge_err_map[std::make_pair(time_slice,wire->channel())] = charge_err;
       // std::cout << time_slice << " " << wire->channel() << " " << charge << " " << charge_err << std::endl;
+      if (wire->channel() < min_wch) min_wch = wire->channel();
+      if (wire->channel() > max_wch) max_wch = wire->channel();
     }
   }
 
   // for (auto it = time_ch_charge_map.begin(); it!= time_ch_charge_map.end(); it++){
   //   std::cout << it->first.first << " " << it->first.second << std::endl;
   // }
+  
+
+  WireCell::ToyPointCloud *orig_point_cloud = cluster1->get_point_cloud();
+  double dis_cut = 20*units::cm;
+
+  // fill in the dead channels ...
+  std::vector<std::pair<int, int> > dead_uch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_uch, max_uch, 0, true);
+  std::vector<std::pair<int, int> > dead_vch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_vch, max_vch, 1, true);
+  std::vector<std::pair<int, int> > dead_wch_ranges = ct_point_cloud.get_overlap_dead_chs(min_time, max_time, min_wch, max_wch, 2,true);
+
+  
+  for (int time_slice = min_time; time_slice <= max_time; time_slice ++){
+    // U plane 
+    if (u_time_chs.find(time_slice)==u_time_chs.end()){
+      std::set<int> uchs;
+      for (auto it = dead_uch_ranges.begin(); it!=dead_uch_ranges.end(); it++){
+	for (int ch = (*it).first; ch<=(*it).second; ch++){
+	  std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 0);
+	  double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 0);
+	  if (temp_min_dis > dis_cut) continue;
+	  uchs.insert(ch);
+	  time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
+	  time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
+	}
+      }
+      u_time_chs[time_slice] = uchs;
+    }else{
+      for (auto it = dead_uch_ranges.begin(); it!=dead_uch_ranges.end(); it++){
+	for (int ch = (*it).first; ch<=(*it).second; ch++){
+	  if (u_time_chs[time_slice].find(ch)==u_time_chs[time_slice].end()){
+	    std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 0);
+	    double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 0);
+	    if (temp_min_dis > dis_cut) continue;
+	    
+	    u_time_chs[time_slice].insert(ch);
+	    time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
+	    time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
+	  }
+	}
+      }
+    }
+
+    // V plane
+     if (v_time_chs.find(time_slice)==v_time_chs.end()){
+      std::set<int> vchs;
+      for (auto it = dead_vch_ranges.begin(); it!=dead_vch_ranges.end(); it++){
+	for (int ch = (*it).first; ch<=(*it).second; ch++){
+	  std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 1);
+	  double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 1);
+	  if (temp_min_dis > dis_cut) continue;
+	  
+	  vchs.insert(ch);
+	  time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
+	  time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
+	}
+      }
+      v_time_chs[time_slice] = vchs;
+    }else{
+      for (auto it = dead_vch_ranges.begin(); it!=dead_vch_ranges.end(); it++){
+	for (int ch = (*it).first; ch<=(*it).second; ch++){
+	  if (v_time_chs[time_slice].find(ch)==v_time_chs[time_slice].end()){
+	    std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 1);
+	    double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 1);
+	    if (temp_min_dis > dis_cut) continue;
+	  
+	    v_time_chs[time_slice].insert(ch);
+	    time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
+	    time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
+	  }
+	}
+      }
+    }
+
+     // W plane
+     if (w_time_chs.find(time_slice)==w_time_chs.end()){
+      std::set<int> wchs;
+      for (auto it = dead_wch_ranges.begin(); it!=dead_wch_ranges.end(); it++){
+	for (int ch = (*it).first; ch<=(*it).second; ch++){
+	  std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 2);
+	  double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 2);
+	  if (temp_min_dis > dis_cut) continue;
+	  
+	  wchs.insert(ch);
+	  time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
+	  time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
+	}
+      }
+      w_time_chs[time_slice] = wchs;
+    }else{
+      for (auto it = dead_wch_ranges.begin(); it!=dead_wch_ranges.end(); it++){
+	for (int ch = (*it).first; ch<=(*it).second; ch++){
+	  if (w_time_chs[time_slice].find(ch)==w_time_chs[time_slice].end()){
+	    std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 2);
+	    double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 2);
+	    if (temp_min_dis > dis_cut) continue;
+	    w_time_chs[time_slice].insert(ch);
+	    time_ch_charge_map[std::make_pair(time_slice,ch)] = 0;
+	    time_ch_charge_err_map[std::make_pair(time_slice,ch)] = 0;
+	  }
+	}
+      }
+    }
+  }
+
+  
+  // deal with the good channels using WCPoint Cloud ...
+  std::map<std::pair<int,int>, std::pair<double,double> > map_u_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_uch, max_uch, 0);
+  std::map<std::pair<int,int>, std::pair<double,double> > map_v_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_vch, max_vch, 1);
+  std::map<std::pair<int,int>, std::pair<double,double> > map_w_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_wch, max_wch, 2);
+  //std::cout << map_u_tcc.size() << " " << map_v_tcc.size() << " " << map_w_tcc.size() << std::endl;
+  // Form a connected graph for each view ??? 
+
+  // U plane 
+  for (auto it = map_u_tcc.begin(); it!=map_u_tcc.end(); it++){
+    int time_slice = (*it).first.first;
+    int ch = (*it).first.second;
+    double charge = (*it).second.first;
+    double charge_err = (*it).second.second;
+    if (u_time_chs.find(time_slice)==u_time_chs.end()){
+      std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 0);
+      double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 0);
+      if (temp_min_dis > dis_cut) continue;
+	  
+      std::set<int> uchs;
+      uchs.insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+      u_time_chs[time_slice] = uchs;
+    }else{
+      std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 0);
+      double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 0);
+      if (temp_min_dis > dis_cut) continue;
+      
+      u_time_chs[time_slice].insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+    }
+  }
+  // V plane
+  for (auto it = map_v_tcc.begin(); it!=map_v_tcc.end(); it++){
+    int time_slice = (*it).first.first;
+    int ch = (*it).first.second;
+    double charge = (*it).second.first;
+    double charge_err = (*it).second.second;
+    if (v_time_chs.find(time_slice)==v_time_chs.end()){
+      std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 1);
+      double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 1);
+      if (temp_min_dis > dis_cut) continue;
+	  
+      std::set<int> vchs;
+      vchs.insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+      v_time_chs[time_slice] = vchs;
+    }else{
+      std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 1);
+      double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 1);
+      if (temp_min_dis > dis_cut) continue;
+	  
+      v_time_chs[time_slice].insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+    }
+  }
+
+  // W plane
+  for (auto it = map_w_tcc.begin(); it!=map_w_tcc.end(); it++){
+    int time_slice = (*it).first.first;
+    int ch = (*it).first.second;
+    double charge = (*it).second.first;
+    double charge_err = (*it).second.second;
+    if (w_time_chs.find(time_slice)==w_time_chs.end()){
+      std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 2);
+      double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 2);
+      if (temp_min_dis > dis_cut) continue;
+	  
+      std::set<int> wchs;
+      wchs.insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+      w_time_chs[time_slice] = wchs;
+    }else{
+      std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 2);
+      double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 2);
+      if (temp_min_dis > dis_cut) continue;
+	  
+      w_time_chs[time_slice].insert(ch);
+      time_ch_charge_map[std::make_pair(time_slice,ch)] = charge;
+      time_ch_charge_err_map[std::make_pair(time_slice,ch)] = charge_err;
+    }
+  }
+  
+
   
   
   //  std::cout << u_time_chs.size() << " Xin1: " << v_time_chs.size() << " " << w_time_chs.size() << " " << time_ch_charge_map.size() << std::endl;
@@ -1100,8 +1524,9 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
 	}else{
 	  path_pts_flag.push_back(false);
 	}
-	
-	//  std::cout << "Path: " << (*it).x/units::cm << " " << (*it).y/units::cm << " " << (*it).z/units::cm << " " << path_pts_flag.back() << std::endl;
+	//	if (fabs((*it).x)<10*units::cm){
+	// std::cout << "Path: " << (*it).x/units::cm << " " << (*it).y/units::cm << " " << (*it).z/units::cm << " " << path_pts_flag.back() << " " << nu << " " << nv << " " << nw << std::endl;
+	// }
       }
       
       // std::cout << path_pts.size() << " " << path_pts_flag.size() << " " << cluster->get_cluster_id() << std::endl;
@@ -1117,6 +1542,8 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
 	  if (path_pts_flag.at(i-1) && path_pts_flag.at(i) && path_pts_flag.at(i+1)) continue;
 	}
 	
+	// if (fabs(path_pts.at(i).x) < 3*units::cm)
+	//   std::cout << results.at(0) << " " << results.at(1) << " " << results.at(2) << " " << results.at(3) << std::endl;
 	
 	int range = 3;
 	
@@ -1139,7 +1566,8 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
 	    if (time_ch_charge_map.find(std::make_pair(time_slice,ch))==time_ch_charge_map.end()){
 	      time_ch_charge_map[std::make_pair(time_slice,ch)]=0;
 	      time_ch_charge_err_map[std::make_pair(time_slice,ch)]=0;
-	      //std::cout << time_slice << " " << ch << std::endl;
+	      // if (fabs(path_pts.at(i).x) < 3*units::cm)
+	      // 	std::cout << time_slice << " U " << ch << std::endl;
 	    }
 	  }
 	  for (int ch = results.at(2)-range; ch<=results.at(2)+range; ch++){
@@ -1150,7 +1578,8 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
 	    if (time_ch_charge_map.find(std::make_pair(time_slice,ch))==time_ch_charge_map.end()){
 	      time_ch_charge_map[std::make_pair(time_slice,ch)]=0;
 	      time_ch_charge_err_map[std::make_pair(time_slice,ch)]=0;
-	      //std::cout << time_slice << " " << ch << std::endl;
+	      // if (fabs(path_pts.at(i).x) < 3*units::cm)
+	      // 	std::cout << time_slice << " V " << ch << std::endl;
 	    }
 	  }
 	  for (int ch = results.at(3)-range; ch<=results.at(3)+range; ch++){
@@ -1161,11 +1590,14 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
 	    if (time_ch_charge_map.find(std::make_pair(time_slice,ch))==time_ch_charge_map.end()){
 	      time_ch_charge_map[std::make_pair(time_slice,ch)]=0;
 	      time_ch_charge_err_map[std::make_pair(time_slice,ch)]=0;
-	      //std::cout << time_slice << " " << ch << std::endl;
+	      //if (fabs(path_pts.at(i).x) < 3*units::cm)
+	      //std::cout << time_slice << " W " << ch << std::endl;
 	    }
 	  }	
 	}
       }
+
+      
       //std::cout << path_pts.size() << std::endl;
       //   std::cout << u_time_chs.size() << " Xin2: " << v_time_chs.size() << " " << w_time_chs.size() << " " << time_ch_charge_map.size() << std::endl;
     }
@@ -1304,13 +1736,26 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
     }
   }
 
-  
+    // for (auto it = w_time_chs.begin(); it!= w_time_chs.end(); it++){
+    //   int time_slice = it->first;
+    //   if (time_slice == 800){
+    // 	for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+    // 	  std::cout << (*it1) << std::endl;
+    // 	}
+    //   }
+    // }
   
 
   
     //  WireCell2dToy::WireCellHolder *WCholder = new WireCell2dToy::WireCellHolder();
   for (auto it = u_time_chs.begin(); it!= u_time_chs.end(); it++){
     int time_slice = it->first;
+    // if (time_slice == 800){
+    //   for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+    // 	std::cout << (*it1) << std::endl;
+    //   }
+    // }
+    
     WireCell2dToy::LowmemTiling tiling(time_slice,gds,*holder);
     // recreate the merged wires
     // recreate the merge cells
@@ -1339,6 +1784,9 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
   int index = 0;
   for (auto it = temp_cells.begin(); it!=temp_cells.end(); it++){
     SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)(*it);
+    //if (mcell->GetTimeSlice()==800){
+    //  std::cout << "haha " << std::endl;
+    // }
 
     map_index_mcell[index] = mcell;
     map_mcell_index[mcell] = index;
@@ -1444,6 +1892,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
 	    new_time_mcells_map[time_slice].push_back(mcell);
 	  }
 	}else{
+	  //	  std::cout << mcell->GetTimeSlice() << " h" << std::endl; 
 	  //	  delete mcell;
 	}
       }
