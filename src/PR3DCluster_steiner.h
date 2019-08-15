@@ -168,13 +168,49 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
   
   // form point cloud 
   WireCell::ToyPointCloud temp_pcloud;
-  if (flag_path){
+  if (flag_path && path_wcps.size()>0){
+   
+    WireCell::Point prev_p((*(path_wcps.begin())).x, (*(path_wcps.begin())).y, (*(path_wcps.begin())).z);
+    std::tuple<int,int,int> prev_wire_index = std::make_tuple((*(path_wcps.begin())).index_u, (*(path_wcps.begin())).index_v, (*(path_wcps.begin())).index_w);
+      
     for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
-      WireCell::Point p((*it).x, (*it).y, (*it).z);
-      std::tuple<int, int, int> wire_index = std::make_tuple((*it).index_u, (*it).index_v, (*it).index_w);
-      temp_pcloud.AddPoint(p, wire_index ,0);
+      if (temp_pcloud.get_num_points()==0){
+	WireCell::Point p((*it).x, (*it).y, (*it).z);
+	std::tuple<int, int, int> wire_index = std::make_tuple((*it).index_u, (*it).index_v, (*it).index_w);
+	temp_pcloud.AddPoint(p, wire_index ,0);
+      }else{
+	WireCell::Point p((*it).x, (*it).y, (*it).z);
+	std::tuple<int, int, int> wire_index = std::make_tuple((*it).index_u, (*it).index_v, (*it).index_w);
+
+	float step_dis = 0.6*units::cm;
+	float dis = sqrt(pow(p.x - prev_p.x,2) + pow(p.y - prev_p.y,2) + pow(p.z - prev_p.z,2));
+	
+	if (dis <= step_dis){
+	  temp_pcloud.AddPoint(p, wire_index, 0);
+	  prev_p = p;
+	  prev_wire_index = wire_index;
+	}else{
+	  int num_steps = dis/step_dis;
+	  for (int qx = 0; qx!=num_steps;qx ++){
+	    WireCell::Point temp_p(prev_p.x + (p.x-prev_p.x)/num_steps*(qx+1),
+				 prev_p.y + (p.y-prev_p.y)/num_steps*(qx+1),
+				 prev_p.z + (p.z-prev_p.z)/num_steps*(qx+1)
+				 );
+	    std::tuple<int, int, int> temp_wire_index = std::make_tuple(int(std::get<0>(prev_wire_index) + (std::get<0>(wire_index) - std::get<0>(prev_wire_index))*(qx+1.0)/num_steps),
+								        int(std::get<1>(prev_wire_index) + (std::get<1>(wire_index) - std::get<1>(prev_wire_index))*(qx+1.0)/num_steps),
+									int(std::get<2>(prev_wire_index) + (std::get<2>(wire_index) - std::get<2>(prev_wire_index))*(qx+1.0)/num_steps)
+									);
+	    temp_pcloud.AddPoint(temp_p, temp_wire_index, 0);
+	  }
+	  temp_pcloud.AddPoint(p, wire_index, 0);
+	  prev_p = p;
+	  prev_wire_index = wire_index;
+	}
+	
+      }
     }
     temp_pcloud.build_kdtree_index();
+    
   }
   // organize mcells
   std::map<int,SMGCSelection> old_time_mcells_map;
@@ -308,14 +344,16 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
 	flag_remove = true;
     }
 
-    //    if (cloud.pts[*it].y/units::cm <-100)
-    //  std::cout << cloud.pts[*it].x/units::cm << " " <<cloud.pts[*it].y/units::cm << " " << cloud.pts[*it].z/units::cm<< " " << flag_remove << " " << old_time_mcells_map[time_slice].size() << std::endl;
+    /* if (flag_remove) */
+    /*   std::cout << cloud.pts[*it].x/units::cm << " " <<cloud.pts[*it].y/units::cm << " " << cloud.pts[*it].z/units::cm<< " " << flag_remove << " " << old_time_mcells_map[time_slice].size() << std::endl; */
     
     
     if (flag_remove){
       indices_to_be_removal.insert(*it);
     }
   }
+
+  // std::cout << indices_to_be_removal.size() << std::endl;
   
   for (auto it = indices_to_be_removal.begin(); it!=indices_to_be_removal.end(); it++){
     steiner_terminal_indices.erase(*it);
