@@ -77,16 +77,64 @@ std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellP
   return std::make_pair(lowest_wcp,highest_wcp);
 }
 
-std::vector<std::vector<WCPointCloud<double>::WCPoint>> WireCellPID::PR3DCluster::get_extreme_wcps(int flag){
+std::vector<std::vector<WCPointCloud<double>::WCPoint>> WireCellPID::PR3DCluster::get_extreme_wcps(int flag, std::map<int,SMGCSelection>* old_time_mcells_map){
+  
   ToyPointCloud *temp_point_cloud = point_cloud;
   if (flag==2){
     temp_point_cloud = point_cloud_steiner;
   }
   WireCell::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
+
+  std::vector<int> all_indices;
+  if (old_time_mcells_map==0){
+    for (size_t i=0;i<cloud.pts.size();i++){
+      all_indices.push_back(i);
+    }
+  }else{
+    // scan
+    for (size_t i=0;i<cloud.pts.size();i++){
+      int time_slice = cloud.pts[i].mcell->GetTimeSlice();
+      bool flag_add = false;
+      
+      if (old_time_mcells_map->find(time_slice)!=old_time_mcells_map->end()){
+	for (auto it1 = (*old_time_mcells_map)[time_slice].begin(); it1!= (*old_time_mcells_map)[time_slice].end(); it1++){
+	  SlimMergeGeomCell *mcell = *it1;
+	  int u1_low_index = mcell->get_uwires().front()->index();
+	  int u1_high_index = mcell->get_uwires().back()->index();
+	  
+	  int v1_low_index = mcell->get_vwires().front()->index();
+	  int v1_high_index = mcell->get_vwires().back()->index();
+	  
+	  int w1_low_index = mcell->get_wwires().front()->index();
+	  int w1_high_index = mcell->get_wwires().back()->index();
+	  
+	  if (cloud.pts[i].index_u <= u1_high_index &&
+	      cloud.pts[i].index_u >= u1_low_index &&
+	      cloud.pts[i].index_v <= v1_high_index &&
+	      cloud.pts[i].index_v >= v1_low_index &&
+	      cloud.pts[i].index_w <= w1_high_index &&
+	      cloud.pts[i].index_w >= w1_low_index ){
+	   flag_add = true;
+	   break;
+	  }
+	}
+      }
+      if (flag_add){
+	all_indices.push_back(i);
+      }
+    }
+  }
+
+  std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps;
+  if (all_indices.size()==0){
+    return out_vec_wcps;  
+  }
+    
+  
   Calc_PCA();
   WCPointCloud<double>::WCPoint wcps[8];
   for (int i=0;i!=8;i++){
-    wcps[i] = cloud.pts[0];
+    wcps[i] = cloud.pts[all_indices.at(0)];
   }
   Vector main_axis = get_PCA_axis(0);
   if (main_axis.y <0){
@@ -99,42 +147,43 @@ std::vector<std::vector<WCPointCloud<double>::WCPoint>> WireCellPID::PR3DCluster
 
   bool flag_init = false;
   
-  for (size_t i=0;i<cloud.pts.size();i++){
-    if (excluded_points.find(i)!=excluded_points.end()) continue;
+  for (size_t i=0;i<all_indices.size();i++){
+    
+    if (excluded_points.find(all_indices.at(i))!=excluded_points.end()) continue;
     if (!flag_init){
       for (int j=0;j!=8;j++){
-	wcps[j] = cloud.pts[i];
+	wcps[j] = cloud.pts[all_indices.at(i)];
       }
       high_value = wcps[0].x*main_axis.x + wcps[0].y*main_axis.y + wcps[0].z*main_axis.z;
       low_value = wcps[1].x * main_axis.x + wcps[1].y * main_axis.y + wcps[1].z * main_axis.z ;
       flag_init = true;
     }else{
-      double value = cloud.pts[i].x*main_axis.x + cloud.pts[i].y*main_axis.y + cloud.pts[i].z*main_axis.z;
+      double value = cloud.pts[all_indices.at(i)].x*main_axis.x + cloud.pts[all_indices.at(i)].y*main_axis.y + cloud.pts[all_indices.at(i)].z*main_axis.z;
       if (value > high_value){
-	wcps[0] = cloud.pts[i];
+	wcps[0] = cloud.pts[all_indices.at(i)];
 	high_value = value;
       }
       if (value < low_value){
-	wcps[1] = cloud.pts[i];
+	wcps[1] = cloud.pts[all_indices.at(i)];
 	low_value = value;
       }
       // top down
-      if (cloud.pts[i].y > wcps[2].y)
-	wcps[2] = cloud.pts[i];
-      if (cloud.pts[i].y < wcps[3].y)
-	wcps[3] = cloud.pts[i];
+      if (cloud.pts[all_indices.at(i)].y > wcps[2].y)
+	wcps[2] = cloud.pts[all_indices.at(i)];
+      if (cloud.pts[all_indices.at(i)].y < wcps[3].y)
+	wcps[3] = cloud.pts[all_indices.at(i)];
       
       // front back
-      if (cloud.pts[i].z > wcps[4].z)
-	wcps[4] = cloud.pts[i];
-      if (cloud.pts[i].z < wcps[5].z)
-	wcps[5] = cloud.pts[i];
+      if (cloud.pts[all_indices.at(i)].z > wcps[4].z)
+	wcps[4] = cloud.pts[all_indices.at(i)];
+      if (cloud.pts[all_indices.at(i)].z < wcps[5].z)
+	wcps[5] = cloud.pts[all_indices.at(i)];
       
       // early late
-      if (cloud.pts[i].x > wcps[6].x)
-	wcps[6] = cloud.pts[i];
-      if (cloud.pts[i].x < wcps[7].x)
-	wcps[7] = cloud.pts[i];
+      if (cloud.pts[all_indices.at(i)].x > wcps[6].x)
+	wcps[6] = cloud.pts[all_indices.at(i)];
+      if (cloud.pts[all_indices.at(i)].x < wcps[7].x)
+	wcps[7] = cloud.pts[all_indices.at(i)];
     }
   }
 
@@ -142,7 +191,7 @@ std::vector<std::vector<WCPointCloud<double>::WCPoint>> WireCellPID::PR3DCluster
   
 
   
-  std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps;
+  
 
   {
     // first extreme along the main axis

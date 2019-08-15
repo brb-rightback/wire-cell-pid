@@ -358,9 +358,26 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
   for (auto it = indices_to_be_removal.begin(); it!=indices_to_be_removal.end(); it++){
     steiner_terminal_indices.erase(*it);
   }
-  
+
+   // figure out the extreme points ...
+  std::vector<std::vector<WCPointCloud<double>::WCPoint>> extreme_wcps = get_extreme_wcps(1, &old_time_mcells_map);
+  for (size_t i=0;i!=extreme_wcps.size();i++){
+    for (size_t j = 0; j!=extreme_wcps.at(i).size(); j++){
+      if (steiner_terminal_indices.find(extreme_wcps.at(i).at(j).index)==steiner_terminal_indices.end()){
+	steiner_terminal_indices.insert(extreme_wcps.at(i).at(j).index);
+	//terminals.push_back(extreme_wcps.at(i).at(j).index);
+	/* std::cout << extreme_wcps.at(i).at(j).x/units::cm << " " << */
+	/*   extreme_wcps.at(i).at(j).y/units::cm << " " << */
+	/*   extreme_wcps.at(i).at(j).z/units::cm << " " << std::endl; */
+      }
+    }
+  }
+
   // form the tree ... 
   std::vector<int> terminals(steiner_terminal_indices.begin(), steiner_terminal_indices.end());
+
+ 
+  
   const int N = point_cloud->get_num_points();
   /* std::vector<int> nonterminals; */
   /* for (int i=0;i!=N;i++){ */
@@ -514,6 +531,9 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
     }
 
     Point p(cloud.pts[index].x,cloud.pts[index].y,cloud.pts[index].z);
+    /* if (p.z>30*units::cm) */
+    /*   std::cout << p.x/units::cm << " " << p.y/units::cm << " " << p.z/units::cm << " " << mcell <<  std::endl; */
+    
     std::tuple<int,int,int> temp_indices = std::make_tuple(cloud.pts[index].index_u, cloud.pts[index].index_v, cloud.pts[index].index_w);
     point_cloud_steiner->AddPoint(p,temp_indices, mcell);
     //std::cout << index << " " << cloud.pts[*it].index << std::endl;
