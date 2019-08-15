@@ -278,10 +278,11 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
     int ch = (*it).first.second;
     double charge = (*it).second.first;
     double charge_err = (*it).second.second;
+    if (charge < 0 ) continue;
     if (u_time_chs.find(time_slice)==u_time_chs.end()){
       std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 0);
       double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 0);
-      if (temp_min_dis > dis_cut) continue;
+      if (temp_min_dis > dis_cut ) continue;
 	  
       std::set<int> uchs;
       uchs.insert(ch);
@@ -304,6 +305,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
     int ch = (*it).first.second;
     double charge = (*it).second.first;
     double charge_err = (*it).second.second;
+    if (charge < 0 ) continue;
     if (v_time_chs.find(time_slice)==v_time_chs.end()){
       std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 1);
       double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 1);
@@ -331,6 +333,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster_1(WireCellPID::PR3DCl
     int ch = (*it).first.second;
     double charge = (*it).second.first;
     double charge_err = (*it).second.second;
+    if (charge < 0 ) continue;
     if (w_time_chs.find(time_slice)==w_time_chs.end()){
       std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 2);
       double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 2);
@@ -783,6 +786,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
     int ch = (*it).first.second;
     double charge = (*it).second.first;
     double charge_err = (*it).second.second;
+    if (charge < 0 ) continue;
     if (u_time_chs.find(time_slice)==u_time_chs.end()){
       std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 0);
       double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 0);
@@ -809,6 +813,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
     int ch = (*it).first.second;
     double charge = (*it).second.first;
     double charge_err = (*it).second.second;
+    if (charge < 0 ) continue;
     if (v_time_chs.find(time_slice)==v_time_chs.end()){
       std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 1);
       double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 1);
@@ -836,6 +841,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
     int ch = (*it).first.second;
     double charge = (*it).second.first;
     double charge_err = (*it).second.second;
+    if (charge < 0 ) continue;
     if (w_time_chs.find(time_slice)==w_time_chs.end()){
       std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 2);
       double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 2);
@@ -1388,6 +1394,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
     int ch = (*it).first.second;
     double charge = (*it).second.first;
     double charge_err = (*it).second.second;
+    if (charge < 0 ) continue;
     if (u_time_chs.find(time_slice)==u_time_chs.end()){
       std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 0);
       double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 0);
@@ -1414,6 +1421,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
     int ch = (*it).first.second;
     double charge = (*it).second.first;
     double charge_err = (*it).second.second;
+    if (charge < 0 ) continue;
     if (v_time_chs.find(time_slice)==v_time_chs.end()){
       std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 1);
       double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 1);
@@ -1441,6 +1449,7 @@ WireCellPID::PR3DCluster* WireCellPID::Improve_PR3DCluster(WireCellPID::PR3DClus
     int ch = (*it).first.second;
     double charge = (*it).second.first;
     double charge_err = (*it).second.second;
+    if (charge < 0 ) continue;
     if (w_time_chs.find(time_slice)==w_time_chs.end()){
       std::pair<double,double> temp_2d_pos = ct_point_cloud.convert_time_ch_2Dpoint(time_slice, ch, 2);
       double temp_min_dis = orig_point_cloud->get_closest_2d_dis(temp_2d_pos.first, temp_2d_pos.second, 2);
