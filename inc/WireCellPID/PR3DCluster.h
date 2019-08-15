@@ -85,6 +85,9 @@ namespace WireCellPID{
     // use the full steiner terminal graph ...
     void recover_steiner_graph();
 
+    void establish_same_mcell_steiner_edges(WireCell::GeomDataSource& gds, bool disable_dead_mix_cell = true, int flag=1);
+    void remove_same_mcell_steiner_edges(int flag=1);
+    
     
     void find_steiner_terminals(WireCell::GeomDataSource& gds, bool disable_dead_mix_cell = true);
     void form_cell_points_map();
@@ -120,6 +123,8 @@ namespace WireCellPID{
     std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_two_boundary_wcps(int flag = 1);
     
     std::pair<WireCell::Point,WireCell::Point> get_two_extreme_points(int flag = 1);
+
+
     
     void dijkstra_shortest_paths(WireCell::WCPointCloud<double>::WCPoint& wcp_source, int flag = 1);
     void cal_shortest_path(WireCell::WCPointCloud<double>::WCPoint& wcp_target, int flag = 1);
@@ -143,6 +148,8 @@ namespace WireCellPID{
     // graph
     MCUGraph *graph;
 
+
+    std::vector<edge_descriptor> same_mcell_steiner_edges;
     std::set<int> excluded_points;
     // saved steiner tree related products
     

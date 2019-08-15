@@ -6,6 +6,7 @@
 
 
 
+
 void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis){
 
   if (graph_steiner == (MCUGraph*)0){
@@ -16,16 +17,20 @@ void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& c
     
     new_cluster->Create_point_cloud(); 
     new_cluster->Create_graph(ct_point_cloud, point_cloud);
-    
+
+    new_cluster->establish_same_mcell_steiner_edges(gds,false);
     // find the shortest path
     std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps(); 
     new_cluster->dijkstra_shortest_paths(wcps.first); 
     new_cluster->cal_shortest_path(wcps.second);
+    new_cluster->remove_same_mcell_steiner_edges();
     
     point_cloud_steiner = new ToyPointCloud();
+
     // steiner tree with some basic cuts ...
     graph_steiner = new_cluster->Create_steiner_tree(point_cloud_steiner, flag_steiner_terminal, gds, mcells, true, false);
-
+    establish_same_mcell_steiner_edges(gds,true,2);
+    
     new_cluster->Del_graph();
     new_cluster->Del_point_cloud();
     
@@ -160,6 +165,7 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
   find_steiner_terminals(gds, disable_dead_mix_cell);
   
   
+  
   // form point cloud 
   WireCell::ToyPointCloud temp_pcloud;
   if (flag_path){
@@ -192,6 +198,11 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
     // examine the steiner terminals according to the mcells, inside known mcells
     int time_slice = cloud.pts[*it].mcell->GetTimeSlice();
     bool flag_remove = true;
+
+    //    if (cloud.pts[*it].y/units::cm >-100 && cloud.pts[*it].y/units::cm<-50) 
+    //std::cout << cloud.pts[*it].x/units::cm << " " <<
+    //	cloud.pts[*it].y/units::cm << " " <<
+    //	cloud.pts[*it].z/units::cm << " " << std::endl;
     
     if (old_time_mcells_map.find(time_slice)!=old_time_mcells_map.end()){
       for (auto it1 = old_time_mcells_map[time_slice].begin(); it1!= old_time_mcells_map[time_slice].end(); it1++){
@@ -491,7 +502,7 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
     float Q0 = 10000; // constant term ...
     float Qs = map_index_charge[index[source(e,*graph)]];
     float Qt = map_index_charge[index[target(e,*graph)]];
-     float factor1=0.8, factor2=0.4; 
+    float factor1=0.8, factor2=0.4; 
     
     /* int nsteiner = 0; */
     /* if (steiner_terminal_indices.find(index[source(e,*graph)])!=steiner_terminal_indices.end()) */
@@ -631,8 +642,8 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
     int current_index = it->second;
     double current_charge = it->first;
 
-    /* if (cloud.pts[current_index].y/units::cm < -100) */
-    /*   std::cout << cloud.pts[current_index].x/units::cm << " " << cloud.pts[current_index].y/units::cm << " " << cloud.pts[current_index].z/units::cm << " " << current_charge << std::endl;  */
+    //    if (fabs(cloud.pts[current_index].x/units::cm -126.175)<0.1) 
+    // std::cout << cloud.pts[current_index].x/units::cm << " A " << cloud.pts[current_index].y/units::cm << " " << cloud.pts[current_index].z/units::cm << " " << current_charge << std::endl;  
     
     
     std::set<int> total_vertices_found;
@@ -712,9 +723,12 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
   /* } */
 
  
-    /* for (auto it = peak_indices.begin();  it!= peak_indices.end(); it++){ */
-    /*   std::cout <<  cloud.pts[(*it)].x/units::cm << " " << cloud.pts[(*it)].y/units::cm << " " << cloud.pts[(*it)].z/units::cm  << std::endl; */
-    /* } */
+  /* for (auto it = peak_indices.begin();  it!= peak_indices.end(); it++){  */
+  /*   if (fabs(cloud.pts[(*it)].x/units::cm -126.175)<0.1)  */
+  /*     // if (cloud.pts[(*it)].y/units::cm > -90 && cloud.pts[(*it)].y/units::cm < -70 && */
+  /*     // 	cloud.pts[(*it)].z/units::cm > 490 && cloud.pts[(*it)].z/units::cm < 510) */
+  /*     std::cout <<  cloud.pts[(*it)].x/units::cm << " " << cloud.pts[(*it)].y/units::cm << " " << cloud.pts[(*it)].z/units::cm  << " " << map_index_charge[*it] << std::endl; */
+  /* } */
   
   
   // form a graph to find the independent component ... 

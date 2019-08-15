@@ -6,6 +6,127 @@ void WireCellPID::PR3DCluster::Del_graph(){
   }
 }
 
+
+void WireCellPID::PR3DCluster::remove_same_mcell_steiner_edges(int flag){
+
+  if (flag==1){
+    //std::cout << num_edges(*graph) << std::endl;
+    for (auto it = same_mcell_steiner_edges.begin(); it!=same_mcell_steiner_edges.end(); it++){
+      remove_edge(*it,*graph);
+    }
+    same_mcell_steiner_edges.clear();
+    //  std::cout << num_edges(*graph) << std::endl;
+  }else if (flag==2){
+    //clean up added edges for the steiner tree graph ... 
+    for (auto it = same_mcell_steiner_edges.begin(); it!=same_mcell_steiner_edges.end(); it++){
+      remove_edge(*it,*graph_steiner);
+    }
+    same_mcell_steiner_edges.clear();
+  }
+}
+
+void WireCellPID::PR3DCluster::establish_same_mcell_steiner_edges(WireCell::GeomDataSource& gds, bool disable_dead_mix_cell, int flag){
+
+  if (flag==1){
+    if (graph==(MCUGraph*)0)
+      Create_graph();
+    
+    WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+    std::map<SlimMergeGeomCell*, std::set<int> > map_mcell_all_indices;
+    
+    //std::map<SlimMergeGeomCell*, std::set<int> > map_mcell_steiner_indices;
+    
+    for (size_t i=0;i!=cloud.pts.size();i++){
+      if (map_mcell_all_indices.find(cloud.pts.at(i).mcell)==map_mcell_all_indices.end()){
+	std::set<int> temp_vec;
+	temp_vec.insert(i);
+	map_mcell_all_indices[cloud.pts.at(i).mcell] = temp_vec;
+      }else{
+	map_mcell_all_indices[cloud.pts.at(i).mcell].insert(i);
+      }
+    }
+    
+    
+    find_steiner_terminals(gds, disable_dead_mix_cell);
+    /* for (auto it = steiner_terminal_indices.begin(); it!=steiner_terminal_indices.end(); it++){ */
+    /*   if (map_mcell_steiner_indices.find(cloud.pts[*it].mcell)==map_mcell_steiner_indices.end()){ */
+    /*     std::set<int> temp_vec; */
+    /*     temp_vec.insert(*it); */
+    /*     map_mcell_steiner_indices[cloud.pts[*it].mcell] = temp_vec; */
+    /*   }else{ */
+    /*     map_mcell_steiner_indices[cloud.pts[*it].mcell].insert(*it); */
+    /*   } */
+    /* } */
+    
+    for (auto it = map_mcell_all_indices.begin(); it!=map_mcell_all_indices.end();  it++){ 
+      std::set<int>& temp_vec = it->second;
+      for (auto it1 = temp_vec.begin(); it1!=temp_vec.end(); it1++){
+	int index1 = *it1;
+	WCPointCloud<double>::WCPoint& wcp1 = cloud.pts[index1];
+	bool flag_index1 = steiner_terminal_indices.find(index1)!=steiner_terminal_indices.end();
+	for (auto  it2 = it1; it2!=temp_vec.end();it2++){
+	  if (it2==it1) continue;
+	  int index2 = *it2;
+	  bool flag_index2 = steiner_terminal_indices.find(index2)!=steiner_terminal_indices.end();
+	  WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[index2];
+	  
+	  if (flag_index1 && flag_index2){
+	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))*0.8 ),*graph);
+	    if (edge.second)
+	      same_mcell_steiner_edges.push_back(edge.first);
+	  }else if (flag_index1 || flag_index2){
+	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))*0.9 ),*graph);
+	    if (edge.second)
+	      same_mcell_steiner_edges.push_back(edge.first);
+	  }
+	}
+      }
+      
+    }
+  }else if (flag==2){
+    WireCell::WCPointCloud<double>& cloud = point_cloud_steiner->get_cloud();
+    std::map<SlimMergeGeomCell*, std::set<int> > map_mcell_all_indices;
+        
+    for (size_t i=0;i!=cloud.pts.size();i++){
+      if (cloud.pts.at(i).mcell==0) continue;
+      
+      if (map_mcell_all_indices.find(cloud.pts.at(i).mcell)==map_mcell_all_indices.end()){
+	std::set<int> temp_vec;
+	temp_vec.insert(i);
+	map_mcell_all_indices[cloud.pts.at(i).mcell] = temp_vec;
+      }else{
+	map_mcell_all_indices[cloud.pts.at(i).mcell].insert(i);
+      }
+    }
+
+    for (auto it = map_mcell_all_indices.begin(); it!=map_mcell_all_indices.end();  it++){ 
+      std::set<int>& temp_vec = it->second;
+      for (auto it1 = temp_vec.begin(); it1!=temp_vec.end(); it1++){
+	int index1 = *it1;
+	WCPointCloud<double>::WCPoint& wcp1 = cloud.pts[index1];
+	bool flag_index1 = flag_steiner_terminal[index1];
+	for (auto  it2 = it1; it2!=temp_vec.end();it2++){
+	  if (it2==it1) continue;
+	  int index2 = *it2;
+	  bool flag_index2 = flag_steiner_terminal[index2];
+	  WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[index2];
+	  
+	  if (flag_index1 && flag_index2){
+	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph_steiner);
+	    if (edge.second)
+	      same_mcell_steiner_edges.push_back(edge.first);
+	  }else if (flag_index1 || flag_index2){
+	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph_steiner);
+	    if (edge.second)
+	      same_mcell_steiner_edges.push_back(edge.first);
+	  }
+	}
+      }
+    }    
+  }
+  
+}
+
 void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCell::ToyPointCloud* ref_point_cloud){
   WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
   WireCell::WC2DPointCloud<double>& cloud_u = point_cloud->get_cloud_u();
