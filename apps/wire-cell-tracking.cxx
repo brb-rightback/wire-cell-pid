@@ -803,16 +803,36 @@ int main(int argc, char* argv[])
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     WireCellPID::PR3DCluster* cluster = *it;
+
+    ndf_save = cluster->get_cluster_id();
+
+    // original
+    // PointVector& pts = cluster->get_fine_tracking_path();
+    // std::vector<double>& dQ = cluster->get_dQ();
+    // std::vector<double>& dx = cluster->get_dx();
+    // std::vector<double>& tpu = cluster->get_pu();
+    // std::vector<double>& tpv = cluster->get_pv();
+    // std::vector<double>& tpw = cluster->get_pw();
+    // std::vector<double>& tpt = cluster->get_pt();
+
+    //hack for now ...
+    std::list<WCPointCloud<double>::WCPoint>& wcps_list = cluster->get_path_wcps();
+    PointVector pts;
+    std::vector<double> dQ, dx, tpu, tpv, tpw, tpt;
     
-    PointVector& pts = cluster->get_fine_tracking_path();
-    std::vector<double>& dQ = cluster->get_dQ();
-    std::vector<double>& dx = cluster->get_dx();
-    std::vector<double>& tpu = cluster->get_pu();
-    std::vector<double>& tpv = cluster->get_pv();
-    std::vector<double>& tpw = cluster->get_pw();
-    std::vector<double>& tpt = cluster->get_pt();
+    for (auto it = wcps_list.begin(); it!=wcps_list.end(); it++){
+      Point p((*it).x, (*it).y,  (*it).z);
+      pts.push_back(p);
+      dQ.push_back(0);
+      dx.push_back(1);
+      std::vector<int> time_chs = ct_point_cloud.convert_3Dpoint_time_ch(p);
+      tpt.push_back(time_chs.at(0));
+      tpu.push_back(time_chs.at(1));
+      tpv.push_back(time_chs.at(2));
+      tpw.push_back(time_chs.at(3));
+    }
     
-    if (pts.size()!=dQ.size()) continue;
+    if (pts.size()!=dQ.size() || pts.size()==0) continue;
     
     for (size_t i=0; i!=pts.size(); i++){
       x = pts.at(i).x/units::cm;
