@@ -21,16 +21,20 @@ using namespace std;
 int main(int argc, char* argv[])
 {
   if (argc < 3) {
-    cerr << "usage: wire-cell-uboone /path/to/ChannelWireGeometry.txt /path/to/matching.root" << endl;
+    cerr << "usage: wire-cell-uboone /path/to/ChannelWireGeometry.txt /path/to/matching.root -t[0,1? in time flash only] -c[0,1? main cluster only]" << endl;
     return 1;
   }
   TH1::AddDirectory(kFALSE);
 
   bool flag_in_time_only = false;
+  bool flag_main_cluster_only = true;
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
     case 't':
       flag_in_time_only = atoi(&argv[i][2]); 
+      break;
+    case 'c':
+      flag_main_cluster_only = atoi(&argv[i][2]);
       break;
     }
   }
@@ -141,32 +145,26 @@ int main(int argc, char* argv[])
   TTree *T_match = (TTree*)file->Get("T_match");
   Int_t tpc_cluster_id;
   Int_t event_type;
-  T_match->SetBranchAddress("tpc_cluster_id",&tpc_cluster_id);
-  T_match->SetBranchAddress("flash_id",&flash_id);
+  T_match->SetBranchAddress("tpc_cluster_id",&tpc_cluster_id); // parent cluster id
+  T_match->SetBranchAddress("flash_id",&flash_id);  // flash id 
   T_match->SetBranchAddress("event_type",&event_type);
 
-  std::set<int> saved_flash_ids;
-  std::map<int,double> saved_id_time_map;
-  std::set<int> saved_parent_tpc_cluster_ids;
+  std::map<int, std::pair<int, double> > map_flash_info;
+  std::map<int, int> map_flash_tpc_ids;
+  std::map<int, int> map_tpc_flash_ids;
+  
+  
   for (int i=0;i!=T_flash->GetEntries();i++){
     T_flash->GetEntry(i);
-    if (flag_in_time_only){
-      if (type==2 && (time >= lowerwindow && time <=upperwindow) ){
-	saved_flash_ids.insert(flash_id);
-	saved_id_time_map[flash_id]=time;
-      }
-    }else{
-      saved_flash_ids.insert(flash_id);
-      saved_id_time_map[flash_id]=time;
-    }
+    map_flash_info[flash_id] = std::make_pair(type, time);
   }
   for (int i=0;i!=T_match->GetEntries();i++){
     T_match->GetEntry(i);
-    if (saved_flash_ids.find(flash_id)!=saved_flash_ids.end()){
-      saved_parent_tpc_cluster_ids.insert(tpc_cluster_id);
-    }
+    map_flash_tpc_ids[flash_id] = tpc_cluster_id;
+    map_tpc_flash_ids[tpc_cluster_id] = flash_id;
   }
-  //std::cout << flag_in_time_only << " " << saved_parent_tpc_cluster_ids.size() << std::endl;
+  
+ 
 
   // load mcell
   TTree *TC = (TTree*)file->Get("TC");
@@ -520,18 +518,20 @@ int main(int argc, char* argv[])
   //std::cout << saved_parent_tpc_cluster_ids.size() << std::endl;
   for (size_t i=0; i!=live_clusters.size();i++){
     //    if (live_clusters.at(i)->get_cluster_id()!=34) continue;
-    
     if (live_clusters.at(i)->get_num_points()<=2) continue;
-    if (flag_in_time_only){
-      if ( saved_parent_tpc_cluster_ids.find(map_cluster_parent_id[live_clusters.at(i)])!=saved_parent_tpc_cluster_ids.end()){
-    	live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-    	live_clusters.at(i)->recover_steiner_graph();
-      }
+
+    double flash_time = map_flash_info[map_tpc_flash_ids[map_cluster_parent_id[live_clusters.at(i)]]].second;
+    if (flag_in_time_only && (flash_time < lowerwindow || flash_time > upperwindow)) continue;
+
+    std::cout << live_clusters.at(i)->get_cluster_id() << " " << map_cluster_parent_id[live_clusters.at(i)] << " " << flash_time << std::endl;
+    
+    if (live_clusters.at(i)->get_cluster_id() == map_cluster_parent_id[live_clusters.at(i)]&&flag_main_cluster_only){
+      live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+      live_clusters.at(i)->recover_steiner_graph();
     }else{
       live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
       live_clusters.at(i)->recover_steiner_graph();
     }
-    
   }
   cout << em("Build graph for all clusters") << std::endl;
   
