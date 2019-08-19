@@ -21,13 +21,14 @@ using namespace std;
 int main(int argc, char* argv[])
 {
   if (argc < 3) {
-    cerr << "usage: wire-cell-uboone /path/to/ChannelWireGeometry.txt /path/to/matching.root -t[0,1? in time flash only] -c[0,1? main cluster only]" << endl;
+    cerr << "usage: wire-cell-uboone /path/to/ChannelWireGeometry.txt /path/to/matching.root -t[0,1? in time flash only] -c[0,1? main cluster only] -b[0,1? bee output]" << endl;
     return 1;
   }
   TH1::AddDirectory(kFALSE);
-
-  bool flag_in_time_only = false;
-  bool flag_main_cluster_only = true;
+  
+  bool flag_in_time_only = false; // default to run all code
+  bool flag_main_cluster_only = true; // default to run only on the main cluster
+  bool flag_bee_output = true; // default save 
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
     case 't':
@@ -35,6 +36,9 @@ int main(int argc, char* argv[])
       break;
     case 'c':
       flag_main_cluster_only = atoi(&argv[i][2]);
+      break;
+    case 'b':
+      flag_bee_output = atoi(&argv[i][2]);
       break;
     }
   }
@@ -520,14 +524,19 @@ int main(int argc, char* argv[])
     //    if (live_clusters.at(i)->get_cluster_id()!=34) continue;
     if (live_clusters.at(i)->get_num_points()<=2) continue;
 
+    // no matched flash 
+    if (map_tpc_flash_ids.find(map_cluster_parent_id[live_clusters.at(i)]) == map_tpc_flash_ids.end()) continue;
     double flash_time = map_flash_info[map_tpc_flash_ids[map_cluster_parent_id[live_clusters.at(i)]]].second;
+
     if (flag_in_time_only && (flash_time < lowerwindow || flash_time > upperwindow)) continue;
 
     std::cout << live_clusters.at(i)->get_cluster_id() << " " << map_cluster_parent_id[live_clusters.at(i)] << " " << flash_time << std::endl;
-    
-    if (live_clusters.at(i)->get_cluster_id() == map_cluster_parent_id[live_clusters.at(i)]&&flag_main_cluster_only){
-      live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+
+    if (flag_main_cluster_only){
+      if (live_clusters.at(i)->get_cluster_id() == map_cluster_parent_id[live_clusters.at(i)]){
+	live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
       live_clusters.at(i)->recover_steiner_graph();
+      }
     }else{
       live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
       live_clusters.at(i)->recover_steiner_graph();
@@ -536,9 +545,16 @@ int main(int argc, char* argv[])
   cout << em("Build graph for all clusters") << std::endl;
   
   
-  TFile *file1 = new TFile(Form("graph_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
-  Trun->CloneTree()->Write();
-
+  TFile *file1 = new TFile(Form("tracking_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
+  Trun->CloneTree(-1,"fast");
+  if (T_bad_ch!=0){
+     T_bad_ch->CloneTree(-1,"fast");
+  }
+  if (flag_bee_output){
+    T_match->CloneTree(-1,"fast");
+    T_flash->CloneTree(-1,"fast");
+  }
+  
   TTree *T_cluster ;
   Double_t x,y,z,q,nq;
   Int_t ncluster;
@@ -561,11 +577,11 @@ int main(int argc, char* argv[])
     // WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
 
     WireCellPID::PR3DCluster* new_cluster = *it;  
-    ncluster = new_cluster->get_cluster_id();
+    ncluster = map_cluster_parent_id[new_cluster]; //new_cluster->get_cluster_id();
     
     ToyPointCloud *pcloud = new_cluster->get_point_cloud();
     //ToyPointCloud *pcloud = new_cluster->get_point_cloud_steiner();
-    // ToyPointCloud *pcloud = new_cluster->get_point_cloud_steiner_terminal();
+    //ToyPointCloud *pcloud = new_cluster->get_point_cloud_steiner_terminal();
 
     if (pcloud!=0){
       WireCell::WCPointCloud<double>& cloud = pcloud->get_cloud();
@@ -740,6 +756,8 @@ int main(int argc, char* argv[])
       }
     }
   }
+
+  
   
   
   
