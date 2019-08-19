@@ -250,6 +250,7 @@ int main(int argc, char* argv[])
   WireCellPID::PR3DClusterSelection live_clusters;
   WireCellPID::PR3DCluster *cluster;
   std::map<WireCellPID::PR3DCluster*, int> map_cluster_parent_id;
+  std::map<int, std::vector<WireCellPID::PR3DCluster*> > map_parentid_clusters;
   int prev_cluster_id=-1;
   int ident = 0;
   TC->GetEntry(0);
@@ -348,6 +349,13 @@ int main(int argc, char* argv[])
       cluster = new WireCellPID::PR3DCluster(cluster_id);
       map_cluster_parent_id[cluster] = parent_cluster_id->at(i);
       live_clusters.push_back(cluster);
+      if (map_parentid_clusters.find(parent_cluster_id->at(i)) == map_parentid_clusters.end()){
+	std::vector<WireCellPID::PR3DCluster*> temp_clusters;
+	temp_clusters.push_back(cluster);
+	map_parentid_clusters[parent_cluster_id->at(i)] = temp_clusters;
+      }else{
+	map_parentid_clusters[parent_cluster_id->at(i)].push_back(cluster);
+      }
     }
     cluster->AddCell(mcell,time_slice);
 
@@ -496,7 +504,65 @@ int main(int argc, char* argv[])
     
   }
   cout << em("load clusters from file") << endl;
-  //
+
+  
+  // form a global map with the current map information
+  std::map<int,std::map<const GeomWire*, SMGCSelection > > global_wc_map;
+  for (size_t i=0; i!=live_clusters.size();i++){
+    WireCellPID::PR3DCluster *cluster = live_clusters.at(i);
+    SMGCSelection& mcells = cluster->get_mcells();
+    for (auto it = mcells.begin(); it!= mcells.end(); it++){
+      SlimMergeGeomCell *mcell = *it;
+      int time_slice = mcell->GetTimeSlice();
+      if (global_wc_map.find(time_slice)==global_wc_map.end()){
+	std::map<const GeomWire*, SMGCSelection> temp_wc_map;
+	global_wc_map[time_slice] = temp_wc_map;
+      }
+      std::map<const GeomWire*, SMGCSelection>& timeslice_wc_map = global_wc_map[time_slice];
+      
+      GeomWireSelection& uwires = mcell->get_uwires();
+      GeomWireSelection& vwires = mcell->get_vwires();
+      GeomWireSelection& wwires = mcell->get_wwires();
+      std::vector<WirePlaneType_t> bad_planes = mcell->get_bad_planes();
+      if (find(bad_planes.begin(),bad_planes.end(),WirePlaneType_t(0))==bad_planes.end()){
+	for (int j=0;j!=uwires.size();j++){
+	  const GeomWire *wire = uwires.at(j);
+	  if (timeslice_wc_map.find(wire)==timeslice_wc_map.end()){
+	    SMGCSelection temp_mcells;
+	    temp_mcells.push_back(mcell);
+	    timeslice_wc_map[wire] = temp_mcells;
+	  }else{
+	    timeslice_wc_map[wire].push_back(mcell);
+	  }
+	}
+      }
+      if (find(bad_planes.begin(),bad_planes.end(),WirePlaneType_t(1))==bad_planes.end()){
+	for (int j=0;j!=vwires.size();j++){
+	  const GeomWire *wire = vwires.at(j);
+	  if (timeslice_wc_map.find(wire)==timeslice_wc_map.end()){
+	    SMGCSelection temp_mcells;
+	    temp_mcells.push_back(mcell);
+	     timeslice_wc_map[wire] = temp_mcells;
+	  }else{
+	    timeslice_wc_map[wire].push_back(mcell);
+	  }
+	}
+      }
+      if (find(bad_planes.begin(),bad_planes.end(),WirePlaneType_t(2))==bad_planes.end()){
+	for (int j=0;j!=wwires.size();j++){
+	  const GeomWire *wire = wwires.at(j);
+	  if (timeslice_wc_map.find(wire)==timeslice_wc_map.end()){
+	    SMGCSelection temp_mcells;
+	    temp_mcells.push_back(mcell);
+	    timeslice_wc_map[wire] = temp_mcells;
+	  }else{
+	    timeslice_wc_map[wire].push_back(mcell);
+	  }
+	}
+      }
+    }
+  }
+  
   
   // replace by the new sampling points ...
   for (size_t i=0; i!=live_clusters.size();i++){
@@ -682,6 +748,7 @@ int main(int argc, char* argv[])
     
     WireCellPID::PR3DCluster* new_cluster = *it;
     if (new_cluster->get_point_cloud_steiner()==0) continue;
+
     if (new_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
       std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps(2); 
       // std::cout << wcps.first.x/units::cm << " " << wcps.first.y/units::cm << " " << wcps.first.z/units::cm << std::endl;
@@ -689,7 +756,7 @@ int main(int argc, char* argv[])
       new_cluster->dijkstra_shortest_paths(wcps.first,2); 
       new_cluster->cal_shortest_path(wcps.second,2);
     }
-
+    new_cluster->collect_charge_trajectory(ct_point_cloud);
     
     
     ndf_save = new_cluster->get_cluster_id();
@@ -719,7 +786,6 @@ int main(int argc, char* argv[])
 
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-
     // if (old_new_cluster_map.find(*it)==old_new_cluster_map.end()) continue;
     // WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
     // //std::set<int> steiner_terminals = new_cluster->get_selected_terminals();
@@ -758,8 +824,40 @@ int main(int argc, char* argv[])
   }
 
   
+  // now save the original projected charge information
+  // fill the bad channels ...
+  TTree *T_proj = new TTree("T_proj","T_proj");
+  std::vector<int> *proj_cluster_id = new std::vector<int>;
+  std::vector<std::vector<int>> *proj_cluster_channel = new std::vector<std::vector<int>>;
+  std::vector<std::vector<int>> *proj_cluster_timeslice= new std::vector<std::vector<int>>;
+  std::vector<std::vector<int>> *proj_cluster_charge= new std::vector<std::vector<int>>;
+  std::vector<std::vector<int>> *proj_cluster_charge_err= new std::vector<std::vector<int>>;
+  T_proj->Branch("cluster_id",&proj_cluster_id);
+  T_proj->Branch("channel",&proj_cluster_channel);
+  T_proj->Branch("time_slice",&proj_cluster_timeslice);
+  T_proj->Branch("charge",&proj_cluster_charge);
+  T_proj->Branch("charge_err",&proj_cluster_charge_err);
+  T_proj->SetDirectory(file1);
+
+  for (auto it = map_parentid_clusters.begin(); it!=map_parentid_clusters.end(); it++){
+    int cluster_id = it->first;
+    std::vector<int> proj_channel;
+    std::vector<int> proj_timeslice;
+    std::vector<int> proj_charge;
+    std::vector<int> proj_charge_err;
+    std::vector<int> proj_flag;
+    for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+      WireCellPID::PR3DCluster *cluster = (*it1);
+      cluster->get_projection(proj_channel,proj_timeslice,proj_charge, proj_charge_err, proj_flag, global_wc_map);
+    }
+    proj_cluster_id->push_back(cluster_id);
+    proj_cluster_channel->push_back(proj_channel);
+    proj_cluster_timeslice->push_back(proj_timeslice);
+    proj_cluster_charge->push_back(proj_charge);
+    proj_cluster_charge_err->push_back(proj_charge_err);
+  }
   
-  
+  T_proj->Fill();
   
   file1->Write();
   file1->Close();

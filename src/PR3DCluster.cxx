@@ -405,3 +405,343 @@ std::pair<double,double> WireCellPID::PR3DCluster::HoughTrans(Point&p , double d
   return std::make_pair(theta,phi);
 }
 
+
+
+void WireCellPID::PR3DCluster::get_projection(std::vector<int>& proj_channel, std::vector<int>& proj_timeslice, std::vector<int>& proj_charge, std::vector<int>& proj_charge_err, std::vector<int>& proj_flag, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map){
+  // std::vector<int> proj_charge_err;
+  
+  std::set<SlimMergeGeomCell*> cluster_mcells_set;
+  for (auto it = mcells.begin(); it!=mcells.end(); it++){
+    SlimMergeGeomCell *mcell = *it;
+    cluster_mcells_set.insert(mcell);
+  }
+
+  std::set<std::pair<int,int>> saved_time_channel;
+   
+  for (auto it = mcells.begin(); it!=mcells.end(); it++){
+    SlimMergeGeomCell *mcell = *it;
+    int time_slice = mcell->GetTimeSlice();
+
+    std::map<const GeomWire*, SMGCSelection >& timeslice_wc_map = global_wc_map[time_slice];
+
+    GeomWireSelection& uwires = mcell->get_uwires();
+    GeomWireSelection& vwires = mcell->get_vwires();
+    GeomWireSelection& wwires = mcell->get_wwires();
+
+    bool flag_reg_save = true;
+    
+    std::vector<WirePlaneType_t> bad_planes = mcell->get_bad_planes();
+    if (find(bad_planes.begin(),bad_planes.end(),WirePlaneType_t(0))==bad_planes.end()){
+      int num_shared_wires = 0;
+      for (int i=0;i!=uwires.size();i++){
+	const GeomWire *wire = uwires.at(i);
+	
+	if (timeslice_wc_map[wire].size()>1){
+	  for (auto it1 = timeslice_wc_map[wire].begin(); it1!=timeslice_wc_map[wire].end(); it1++){
+	    SlimMergeGeomCell *mcell1 = *it1;
+	    if (cluster_mcells_set.find(mcell1)==cluster_mcells_set.end())
+	      num_shared_wires ++;
+	  }
+	  //
+	}
+      }
+      if (num_shared_wires >0.15*uwires.size()&&num_shared_wires>1)
+	flag_reg_save = false;
+    }else{
+      flag_reg_save = false;
+    }
+
+    if (flag_reg_save){
+      for (int i=0;i!=uwires.size();i++){
+	const GeomWire *wire = uwires.at(i);
+	int ch = wire->channel();
+	// regular cases ... 
+	int charge = mcell->Get_Wire_Charge(wire);
+	int charge_err = mcell->Get_Wire_Charge_Err(wire);
+	
+	if (saved_time_channel.find(std::make_pair(time_slice,ch))==saved_time_channel.end()){
+	  proj_channel.push_back(ch);
+	  proj_timeslice.push_back(time_slice);
+	  proj_charge.push_back(charge);
+	  proj_charge_err.push_back(charge_err);
+	  proj_flag.push_back(1);
+	  saved_time_channel.insert(std::make_pair(time_slice,ch));
+	}
+      }
+    }else{
+      for (int i=0;i!=uwires.size();i++){
+	const GeomWire *wire = uwires.at(i);
+	int ch = wire->channel();
+	int temp_flag = 1;
+	int charge = mcell->Get_Wire_Charge(wire);
+	int charge_err = mcell->Get_Wire_Charge_Err(wire);
+	
+	if (charge<=0){
+	  charge = mcell->get_q()*1.0/uwires.size();
+	  charge_err = sqrt(pow(charge*0.1,2)+pow(600,2)); // assume 30% error
+	  temp_flag = 0;
+	}
+	 
+	//	if(cluster_id==18)
+	//std::cout << ch << " " << time_slice << " " << charge << std::endl;
+	//	if (saved_time_channel.find(std::make_pair(time_slice,ch))==saved_time_channel.end()){
+	proj_channel.push_back(ch);
+	proj_timeslice.push_back(time_slice);
+	proj_charge.push_back(charge);
+	proj_charge_err.push_back(charge_err);
+	proj_flag.push_back(temp_flag);
+	// saved_time_channel.insert(std::make_pair(time_slice,ch));
+	  //}
+      }
+    }
+    
+    flag_reg_save = true;
+    if (find(bad_planes.begin(),bad_planes.end(),WirePlaneType_t(1))==bad_planes.end()){
+      int num_shared_wires = 0;
+      for (int i=0;i!=vwires.size();i++){
+	const GeomWire *wire = vwires.at(i);
+
+	for (auto it1 = timeslice_wc_map[wire].begin(); it1!=timeslice_wc_map[wire].end(); it1++){
+	  SlimMergeGeomCell *mcell1 = *it1;
+	  if (cluster_mcells_set.find(mcell1)==cluster_mcells_set.end())
+	    num_shared_wires ++;
+	}
+	
+	//	if (timeslice_wc_map[wire].size()>1)
+	//  num_shared_wires ++;
+      }
+      if (num_shared_wires >0.15*vwires.size()&&num_shared_wires>1)
+	flag_reg_save = false;
+    }else{
+      flag_reg_save = false;
+    }
+
+    
+    if (flag_reg_save){
+      for (int i=0;i!=vwires.size();i++){
+	const GeomWire *wire = vwires.at(i);
+	int ch = wire->channel();
+	int charge = mcell->Get_Wire_Charge(wire);
+	int charge_err = mcell->Get_Wire_Charge_Err(wire);
+	
+	if (saved_time_channel.find(std::make_pair(time_slice,ch))==saved_time_channel.end()){
+	  proj_channel.push_back(ch);
+	  proj_timeslice.push_back(time_slice);
+	  proj_charge.push_back(charge);
+	  proj_charge_err.push_back(charge_err);
+	  proj_flag.push_back(1);
+	  saved_time_channel.insert(std::make_pair(time_slice,ch));
+	}
+      }
+    }else{
+      for (int i=0;i!=vwires.size();i++){
+	const GeomWire *wire = vwires.at(i);
+	int ch = wire->channel();
+	int temp_flag=1;
+	int charge = mcell->Get_Wire_Charge(wire);
+	int charge_err = mcell->Get_Wire_Charge_Err(wire);
+	if (charge<=0){
+	  charge = mcell->get_q()*1.0/vwires.size();
+	  charge_err = sqrt(pow(charge*0.1,2)+pow(600,2));
+	  temp_flag= 0;
+	}
+	
+	
+	
+	//if (saved_time_channel.find(std::make_pair(time_slice,ch))==saved_time_channel.end()){
+	proj_channel.push_back(ch);
+	proj_timeslice.push_back(time_slice);
+	proj_charge.push_back(charge);
+	proj_charge_err.push_back(charge_err);
+	proj_flag.push_back(temp_flag);
+	//saved_time_channel.insert(std::make_pair(time_slice,ch));
+	  //}
+      }
+    }
+    
+    flag_reg_save = true;
+    if (find(bad_planes.begin(),bad_planes.end(),WirePlaneType_t(2))==bad_planes.end()){
+      int num_shared_wires = 0;
+      for (int i=0;i!=wwires.size();i++){
+	const GeomWire *wire = wwires.at(i);
+
+	for (auto it1 = timeslice_wc_map[wire].begin(); it1!=timeslice_wc_map[wire].end(); it1++){
+	  SlimMergeGeomCell *mcell1 = *it1;
+	  if (cluster_mcells_set.find(mcell1)==cluster_mcells_set.end())
+	    num_shared_wires ++;
+	}
+	
+	//	if (timeslice_wc_map[wire].size()>1)
+	//num_shared_wires ++;
+      }
+      if (num_shared_wires >0.15*wwires.size()&&num_shared_wires>1)
+	flag_reg_save = false;
+    }else{
+      flag_reg_save = false;
+    }
+
+
+    if(flag_reg_save){
+      for (int i=0;i!=wwires.size();i++){
+	const GeomWire *wire = wwires.at(i);
+	int ch = wire->channel();
+	int charge = mcell->Get_Wire_Charge(wire);
+	int charge_err = mcell->Get_Wire_Charge_Err(wire);
+	
+	if (saved_time_channel.find(std::make_pair(time_slice,ch))==saved_time_channel.end()){
+	  proj_channel.push_back(ch);
+	  proj_timeslice.push_back(time_slice);
+	  proj_charge.push_back(charge);
+	  proj_charge_err.push_back(charge_err);
+	  proj_flag.push_back(1);
+	  saved_time_channel.insert(std::make_pair(time_slice,ch));
+	}
+      }
+    }else{
+      for (int i=0;i!=wwires.size();i++){
+	const GeomWire *wire = wwires.at(i);
+	int ch = wire->channel();
+	int temp_flag=1;
+	int charge = mcell->Get_Wire_Charge(wire);
+	int charge_err = mcell->Get_Wire_Charge_Err(wire);
+	if (charge<=0){
+	  charge = mcell->get_q()*1.0/wwires.size();
+	  charge_err = sqrt(pow(charge*0.1,2) + pow(100,2));
+	  temp_flag = 0;
+	}
+	//	if (saved_time_channel.find(std::make_pair(time_slice,ch))==saved_time_channel.end()){
+	proj_channel.push_back(ch);
+	proj_timeslice.push_back(time_slice);
+	proj_charge.push_back(charge);
+	proj_charge_err.push_back(charge_err);
+	proj_flag.push_back(temp_flag);
+	  //	  saved_time_channel.insert(std::make_pair(time_slice,ch));
+	  //	}
+      }
+    }
+  } // loop over mcells
+
+  for (auto it = collected_charge_map.begin(); it!=collected_charge_map.end(); it++){
+    int time_slice = it->first.first;
+    int ch = it->first.second;
+    int charge = it->second.first;
+    int charge_err = it->second.second;
+    proj_channel.push_back(ch);
+    proj_timeslice.push_back(time_slice);
+    proj_charge.push_back(charge);
+    proj_charge_err.push_back(charge_err);
+    proj_flag.push_back(1);
+  }
+  
+}
+
+
+
+void WireCellPID::PR3DCluster::collect_charge_trajectory(ToyCTPointCloud& ct_point_cloud, double dis_cut, double range_cut){
+  //clear up ...
+  collected_charge_map.clear();
+  
+  std::set<std::pair<int,int>> existing_tcs;
+
+  //std::cout << "mcells: " << mcells.size() << std::endl;
+  
+  // form a set cotaining everything inside the cluster
+  for (auto it = mcells.begin(); it!=mcells.end(); it++){
+    SlimMergeGeomCell *mcell = (*it);
+    int time_slice = mcell->GetTimeSlice();
+    GeomWireSelection& uwires = mcell->get_uwires();
+    GeomWireSelection& vwires = mcell->get_vwires();
+    GeomWireSelection& wwires = mcell->get_wwires();
+    for (auto it1 = uwires.begin(); it1!=uwires.end(); it1++){
+      const GeomWire *wire = (*it1);
+      existing_tcs.insert(std::make_pair(time_slice,wire->channel()));
+    }
+    for (auto it1 = vwires.begin(); it1!=vwires.end(); it1++){
+      const GeomWire *wire = (*it1);
+      existing_tcs.insert(std::make_pair(time_slice,wire->channel()));
+    }
+    for (auto it1 = wwires.begin(); it1!=wwires.end(); it1++){
+      const GeomWire *wire = (*it1);
+      existing_tcs.insert(std::make_pair(time_slice,wire->channel()));
+    }
+  }
+  
+  // form a trajectory according to dis and fine tracking?
+  PointVector traj_pts;
+  //  PointVector& pts = get_fine_tracking_path();
+
+  // not using fine tracking results ... 
+  PointVector pts;
+  std::list<WCPointCloud<double>::WCPoint>& path_wcps = get_path_wcps();
+  for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
+    Point p((*it).x, (*it).y, (*it).z);
+    pts.push_back(p);
+  }
+  
+  //std::cout << "trajectory points " << pts.size() << std::endl;
+
+  // if (cluster_id==13){
+  //   for (int i=0; i!=pts.size(); i++){
+  //     std::cout << i << " " << pts.at(i).x/units::cm << " " << pts.at(i).y/units::cm << " "<< pts.at(i).z/units::cm << std::endl;
+  //   }
+  // }
+  
+  for (int i=0; i!=pts.size(); i++){
+    if (pts.at(i).y <-120*units::cm || pts.at(i).y > 120*units::cm ||
+	pts.at(i).z < -5*units::cm || pts.at(i).z > 1070*units::cm) continue;
+    
+    if (traj_pts.size()==0){
+      traj_pts.push_back(pts.at(i));
+    }else{
+      double dis = sqrt(pow(pts.at(i).x-pts.at(i-1).x,2) +
+			pow(pts.at(i).y-pts.at(i-1).y,2) +
+			pow(pts.at(i).z-pts.at(i-1).z,2));
+      if (dis <= dis_cut){
+	traj_pts.push_back(pts.at(i));
+      }else{
+	int nseg = dis / dis_cut + 1;
+	//	std::cout << i << " " << pts.at(i).x/units::cm << " " << pts.at(i).y/units::cm << " "<< pts.at(i).z/units::cm << " " << dis << " " << dis_cut << " " << nseg << std::endl;
+	for (int j=0; j!=nseg;j++){
+	  Point temp_pt;
+	  temp_pt.x = pts.at(i-1).x + (pts.at(i).x-pts.at(i-1).x) *(j+1.)/nseg;
+	  temp_pt.y = pts.at(i-1).y + (pts.at(i).y-pts.at(i-1).y) *(j+1.)/nseg;
+	  temp_pt.z = pts.at(i-1).z + (pts.at(i).z-pts.at(i-1).z) *(j+1.)/nseg;
+	  traj_pts.push_back(temp_pt);
+	}
+      }
+    }
+  }
+  
+  // collect the nearby points, and compare with existing maps
+  for (size_t i=0;i!=traj_pts.size();i++){
+    //std::cout << i << " " << traj_pts.at(i).x/units::cm << " " << traj_pts.at(i).y/units::cm << " " << traj_pts.at(i).z/units::cm << " " << range_cut << std::endl;
+    WireCell::CTPointCloud<double> nearby_points = ct_point_cloud.get_closest_points(traj_pts.at(i),range_cut,0);
+    
+    //    std::cout << "0 " << nearby_points.pts.size() << std::endl;
+    
+    for (size_t j=0;j!=nearby_points.pts.size();j++){
+      if (existing_tcs.find(std::make_pair(nearby_points.pts.at(j).time_slice,nearby_points.pts.at(j).channel)) == existing_tcs.end()){
+	collected_charge_map[std::make_pair(nearby_points.pts.at(j).time_slice,nearby_points.pts.at(j).channel)] = std::make_pair(nearby_points.pts.at(j).charge,nearby_points.pts.at(j).charge_err);
+      }
+    }
+    nearby_points = ct_point_cloud.get_closest_points(traj_pts.at(i),range_cut,1);
+    //std::cout << "1 " << nearby_points.pts.size() << std::endl;
+    
+    for (size_t j=0;j!=nearby_points.pts.size();j++){
+      if (existing_tcs.find(std::make_pair(nearby_points.pts.at(j).time_slice,nearby_points.pts.at(j).channel)) == existing_tcs.end()){
+	collected_charge_map[std::make_pair(nearby_points.pts.at(j).time_slice,nearby_points.pts.at(j).channel)] = std::make_pair(nearby_points.pts.at(j).charge,nearby_points.pts.at(j).charge_err);
+      }
+    }
+    nearby_points = ct_point_cloud.get_closest_points(traj_pts.at(i),range_cut,2);
+    
+    //    std::cout << "2 " << nearby_points.pts.size() << std::endl;
+    
+    for (size_t j=0;j!=nearby_points.pts.size();j++){
+      if (existing_tcs.find(std::make_pair(nearby_points.pts.at(j).time_slice,nearby_points.pts.at(j).channel)) == existing_tcs.end()){
+	collected_charge_map[std::make_pair(nearby_points.pts.at(j).time_slice,nearby_points.pts.at(j).channel)] = std::make_pair(nearby_points.pts.at(j).charge,nearby_points.pts.at(j).charge_err);
+      }
+    }
+  }
+
+  // std::cout << collected_charge_map.size() << std::endl;
+}

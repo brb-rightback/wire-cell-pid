@@ -129,7 +129,9 @@ namespace WireCellPID{
     void dijkstra_shortest_paths(WireCell::WCPointCloud<double>::WCPoint& wcp_source, int flag = 1);
     void cal_shortest_path(WireCell::WCPointCloud<double>::WCPoint& wcp_target, int flag = 1);
 
-
+    // projection related
+    void get_projection(std::vector<int>& proj_channel, std::vector<int>& proj_timeslice, std::vector<int>& proj_charge, std::vector<int>& proj_charge_err , std::vector<int>& proj_flag, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map);
+    void collect_charge_trajectory(WireCell::ToyCTPointCloud& ct_point_cloud, double dis_cut = 0.6*units::cm, double range_cut = 1.0*units::cm);
     
   protected:
     
@@ -171,6 +173,9 @@ namespace WireCellPID{
     //path related
     std::list<WireCell::WCPointCloud<double>::WCPoint> path_wcps;
     std::list<WireCell::SlimMergeGeomCell*> path_mcells;
+
+    // projection related
+    std::map<std::pair<int,int>,std::pair<int,int>> collected_charge_map;
   };
   typedef std::vector<PR3DCluster*> PR3DClusterSelection;
 }
