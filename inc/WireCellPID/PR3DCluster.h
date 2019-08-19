@@ -132,6 +132,22 @@ namespace WireCellPID{
     // projection related
     void get_projection(std::vector<int>& proj_channel, std::vector<int>& proj_timeslice, std::vector<int>& proj_charge, std::vector<int>& proj_charge_err , std::vector<int>& proj_flag, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map);
     void collect_charge_trajectory(WireCell::ToyCTPointCloud& ct_point_cloud, double dis_cut = 0.6*units::cm, double range_cut = 1.0*units::cm);
+
+
+    //fine tracking related ...
+    bool get_fine_tracking_flag(){return flag_fine_tracking;};
+    WireCell::PointVector& get_fine_tracking_path(){return fine_tracking_path;};
+    std::vector<double>& get_dQ(){return dQ;};
+    std::vector<double>& get_dx(){return dx;};
+    std::vector<double>& get_pu(){return pu;};
+    std::vector<double>& get_pv(){return pv;};
+    std::vector<double>& get_pw(){return pw;};
+    std::vector<double>& get_pt(){return pt;};
+
+    std::map<std::pair<int,int>, std::tuple<double,double,double> > & get_proj_data_u_map(){return proj_data_u_map;};
+    std::map<std::pair<int,int>, std::tuple<double,double,double> > & get_proj_data_v_map(){return proj_data_v_map;};
+    std::map<std::pair<int,int>, std::tuple<double,double,double> > & get_proj_data_w_map(){return proj_data_w_map;};
+
     
   protected:
     
@@ -176,6 +192,22 @@ namespace WireCellPID{
 
     // projection related
     std::map<std::pair<int,int>,std::pair<int,int>> collected_charge_map;
+
+
+     // fine tracking related ...
+    bool flag_fine_tracking;
+    WireCell::PointVector fine_tracking_path;
+    std::vector<double> dQ;
+    std::vector<double> dx;
+    std::vector<double> pu;
+    std::vector<double> pv;
+    std::vector<double> pw;
+    std::vector<double> pt;
+
+    std::map<std::pair<int,int>, std::tuple<double,double,double> > proj_data_u_map;
+    std::map<std::pair<int,int>, std::tuple<double,double,double> > proj_data_v_map;
+    std::map<std::pair<int,int>, std::tuple<double,double,double> > proj_data_w_map;
+    
   };
   typedef std::vector<PR3DCluster*> PR3DClusterSelection;
 }
