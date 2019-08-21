@@ -14,7 +14,8 @@ using namespace WireCell;
 #include "PR3DCluster_graph.h"
 #include "PR3DCluster_steiner.h"
 #include "PR3DCluster_path.h"
-
+#include "PR3DCluster_trajectory_fit.h"
+#include "PR3DCluster_dQ_dx_fit.h"
 
 
 WireCellPID::PR3DCluster::PR3DCluster(int cluster_id)
