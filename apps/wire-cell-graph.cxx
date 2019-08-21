@@ -688,16 +688,22 @@ int main(int argc, char* argv[])
     // WireCell::ToyPointCloud* point_cloud = new_cluster->get_point_cloud();
     
     WireCellPID::PR3DCluster* new_cluster = *it;
-    std::set<int> steiner_terminals = new_cluster->get_steiner_graph_terminals();
-    //std::set<int> steiner_terminals = new_cluster->get_steiner_graph_selected_terminals();
+    //std::set<int> steiner_terminals = new_cluster->get_steiner_graph_terminals();
+    std::set<int> steiner_terminals = new_cluster->get_steiner_graph_selected_terminals();
+    
     ToyPointCloud *point_cloud = new_cluster->get_point_cloud_steiner();
    
     if (point_cloud==0) continue;
     if (point_cloud->get_num_points()>0){
       WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+
+      steiner_terminals.clear();
+      for (size_t i = 0; i!=cloud.pts.size();i++){
+	steiner_terminals.insert(i);
+      }
       
       for (auto it1 = steiner_terminals.begin();it1!=steiner_terminals.end();it1++){
-	x = cloud.pts[*it1].x/units::cm;
+      	x = cloud.pts[*it1].x/units::cm;
 	y = cloud.pts[*it1].y/units::cm;
 	z = cloud.pts[*it1].z/units::cm;
 	pu = cloud.pts[*it1].index_u;
