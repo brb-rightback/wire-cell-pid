@@ -150,7 +150,15 @@ namespace WireCellPID{
     WireCell::PointVector organize_wcps_path(std::list<WireCell::WCPointCloud<double>::WCPoint>& path_wcps_list,  double low_dis_limit);
     // prepare data
     void prepare_data(WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge);
+    // form map ...
+    void form_map(WireCell::ToyCTPointCloud& ct_point_cloud, WireCell::PointVector& pts,
+		  std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge,
+		  std::map<int, std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DW_set,
+		  std::map<std::pair<int,int>,std::set<int>>& map_2DU_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DV_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DW_3D_set,
+		  double end_point_factor=0.6, double mid_point_factor=0.9, int nlevel = 3, double time_cut = 5, double charge_cut = 2000);
 
+    void form_point_association(WireCell::Point &p, std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt, WireCell::ToyCTPointCloud& ct_point_cloud, double dis_cut, int nlevel = 3, double time_cut = 5);
+    
     
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & get_proj_data_u_map(){return proj_data_u_map;};
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & get_proj_data_v_map(){return proj_data_v_map;};

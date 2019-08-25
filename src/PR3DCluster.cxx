@@ -19,6 +19,14 @@ using namespace WireCell;
 
 void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double time){
 
+   // prepare the data for the fit, do not contain everything ...
+  // form from the cluster ...
+  std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_ut_charge;
+  std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_vt_charge;
+  std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_wt_charge;
+  prepare_data(ct_point_cloud, global_wc_map, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+
+  
   // first round of organizing the path from the path_wcps (shortest path)
   double low_dis_limit = 0.6*units::cm;
   PointVector pts = organize_wcps_path(path_wcps,low_dis_limit); 
@@ -27,17 +35,21 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
   //  std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
   //}
   
-  // prepare the data for the fit, do not contain everything ...
-  // form from the cluster ...
-  std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_ut_charge;
-  std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_vt_charge;
-  std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_wt_charge;
-  prepare_data(ct_point_cloud, global_wc_map, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
-
-  
   // form association ...
-  
-  
+   // map 3D index to set of 2D points
+    std::map<int,std::pair<std::set<std::pair<int,int>>, int> > map_3D_2DU_set;
+    std::map<int,std::pair<std::set<std::pair<int,int>>, int> > map_3D_2DV_set;
+    std::map<int,std::pair<std::set<std::pair<int,int>>, int> > map_3D_2DW_set;
+    // map 2D points to 3D indices
+    std::map<std::pair<int,int>,std::set<int>> map_2DU_3D_set;
+    std::map<std::pair<int,int>,std::set<int>> map_2DV_3D_set;
+    std::map<std::pair<int,int>,std::set<int>> map_2DW_3D_set;
+    
+    form_map(ct_point_cloud, pts,
+	     map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
+	     map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
+	     map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set);
+    
   
 }
 

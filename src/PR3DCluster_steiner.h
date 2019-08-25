@@ -547,6 +547,7 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
     }
     
   }
+  point_cloud_steiner->build_kdtree_index();
   //std::cout << point_cloud_steiner->get_num_points() << " " << flag_steiner_terminal.size() << std::endl;
   
   // fill the graph ...
