@@ -1,3 +1,63 @@
+std::vector<int> WireCellPID::PR3DCluster::examine_point_association(std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt,
+								     std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge, double charge_cut){
+
+  std::set<int> temp_types_u;
+  std::set<int> temp_types_v;
+  std::set<int> temp_types_w;
+    
+  std::set<std::pair<int,int> > saved_2dut;
+  std::set<std::pair<int,int> > saved_2dvt;
+  std::set<std::pair<int,int> > saved_2dwt;
+
+  std::vector<int> results;
+  results.resize(3,0);
+  
+  for (auto it = temp_2dut.begin(); it!=temp_2dut.end(); it++){
+    auto it1 = map_2D_ut_charge.find(*it);
+    if (it1!=map_2D_ut_charge.end() && std::get<0>(it1->second) > charge_cut ){
+      temp_types_u.insert(std::get<2>(it1->second));
+      if (std::get<2>(it1->second)==0) results.at(0)++;
+      saved_2dut.insert(*it);
+    }
+  }
+
+  for (auto it = temp_2dvt.begin(); it!=temp_2dvt.end(); it++){
+    auto it1 = map_2D_vt_charge.find(*it);
+    if (it1!=map_2D_vt_charge.end() && std::get<0>(it1->second) > charge_cut ){
+      temp_types_v.insert(std::get<2>(it1->second));
+      if (std::get<2>(it1->second)==0) results.at(1)++;
+      saved_2dvt.insert(*it);
+    }
+  }
+
+  for (auto it = temp_2dwt.begin(); it!=temp_2dwt.end(); it++){
+    auto it1 = map_2D_wt_charge.find(*it);
+    if (it1!=map_2D_wt_charge.end() && std::get<0>(it1->second) > charge_cut ){
+      temp_types_w.insert(std::get<2>(it1->second));
+      if (std::get<2>(it1->second)==0) results.at(2)++;
+      saved_2dwt.insert(*it);
+    }
+  }
+
+  if (temp_types_u.find(0)!=temp_types_u.end() && temp_types_u.size()==1){
+    saved_2dut.clear();
+    results.at(0) = 0;
+  }
+  if (temp_types_v.find(0)!=temp_types_v.end() && temp_types_v.size()==1){
+    saved_2dvt.clear();
+    results.at(1) = 0;
+  }
+  if (temp_types_w.find(0)!=temp_types_w.end() && temp_types_w.size()==1){
+    saved_2dwt.clear();
+    results.at(2) = 0;
+  }
+  temp_2dut = saved_2dut;
+  temp_2dvt = saved_2dvt;
+  temp_2dwt = saved_2dwt;
+
+  return results;
+}
+
 void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt, WireCell::ToyCTPointCloud& ct_point_cloud, double dis_cut, int nlevel, double time_cut ){
   // global information
   TPCParams& mp = Singleton<TPCParams>::Instance();
@@ -449,7 +509,9 @@ void WireCellPID::PR3DCluster::form_map(WireCell::ToyCTPointCloud& ct_point_clou
   map_2DW_3D_set.clear();
 
  
-
+  WireCell::PointVector saved_pts;
+  int count = 0;
+  
   // distance ...
   std::vector<double> distances;
   for (size_t i=0;i+1!=pts.size();i++){
@@ -473,21 +535,51 @@ void WireCellPID::PR3DCluster::form_map(WireCell::ToyCTPointCloud& ct_point_clou
 
     std::set<std::pair<int,int> > temp_2dut, temp_2dvt, temp_2dwt;
     form_point_association(pts.at(i), temp_2dut, temp_2dvt, temp_2dwt, ct_point_cloud, dis_cut, nlevel, time_cut);
-    
-    
-   
-    
+    // examine ...
+    std::vector<int> temp_flag = examine_point_association(temp_2dut, temp_2dvt, temp_2dwt, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,charge_cut);
 
-    
-
-    
+    std::cout << temp_2dut.size() << " " << temp_2dvt.size() << " " << temp_2dwt.size() << " " << temp_flag.at(0) << " " << temp_flag.at(1) << " " << temp_flag.at(2) << std::endl;
     // just projection ...
+    // fill the data ...
+    if (temp_2dut.size() + temp_2dvt.size() + temp_2dwt.size() > 0){
+      map_3D_2DU_set[count] = std::make_pair(temp_2dut,temp_flag.at(0));
+      map_3D_2DV_set[count] = std::make_pair(temp_2dvt,temp_flag.at(1));
+      map_3D_2DW_set[count] = std::make_pair(temp_2dwt,temp_flag.at(2));
+      for (auto it = temp_2dut.begin(); it!=temp_2dut.end();it++){
+	if (map_2DU_3D_set.find(*it)==map_2DU_3D_set.end()){
+	  std::set<int>  temp_set;
+	  temp_set.insert(count);
+	  map_2DU_3D_set[*it] = temp_set;
+	}else{
+	  map_2DU_3D_set[*it].insert(count);
+	}
+      }
+      for (auto it = temp_2dvt.begin(); it!=temp_2dvt.end();it++){
+	if (map_2DV_3D_set.find(*it)==map_2DV_3D_set.end()){
+	  std::set<int>  temp_set;
+	  temp_set.insert(count);
+	  map_2DV_3D_set[*it] = temp_set;
+	}else{
+	  map_2DV_3D_set[*it].insert(count);
+	}
+      }
+      for (auto it = temp_2dwt.begin(); it!=temp_2dwt.end();it++){
+	if (map_2DW_3D_set.find(*it)==map_2DW_3D_set.end()){
+	  std::set<int>  temp_set;
+	  temp_set.insert(count);
+	  map_2DW_3D_set[*it] = temp_set;
+	}else{
+	  map_2DW_3D_set[*it].insert(count);
+	}
+      }
 
-    
-    
+      
+      saved_pts.push_back(pts.at(i));
+      count ++;
+    }
   }
   
-  
+  pts = saved_pts;
  }
 
 void WireCellPID::PR3DCluster::prepare_data(WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge){
