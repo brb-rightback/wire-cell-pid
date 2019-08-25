@@ -773,6 +773,10 @@ int main(int argc, char* argv[])
       new_cluster->cal_shortest_path(wcps.second,2);
     }
     new_cluster->collect_charge_trajectory(ct_point_cloud);
+
+    double flash_time = map_flash_info[map_tpc_flash_ids[map_cluster_parent_id[*it]]].second;
+    
+    new_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
     
     
     ndf_save = new_cluster->get_cluster_id();

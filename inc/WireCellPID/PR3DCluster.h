@@ -144,6 +144,11 @@ namespace WireCellPID{
     std::vector<double>& get_pw(){return pw;};
     std::vector<double>& get_pt(){return pt;};
 
+    // main function to do the overall tracking, 
+    void do_tracking(WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, double time = 4*units::microsecond);
+    
+    WireCell::PointVector organize_wcps_path(std::list<WireCell::WCPointCloud<double>::WCPoint>& path_wcps_list,  double low_dis_limit);
+    
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & get_proj_data_u_map(){return proj_data_u_map;};
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & get_proj_data_v_map(){return proj_data_v_map;};
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & get_proj_data_w_map(){return proj_data_w_map;};
