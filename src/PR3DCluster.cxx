@@ -18,12 +18,26 @@ using namespace WireCell;
 #include "PR3DCluster_dQ_dx_fit.h"
 
 void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double time){
-  
+
+  // first round of organizing the path from the path_wcps (shortest path)
   double low_dis_limit = 0.6*units::cm;
   PointVector pts = organize_wcps_path(path_wcps,low_dis_limit); 
+
   //for (size_t i=0;i+1!=pts.size();i++){
   //  std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
   //}
+  
+  // prepare the data for the fit, do not contain everything ...
+  // form from the cluster ...
+  std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_ut_charge;
+  std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_vt_charge;
+  std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_wt_charge;
+  prepare_data(ct_point_cloud, global_wc_map, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+
+  
+  // form association ...
+  
+  
   
 }
 
@@ -641,7 +655,7 @@ void WireCellPID::PR3DCluster::get_projection(std::vector<int>& proj_channel, st
     proj_timeslice.push_back(time_slice);
     proj_charge.push_back(charge);
     proj_charge_err.push_back(charge_err);
-    proj_flag.push_back(1);
+    proj_flag.push_back(2); // isolated ones ...
   }
   
 }

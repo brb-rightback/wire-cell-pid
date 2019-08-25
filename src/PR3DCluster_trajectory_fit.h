@@ -1,3 +1,83 @@
+void WireCellPID::PR3DCluster::prepare_data(WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge){
+  
+  std::vector<int> proj_channel;
+  std::vector<int> proj_timeslice;
+  std::vector<int> proj_charge;
+  std::vector<int> proj_charge_err;
+  std::vector<int> proj_flag;
+  get_projection(proj_channel,proj_timeslice,proj_charge, proj_charge_err, proj_flag, global_wc_map);
+
+  int min_time = 1e9;
+  int max_time = -1e9;
+  int min_uch = 1e9;
+  int max_uch = -1e9;
+  int min_vch = 1e9;
+  int max_vch = -1e9;
+  int min_wch = 1e9;
+  int max_wch = -1e9;
+  
+  // std::cout << proj_charge.size() << " " << proj_flag.size() << std::endl;
+  for (size_t i=0;i!=proj_channel.size();i++){
+    if (min_time > proj_timeslice.at(i)) min_time = proj_timeslice.at(i);
+    if (max_time < proj_timeslice.at(i)) max_time = proj_timeslice.at(i);
+	
+    if (proj_channel.at(i)<2400){
+      map_2D_ut_charge[std::make_pair(proj_channel.at(i),proj_timeslice.at(i))] = std::make_tuple(proj_charge.at(i),proj_charge_err.at(i), proj_flag.at(i));
+
+      if (min_uch > proj_channel.at(i)) min_uch = proj_channel.at(i);
+      if (max_uch < proj_channel.at(i)) max_uch = proj_channel.at(i);
+    }else if (proj_channel.at(i)<4800){
+      map_2D_vt_charge[std::make_pair(proj_channel.at(i)-2400,proj_timeslice.at(i))] = std::make_tuple(proj_charge.at(i),proj_charge_err.at(i), proj_flag.at(i));
+
+      if (min_vch > proj_channel.at(i)) min_vch = proj_channel.at(i);
+      if (max_vch < proj_channel.at(i)) max_vch = proj_channel.at(i);
+    }else{
+      map_2D_wt_charge[std::make_pair(proj_channel.at(i)-4800,proj_timeslice.at(i))] = std::make_tuple(proj_charge.at(i),proj_charge_err.at(i), proj_flag.at(i));
+      if (min_wch > proj_channel.at(i)) min_wch = proj_channel.at(i);
+      if (max_wch < proj_channel.at(i)) max_wch = proj_channel.at(i);
+    }
+  }
+
+  // flag 0 for dead or overlapping channels
+  // flag 1 for good channels
+  // flag 2 for isolated channels
+  // flag 3 for additional channels ...
+  
+  // add the rest of live channels within range???
+  std::map<std::pair<int,int>, std::pair<double,double> > map_u_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_uch, max_uch, 0);
+  std::map<std::pair<int,int>, std::pair<double,double> > map_v_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_vch, max_vch, 1);
+  std::map<std::pair<int,int>, std::pair<double,double> > map_w_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_wch, max_wch, 2);
+
+  for (auto it = map_u_tcc.begin(); it!=map_u_tcc.end(); it++){
+    if (map_2D_ut_charge.find(std::make_pair(it->first.second, it->first.first))==map_2D_ut_charge.end()){
+      map_2D_ut_charge[std::make_pair(it->first.second, it->first.first)] = std::make_tuple(it->second.first, it->second.second, 3);
+      //std::cout << it->first.first << " " << it->first.second << std::endl;
+    }
+  }
+
+  for (auto it = map_v_tcc.begin(); it!=map_v_tcc.end(); it++){
+    if (map_2D_vt_charge.find(std::make_pair(it->first.second-2400, it->first.first))==map_2D_vt_charge.end()){
+      map_2D_vt_charge[std::make_pair(it->first.second-2400, it->first.first)] = std::make_tuple(it->second.first, it->second.second, 3);
+      //std::cout << it->first.first << " " << it->first.second << std::endl;
+    }
+  }
+
+  for (auto it = map_w_tcc.begin(); it!=map_w_tcc.end(); it++){
+    if (map_2D_wt_charge.find(std::make_pair(it->first.second-4800, it->first.first))==map_2D_wt_charge.end()){
+      map_2D_wt_charge[std::make_pair(it->first.second, it->first.first)] = std::make_tuple(it->second.first, it->second.second, 3);
+      //      std::cout << it->first.first << " " << it->first.second << std::endl;
+    }else{
+      //      std::cout << it->first.first << " " << it->first.second << std::endl;
+    }
+  }
+  
+  
+  //  for (auto it = map_w_tcc.begin(); it!=map_w_tcc.end(); it++){
+  // std::cout << it->first.first << " " << it->first.second << std::endl;
+  // }
+  
+}
+
 WireCell::PointVector WireCellPID::PR3DCluster::organize_wcps_path(std::list<WCPointCloud<double>::WCPoint>& path_wcps_list,  double low_dis_limit){
 
   PointVector pts;
