@@ -9,6 +9,9 @@
 #include <boost/graph/connected_components.hpp>
 #include <boost/graph/prim_minimum_spanning_tree.hpp>
 
+#include <Eigen/Sparse>
+#include <Eigen/IterativeLinearSolvers>
+
 using namespace WireCell;
 
 #include "PR3DCluster_graph.h"
@@ -50,7 +53,13 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
 	     map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
 	     map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set);
     
-  
+    trajectory_fit(pts, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
+		 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
+		 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+
+   std::vector<int> indices;
+   indices.push_back(14);
+    fill_data_map_trajectory(indices, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
 }
 
 

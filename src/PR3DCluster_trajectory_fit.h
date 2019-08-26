@@ -1,3 +1,373 @@
+void WireCellPID::PR3DCluster::fill_data_map_trajectory(std::vector<int> indices, std::map<int, std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DW_set, std::map<std::pair<int,int>,  std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge){
+  proj_data_u_map.clear();
+  proj_data_v_map.clear();
+  proj_data_w_map.clear();
+
+  if (indices.size()==0){
+    for (auto it = map_2D_ut_charge.begin(); it!=map_2D_ut_charge.end(); it++){
+      //good_channels_set.insert(it->first.first);
+      proj_data_u_map[it->first] = std::make_tuple(std::get<0>(it->second),std::get<1>(it->second),0);
+    }
+    for (auto it = map_2D_vt_charge.begin(); it!=map_2D_vt_charge.end(); it++){
+      //good_channels_set.insert(it->first.first+2400);
+      proj_data_v_map[std::make_pair(it->first.first+2400,it->first.second)] = std::make_tuple(std::get<0>(it->second),std::get<1>(it->second),0);
+    }
+    for (auto it = map_2D_wt_charge.begin(); it!=map_2D_wt_charge.end(); it++){
+      //good_channels_set.insert(it->first.first+4800);
+      proj_data_w_map[std::make_pair(it->first.first+4800,it->first.second)] = std::make_tuple(std::get<0>(it->second),std::get<1>(it->second),0);
+    }
+  }else{
+    for (auto it = indices.begin(); it!=indices.end(); it++){
+      for (auto it1 = map_3D_2DU_set[*it].first.begin(); it1!=map_3D_2DU_set[*it].first.end(); it1++){
+	proj_data_u_map[*it1] = std::make_tuple(std::get<0>(map_2D_ut_charge[*it1]),std::get<1>(map_2D_ut_charge[*it1]),0);
+      }
+      for (auto it1 = map_3D_2DV_set[*it].first.begin(); it1!=map_3D_2DV_set[*it].first.end(); it1++){
+	proj_data_v_map[std::make_pair(it1->first+2400,it1->second)] = std::make_tuple(std::get<0>(map_2D_vt_charge[*it1]),std::get<1>(map_2D_vt_charge[*it1]),0);
+      }
+      for (auto it1 = map_3D_2DW_set[*it].first.begin(); it1!=map_3D_2DW_set[*it].first.end(); it1++){
+	proj_data_w_map[std::make_pair(it1->first+4800,it1->second)] = std::make_tuple(std::get<0>(map_2D_wt_charge[*it1]),std::get<1>(map_2D_wt_charge[*it1]),0);
+      }
+    }
+    
+  }
+}
+
+void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std::map<int, std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DW_set, std::map<std::pair<int,int>,std::set<int>>& map_2DU_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DV_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DW_3D_set,std::map<std::pair<int,int>, std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, int charge_div_method, double div_sigma){
+  
+  // calculate the distance between points ...
+  std::vector<double> distances;
+  for (size_t i=0;i+1!=ps_vec.size();i++){
+    distances.push_back(sqrt(pow(ps_vec.at(i+1).x-ps_vec.at(i).x,2) +
+			     pow(ps_vec.at(i+1).y-ps_vec.at(i).y,2) +
+			     pow(ps_vec.at(i+1).z-ps_vec.at(i).z,2)));
+  }
+
+  // map 2D points to its index
+  std::vector<std::pair<std::pair<int,int>,int>> vec_2DU_index;
+  std::vector<std::pair<std::pair<int,int>,int>> vec_2DV_index;
+  std::vector<std::pair<std::pair<int,int>,int>> vec_2DW_index;
+
+  for (auto it = map_2DU_3D_set.begin(); it!= map_2DU_3D_set.end(); it++){
+    for (auto it1 =it->second.begin(); it1!=it->second.end(); it1++){
+      vec_2DU_index.push_back(std::make_pair(it->first,*it1));
+    }
+  }
+  for (auto it = map_2DV_3D_set.begin(); it!= map_2DV_3D_set.end(); it++){
+    for (auto it1 =it->second.begin(); it1!=it->second.end(); it1++){
+      vec_2DV_index.push_back(std::make_pair(it->first,*it1));
+    }
+  }
+  for (auto it = map_2DW_3D_set.begin(); it!= map_2DW_3D_set.end(); it++){
+    for (auto it1 =it->second.begin(); it1!=it->second.end(); it1++){
+      vec_2DW_index.push_back(std::make_pair(it->first,*it1));
+    }
+  }
+
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  double pitch_u = mp.get_pitch_u();
+  double pitch_v = mp.get_pitch_v();
+  double pitch_w = mp.get_pitch_w();
+  double angle_u = mp.get_angle_u();
+  double angle_v = mp.get_angle_v();
+  double angle_w = mp.get_angle_w();
+  double time_slice_width = mp.get_ts_width();
+  double first_u_dis = mp.get_first_u_dis();
+  double first_v_dis = mp.get_first_v_dis();
+  double first_w_dis = mp.get_first_w_dis();
+
+
+  double slope_x = 1./time_slice_width;
+  double first_t_dis = path_wcps.front().mcell->GetTimeSlice()*time_slice_width - path_wcps.front().x;
+  double offset_t = first_t_dis / time_slice_width;
+
+  //  convert Z to W ... 
+  double slope_zw = 1./pitch_w * cos(angle_w);
+  double slope_yw = 1./pitch_w * sin(angle_w);
+  
+  double slope_yu = -1./pitch_u * sin(angle_u);
+  double slope_zu = 1./pitch_u * cos(angle_u);
+  double slope_yv = -1./pitch_v * sin(angle_v);
+  double slope_zv = 1./pitch_v * cos(angle_v);
+  
+  //convert Y,Z to U,V
+  double offset_w = -first_w_dis/pitch_w;
+  double offset_u = -first_u_dis/pitch_u;
+  double offset_v = -first_v_dis/pitch_v;
+
+   // form matrix ...
+  int n_3D_pos = 3 * ps_vec.size();
+  int n_2D_u = 2 * vec_2DU_index.size();
+  int n_2D_v = 2 * vec_2DV_index.size();
+  int n_2D_w = 2 * vec_2DW_index.size();
+
+  Eigen::VectorXd pos_3D(n_3D_pos), data_u_2D(n_2D_u), data_v_2D(n_2D_v), data_w_2D(n_2D_w);
+  Eigen::SparseMatrix<double> RU(n_2D_u, n_3D_pos) ;
+  Eigen::SparseMatrix<double> RV(n_2D_v, n_3D_pos) ;
+  Eigen::SparseMatrix<double> RW(n_2D_w, n_3D_pos) ;
+  Eigen::VectorXd pos_3D_init(n_3D_pos);
+  for (size_t i=0;i!=ps_vec.size();i++){
+    pos_3D_init(3*i) = ps_vec.at(i).x;
+    pos_3D_init(3*i+1) = ps_vec.at(i).y;
+    pos_3D_init(3*i+2) = ps_vec.at(i).z;
+  }
+
+  // 2D pixel and then the 3D index ...
+  std::map<std::tuple<int,int, int>, double> map_Udiv_fac;
+  std::map<std::tuple<int,int, int>, double> map_Vdiv_fac;
+  std::map<std::tuple<int,int, int>, double> map_Wdiv_fac;
+  
+  // charge division method ...
+  if (charge_div_method==1){
+    // equal division
+    for (auto it = map_2DU_3D_set.begin(); it!=map_2DU_3D_set.end(); it++){
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+	map_Udiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = 1./it->second.size();
+	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+      }
+    }
+    for (auto it = map_2DV_3D_set.begin(); it!=map_2DV_3D_set.end(); it++){
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+	map_Vdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = 1./it->second.size();
+	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+      }
+    }
+    for (auto it = map_2DW_3D_set.begin(); it!=map_2DW_3D_set.end(); it++){
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+	map_Wdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = 1./it->second.size();
+	//	std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+      }
+    }
+  }else if (charge_div_method == 2){
+    // use div_sigma ...
+    for (auto it = map_2DU_3D_set.begin(); it!=map_2DU_3D_set.end(); it++){
+      double sum = 0;
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+	double central_t = slope_x * ps_vec.at(*it1).x + offset_t;
+	double central_ch = slope_yu * ps_vec.at(*it1).y + slope_zu * ps_vec.at(*it1).z + offset_u;
+	double factor = exp(-0.5 * (pow((central_t-it->first.second)*time_slice_width,2) + pow((central_ch-it->first.first)*pitch_u,2))/pow(div_sigma,2));
+	map_Udiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = factor;
+	sum += factor;
+	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+      }
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+	map_Udiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] /= sum;
+      }
+    }
+
+    for (auto it = map_2DV_3D_set.begin(); it!=map_2DV_3D_set.end(); it++){
+      double sum = 0;
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+	double central_t = slope_x * ps_vec.at(*it1).x + offset_t;
+	double central_ch = slope_yv * ps_vec.at(*it1).y + slope_zv * ps_vec.at(*it1).z + offset_v;
+	double factor = exp(-0.5 * (pow((central_t-it->first.second)*time_slice_width,2) + pow((central_ch-it->first.first)*pitch_v,2))/pow(div_sigma,2));
+	map_Vdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = factor;
+	sum += factor;
+	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+      }
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+	map_Vdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] /= sum;
+      }
+    }
+
+    for (auto it = map_2DW_3D_set.begin(); it!=map_2DW_3D_set.end(); it++){
+      double sum = 0;
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+	double central_t = slope_x * ps_vec.at(*it1).x + offset_t;
+	double central_ch = slope_yw * ps_vec.at(*it1).y + slope_zw * ps_vec.at(*it1).z + offset_w;
+	double factor = exp(-0.5 * (pow((central_t-it->first.second)*time_slice_width,2) + pow((central_ch-it->first.first)*pitch_w,2))/pow(div_sigma,2));
+	map_Wdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = factor;
+	sum += factor;
+	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << " " << factor << std::endl;
+      }
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+	map_Wdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] /= sum;
+      }
+    }
+  }
+  
+  // additional error calculation based on mixture of dead channels
+  for (size_t index = 0; index!=vec_2DU_index.size(); index++){
+    double charge = std::get<0>(map_2D_ut_charge[vec_2DU_index.at(index).first]);
+    double charge_err = std::get<1>(map_2D_ut_charge[vec_2DU_index.at(index).first]);
+    int n_divide = map_2DU_3D_set[vec_2DU_index.at(index).first].size();
+    // induction plane error is large, so they have less weights in the fit to decide X position
+    double scaling = charge/charge_err * map_Udiv_fac[std::make_tuple(vec_2DU_index.at(index).first.first, vec_2DU_index.at(index).first.second, vec_2DU_index.at(index).second)];
+
+    int index_3D = vec_2DU_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z    
+
+    if (map_3D_2DU_set[index_3D].second!=0 && map_3D_2DU_set[index_3D].first.size()!=0)
+      scaling *= (map_3D_2DU_set[index_3D].first.size()*1.0 - map_3D_2DU_set[index_3D].second)/map_3D_2DU_set[index_3D].first.size();
+
+    //    std::cout << scaling << std::endl;
+    
+    data_u_2D(2*index) =  scaling * (vec_2DU_index.at(index).first.first - offset_u);
+    data_u_2D(2*index+1) = scaling * (vec_2DU_index.at(index).first.second - offset_t);
+
+    RU.insert(2*index,3*index_3D+1) = scaling * slope_yu; // Y--> U
+    RU.insert(2*index,3*index_3D+2) = scaling * slope_zu; // Z--> U
+    RU.insert(2*index+1,3*index_3D) = scaling * slope_x; // X --> T
+  }
+
+  for (size_t index = 0; index!=vec_2DV_index.size(); index++){
+    double charge = std::get<0>(map_2D_vt_charge[vec_2DV_index.at(index).first]);
+    double charge_err = std::get<1>(map_2D_vt_charge[vec_2DV_index.at(index).first]);
+    int n_divide = map_2DV_3D_set[vec_2DV_index.at(index).first].size();
+    // induction plane error is large, so they have less weights in the fit to decide X position
+    double scaling = charge/charge_err * map_Vdiv_fac[std::make_tuple(vec_2DV_index.at(index).first.first, vec_2DV_index.at(index).first.second, vec_2DV_index.at(index).second)];
+
+    int index_3D = vec_2DV_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z    
+
+    if (map_3D_2DV_set[index_3D].second!=0 && map_3D_2DV_set[index_3D].first.size()!=0)
+      scaling *= (map_3D_2DV_set[index_3D].first.size()*1.0 - map_3D_2DV_set[index_3D].second)/map_3D_2DV_set[index_3D].first.size();
+
+    //    std::cout << scaling << std::endl;
+    
+    data_v_2D(2*index) =  scaling * (vec_2DV_index.at(index).first.first - offset_v);
+    data_v_2D(2*index+1) = scaling * (vec_2DV_index.at(index).first.second - offset_t);
+
+    RV.insert(2*index,3*index_3D+1) = scaling * slope_yv; // Y--> V
+    RV.insert(2*index,3*index_3D+2) = scaling * slope_zv; // Z--> V
+    RV.insert(2*index+1,3*index_3D) = scaling * slope_x; // X --> T
+  }
+
+  for (size_t index = 0; index!=vec_2DW_index.size(); index++){
+    double charge = std::get<0>(map_2D_wt_charge[vec_2DW_index.at(index).first]);
+    double charge_err = std::get<1>(map_2D_wt_charge[vec_2DW_index.at(index).first]);
+    int n_divide = map_2DW_3D_set[vec_2DW_index.at(index).first].size();
+    // induction plane error is large, so they have less weights in the fit to decide X position
+    double scaling = charge/charge_err * map_Wdiv_fac[std::make_tuple(vec_2DW_index.at(index).first.first, vec_2DW_index.at(index).first.second, vec_2DW_index.at(index).second)];
+
+    int index_3D = vec_2DW_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z    
+
+    if (map_3D_2DW_set[index_3D].second!=0 && map_3D_2DW_set[index_3D].first.size()!=0)
+      scaling *= (map_3D_2DW_set[index_3D].first.size()*1.0 - map_3D_2DW_set[index_3D].second)/map_3D_2DW_set[index_3D].first.size();
+
+    //    std::cout << scaling << std::endl;
+    
+    data_w_2D(2*index) =  scaling * (vec_2DW_index.at(index).first.first - offset_w);
+    data_w_2D(2*index+1) = scaling * (vec_2DW_index.at(index).first.second - offset_t);
+
+    RW.insert(2*index,3*index_3D+2) = scaling * slope_zw; // Z--> W
+    RW.insert(2*index+1,3*index_3D) = scaling * slope_x; // X --> T
+  }
+  
+  Eigen::SparseMatrix<double> RUT = Eigen::SparseMatrix<double>(RU.transpose());
+  Eigen::SparseMatrix<double> RVT = Eigen::SparseMatrix<double>(RV.transpose());
+  Eigen::SparseMatrix<double> RWT = Eigen::SparseMatrix<double>(RW.transpose());
+  
+  // when to apply regularization ... how???
+  Eigen::SparseMatrix<double> FMatrix(n_3D_pos, n_3D_pos) ;
+   for (size_t i=0;i!=ps_vec.size();i++){
+    
+    if (i==0){
+      if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ||
+	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 ||
+	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){
+	FMatrix.insert(0,0) = -1./distances.at(0); // X
+	FMatrix.insert(0,3) = 1./distances.at(0);
+	
+	FMatrix.insert(1,1) = -1./distances.at(0); // Y
+	FMatrix.insert(1,4) = 1./distances.at(0);
+	
+	FMatrix.insert(2,2) = -1./distances.at(0); // Z
+	FMatrix.insert(2,5) = 1./distances.at(0);
+      }
+    }else if (i+1==ps_vec.size()){
+      if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ||
+	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 ||
+	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){
+	FMatrix.insert(3*i,3*i) = -1./distances.at(ps_vec.size()-2); // X
+	FMatrix.insert(3*i,3*i-3) = 1./distances.at(ps_vec.size()-2);
+
+	FMatrix.insert(3*i+1,3*i+1) = -1./distances.at(ps_vec.size()-2);
+	FMatrix.insert(3*i+1,3*i-2) = 1./distances.at(ps_vec.size()-2);
+
+	FMatrix.insert(3*i+2,3*i+2) = -1./distances.at(ps_vec.size()-2);
+	FMatrix.insert(3*i+2,3*i-1) = 1./distances.at(ps_vec.size()-2);
+      }
+    }else{
+      if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ||
+	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 ||
+	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){
+	FMatrix.insert(3*i,3*i-3) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1));
+	FMatrix.insert(3*i,3*i) = -1./distances.at(i-1)/distances.at(i);
+	FMatrix.insert(3*i,3*i+3) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1));
+	
+	FMatrix.insert(3*i+1,3*i-2) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1));
+	FMatrix.insert(3*i+1,3*i+1) = -1./distances.at(i-1)/distances.at(i);
+	FMatrix.insert(3*i+1,3*i+4) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1));
+	
+	FMatrix.insert(3*i+2,3*i-1) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1));
+	FMatrix.insert(3*i+2,3*i+2) = -1./distances.at(i-1)/distances.at(i);
+	FMatrix.insert(3*i+2,3*i+5) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1));
+      }
+    }
+  }
+
+  double lambda = 0;
+  lambda = 2 // strength 
+    * sqrt(9. //  average chi2 guessted
+ 	   * (vec_2DU_index.size() + vec_2DV_index.size() + vec_2DW_index.size()) // how many of them
+ 	   * 6 * 6 // charge/charge_err estimation ... 
+ 	   /(ps_vec.size() * 1.)); //weighting
+  double angle_range = 0.25;
+  FMatrix *= lambda/angle_range ; // disable the angle cut ... 
+  
+  
+  Eigen::SparseMatrix<double> FMatrixT = Eigen::SparseMatrix<double>(FMatrix.transpose());
+  // Eigen::SparseMatrix<double> PMatrixT = Eigen::SparseMatrix<double>(PMatrix.transpose());
+  Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
+  Eigen::VectorXd b = RUT * data_u_2D + RVT * data_v_2D + RWT * data_w_2D;// + PMatrixT * pos_3D_init * pow(lambda/dis_range,2);
+
+  Eigen::SparseMatrix<double> A =   RUT * RU + RVT * RV + RWT * RW + FMatrixT * FMatrix;// + PMatrixT * PMatrix * pow(lambda/dis_range,2);
+
+  //  std::cout << "Solve1 " << std::endl;
+  
+  solver.compute(A);
+
+  //  std::cout << "Solve " << std::endl;
+  
+  pos_3D = solver.solveWithGuess(b,pos_3D_init);
+  
+  if (std::isnan(solver.error())){
+    pos_3D = solver.solve(b);
+    //std::cout << "#iterations: " << solver.iterations() << std::endl;
+    //std::cout << "#estimated error: " << solver.error() << std::endl;
+  }
+  
+  //std::cout << path_wcps_vec.size() << " " << map_2DU_index.size() << " " << map_2DV_index.size() << " " << map_2DW_index.size() << std::endl;
+
+  if (std::isnan(solver.error())){
+    //std::cout << "Bad fit" << std::endl;
+    fine_tracking_path.clear();
+    if (fine_tracking_path.size()==0){
+      for (size_t i=0;i!=ps_vec.size();i++){
+	Point p;
+	p.x = ps_vec.at(i).x;
+	p.y = ps_vec.at(i).y;
+	p.z = ps_vec.at(i).z;
+	fine_tracking_path.push_back(p);
+      }
+    }
+  }else{
+    // std::cout << "Good fit" << std::endl;
+    flag_fine_tracking = true;
+    fine_tracking_path.clear();
+    for (size_t i=0;i!=ps_vec.size();i++){
+      Point p;
+      p.x = pos_3D(3*i);
+      p.y = pos_3D(3*i+1);
+      p.z = pos_3D(3*i+2);
+      if (std::isnan(p.x) || std::isnan(p.y) || std::isnan(p.z)){
+      }else{
+	fine_tracking_path.push_back(p);
+	std::cout << ps_vec.at(i) << " " << p << " " << sqrt(pow(ps_vec.at(i).x-p.x,2)+pow(ps_vec.at(i).y-p.y,2)+pow(ps_vec.at(i).z-p.z,2))/units::mm <<std::endl;
+      }
+    }
+  }
+}
+
+
 std::vector<int> WireCellPID::PR3DCluster::examine_point_association(std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt,
 								     std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge, double charge_cut){
 
