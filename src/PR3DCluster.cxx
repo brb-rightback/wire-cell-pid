@@ -39,27 +39,31 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
   //}
   
   // form association ...
-   // map 3D index to set of 2D points
-    std::map<int,std::pair<std::set<std::pair<int,int>>, int> > map_3D_2DU_set;
-    std::map<int,std::pair<std::set<std::pair<int,int>>, int> > map_3D_2DV_set;
-    std::map<int,std::pair<std::set<std::pair<int,int>>, int> > map_3D_2DW_set;
-    // map 2D points to 3D indices
-    std::map<std::pair<int,int>,std::set<int>> map_2DU_3D_set;
-    std::map<std::pair<int,int>,std::set<int>> map_2DV_3D_set;
-    std::map<std::pair<int,int>,std::set<int>> map_2DW_3D_set;
-    
-    form_map(ct_point_cloud, pts,
-	     map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
-	     map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
-	     map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set);
-    
-    trajectory_fit(pts, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
+  // map 3D index to set of 2D points
+  std::map<int,std::pair<std::set<std::pair<int,int>>, int> > map_3D_2DU_set;
+  std::map<int,std::pair<std::set<std::pair<int,int>>, int> > map_3D_2DV_set;
+  std::map<int,std::pair<std::set<std::pair<int,int>>, int> > map_3D_2DW_set;
+  // map 2D points to 3D indices
+  std::map<std::pair<int,int>,std::set<int>> map_2DU_3D_set;
+  std::map<std::pair<int,int>,std::set<int>> map_2DV_3D_set;
+  std::map<std::pair<int,int>,std::set<int>> map_2DW_3D_set;
+  
+  form_map(ct_point_cloud, pts,
+	   map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
+	   map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
+	   map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set);
+
+  for (size_t i=0;i!=pts.size();i++){
+    std::cout << i << " " << pts.at(i) << " " << map_3D_2DU_set[i].first.size() << " " << map_3D_2DV_set[i].first.size() << " " << map_3D_2DW_set[i].first.size() << std::endl;
+  }
+  
+  trajectory_fit(pts, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
 		 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
 		 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
-
-   std::vector<int> indices;
-   indices.push_back(14);
-    fill_data_map_trajectory(indices, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+  
+  std::vector<int> indices;
+  // indices.push_back(14);
+  fill_data_map_trajectory(indices, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
 }
 
 

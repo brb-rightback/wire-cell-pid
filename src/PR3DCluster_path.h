@@ -523,6 +523,13 @@ std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>
       }
     }
   }
+
+  if (boundary_points.first.y < boundary_points.second.y){
+    WireCell::WCPointCloud<double>::WCPoint temp_wcp = boundary_points.first;
+    boundary_points.first = boundary_points.second;
+    boundary_points.second = temp_wcp;
+  }
+  
   return boundary_points;
 }
 
