@@ -18,18 +18,18 @@ void WireCellPID::PR3DCluster::fill_data_map_trajectory(std::vector<int> indices
     }
   }else{
     for (auto it = indices.begin(); it!=indices.end(); it++){
-      std::cout << pu.at(*it) << " " << pv.at(*it) << " " << pw.at(*it) << " " << pt.at(*it) << std::endl;
+      //      std::cout << pu.at(*it) << " " << pv.at(*it) << " " << pw.at(*it) << " " << pt.at(*it) << std::endl;
       for (auto it1 = map_3D_2DU_set[*it].first.begin(); it1!=map_3D_2DU_set[*it].first.end(); it1++){
 	proj_data_u_map[*it1] = std::make_tuple(std::get<0>(map_2D_ut_charge[*it1]),std::get<1>(map_2D_ut_charge[*it1]),0);
-	std::cout << "U: " << it1->first << " " << it1->second << std::endl; 
+	//std::cout << "U: " << it1->first << " " << it1->second << std::endl; 
       }
       for (auto it1 = map_3D_2DV_set[*it].first.begin(); it1!=map_3D_2DV_set[*it].first.end(); it1++){
 	proj_data_v_map[std::make_pair(it1->first+2400,it1->second)] = std::make_tuple(std::get<0>(map_2D_vt_charge[*it1]),std::get<1>(map_2D_vt_charge[*it1]),0);
-	std::cout << "V: " << it1->first+2400 << " " << it1->second << std::endl; 
+	//std::cout << "V: " << it1->first+2400 << " " << it1->second << std::endl; 
       }
       for (auto it1 = map_3D_2DW_set[*it].first.begin(); it1!=map_3D_2DW_set[*it].first.end(); it1++){
 	proj_data_w_map[std::make_pair(it1->first+4800,it1->second)] = std::make_tuple(std::get<0>(map_2D_wt_charge[*it1]),std::get<1>(map_2D_wt_charge[*it1]),0);
-	std::cout << "W: " << it1->first+4800 << " " << it1->second << std::endl; 
+	//std::cout << "W: " << it1->first+4800 << " " << it1->second << std::endl; 
       }
     }
     
@@ -115,6 +115,9 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
     pos_3D_init(3*i+2) = ps_vec.at(i).z;
   }
 
+
+  
+
   // 2D pixel and then the 3D index ...
   std::map<std::tuple<int,int, int>, double> map_Udiv_fac;
   std::map<std::tuple<int,int, int>, double> map_Vdiv_fac;
@@ -125,20 +128,20 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
     // equal division
     for (auto it = map_2DU_3D_set.begin(); it!=map_2DU_3D_set.end(); it++){
       for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-	map_Udiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = 1./it->second.size();
-	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+  	map_Udiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = 1./it->second.size();
+  	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
       }
     }
     for (auto it = map_2DV_3D_set.begin(); it!=map_2DV_3D_set.end(); it++){
       for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-	map_Vdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = 1./it->second.size();
-	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+  	map_Vdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = 1./it->second.size();
+  	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
       }
     }
     for (auto it = map_2DW_3D_set.begin(); it!=map_2DW_3D_set.end(); it++){
       for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-	map_Wdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = 1./it->second.size();
-	//	std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+  	map_Wdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = 1./it->second.size();
+  	//	std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
       }
     }
   }else if (charge_div_method == 2){
@@ -146,45 +149,45 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
     for (auto it = map_2DU_3D_set.begin(); it!=map_2DU_3D_set.end(); it++){
       double sum = 0;
       for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-	double central_t = slope_x * ps_vec.at(*it1).x + offset_t;
-	double central_ch = slope_yu * ps_vec.at(*it1).y + slope_zu * ps_vec.at(*it1).z + offset_u;
-	double factor = exp(-0.5 * (pow((central_t-it->first.second)*time_slice_width,2) + pow((central_ch-it->first.first)*pitch_u,2))/pow(div_sigma,2));
-	map_Udiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = factor;
-	sum += factor;
-	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+  	double central_t = slope_x * ps_vec.at(*it1).x + offset_t;
+  	double central_ch = slope_yu * ps_vec.at(*it1).y + slope_zu * ps_vec.at(*it1).z + offset_u;
+  	double factor = exp(-0.5 * (pow((central_t-it->first.second)*time_slice_width,2) + pow((central_ch-it->first.first)*pitch_u,2))/pow(div_sigma,2));
+  	map_Udiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = factor;
+  	sum += factor;
+  	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
       }
       for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-	map_Udiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] /= sum;
+  	map_Udiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] /= sum;
       }
     }
 
     for (auto it = map_2DV_3D_set.begin(); it!=map_2DV_3D_set.end(); it++){
       double sum = 0;
       for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-	double central_t = slope_x * ps_vec.at(*it1).x + offset_t;
-	double central_ch = slope_yv * ps_vec.at(*it1).y + slope_zv * ps_vec.at(*it1).z + offset_v;
-	double factor = exp(-0.5 * (pow((central_t-it->first.second)*time_slice_width,2) + pow((central_ch-it->first.first)*pitch_v,2))/pow(div_sigma,2));
-	map_Vdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = factor;
-	sum += factor;
-	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+  	double central_t = slope_x * ps_vec.at(*it1).x + offset_t;
+  	double central_ch = slope_yv * ps_vec.at(*it1).y + slope_zv * ps_vec.at(*it1).z + offset_v;
+  	double factor = exp(-0.5 * (pow((central_t-it->first.second)*time_slice_width,2) + pow((central_ch-it->first.first)*pitch_v,2))/pow(div_sigma,2));
+  	map_Vdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = factor;
+  	sum += factor;
+  	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
       }
       for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-	map_Vdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] /= sum;
+  	map_Vdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] /= sum;
       }
     }
 
     for (auto it = map_2DW_3D_set.begin(); it!=map_2DW_3D_set.end(); it++){
       double sum = 0;
       for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-	double central_t = slope_x * ps_vec.at(*it1).x + offset_t;
-	double central_ch = slope_yw * ps_vec.at(*it1).y + slope_zw * ps_vec.at(*it1).z + offset_w;
-	double factor = exp(-0.5 * (pow((central_t-it->first.second)*time_slice_width,2) + pow((central_ch-it->first.first)*pitch_w,2))/pow(div_sigma,2));
-	map_Wdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = factor;
-	sum += factor;
-	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << " " << factor << std::endl;
+  	double central_t = slope_x * ps_vec.at(*it1).x + offset_t;
+  	double central_ch = slope_yw * ps_vec.at(*it1).y + slope_zw * ps_vec.at(*it1).z + offset_w;
+  	double factor = exp(-0.5 * (pow((central_t-it->first.second)*time_slice_width,2) + pow((central_ch-it->first.first)*pitch_w,2))/pow(div_sigma,2));
+  	map_Wdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = factor;
+  	sum += factor;
+  	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << " " << factor << std::endl;
       }
       for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-	map_Wdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] /= sum;
+  	map_Wdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] /= sum;
       }
     }
   }
@@ -197,7 +200,7 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
     // induction plane error is large, so they have less weights in the fit to decide X position
     double scaling = charge/charge_err * map_Udiv_fac[std::make_tuple(vec_2DU_index.at(index).first.first, vec_2DU_index.at(index).first.second, vec_2DU_index.at(index).second)];
 
-    int index_3D = vec_2DU_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z    
+    int index_3D = vec_2DU_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z
 
     if (map_3D_2DU_set[index_3D].second!=0 && map_3D_2DU_set[index_3D].first.size()!=0)
       scaling *= (map_3D_2DU_set[index_3D].first.size()*1.0 - map_3D_2DU_set[index_3D].second)/map_3D_2DU_set[index_3D].first.size();
@@ -219,7 +222,7 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
     // induction plane error is large, so they have less weights in the fit to decide X position
     double scaling = charge/charge_err * map_Vdiv_fac[std::make_tuple(vec_2DV_index.at(index).first.first, vec_2DV_index.at(index).first.second, vec_2DV_index.at(index).second)];
 
-    int index_3D = vec_2DV_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z    
+    int index_3D = vec_2DV_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z
 
     if (map_3D_2DV_set[index_3D].second!=0 && map_3D_2DV_set[index_3D].first.size()!=0)
       scaling *= (map_3D_2DV_set[index_3D].first.size()*1.0 - map_3D_2DV_set[index_3D].second)/map_3D_2DV_set[index_3D].first.size();
@@ -241,7 +244,7 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
     // induction plane error is large, so they have less weights in the fit to decide X position
     double scaling = charge/charge_err * map_Wdiv_fac[std::make_tuple(vec_2DW_index.at(index).first.first, vec_2DW_index.at(index).first.second, vec_2DW_index.at(index).second)];
 
-    int index_3D = vec_2DW_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z    
+    int index_3D = vec_2DW_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z
 
     if (map_3D_2DW_set[index_3D].second!=0 && map_3D_2DW_set[index_3D].first.size()!=0)
       scaling *= (map_3D_2DW_set[index_3D].first.size()*1.0 - map_3D_2DW_set[index_3D].second)/map_3D_2DW_set[index_3D].first.size();
@@ -356,10 +359,10 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
 	p.z = ps_vec.at(i).z;
 	fine_tracking_path.push_back(p);
 
-	pu.push_back(offset_u + (slope_yu * p.y + slope_zu * p.z));
-	pv.push_back(offset_v + (slope_yv * p.y + slope_zv * p.z)+2400);
-	pw.push_back(offset_w + (slope_yw * p.y + slope_zw * p.z)+4800);
-	pt.push_back(offset_t + slope_x * p.x );
+	pu.push_back(offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z));
+	pv.push_back(offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z)+2400);
+	pw.push_back(offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z)+4800);
+	pt.push_back(offset_t + 0.5 + slope_x * p.x );
       }
     }
   }else{
@@ -375,20 +378,16 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
       p.x = pos_3D(3*i);
       p.y = pos_3D(3*i+1);
       p.z = pos_3D(3*i+2);
-
-      p.x = ps_vec.at(i).x;
-      p.y = ps_vec.at(i).y;
-      p.z = ps_vec.at(i).z;
 	
       if (std::isnan(p.x) || std::isnan(p.y) || std::isnan(p.z)){
 	std::cout << "gaga " << std::endl;
       }else{
 	fine_tracking_path.push_back(p);
 	//fine_tracking_path.push_back(ps_vec.at(i));
-	pu.push_back(offset_u + (slope_yu * p.y + slope_zu * p.z));
-	pv.push_back(offset_v + (slope_yv * p.y + slope_zv * p.z)+2400);
-	pw.push_back(offset_w + (slope_yw * p.y + slope_zw * p.z)+4800);
-	pt.push_back(offset_t + slope_x * p.x );
+	pu.push_back(offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z));
+	pv.push_back(offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z)+2400);
+	pw.push_back(offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z)+4800);
+	pt.push_back(offset_t + 0.5 + slope_x * p.x );
 	//	std::cout << ps_vec.at(i) << " " << p << " " << sqrt(pow(ps_vec.at(i).x-p.x,2)+pow(ps_vec.at(i).y-p.y,2)+pow(ps_vec.at(i).z-p.z,2))/units::mm <<std::endl;
       }
     }
@@ -522,6 +521,8 @@ void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::s
 	int cur_wire_u = cloud.pts[wcp.index].index_u;
 	int cur_wire_v = cloud.pts[wcp.index].index_v;
 	int cur_wire_w = cloud.pts[wcp.index].index_w;
+
+	//	std::cout << "A: " << cur_time_slice << " " << cur_wire_u << " " << cur_wire_v << " " << cur_wire_w << std::endl;
 	
 	double dis_cut_u = dis_cut;
 	double dis_cut_v = dis_cut;
@@ -635,7 +636,7 @@ void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::s
   }
     
   // steiner tree point cloud ...
-  if (point_cloud_steiner!=0 && graph_steiner!=0){
+  if (point_cloud_steiner!=0 && graph_steiner!=0 ){
     WireCell::WCPointCloud<double>& cloud = point_cloud_steiner->get_cloud();
     IndexMap index = get(boost::vertex_index,*graph_steiner);
 
@@ -643,7 +644,7 @@ void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::s
       WireCell::WCPointCloud<double>::WCPoint wcp = point_cloud_steiner->get_closest_wcpoint(p);
       double temp_dis = sqrt(pow(wcp.x-p.x,2)+pow(wcp.y-p.y,2)+pow(wcp.z-p.z,2));
       
-      //std::cout << temp_dis/units::cm << " " << dis_cut/units::cm << std::endl;
+      //      std::cout << temp_dis/units::cm << " " << dis_cut/units::cm << std::endl;
       if (temp_dis < dis_cut){
 	std::set<int> total_vertices_found;
 	std::set<int> vertices_to_be_examined;
@@ -669,10 +670,14 @@ void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::s
 	WireCell::Point temp_p(wcp.x, wcp.y, wcp.z);
 	std::vector<int> temp_results = ct_point_cloud.convert_3Dpoint_time_ch(temp_p);
 	// std::cout << cloud.pts[wcp.index].index_u << " "  << temp_results.at(0) << " " << temp_results.at(1) << std::endl;
+	//	if (wcp.mcell!=0)
+	// std::cout << temp_results.at(0) << " " << wcp.mcell->GetTimeSlice() << std::endl;
 	int cur_time_slice = temp_results.at(0);
 	int cur_wire_u = cloud.pts[wcp.index].index_u;
 	int cur_wire_v = cloud.pts[wcp.index].index_v;
 	int cur_wire_w = cloud.pts[wcp.index].index_w;
+
+	//	std::cout << "B: " << cur_time_slice << " " << cur_wire_u << " " << cur_wire_v << " " << cur_wire_w << std::endl;
 	
 	SMGCSet nearby_mcells_set;
 	std::vector<int> point_indices;
@@ -710,32 +715,32 @@ void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::s
 	  GeomWireSelection vwires = mcell->get_vwires();
 	  GeomWireSelection wwires = mcell->get_wwires();
 	  for (auto it1 = uwires.begin(); it1!=uwires.end(); it1++){
-	    if (fabs((*it1)->index()-cur_wire_u)<=1)
+	    if (fabs((*it1)->index()-cur_wire_u)<1)
 	      if (fabs(this_time_slice-cur_time_slice)>max_time_slice_u)
 		max_time_slice_u = fabs(this_time_slice-cur_time_slice);
 	  }
 	  for (auto it1 = vwires.begin(); it1!=vwires.end(); it1++){
-	    if (fabs((*it1)->index()-cur_wire_v)<=1)
+	    if (fabs((*it1)->index()-cur_wire_v)<1)
 	      if (fabs(this_time_slice-cur_time_slice)>max_time_slice_v)
 		max_time_slice_v = fabs(this_time_slice-cur_time_slice);
 	  }
 	  for (auto it1 = wwires.begin(); it1!=wwires.end(); it1++){
-	    if (fabs((*it1)->index()-cur_wire_w)<=1)
+	    if (fabs((*it1)->index()-cur_wire_w)<1)
 	      if (fabs(this_time_slice-cur_time_slice)>max_time_slice_w)
 		max_time_slice_w = fabs(this_time_slice-cur_time_slice);
 	  }
 	}
 	for (size_t i=0; i!=point_indices.size(); i++){
 	  int this_time_slice = point_timeslices.at(i);
-	  if (fabs(cloud.pts[point_indices.at(i)].index_u - cur_wire_u)<=2){
+	  if (fabs(cloud.pts[point_indices.at(i)].index_u - cur_wire_u)<=1){
 	    if (fabs(this_time_slice-cur_time_slice)>max_time_slice_u)
 	      max_time_slice_u = fabs(this_time_slice-cur_time_slice);
 	  }
-	  if (fabs(cloud.pts[point_indices.at(i)].index_v - cur_wire_v)<=2){
+	  if (fabs(cloud.pts[point_indices.at(i)].index_v - cur_wire_v)<=1){
 	    if (fabs(this_time_slice-cur_time_slice)>max_time_slice_v)
 	      max_time_slice_v = fabs(this_time_slice-cur_time_slice);
 	  }
-	  if (fabs(cloud.pts[point_indices.at(i)].index_w - cur_wire_w)<=2){
+	  if (fabs(cloud.pts[point_indices.at(i)].index_w - cur_wire_w)<=1){
 	    if (fabs(this_time_slice-cur_time_slice)>max_time_slice_w)
 	      max_time_slice_w = fabs(this_time_slice-cur_time_slice);
 	  }
@@ -812,6 +817,7 @@ void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::s
 	} // loop over all mcells
 	
 	for (size_t i=0; i!=point_indices.size(); i++){
+
 	  int this_time_slice = point_timeslices.at(i);
 	  int this_index_u = cloud.pts[point_indices.at(i)].index_u;
 	  int this_index_v = cloud.pts[point_indices.at(i)].index_v;
@@ -824,22 +830,22 @@ void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::s
 	    float min_u_dis;
 	    if (cur_wire_u < this_index_u-1){
 	      min_u_dis = this_index_u -1 - cur_wire_u;
-	    }else if (cur_wire_u > this_index_u+1){
-	      min_u_dis = cur_wire_u - this_index_u -1;
+	    }else if (cur_wire_u > this_index_u + 1){
+	      min_u_dis = cur_wire_u - this_index_u - 1;
 	    }else{
 	      min_u_dis = 0;
 	    }
 	    float min_v_dis;
 	    if (cur_wire_v < this_index_v-1){
 	      min_v_dis = this_index_v -1 - cur_wire_v;
-	    }else if (cur_wire_v > this_index_v+1){
-	      min_v_dis = cur_wire_v - this_index_v -1;
+	    }else if (cur_wire_v > this_index_v + 1){
+	      min_v_dis = cur_wire_v - this_index_v -1 ;
 	    }else{
 	      min_v_dis = 0;
 	    }
 	    float min_w_dis;
 	    if (cur_wire_w < this_index_w-1){
-	      min_w_dis = this_index_w -1 - cur_wire_w;
+	      min_w_dis = this_index_w  -1 - cur_wire_w;
 	    }else if (cur_wire_w > this_index_w+1){
 	      min_w_dis = cur_wire_w - this_index_w -1;
 	    }else{
