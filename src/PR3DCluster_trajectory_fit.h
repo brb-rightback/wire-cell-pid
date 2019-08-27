@@ -378,9 +378,13 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
       p.x = pos_3D(3*i);
       p.y = pos_3D(3*i+1);
       p.z = pos_3D(3*i+2);
+
+      /* p.x = ps_vec.at(i).x; */
+      /* p.y = ps_vec.at(i).y; */
+      /* p.z = ps_vec.at(i).z; */
 	
       if (std::isnan(p.x) || std::isnan(p.y) || std::isnan(p.z)){
-	std::cout << "gaga " << std::endl;
+	//std::cout << "gaga " << std::endl;
       }else{
 	fine_tracking_path.push_back(p);
 	//fine_tracking_path.push_back(ps_vec.at(i));
@@ -1072,7 +1076,69 @@ void WireCellPID::PR3DCluster::prepare_data(WireCell::ToyCTPointCloud& ct_point_
   
 }
 
-WireCell::PointVector WireCellPID::PR3DCluster::organize_wcps_path(std::list<WCPointCloud<double>::WCPoint>& path_wcps_list,  double low_dis_limit){
+void WireCellPID::PR3DCluster::organize_ps_path(WireCell::PointVector& pts, double low_dis_limit, double end_point_limit){
+  WireCell::PointVector ps_vec = pts;
+  pts.clear();
+  // fill in the beginning part
+  {
+    Point p1 = ps_vec.front();
+    Point p2 = ps_vec.front();
+    double dis1 = 0;
+    for (auto it = ps_vec.begin(); it!=ps_vec.end(); it++){
+      p2 = *it;
+      dis1 = sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2)+pow(p1.z-p2.z,2));
+      if (dis1 > low_dis_limit) break;
+    }
+    if (dis1!=0){
+      p1.x += (p1.x - p2.x)/dis1 * end_point_limit;
+      p1.y += (p1.y - p2.y)/dis1 * end_point_limit;
+      p1.z += (p1.z - p2.z)/dis1 * end_point_limit;
+      pts.push_back(p1);
+    }
+  }
+  
+  // fill in the middle part
+  for (size_t i=0;i!=ps_vec.size(); i++){
+    Point p1 = ps_vec.at(i);
+    double dis = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));
+    if (dis < low_dis_limit * 0.8 ){
+      continue;
+    }else if (dis < low_dis_limit * 1.6){
+      pts.push_back(p1);
+    }else{
+      int npoints = std::round(dis/low_dis_limit);
+      
+      for (int j=0;j!=npoints;j++){
+	Point p(pts.back().x + (p1.x-pts.back().x) / npoints * (j+1),
+		pts.back().y + (p1.y-pts.back().y) / npoints * (j+1),
+		pts.back().z + (p1.z-pts.back().z) / npoints * (j+1));
+	pts.push_back(p);
+      }
+    }
+  }
+  
+
+  // fill in the end part
+  if (end_point_limit!=0){
+    Point p1 = ps_vec.back();
+    Point p2 = ps_vec.back();
+    double dis1 = 0;
+    for (auto it = ps_vec.rbegin(); it!=ps_vec.rend(); it++){
+      p2 = *it;
+      dis1 = sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2)+pow(p1.z-p2.z,2));
+      if (dis1 > low_dis_limit) break;
+    }
+    if (dis1!=0){
+      p1.x += (p1.x - p2.x)/dis1 * end_point_limit;
+      p1.y += (p1.y - p2.y)/dis1 * end_point_limit;
+      p1.z += (p1.z - p2.z)/dis1 * end_point_limit;
+      pts.push_back(p1);
+    }
+  }
+  
+}
+
+WireCell::PointVector WireCellPID::PR3DCluster::organize_wcps_path(std::list<WCPointCloud<double>::WCPoint>& path_wcps_list,  double low_dis_limit, double end_point_limit){
 
   PointVector pts;
   
@@ -1091,9 +1157,9 @@ WireCell::PointVector WireCellPID::PR3DCluster::organize_wcps_path(std::list<WCP
       if (dis1 > low_dis_limit) break;
     }
     if (dis1!=0){
-      p1.x += (p1.x - p2.x)/dis1 * low_dis_limit/2.;
-      p1.y += (p1.y - p2.y)/dis1 * low_dis_limit/2.;
-      p1.z += (p1.z - p2.z)/dis1 * low_dis_limit/2.;
+      p1.x += (p1.x - p2.x)/dis1 * end_point_limit;
+      p1.y += (p1.y - p2.y)/dis1 * end_point_limit;
+      p1.z += (p1.z - p2.z)/dis1 * end_point_limit;
       pts.push_back(p1);
     }
   }
@@ -1101,26 +1167,22 @@ WireCell::PointVector WireCellPID::PR3DCluster::organize_wcps_path(std::list<WCP
   // fill in the middle part
   for (size_t i=0;i!=temp_wcps_vec.size(); i++){
     Point p1(temp_wcps_vec.at(i).x, temp_wcps_vec.at(i).y, temp_wcps_vec.at(i).z);
-    if (i==0) {
+
+    double dis = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));
+    
+    if (dis < low_dis_limit * 0.8 ){
+      continue;
+    }else if (dis < low_dis_limit * 1.6){
       pts.push_back(p1);
     }else{
-      double dis = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));
-    
-      if (dis < low_dis_limit * 1.0 ){
-	continue;
-      }else if (dis < low_dis_limit * 1.6){
-	pts.push_back(p1);
-      }else{
-	int npoints = std::round(dis/low_dis_limit/1.6);
-
-	for (int j=0;j!=npoints;j++){
-	  Point p(pts.back().x + (p1.x-pts.back().x) / npoints * (j+1),
-		  pts.back().y + (p1.y-pts.back().y) / npoints * (j+1),
-		  pts.back().z + (p1.z-pts.back().z) / npoints * (j+1));
-	  pts.push_back(p);
-	}
+      int npoints = std::round(dis/low_dis_limit);
+      
+      for (int j=0;j!=npoints;j++){
+	Point p(pts.back().x + (p1.x-pts.back().x) / npoints * (j+1),
+		pts.back().y + (p1.y-pts.back().y) / npoints * (j+1),
+		pts.back().z + (p1.z-pts.back().z) / npoints * (j+1));
+	pts.push_back(p);
       }
-
     }
   }
   
@@ -1138,9 +1200,9 @@ WireCell::PointVector WireCellPID::PR3DCluster::organize_wcps_path(std::list<WCP
       if (dis1 > low_dis_limit) break;
     }
     if (dis1!=0){
-      p1.x += (p1.x - p2.x)/dis1 * low_dis_limit/2.;
-      p1.y += (p1.y - p2.y)/dis1 * low_dis_limit/2.;
-      p1.z += (p1.z - p2.z)/dis1 * low_dis_limit/2.;
+      p1.x += (p1.x - p2.x)/dis1 * end_point_limit;
+      p1.y += (p1.y - p2.y)/dis1 * end_point_limit;
+      p1.z += (p1.z - p2.z)/dis1 * end_point_limit;
       pts.push_back(p1);
     }
   }

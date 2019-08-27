@@ -31,8 +31,9 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
 
   
   // first round of organizing the path from the path_wcps (shortest path)
-  double low_dis_limit = 0.6*units::cm;
-  PointVector pts = organize_wcps_path(path_wcps,low_dis_limit); 
+  double low_dis_limit = 1.2*units::cm;
+  double end_point_limit = 0.6*units::cm;
+  PointVector pts = organize_wcps_path(path_wcps,low_dis_limit, end_point_limit); 
 
   // pts.clear();
   
@@ -75,9 +76,9 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
   // {Point p(1514.98, 300.685, 6004); pts.push_back(p);}
   // {Point p(1508.37, 298.087, 6002.5); pts.push_back(p);}
   
-  //for (size_t i=0;i+1!=pts.size();i++){
+  // for (size_t i=0;i+1!=pts.size();i++){
   //  std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
-  //}
+  // }
   
   // form association ...
   // map 3D index to set of 2D points
@@ -101,6 +102,47 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
   trajectory_fit(pts, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
 		 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
 		 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+
+  
+  //  for (size_t i=0;i+1!=pts.size();i++){
+  //  std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
+  //}
+
+  
+  // second round trajectory fit ...
+  low_dis_limit = 0.6*units::cm;
+  end_point_limit = 0.3*units::cm;
+  //  std::cout << pts.size() << std::endl;
+  organize_ps_path(pts, low_dis_limit, end_point_limit); 
+  //std::cout << pts.size() << std::endl;
+
+  map_3D_2DU_set.clear();
+  map_3D_2DV_set.clear();
+  map_3D_2DW_set.clear();
+  // map 2D points to 3D indices
+  map_2DU_3D_set.clear();
+  map_2DV_3D_set.clear();
+  map_2DW_3D_set.clear();
+  
+  form_map(ct_point_cloud, pts,
+	   map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
+	   map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
+	   map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set);
+
+  // for (size_t i=0;i!=pts.size();i++){
+  //   std::cout << i << " " << pts.at(i) << " " << map_3D_2DU_set[i].first.size() << " " << map_3D_2DV_set[i].first.size() << " " << map_3D_2DW_set[i].first.size() << std::endl;
+  // }
+  
+  trajectory_fit(pts, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
+		 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
+		 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,2,0.6*units::cm);
+
+
+  // examine trajectory ... // no angle at the moment ...
+  organize_ps_path(pts, low_dis_limit, 0); 
+  
+  // first round of dQ/dx fit ...
+  
   
   std::vector<int> indices;
   // indices.push_back(14);
