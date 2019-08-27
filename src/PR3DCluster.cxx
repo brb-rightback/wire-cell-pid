@@ -139,9 +139,12 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
 
 
   // examine trajectory ... // no angle at the moment ...
+  // std::cout << pts.size() << std::endl;
   organize_ps_path(pts, low_dis_limit, 0); 
-  
+  // std::cout << pts.size() << std::endl;
+
   // first round of dQ/dx fit ...
+  
   
   
   std::vector<int> indices;
