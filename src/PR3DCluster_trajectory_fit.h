@@ -351,19 +351,18 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
     pv.clear();
     pw.clear();
     pt.clear();
-    if (fine_tracking_path.size()==0){
-      for (size_t i=0;i!=ps_vec.size();i++){
-	Point p;
-	p.x = ps_vec.at(i).x;
-	p.y = ps_vec.at(i).y;
-	p.z = ps_vec.at(i).z;
-	fine_tracking_path.push_back(p);
 
-	pu.push_back(offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z));
-	pv.push_back(offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z)+2400);
-	pw.push_back(offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z)+4800);
-	pt.push_back(offset_t + 0.5 + slope_x * p.x );
-      }
+    for (size_t i=0;i!=ps_vec.size();i++){
+      Point p;
+      p.x = ps_vec.at(i).x;
+      p.y = ps_vec.at(i).y;
+      p.z = ps_vec.at(i).z;
+      fine_tracking_path.push_back(p);
+      
+      pu.push_back(offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z));
+      pv.push_back(offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z)+2400);
+      pw.push_back(offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z)+4800);
+      pt.push_back(offset_t + 0.5 + slope_x * p.x );
     }
   }else{
     // std::cout << "Good fit" << std::endl;
@@ -373,16 +372,12 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
     pv.clear();
     pw.clear();
     pt.clear();
+
     for (size_t i=0;i!=ps_vec.size();i++){
       Point p;
       p.x = pos_3D(3*i);
       p.y = pos_3D(3*i+1);
       p.z = pos_3D(3*i+2);
-
-      /* p.x = ps_vec.at(i).x; */
-      /* p.y = ps_vec.at(i).y; */
-      /* p.z = ps_vec.at(i).z; */
-	
       if (std::isnan(p.x) || std::isnan(p.y) || std::isnan(p.z)){
 	//std::cout << "gaga " << std::endl;
       }else{
@@ -395,6 +390,8 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
 	//	std::cout << ps_vec.at(i) << " " << p << " " << sqrt(pow(ps_vec.at(i).x-p.x,2)+pow(ps_vec.at(i).y-p.y,2)+pow(ps_vec.at(i).z-p.z,2))/units::mm <<std::endl;
       }
     }
+
+    ps_vec = fine_tracking_path;
   }
 }
 
@@ -1036,10 +1033,11 @@ void WireCellPID::PR3DCluster::prepare_data(WireCell::ToyCTPointCloud& ct_point_
     }
   }
 
-  // flag 0 for dead or overlapping channels
-  // flag 1 for good channels
+  // flag 0 for dead 
+  // flag 1 for good channels or overlapping channels 
   // flag 2 for isolated channels
   // flag 3 for additional channels ...
+  
   
   // add the rest of live channels within range???
   std::map<std::pair<int,int>, std::pair<double,double> > map_u_tcc = ct_point_cloud.get_overlap_good_ch_charge(min_time, max_time, min_uch, max_uch, 0);
