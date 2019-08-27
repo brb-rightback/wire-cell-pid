@@ -120,3 +120,6 @@ double WireCellPID::PR3DCluster::cal_gaus_integral(int tbin, int wbin, double t_
 }
 
 
+void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, double flash_time){
+  
+}

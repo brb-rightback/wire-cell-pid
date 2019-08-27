@@ -144,7 +144,7 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
   // std::cout << pts.size() << std::endl;
 
   // first round of dQ/dx fit ...
-  
+  dQ_dx_fit(global_wc_map, time);
   
   
   std::vector<int> indices;
