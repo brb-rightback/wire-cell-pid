@@ -227,23 +227,32 @@ void WireCellPID::PR3DCluster::fill_2d_charge_dQ_dx_fit(std::map<int,std::map<co
       if (wire->iplane()==0){
 	proj_data_u_map[std::make_pair(wire->index(),time_slice)] = std::make_tuple(charge, charge_err, 0);
       }else if (wire->iplane()==1){
-	proj_data_v_map[std::make_pair(wire->index(),time_slice)] = std::make_tuple(charge, charge_err, 0);
+	proj_data_v_map[std::make_pair(wire->index()+2400,time_slice)] = std::make_tuple(charge, charge_err, 0);
       }else{
-	proj_data_w_map[std::make_pair(wire->index(),time_slice)] = std::make_tuple(charge, charge_err, 0);
+	proj_data_w_map[std::make_pair(wire->index()+4800,time_slice)] = std::make_tuple(charge, charge_err, 0);
       }
     }
   }
 
-  /* // fill in additional stuff ... */
-  /* for (auto it = map_2D_ut_charge.begin(); it!=map_2D_ut_charge.end(); it++){ */
-  /*   if (std::get<2>(it->second)!=0) good_channels_set.insert(it->first.first); */
-  /* } */
-  /* for (auto it = map_2D_vt_charge.begin(); it!=map_2D_vt_charge.end(); it++){ */
-  /*   if (std::get<2>(it->second)!=0) good_channels_set.insert(it->first.first+2400); */
-  /* } */
-  /* for (auto it = map_2D_wt_charge.begin(); it!=map_2D_wt_charge.end(); it++){ */
-  /*   if (std::get<2>(it->second)!=0) good_channels_set.insert(it->first.first+4800); */
-  /* } */
+  // fill in additional stuff ... 
+  for (auto it = map_2D_ut_charge.begin(); it!=map_2D_ut_charge.end(); it++){ 
+    if (std::get<2>(it->second)==0) continue;
+    if (proj_data_u_map.find(it->first)==proj_data_u_map.end()){
+      proj_data_u_map[it->first] = std::make_tuple(std::get<0>(it->second),std::get<1>(it->second),0);
+    }
+  }
+  for (auto it = map_2D_vt_charge.begin(); it!=map_2D_vt_charge.end(); it++){ 
+    if (std::get<2>(it->second)==0) continue;
+    if (proj_data_v_map.find(std::make_pair(it->first.first+2400,it->first.second))==proj_data_v_map.end()){
+      proj_data_v_map[std::make_pair(it->first.first+2400,it->first.second)] = std::make_tuple(std::get<0>(it->second),std::get<1>(it->second),0);
+    }
+  }
+  for (auto it = map_2D_wt_charge.begin(); it!=map_2D_wt_charge.end(); it++){ 
+    if (std::get<2>(it->second)==0) continue;
+    if (proj_data_w_map.find(std::make_pair(it->first.first+4800,it->first.second))==proj_data_w_map.end()){
+      proj_data_w_map[std::make_pair(it->first.first+4800,it->first.second)] = std::make_tuple(std::get<0>(it->second),std::get<1>(it->second),0);
+    }
+  }
+ 
   
-  /* return good_channels_set; */
 }
