@@ -263,50 +263,87 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
   Eigen::SparseMatrix<double> RWT = Eigen::SparseMatrix<double>(RW.transpose());
   
   // when to apply regularization ... how???
-  Eigen::SparseMatrix<double> FMatrix(n_3D_pos, n_3D_pos) ;
-   for (size_t i=0;i!=ps_vec.size();i++){
-    
+  Eigen::SparseMatrix<double> FMatrix_1(n_3D_pos, n_3D_pos), FMatrix_2(n_3D_pos, n_3D_pos);
+  
+  for (size_t i=0;i!=ps_vec.size();i++){
     if (i==0){
       if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ||
 	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 ||
 	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){
-	FMatrix.insert(0,0) = -1./distances.at(0); // X
-	FMatrix.insert(0,3) = 1./distances.at(0);
+	FMatrix_1.insert(0,0) = -1./distances.at(0); // X
+	FMatrix_1.insert(0,3) = 1./distances.at(0);
 	
-	FMatrix.insert(1,1) = -1./distances.at(0); // Y
-	FMatrix.insert(1,4) = 1./distances.at(0);
+	FMatrix_1.insert(1,1) = -1./distances.at(0); // Y
+	FMatrix_1.insert(1,4) = 1./distances.at(0);
 	
-	FMatrix.insert(2,2) = -1./distances.at(0); // Z
-	FMatrix.insert(2,5) = 1./distances.at(0);
+	FMatrix_1.insert(2,2) = -1./distances.at(0); // Z
+	FMatrix_1.insert(2,5) = 1./distances.at(0);
+
+	FMatrix_2.insert(0,0) = -1./distances.at(0); // X
+	FMatrix_2.insert(0,3) = 1./distances.at(0);
+	
+	FMatrix_2.insert(1,1) = -1./distances.at(0); // Y
+	FMatrix_2.insert(1,4) = 1./distances.at(0);
+	
+	FMatrix_2.insert(2,2) = -1./distances.at(0); // Z
+	FMatrix_2.insert(2,5) = 1./distances.at(0);
       }
     }else if (i+1==ps_vec.size()){
       if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ||
 	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 ||
 	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){
-	FMatrix.insert(3*i,3*i) = -1./distances.at(ps_vec.size()-2); // X
-	FMatrix.insert(3*i,3*i-3) = 1./distances.at(ps_vec.size()-2);
+	FMatrix_1.insert(3*i,3*i) = -1./distances.at(ps_vec.size()-2); // X
+	FMatrix_1.insert(3*i,3*i-3) = 1./distances.at(ps_vec.size()-2);
 
-	FMatrix.insert(3*i+1,3*i+1) = -1./distances.at(ps_vec.size()-2);
-	FMatrix.insert(3*i+1,3*i-2) = 1./distances.at(ps_vec.size()-2);
+	FMatrix_1.insert(3*i+1,3*i+1) = -1./distances.at(ps_vec.size()-2);
+	FMatrix_1.insert(3*i+1,3*i-2) = 1./distances.at(ps_vec.size()-2);
 
-	FMatrix.insert(3*i+2,3*i+2) = -1./distances.at(ps_vec.size()-2);
-	FMatrix.insert(3*i+2,3*i-1) = 1./distances.at(ps_vec.size()-2);
+	FMatrix_1.insert(3*i+2,3*i+2) = -1./distances.at(ps_vec.size()-2);
+	FMatrix_1.insert(3*i+2,3*i-1) = 1./distances.at(ps_vec.size()-2);
+
+	FMatrix_2.insert(3*i,3*i) = -1./distances.at(ps_vec.size()-2); // X
+	FMatrix_2.insert(3*i,3*i-3) = 1./distances.at(ps_vec.size()-2);
+
+	FMatrix_2.insert(3*i+1,3*i+1) = -1./distances.at(ps_vec.size()-2);
+	FMatrix_2.insert(3*i+1,3*i-2) = 1./distances.at(ps_vec.size()-2);
+
+	FMatrix_2.insert(3*i+2,3*i+2) = -1./distances.at(ps_vec.size()-2);
+	FMatrix_2.insert(3*i+2,3*i-1) = 1./distances.at(ps_vec.size()-2);
       }
     }else{
       if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ||
 	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 ||
 	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){
-	FMatrix.insert(3*i,3*i-3) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1));
-	FMatrix.insert(3*i,3*i) = -1./distances.at(i-1)/distances.at(i);
-	FMatrix.insert(3*i,3*i+3) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1));
+	/* FMatrix.insert(3*i,3*i-3) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); */
+	/* FMatrix.insert(3*i,3*i) = -1./distances.at(i-1)/distances.at(i); */
+	/* FMatrix.insert(3*i,3*i+3) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); */
 	
-	FMatrix.insert(3*i+1,3*i-2) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1));
-	FMatrix.insert(3*i+1,3*i+1) = -1./distances.at(i-1)/distances.at(i);
-	FMatrix.insert(3*i+1,3*i+4) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1));
+	/* FMatrix.insert(3*i+1,3*i-2) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); */
+	/* FMatrix.insert(3*i+1,3*i+1) = -1./distances.at(i-1)/distances.at(i); */
+	/* FMatrix.insert(3*i+1,3*i+4) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); */
 	
-	FMatrix.insert(3*i+2,3*i-1) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1));
-	FMatrix.insert(3*i+2,3*i+2) = -1./distances.at(i-1)/distances.at(i);
-	FMatrix.insert(3*i+2,3*i+5) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1));
+	/* FMatrix.insert(3*i+2,3*i-1) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); */
+	/* FMatrix.insert(3*i+2,3*i+2) = -1./distances.at(i-1)/distances.at(i); */
+	/* FMatrix.insert(3*i+2,3*i+5) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); */
+
+	FMatrix_1.insert(3*i,3*i-3) = 1./distances.at(i-1);
+	FMatrix_1.insert(3*i,3*i) = -1./distances.at(i-1);
+	
+	FMatrix_1.insert(3*i+1,3*i-2) = 1./distances.at(i-1);
+	FMatrix_1.insert(3*i+1,3*i+1) = -1./distances.at(i-1);
+
+	FMatrix_1.insert(3*i+2,3*i-1) = 1./distances.at(i-1);
+	FMatrix_1.insert(3*i+2,3*i+2) = -1./distances.at(i-1);
+
+	FMatrix_2.insert(3*i,3*i) = -1./distances.at(i);
+	FMatrix_2.insert(3*i,3*i+3) = 1./distances.at(i);
+	
+	FMatrix_2.insert(3*i+1,3*i+1) = -1./distances.at(i);
+	FMatrix_2.insert(3*i+1,3*i+4) = 1./distances.at(i);
+	
+	FMatrix_2.insert(3*i+2,3*i+2) = -1./distances.at(i);
+	FMatrix_2.insert(3*i+2,3*i+5) = 1./distances.at(i);
+	
       }
     }
   }
@@ -318,15 +355,17 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
  	   * 6 * 6 // charge/charge_err estimation ... 
  	   /(ps_vec.size() * 1.)); //weighting
   double angle_range = 0.25;
-  FMatrix *= lambda/angle_range ; // disable the angle cut ... 
+  FMatrix_1 *= lambda/angle_range ; // disable the angle cut ...
+  FMatrix_2 *= lambda/angle_range ; // disable the angle cut ... 
   
   
-  Eigen::SparseMatrix<double> FMatrixT = Eigen::SparseMatrix<double>(FMatrix.transpose());
+  Eigen::SparseMatrix<double> FMatrix_1T = Eigen::SparseMatrix<double>(FMatrix_1.transpose());
+  Eigen::SparseMatrix<double> FMatrix_2T = Eigen::SparseMatrix<double>(FMatrix_2.transpose());
   // Eigen::SparseMatrix<double> PMatrixT = Eigen::SparseMatrix<double>(PMatrix.transpose());
   Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
   Eigen::VectorXd b = RUT * data_u_2D + RVT * data_v_2D + RWT * data_w_2D;// + PMatrixT * pos_3D_init * pow(lambda/dis_range,2);
 
-  Eigen::SparseMatrix<double> A =   RUT * RU + RVT * RV + RWT * RW + FMatrixT * FMatrix;// + PMatrixT * PMatrix * pow(lambda/dis_range,2);
+  Eigen::SparseMatrix<double> A =   RUT * RU + RVT * RV + RWT * RW + 0.5*(FMatrix_1T * FMatrix_1 + FMatrix_2T*FMatrix_2);// + PMatrixT * PMatrix * pow(lambda/dis_range,2);
 
   //  std::cout << "Solve1 " << std::endl;
   
