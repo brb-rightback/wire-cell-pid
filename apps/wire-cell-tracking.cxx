@@ -815,23 +815,23 @@ int main(int argc, char* argv[])
 
     // original
     PointVector& pts = cluster->get_fine_tracking_path();
-    std::vector<double> dQ, dx;
-    // std::vector<double>& dQ = cluster->get_dQ();
-    // std::vector<double>& dx = cluster->get_dx();
+    //std::vector<double> dQ, dx;
+    std::vector<double>& dQ = cluster->get_dQ();
+    std::vector<double>& dx = cluster->get_dx();
     std::vector<double>& tpu = cluster->get_pu();
     std::vector<double>& tpv = cluster->get_pv();
     std::vector<double>& tpw = cluster->get_pw();
     std::vector<double>& tpt = cluster->get_pt();
     //hack for now 
-    for (auto it = pts.begin(); it!=pts.end(); it++){
-      dQ.push_back(0);
-      dx.push_back(1);
-      // std::vector<int> time_chs = ct_point_cloud.convert_3Dpoint_time_ch(*it);
-      // tpt.push_back(time_chs.at(0));
-      // tpu.push_back(time_chs.at(1));
-      // tpv.push_back(time_chs.at(2));
-      // tpw.push_back(time_chs.at(3));
-    }
+    // for (auto it = pts.begin(); it!=pts.end(); it++){
+    //   dQ.push_back(0);
+    //   dx.push_back(1);
+    //   // std::vector<int> time_chs = ct_point_cloud.convert_3Dpoint_time_ch(*it);
+    //   // tpt.push_back(time_chs.at(0));
+    //   // tpu.push_back(time_chs.at(1));
+    //   // tpv.push_back(time_chs.at(2));
+    //   // tpw.push_back(time_chs.at(3));
+    // }
     
     //hack for now ...
     //std::list<WCPointCloud<double>::WCPoint>& wcps_list = cluster->get_path_wcps();

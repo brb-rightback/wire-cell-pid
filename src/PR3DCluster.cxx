@@ -135,18 +135,19 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
   
   trajectory_fit(pts, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
 		 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
-		 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,2,0.6*units::cm);
+		 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, 2, 0.6*units::cm);
 
 
   // examine trajectory ... // no angle at the moment ...
   // std::cout << pts.size() << std::endl;
   organize_ps_path(pts, low_dis_limit, 0); 
 
+
+  // std::vector<int> indices;
+  // // indices.push_back(14);
+  // fill_data_map_trajectory(indices, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+  
   fine_tracking_path = pts;
-  pu.clear();
-  pv.clear();
-  pt.clear();
-  pw.clear();
   
   // std::cout << pts.size() << std::endl;
   // for (size_t i=0;i+1!=pts.size();i++){
@@ -157,9 +158,7 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
   dQ_dx_fit(global_wc_map, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, time);
   
   
-  std::vector<int> indices;
-  // indices.push_back(14);
-  fill_data_map_trajectory(indices, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+  
 }
 
 
