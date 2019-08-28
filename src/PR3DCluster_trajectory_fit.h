@@ -1105,11 +1105,11 @@ void WireCellPID::PR3DCluster::organize_ps_path(WireCell::PointVector& pts, doub
       pts.push_back(p1);
     }else{
       int npoints = std::round(dis/low_dis_limit);
-      
+      Point p_save = pts.back();
       for (int j=0;j!=npoints;j++){
-	Point p(pts.back().x + (p1.x-pts.back().x) / npoints * (j+1),
-		pts.back().y + (p1.y-pts.back().y) / npoints * (j+1),
-		pts.back().z + (p1.z-pts.back().z) / npoints * (j+1));
+	Point p(p_save.x + (p1.x-p_save.x) / npoints * (j+1),
+		p_save.y + (p1.y-p_save.y) / npoints * (j+1),
+		p_save.z + (p1.z-p_save.z) / npoints * (j+1));
 	pts.push_back(p);
       }
     }
@@ -1167,19 +1167,24 @@ WireCell::PointVector WireCellPID::PR3DCluster::organize_wcps_path(std::list<WCP
     Point p1(temp_wcps_vec.at(i).x, temp_wcps_vec.at(i).y, temp_wcps_vec.at(i).z);
 
     double dis = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));
+
+
     
     if (dis < low_dis_limit * 0.8 ){
       continue;
     }else if (dis < low_dis_limit * 1.6){
       pts.push_back(p1);
+      //std::cout << p1 << " " << sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2))/units::cm << std::endl;
     }else{
       int npoints = std::round(dis/low_dis_limit);
-      
+
+      Point p_save = pts.back();
       for (int j=0;j!=npoints;j++){
-	Point p(pts.back().x + (p1.x-pts.back().x) / npoints * (j+1),
-		pts.back().y + (p1.y-pts.back().y) / npoints * (j+1),
-		pts.back().z + (p1.z-pts.back().z) / npoints * (j+1));
+	Point p(p_save.x + (p1.x-p_save.x) / npoints * (j+1),
+		p_save.y + (p1.y-p_save.y) / npoints * (j+1),
+		p_save.z + (p1.z-p_save.z) / npoints * (j+1));
 	pts.push_back(p);
+	//	std::cout << p << " " << sqrt(pow(p.x-pts.back().x,2)+pow(p.y-pts.back().y,2)+pow(p.z-pts.back().z,2))/units::cm << std::endl;
       }
     }
   }

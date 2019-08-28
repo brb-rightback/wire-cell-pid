@@ -95,8 +95,8 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
 	   map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
 	   map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set);
 
-  // for (size_t i=0;i!=pts.size();i++){
-  //   std::cout << i << " " << pts.at(i) << " " << map_3D_2DU_set[i].first.size() << " " << map_3D_2DV_set[i].first.size() << " " << map_3D_2DW_set[i].first.size() << std::endl;
+  // for (size_t i=0;i+1!=pts.size();i++){
+  //   std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))/units::cm << " " << map_3D_2DU_set[i].first.size() << " " << map_3D_2DV_set[i].first.size() << " " << map_3D_2DW_set[i].first.size() << std::endl;
   // }
   
   trajectory_fit(pts, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
@@ -104,10 +104,10 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
 		 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
 
   
-  //  for (size_t i=0;i+1!=pts.size();i++){
-  //  std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
-  //}
-
+  // for (size_t i=0;i+1!=pts.size();i++){
+  //   std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
+  // }
+  // std::cout << "Second round fit " << std::endl;
   
   // second round trajectory fit ...
   low_dis_limit = 0.6*units::cm;
@@ -137,10 +137,16 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
 		 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
 		 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, 2, 0.6*units::cm);
 
-
+ 
+  //  for (size_t i=0;i+1!=pts.size();i++){
+  //  std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
+  // }
+  
   // examine trajectory ... // no angle at the moment ...
   // std::cout << pts.size() << std::endl;
-  organize_ps_path(pts, low_dis_limit, 0); 
+  organize_ps_path(pts, low_dis_limit, 0);
+
+  // std::cout << "dQ/dx fit " << pts.size() << std::endl;
 
 
   // std::vector<int> indices;

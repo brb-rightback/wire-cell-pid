@@ -164,6 +164,7 @@ int main(int argc, char* argv[])
   }
   for (int i=0;i!=T_match->GetEntries();i++){
     T_match->GetEntry(i);
+    if (flash_id==-1) continue;
     map_flash_tpc_ids[flash_id] = tpc_cluster_id;
     map_tpc_flash_ids[tpc_cluster_id] = flash_id;
   }
@@ -587,7 +588,7 @@ int main(int argc, char* argv[])
   
   //std::cout << saved_parent_tpc_cluster_ids.size() << std::endl;
   for (size_t i=0; i!=live_clusters.size();i++){
-    // if (live_clusters.at(i)->get_cluster_id()!=82) continue;
+    //    if (live_clusters.at(i)->get_cluster_id()!=122) continue;
     
     if (live_clusters.at(i)->get_num_points()<=2) continue;
 
@@ -775,8 +776,9 @@ int main(int argc, char* argv[])
     }
     new_cluster->collect_charge_trajectory(ct_point_cloud);
 
-    double flash_time = map_flash_info[map_tpc_flash_ids[map_cluster_parent_id[*it]]].second;
 
+    double flash_time = map_flash_info[map_tpc_flash_ids[map_cluster_parent_id[*it]]].second;
+    
     std::cout << new_cluster->get_cluster_id() << std::endl;
     
     new_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
