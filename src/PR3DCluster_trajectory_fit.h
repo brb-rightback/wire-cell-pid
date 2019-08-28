@@ -314,17 +314,17 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
       if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ||
 	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 ||
 	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){
-	/* FMatrix.insert(3*i,3*i-3) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); */
-	/* FMatrix.insert(3*i,3*i) = -1./distances.at(i-1)/distances.at(i); */
-	/* FMatrix.insert(3*i,3*i+3) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); */
+	/* FMatrix_1.insert(3*i,3*i-3) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); */
+	/* FMatrix_1.insert(3*i,3*i) = -1./distances.at(i-1)/distances.at(i); */
+	/* FMatrix_1.insert(3*i,3*i+3) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); */
 	
-	/* FMatrix.insert(3*i+1,3*i-2) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); */
-	/* FMatrix.insert(3*i+1,3*i+1) = -1./distances.at(i-1)/distances.at(i); */
-	/* FMatrix.insert(3*i+1,3*i+4) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); */
+	/* FMatrix_1.insert(3*i+1,3*i-2) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); */
+	/* FMatrix_1.insert(3*i+1,3*i+1) = -1./distances.at(i-1)/distances.at(i); */
+	/* FMatrix_1.insert(3*i+1,3*i+4) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); */
 	
-	/* FMatrix.insert(3*i+2,3*i-1) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); */
-	/* FMatrix.insert(3*i+2,3*i+2) = -1./distances.at(i-1)/distances.at(i); */
-	/* FMatrix.insert(3*i+2,3*i+5) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); */
+	/* FMatrix_1.insert(3*i+2,3*i-1) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); */
+	/* FMatrix_1.insert(3*i+2,3*i+2) = -1./distances.at(i-1)/distances.at(i); */
+	/* FMatrix_1.insert(3*i+2,3*i+5) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); */
 
 	FMatrix_1.insert(3*i,3*i-3) = 1./distances.at(i-1);
 	FMatrix_1.insert(3*i,3*i) = -1./distances.at(i-1);
