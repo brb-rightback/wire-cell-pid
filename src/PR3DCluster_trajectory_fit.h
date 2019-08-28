@@ -1171,6 +1171,11 @@ void WireCellPID::PR3DCluster::organize_ps_path(WireCell::PointVector& pts, doub
       p1.z += (p1.z - p2.z)/dis1 * end_point_limit;
       pts.push_back(p1);
     }
+  }else{
+    Point p1 = ps_vec.back();
+    double dis1 = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));
+    if (dis1 > 0.3*units::cm)
+      pts.push_back(p1);
   }
   
 }
