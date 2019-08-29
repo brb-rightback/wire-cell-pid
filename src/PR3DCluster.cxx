@@ -130,17 +130,17 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
   map_2DW_3D_set.clear();
   
   form_map(ct_point_cloud, pts,
-	   map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
-	   map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
-	   map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set);
+  	   map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
+  	   map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
+  	   map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set);
 
   // for (size_t i=0;i!=pts.size();i++){
   //   std::cout << i << " " << pts.at(i) << " " << map_3D_2DU_set[i].first.size() << " " << map_3D_2DV_set[i].first.size() << " " << map_3D_2DW_set[i].first.size() << std::endl;
   // }
   
   trajectory_fit(pts, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
-		 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
-		 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, 2, 0.6*units::cm);
+  		 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
+  		 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, 2, 0.6*units::cm);
 
   //  std::cout << pts.back() << std::endl;
  

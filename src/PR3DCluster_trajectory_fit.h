@@ -405,7 +405,7 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
     }
   }else{
     // std::cout << "Good fit" << std::endl;
-    flag_fine_tracking = true;
+    flag_fine_tracking = true; 
     fine_tracking_path.clear();
     pu.clear();
     pv.clear();
@@ -414,12 +414,252 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
 
     for (size_t i=0;i!=ps_vec.size();i++){
       Point p;
+
       p.x = pos_3D(3*i);
       p.y = pos_3D(3*i+1);
       p.z = pos_3D(3*i+2);
+      
       if (std::isnan(p.x) || std::isnan(p.y) || std::isnan(p.z)){
 	//std::cout << "gaga " << std::endl;
       }else{
+
+	//examine the calculation
+	{
+	  int t1 = std::floor(offset_t + 0.5 + slope_x * p.x);
+	  int u1 = std::floor(offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z));
+	  int v1 = std::floor(offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z));
+	  int w1 = std::floor(offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z));
+ 
+	  double c1_u=0;
+	  {
+	    auto it = map_2D_ut_charge.find(std::make_pair(u1,t1));
+	    if (it != map_2D_ut_charge.end()){
+	      if (std::get<2>(it->second)!=0){
+		c1_u += std::get<0>(it->second);
+		//if (i==9) std::cout << std::get<0>(it->second) << " " ;
+	      }
+	    }
+	    auto it1 = map_2D_ut_charge.find(std::make_pair(u1,t1+1));
+	    if (it1 != map_2D_ut_charge.end()){
+	      if (std::get<2>(it1->second)!=0){
+		c1_u += std::get<0>(it1->second);
+		//if (i==9) std::cout << std::get<0>(it->second) << " " ;
+	      }
+	    }
+	    auto it2 = map_2D_ut_charge.find(std::make_pair(u1,t1-1));
+	    if (it2 != map_2D_ut_charge.end()){
+	      if (std::get<2>(it2->second)!=0){
+		c1_u += std::get<0>(it2->second);
+		//	if (i==9) std::cout << std::get<0>(it->second) << " " ;
+	      }
+	    }
+	    auto it3 = map_2D_ut_charge.find(std::make_pair(u1+1,t1));
+	    if (it3 != map_2D_ut_charge.end()){
+	      if (std::get<2>(it3->second)!=0)
+		c1_u += std::get<0>(it3->second);
+	    }
+	    auto it4 = map_2D_ut_charge.find(std::make_pair(u1-1,t1));
+	    if (it4 != map_2D_ut_charge.end()){
+	      if (std::get<2>(it4->second)!=0)
+		c1_u += std::get<0>(it4->second);
+	    }
+	  }
+
+	  double c1_v=0;
+	  {
+	    auto it = map_2D_vt_charge.find(std::make_pair(v1,t1));
+	    if (it != map_2D_vt_charge.end()){
+	      if (std::get<2>(it->second)!=0){
+		c1_v += std::get<0>(it->second);
+		//		if (i==9) std::cout << std::get<0>(it->second) << " " ;
+	      }
+	    }
+	    auto it1 = map_2D_vt_charge.find(std::make_pair(v1,t1+1));
+	    if (it1 != map_2D_vt_charge.end()){
+	      if (std::get<2>(it1->second)!=0){
+		c1_v += std::get<0>(it1->second);
+		//if (i==9) std::cout << std::get<0>(it1->second) << " " ;
+	      }
+	    }
+	    auto it2 = map_2D_vt_charge.find(std::make_pair(v1,t1-1));
+	    if (it2 != map_2D_vt_charge.end()){
+	      if (std::get<2>(it2->second)!=0){
+		c1_v += std::get<0>(it2->second);
+		//if (i==9) std::cout << std::get<0>(it2->second) << " " ;
+	      }
+	    }
+	    auto it3 = map_2D_vt_charge.find(std::make_pair(v1+1,t1));
+	    if (it3 != map_2D_vt_charge.end()){
+	      if (std::get<2>(it3->second)!=0){
+		c1_v += std::get<0>(it3->second);
+		//	if (i==9) std::cout << std::get<0>(it3->second) << " " ;
+	      }
+	    }
+	    auto it4 = map_2D_vt_charge.find(std::make_pair(v1-1,t1));
+	    if (it4 != map_2D_vt_charge.end()){
+	      if (std::get<2>(it4->second)!=0){
+		c1_v += std::get<0>(it4->second);
+		//if (i==9) std::cout << std::get<0>(it4->second) << " " ;
+	      }
+	    }
+	    //	    if (i==9) std::cout << std::endl;
+	  }
+	  
+
+	  double c1_w=0;
+	  {
+	    auto it = map_2D_wt_charge.find(std::make_pair(w1,t1));
+	    if (it != map_2D_wt_charge.end()){
+	      if (std::get<2>(it->second)!=0)
+		c1_w += std::get<0>(it->second);
+	    }
+	    auto it1 = map_2D_wt_charge.find(std::make_pair(w1,t1+1));
+	    if (it1 != map_2D_wt_charge.end()){
+	      if (std::get<2>(it1->second)!=0)
+		c1_w += std::get<0>(it1->second);
+	    }
+	    auto it2 = map_2D_wt_charge.find(std::make_pair(w1,t1-1));
+	    if (it2 != map_2D_wt_charge.end()){
+	      if (std::get<2>(it2->second)!=0)
+		c1_w += std::get<0>(it2->second);
+	    }
+	    auto it3 = map_2D_wt_charge.find(std::make_pair(w1+1,t1));
+	    if (it3 != map_2D_wt_charge.end()){
+	      if (std::get<2>(it3->second)!=0)
+		c1_w += std::get<0>(it3->second);
+	    }
+	    auto it4 = map_2D_wt_charge.find(std::make_pair(w1-1,t1));
+	    if (it4 != map_2D_wt_charge.end()){
+	      if (std::get<2>(it4->second)!=0)
+		c1_w += std::get<0>(it4->second);
+	    }
+	  }
+	  
+	  
+	  int t2 = std::floor(offset_t + 0.5 + slope_x * ps_vec.at(i).x);
+	  int u2 = std::floor(offset_u + 0.5 + (slope_yu * ps_vec.at(i).y + slope_zu * ps_vec.at(i).z));
+	  int v2 = std::floor(offset_v + 0.5 + (slope_yv * ps_vec.at(i).y + slope_zv * ps_vec.at(i).z));
+	  int w2 = std::floor(offset_w + 0.5 + (slope_yw * ps_vec.at(i).y + slope_zw * ps_vec.at(i).z));
+
+	  
+	  double c2_u=0;
+	  {
+	    auto it = map_2D_ut_charge.find(std::make_pair(u2,t2));
+	    if (it != map_2D_ut_charge.end()){
+	      if (std::get<2>(it->second)!=0)
+		c2_u += std::get<0>(it->second);
+	    }
+	    auto it1 = map_2D_ut_charge.find(std::make_pair(u2,t2+1));
+	    if (it1 != map_2D_ut_charge.end()){
+	      if (std::get<2>(it1->second)!=0)
+		c2_u += std::get<0>(it1->second);
+	    }
+	    auto it2 = map_2D_ut_charge.find(std::make_pair(u2,t2-1));
+	    if (it2 != map_2D_ut_charge.end()){
+	      if (std::get<2>(it2->second)!=0)
+		c2_u += std::get<0>(it2->second);
+	    }
+	    auto it3 = map_2D_ut_charge.find(std::make_pair(u2+1,t2));
+	    if (it3 != map_2D_ut_charge.end()){
+	      if (std::get<2>(it3->second)!=0)
+		c2_u += std::get<0>(it3->second);
+	    }
+	    auto it4 = map_2D_ut_charge.find(std::make_pair(u2-1,t2));
+	    if (it4 != map_2D_ut_charge.end()){
+	      if (std::get<2>(it4->second)!=0)
+		c2_u += std::get<0>(it4->second);
+	    }
+	  }
+
+	  double c2_v=0;
+	  {
+	    auto it = map_2D_vt_charge.find(std::make_pair(v2,t2));
+	    if (it != map_2D_vt_charge.end()){
+	      if (std::get<2>(it->second)!=0){
+		c2_v += std::get<0>(it->second);
+		//		if (i==9) std::cout << std::get<0>(it->second) << " ";
+	      }
+	    }
+	    auto it1 = map_2D_vt_charge.find(std::make_pair(v2,t2+1));
+	    if (it1 != map_2D_vt_charge.end()){
+	      if (std::get<2>(it1->second)!=0){
+		c2_v += std::get<0>(it1->second);
+		//if (i==9) std::cout << std::get<0>(it1->second) << " ";
+	      }
+	    }
+	    auto it2 = map_2D_vt_charge.find(std::make_pair(v2,t2-1));
+	    if (it2 != map_2D_vt_charge.end()){
+	      if (std::get<2>(it2->second)!=0){
+		c2_v += std::get<0>(it2->second);
+		//if (i==9) std::cout << std::get<0>(it2->second) << " ";
+	      }
+	    }
+	    auto it3 = map_2D_vt_charge.find(std::make_pair(v2+1,t2));
+	    if (it3 != map_2D_vt_charge.end()){
+	      if (std::get<2>(it3->second)!=0){
+		c2_v += std::get<0>(it3->second);
+		//if (i==9) std::cout << std::get<0>(it3->second) << " ";
+	      }
+	    }
+	    auto it4 = map_2D_vt_charge.find(std::make_pair(v2-1,t2));
+	    if (it4 != map_2D_vt_charge.end()){
+	      if (std::get<2>(it4->second)!=0){
+		c2_v += std::get<0>(it4->second);
+		//if (i==9) std::cout << std::get<0>(it4->second) << " ";
+	      }
+	    }
+	    //	    if (i==9) std::cout << std::endl;
+	  }
+
+	  double c2_w=0;
+	  {
+	    auto it = map_2D_wt_charge.find(std::make_pair(w2,t2));
+	    if (it != map_2D_wt_charge.end()){
+	      if (std::get<2>(it->second)!=0)
+		c2_w += std::get<0>(it->second);
+	    }
+	    auto it1 = map_2D_wt_charge.find(std::make_pair(w2,t2+1));
+	    if (it1 != map_2D_wt_charge.end()){
+	      if (std::get<2>(it1->second)!=0)
+		c2_w += std::get<0>(it1->second);
+	    }
+	    auto it2 = map_2D_wt_charge.find(std::make_pair(w2,t2-1));
+	    if (it2 != map_2D_wt_charge.end()){
+	      if (std::get<2>(it2->second)!=0)
+		c2_w += std::get<0>(it2->second);
+	    }
+	    auto it3 = map_2D_wt_charge.find(std::make_pair(w2+1,t2));
+	    if (it3 != map_2D_wt_charge.end()){
+	      if (std::get<2>(it3->second)!=0)
+		c2_w += std::get<0>(it3->second);
+	    }
+	    auto it4 = map_2D_wt_charge.find(std::make_pair(w2-1,t2));
+	    if (it4 != map_2D_wt_charge.end()){
+	      if (std::get<2>(it4->second)!=0)
+		c2_w += std::get<0>(it4->second);
+	    }
+	  }
+	  /* if (i==9) */
+	  /*   std::cout << u1 << " " << v1 << " " << w1 << " " << t1 << " " */
+	  /* 	      << u2 << " " << v2 << " " << w2 << " " << t2 << " " */
+	  /* 	      <<  offset_v + (slope_yv * p.y + slope_zv * p.z) << " " << offset_v + (slope_yv * ps_vec.at(i).y + slope_zv * ps_vec.at(i).z) << std::endl; */
+
+	  double ratio=0;
+	  if (c2_u!=0) ratio += c1_u/c2_u; else ratio += 1;
+	  if (c2_v!=0) ratio += c1_v/c2_v; else ratio += 1;
+	  if (c2_w!=0) ratio += c1_w/c2_w; else ratio += 1;
+
+	  if (ratio/3. < 0.97){
+	  // if (c1_u + c1_v + c1_w < (c2_u + c2_v + c2_w)) {
+	    /* std::cout << i << " " << ratio/3. << " " << (c1_u+c1_v+c1_w)*1./(c2_u + c2_v + c2_w) << " " << c1_u * 1.0/c2_u << " " << c1_v*1.0/c2_v << " " << c1_w*1.0/c2_w << " " << sqrt(pow(p.x-ps_vec.at(i).x,2) + pow(p.y-ps_vec.at(i).y,2) + pow(p.z-ps_vec.at(i).z,2)) << " " */
+	    /* 	      << u1 << " " << v1 << " " << w1 << " " << t1 << " " << u2 << " " << v2 << " " << w2 << " " << t2 << std::endl;// */
+	    p = ps_vec.at(i);
+	  }
+	  //	  std::cout << c1_u + c1_v + c1_w << " " << c2_u + c2_v + c2_w << std::endl;
+	}
+	
+
+	
 	fine_tracking_path.push_back(p);
 	//fine_tracking_path.push_back(ps_vec.at(i));
 	pu.push_back(offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z));
