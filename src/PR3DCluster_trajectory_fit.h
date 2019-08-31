@@ -1,4 +1,4 @@
-void WireCellPID::PR3DCluster::fill_data_map_trajectory(std::vector<int> indices, std::map<int, std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DW_set, std::map<std::pair<int,int>,  std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge){
+void WireCellPID::PR3DCluster::fill_data_map_trajectory(std::vector<int> indices, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<std::pair<int,int>,  std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge){
   proj_data_u_map.clear();
   proj_data_v_map.clear();
   proj_data_w_map.clear();
@@ -36,7 +36,7 @@ void WireCellPID::PR3DCluster::fill_data_map_trajectory(std::vector<int> indices
   }
 }
 
-void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std::map<int, std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DW_set, std::map<std::pair<int,int>,std::set<int>>& map_2DU_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DV_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DW_3D_set,std::map<std::pair<int,int>, std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, int charge_div_method, double div_sigma){
+void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<std::pair<int,int>,std::set<int>>& map_2DU_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DV_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DW_3D_set,std::map<std::pair<int,int>, std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, int charge_div_method, double div_sigma){
   
   // calculate the distance between points ...
   std::vector<double> distances;
@@ -202,8 +202,8 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
 
     int index_3D = vec_2DU_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z
 
-    if (map_3D_2DU_set[index_3D].second!=0 && map_3D_2DU_set[index_3D].first.size()!=0)
-      scaling *= (map_3D_2DU_set[index_3D].first.size()*1.0 - map_3D_2DU_set[index_3D].second)/map_3D_2DU_set[index_3D].first.size();
+    if (map_3D_2DU_set[index_3D].second < 0.5)
+      scaling *= pow(map_3D_2DU_set[index_3D].second/0.5,1);
 
     //    std::cout << scaling << std::endl;
     
@@ -224,9 +224,11 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
 
     int index_3D = vec_2DV_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z
 
-    if (map_3D_2DV_set[index_3D].second!=0 && map_3D_2DV_set[index_3D].first.size()!=0)
-      scaling *= (map_3D_2DV_set[index_3D].first.size()*1.0 - map_3D_2DV_set[index_3D].second)/map_3D_2DV_set[index_3D].first.size();
 
+    if (map_3D_2DV_set[index_3D].second < 0.5)
+      scaling *= pow(map_3D_2DV_set[index_3D].second/0.5,1);
+
+    //    if (index_3D == 20) scaling *= 0.3;
     //    std::cout << scaling << std::endl;
     
     data_v_2D(2*index) =  scaling * (vec_2DV_index.at(index).first.first - offset_v);
@@ -246,8 +248,8 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
 
     int index_3D = vec_2DW_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z
 
-    if (map_3D_2DW_set[index_3D].second!=0 && map_3D_2DW_set[index_3D].first.size()!=0)
-      scaling *= (map_3D_2DW_set[index_3D].first.size()*1.0 - map_3D_2DW_set[index_3D].second)/map_3D_2DW_set[index_3D].first.size();
+    if (map_3D_2DW_set[index_3D].second < 0.5)
+      scaling *= pow(map_3D_2DW_set[index_3D].second/0.5,1);
 
     //    std::cout << scaling << std::endl;
     
@@ -262,110 +264,118 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
   Eigen::SparseMatrix<double> RVT = Eigen::SparseMatrix<double>(RV.transpose());
   Eigen::SparseMatrix<double> RWT = Eigen::SparseMatrix<double>(RW.transpose());
   
-  // when to apply regularization ... how???
-  Eigen::SparseMatrix<double> FMatrix_1(n_3D_pos, n_3D_pos), FMatrix_2(n_3D_pos, n_3D_pos);
+  /* // when to apply regularization ... how??? */
+  /* Eigen::SparseMatrix<double> FMatrix_1(n_3D_pos, n_3D_pos), FMatrix_2(n_3D_pos, n_3D_pos); */
   
-  for (size_t i=0;i!=ps_vec.size();i++){
-    if (i==0){
-      if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ||
-	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 ||
-	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){
-	FMatrix_1.insert(0,0) = -1./distances.at(0); // X
-	FMatrix_1.insert(0,3) = 1./distances.at(0);
-	
-	FMatrix_1.insert(1,1) = -1./distances.at(0); // Y
-	FMatrix_1.insert(1,4) = 1./distances.at(0);
-	
-	FMatrix_1.insert(2,2) = -1./distances.at(0); // Z
-	FMatrix_1.insert(2,5) = 1./distances.at(0);
+  /* for (size_t i=0;i!=ps_vec.size();i++){ */
 
-	FMatrix_2.insert(0,0) = -1./distances.at(0); // X
-	FMatrix_2.insert(0,3) = 1./distances.at(0);
+  /*   /\* if (i!=0) *\/ */
+  /*     /\* std::cout << i << " " << ps_vec.at(i) << " " << map_3D_2DU_set[i].first.size() << " " << *\/ */
+  /*     /\* 	map_3D_2DV_set[i].first.size() << " " << map_3D_2DW_set[i].first.size()  << " " << map_3D_2DV_set[i].first.size()*1.0 << " " <<  map_3D_2DV_set[i].second << std::endl; *\/ */
+    
+  /*   if (i==0){ */
+  /*     if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 || */
+  /* 	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 || */
+  /* 	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){ */
+  /* 	/\* FMatrix_1.insert(0,0) = 1./distances.at(0); // X *\/ */
+  /* 	/\* FMatrix_1.insert(0,3) = -1./distances.at(0); *\/ */
 	
-	FMatrix_2.insert(1,1) = -1./distances.at(0); // Y
-	FMatrix_2.insert(1,4) = 1./distances.at(0);
+  /* 	FMatrix_1.insert(1,1) = 1.;//1./distances.at(0); // Y */
+  /* 	FMatrix_1.insert(1,4) = -1;//-1./distances.at(0); */
 	
-	FMatrix_2.insert(2,2) = -1./distances.at(0); // Z
-	FMatrix_2.insert(2,5) = 1./distances.at(0);
-      }
-    }else if (i+1==ps_vec.size()){
-      if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ||
-	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 ||
-	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){
-	FMatrix_1.insert(3*i,3*i) = -1./distances.at(ps_vec.size()-2); // X
-	FMatrix_1.insert(3*i,3*i-3) = 1./distances.at(ps_vec.size()-2);
+  /* 	FMatrix_1.insert(2,2) = 1.;//1./distances.at(0); // Z */
+  /* 	FMatrix_1.insert(2,5) = -1;//-1./distances.at(0); */
 
-	FMatrix_1.insert(3*i+1,3*i+1) = -1./distances.at(ps_vec.size()-2);
-	FMatrix_1.insert(3*i+1,3*i-2) = 1./distances.at(ps_vec.size()-2);
-
-	FMatrix_1.insert(3*i+2,3*i+2) = -1./distances.at(ps_vec.size()-2);
-	FMatrix_1.insert(3*i+2,3*i-1) = 1./distances.at(ps_vec.size()-2);
-
-	FMatrix_2.insert(3*i,3*i) = -1./distances.at(ps_vec.size()-2); // X
-	FMatrix_2.insert(3*i,3*i-3) = 1./distances.at(ps_vec.size()-2);
-
-	FMatrix_2.insert(3*i+1,3*i+1) = -1./distances.at(ps_vec.size()-2);
-	FMatrix_2.insert(3*i+1,3*i-2) = 1./distances.at(ps_vec.size()-2);
-
-	FMatrix_2.insert(3*i+2,3*i+2) = -1./distances.at(ps_vec.size()-2);
-	FMatrix_2.insert(3*i+2,3*i-1) = 1./distances.at(ps_vec.size()-2);
-      }
-    }else{
-      if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ||
-	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 ||
-	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){
-	/* FMatrix_1.insert(3*i,3*i-3) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); */
-	/* FMatrix_1.insert(3*i,3*i) = -1./distances.at(i-1)/distances.at(i); */
-	/* FMatrix_1.insert(3*i,3*i+3) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); */
+  /* 	/\* FMatrix_2.insert(0,0) = 1./distances.at(0); // X *\/ */
+  /* 	/\* FMatrix_2.insert(0,3) = -1./distances.at(0); *\/ */
 	
-	/* FMatrix_1.insert(3*i+1,3*i-2) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); */
-	/* FMatrix_1.insert(3*i+1,3*i+1) = -1./distances.at(i-1)/distances.at(i); */
-	/* FMatrix_1.insert(3*i+1,3*i+4) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); */
+  /* 	FMatrix_2.insert(1,1) = 1;//1./distances.at(0); // Y */
+  /* 	FMatrix_2.insert(1,4) = -1;//-1./distances.at(0); */
 	
-	/* FMatrix_1.insert(3*i+2,3*i-1) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); */
-	/* FMatrix_1.insert(3*i+2,3*i+2) = -1./distances.at(i-1)/distances.at(i); */
-	/* FMatrix_1.insert(3*i+2,3*i+5) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); */
+  /* 	FMatrix_2.insert(2,2) = 1;//1./distances.at(0); // Z */
+  /* 	FMatrix_2.insert(2,5) = -1;//-1./distances.at(0); */
+  /*     } */
+  /*   }else if (i+1==ps_vec.size()){ */
+  /*     if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 || */
+  /* 	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 || */
+  /* 	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){ */
+  /* 	/\* FMatrix_1.insert(3*i,3*i) = -1./distances.at(ps_vec.size()-2); // X *\/ */
+  /* 	/\* FMatrix_1.insert(3*i,3*i-3) = 1./distances.at(ps_vec.size()-2); *\/ */
 
-	FMatrix_1.insert(3*i,3*i-3) = 1./distances.at(i-1);
-	FMatrix_1.insert(3*i,3*i) = -1./distances.at(i-1);
-	
-	FMatrix_1.insert(3*i+1,3*i-2) = 1./distances.at(i-1);
-	FMatrix_1.insert(3*i+1,3*i+1) = -1./distances.at(i-1);
+  /* 	FMatrix_1.insert(3*i+1,3*i+1) = -1;//-1./distances.at(ps_vec.size()-2); */
+  /* 	FMatrix_1.insert(3*i+1,3*i-2) = 1;//1./distances.at(ps_vec.size()-2); */
 
-	FMatrix_1.insert(3*i+2,3*i-1) = 1./distances.at(i-1);
-	FMatrix_1.insert(3*i+2,3*i+2) = -1./distances.at(i-1);
+  /* 	FMatrix_1.insert(3*i+2,3*i+2) = -1;//-1./distances.at(ps_vec.size()-2); */
+  /* 	FMatrix_1.insert(3*i+2,3*i-1) = 1;//1./distances.at(ps_vec.size()-2); */
 
-	FMatrix_2.insert(3*i,3*i) = -1./distances.at(i);
-	FMatrix_2.insert(3*i,3*i+3) = 1./distances.at(i);
-	
-	FMatrix_2.insert(3*i+1,3*i+1) = -1./distances.at(i);
-	FMatrix_2.insert(3*i+1,3*i+4) = 1./distances.at(i);
-	
-	FMatrix_2.insert(3*i+2,3*i+2) = -1./distances.at(i);
-	FMatrix_2.insert(3*i+2,3*i+5) = 1./distances.at(i);
-	
-      }
-    }
-  }
+  /* 	/\* FMatrix_2.insert(3*i,3*i) = -1./distances.at(ps_vec.size()-2); // X *\/ */
+  /* 	/\* FMatrix_2.insert(3*i,3*i-3) = 1./distances.at(ps_vec.size()-2); *\/ */
 
-  double lambda = 0;
-  lambda = 2 // strength 
-    * sqrt(9. //  average chi2 guessted
- 	   * (vec_2DU_index.size() + vec_2DV_index.size() + vec_2DW_index.size()) // how many of them
- 	   * 6 * 6 // charge/charge_err estimation ... 
- 	   /(ps_vec.size() * 1.)); //weighting
-  double angle_range = 0.25;
-  FMatrix_1 *= lambda/angle_range ; // disable the angle cut ...
-  FMatrix_2 *= lambda/angle_range ; // disable the angle cut ... 
+  /* 	FMatrix_2.insert(3*i+1,3*i+1) = -1;//-1./distances.at(ps_vec.size()-2); */
+  /* 	FMatrix_2.insert(3*i+1,3*i-2) = 1;//1./distances.at(ps_vec.size()-2); */
+
+  /* 	FMatrix_2.insert(3*i+2,3*i+2) = -1;//-1./distances.at(ps_vec.size()-2); */
+  /* 	FMatrix_2.insert(3*i+2,3*i-1) = 1;//1./distances.at(ps_vec.size()-2); */
+  /*     } */
+  /*   }else{ */
+  /*     if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 || */
+  /* 	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 || */
+  /* 	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){ */
+
+
+	  
+  /* 	/\* FMatrix_1.insert(3*i,3*i-3) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); *\/ */
+  /* 	/\* FMatrix_1.insert(3*i,3*i) = -1./distances.at(i-1)/distances.at(i); *\/ */
+  /* 	/\* FMatrix_1.insert(3*i,3*i+3) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); *\/ */
+	
+  /* 	/\* FMatrix_1.insert(3*i+1,3*i-2) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); *\/ */
+  /* 	/\* FMatrix_1.insert(3*i+1,3*i+1) = -1./distances.at(i-1)/distances.at(i); *\/ */
+  /* 	/\* FMatrix_1.insert(3*i+1,3*i+4) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); *\/ */
+	
+  /* 	/\* FMatrix_1.insert(3*i+2,3*i-1) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); *\/ */
+  /* 	/\* FMatrix_1.insert(3*i+2,3*i+2) = -1./distances.at(i-1)/distances.at(i); *\/ */
+  /* 	/\* FMatrix_1.insert(3*i+2,3*i+5) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); *\/ */
+	
+  /* 	/\* FMatrix_1.insert(3*i,3*i-3) = 1./distances.at(i-1); *\/ */
+  /* 	/\* FMatrix_1.insert(3*i,3*i) = -1./distances.at(i-1); *\/ */
+	
+  /* 	FMatrix_1.insert(3*i+1,3*i-2) = 1;//1./distances.at(i-1); */
+  /* 	FMatrix_1.insert(3*i+1,3*i+1) = -1;//-1./distances.at(i-1); */
+	
+  /* 	FMatrix_1.insert(3*i+2,3*i-1) = 1;//1./distances.at(i-1); */
+  /* 	FMatrix_1.insert(3*i+2,3*i+2) = -1;//-1./distances.at(i-1); */
+	
+  /* 	/\* FMatrix_2.insert(3*i,3*i) = 1./distances.at(i); *\/ */
+  /* 	/\* FMatrix_2.insert(3*i,3*i+3) = -1./distances.at(i); *\/ */
+	
+  /* 	FMatrix_2.insert(3*i+1,3*i+1) = 1.;//1./distances.at(i); */
+  /* 	FMatrix_2.insert(3*i+1,3*i+4) = -1;//-1./distances.at(i); */
+	
+  /* 	FMatrix_2.insert(3*i+2,3*i+2) = 1.;//1./distances.at(i); */
+  /* 	FMatrix_2.insert(3*i+2,3*i+5) = -1;//-1./distances.at(i); */
+	
+  /*     } */
+  /*   } */
+  /* } */
+
+  /* double lambda = 1; */
+  /* /\* lambda = 2 // strength *\/ */
+  /* /\*   * sqrt(9. //  average chi2 guessted *\/ */
+  /* /\* 	   * (vec_2DU_index.size() + vec_2DV_index.size() + vec_2DW_index.size()) // how many of them *\/ */
+  /* /\* 	   * 6 * 6 // charge/charge_err estimation ... *\/ */
+  /* /\* 	   /(ps_vec.size() * 1.)); //weighting *\/ */
+  /* /\* double angle_range = 0.25 * 100.; *\/ */
+  /* FMatrix_1 *= lambda; // disable the angle cut ... */
+  /* FMatrix_2 *= lambda; // disable the angle cut ... */
   
   
-  Eigen::SparseMatrix<double> FMatrix_1T = Eigen::SparseMatrix<double>(FMatrix_1.transpose());
-  Eigen::SparseMatrix<double> FMatrix_2T = Eigen::SparseMatrix<double>(FMatrix_2.transpose());
-  // Eigen::SparseMatrix<double> PMatrixT = Eigen::SparseMatrix<double>(PMatrix.transpose());
+  /* Eigen::SparseMatrix<double> FMatrix_1T = Eigen::SparseMatrix<double>(FMatrix_1.transpose()); */
+  /* Eigen::SparseMatrix<double> FMatrix_2T = Eigen::SparseMatrix<double>(FMatrix_2.transpose()); */
+  /* // Eigen::SparseMatrix<double> PMatrixT = Eigen::SparseMatrix<double>(PMatrix.transpose()); */
   Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
   Eigen::VectorXd b = RUT * data_u_2D + RVT * data_v_2D + RWT * data_w_2D;// + PMatrixT * pos_3D_init * pow(lambda/dis_range,2);
-
-  Eigen::SparseMatrix<double> A =   RUT * RU + RVT * RV + RWT * RW + 0.5*(FMatrix_1T * FMatrix_1 + FMatrix_2T*FMatrix_2);// + PMatrixT * PMatrix * pow(lambda/dis_range,2);
+  
+  Eigen::SparseMatrix<double> A =   RUT * RU + RVT * RV + RWT * RW ;//+ 0.5*(FMatrix_1T * FMatrix_1 + FMatrix_2T*FMatrix_2);// + PMatrixT * PMatrix * pow(lambda/dis_range,2);
 
   //  std::cout << "Solve1 " << std::endl;
   
@@ -380,6 +390,17 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
     //std::cout << "#iterations: " << solver.iterations() << std::endl;
     //std::cout << "#estimated error: " << solver.error() << std::endl;
   }
+
+
+  /* // check the results ... */
+  /* Eigen::VectorXd test1 = FMatrix_1 * pos_3D; */
+  /* Eigen::VectorXd test2 = FMatrix_2 * pos_3D; */
+  /* for (int i=20;i!=35;i++){ */
+  /*   //std::cout << pos_3D(3*i-3) << " " << pos_3D(3*i) << " " << pos_3D(3*i+3) << std::endl; */
+  /*   std::cout << i << " " << test1(3*i) << " " << test1(3*i+1) << " " << test1(3*i+2) << " " << pow(test1(3*i),2) + pow(test1(3*i+1),2) + pow(test1(3*i+2),2) << " " << test2(3*i) << " " << test2(3*i+1) << " " << test2(3*i+2) << " " << pow(test2(3*i),2) + pow(test2(3*i+1),2) + pow(test2(3*i+2),2) << std::endl; */
+  /* } */
+  /* // */
+
   
   //std::cout << path_wcps_vec.size() << " " << map_2DU_index.size() << " " << map_2DV_index.size() << " " << map_2DW_index.size() << std::endl;
 
@@ -675,7 +696,7 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
 }
 
 
-std::vector<int> WireCellPID::PR3DCluster::examine_point_association(std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt,
+std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt,
 								     std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge, double charge_cut){
 
   std::set<int> temp_types_u;
@@ -686,7 +707,7 @@ std::vector<int> WireCellPID::PR3DCluster::examine_point_association(std::set<st
   std::set<std::pair<int,int> > saved_2dvt;
   std::set<std::pair<int,int> > saved_2dwt;
 
-  std::vector<int> results;
+  std::vector<float> results;
   results.resize(3,0);
   
   for (auto it = temp_2dut.begin(); it!=temp_2dut.end(); it++){
@@ -707,6 +728,8 @@ std::vector<int> WireCellPID::PR3DCluster::examine_point_association(std::set<st
     }
   }
 
+  //std::cout << temp_2dvt.size() << " " << saved_2dvt.size() << std::endl;
+  
   for (auto it = temp_2dwt.begin(); it!=temp_2dwt.end(); it++){
     auto it1 = map_2D_wt_charge.find(*it);
     if (it1!=map_2D_wt_charge.end() && std::get<0>(it1->second) > charge_cut ){
@@ -715,7 +738,22 @@ std::vector<int> WireCellPID::PR3DCluster::examine_point_association(std::set<st
       saved_2dwt.insert(*it);
     }
   }
-
+  if (temp_2dut.size()!=0)
+    results.at(0) = (saved_2dut.size() - results.at(0)*1.0)/temp_2dut.size();
+  else
+    results.at(0) = 0;
+  
+  if (temp_2dvt.size()!=0)
+    results.at(1) = (saved_2dvt.size() - results.at(1)*1.0)/temp_2dvt.size();
+  else
+    results.at(1) = 0;
+  
+  if (temp_2dwt.size()!=0)
+    results.at(2) = (saved_2dwt.size() - results.at(2)*1.0)/temp_2dwt.size();
+  else
+    results.at(2) = 0;
+  
+  
   if (temp_types_u.find(0)!=temp_types_u.end() && temp_types_u.size()==1){
     saved_2dut.clear();
     results.at(0) = 0;
@@ -728,10 +766,12 @@ std::vector<int> WireCellPID::PR3DCluster::examine_point_association(std::set<st
     saved_2dwt.clear();
     results.at(2) = 0;
   }
+
+  
   temp_2dut = saved_2dut;
   temp_2dvt = saved_2dvt;
   temp_2dwt = saved_2dwt;
-
+  
   return results;
 }
 
@@ -1186,7 +1226,7 @@ void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::s
 
 void WireCellPID::PR3DCluster::form_map(WireCell::ToyCTPointCloud& ct_point_cloud, WireCell::PointVector& pts,
 		  std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge,
-		  std::map<int, std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, int> >& map_3D_2DW_set,
+		  std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set,
 		  std::map<std::pair<int,int>,std::set<int>>& map_2DU_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DV_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DW_3D_set,
 	       double end_point_factor, double mid_point_factor, int nlevel, double time_cut, double charge_cut){
   
@@ -1226,7 +1266,8 @@ void WireCellPID::PR3DCluster::form_map(WireCell::ToyCTPointCloud& ct_point_clou
     std::set<std::pair<int,int> > temp_2dut, temp_2dvt, temp_2dwt;
     form_point_association(pts.at(i), temp_2dut, temp_2dvt, temp_2dwt, ct_point_cloud, dis_cut, nlevel, time_cut);
     // examine ...
-    std::vector<int> temp_flag = examine_point_association(temp_2dut, temp_2dvt, temp_2dwt, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,charge_cut);
+    
+    std::vector<float> temp_flag = examine_point_association(temp_2dut, temp_2dvt, temp_2dwt, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,charge_cut);
 
     //    std::cout << temp_2dut.size() << " " << temp_2dvt.size() << " " << temp_2dwt.size() << " " << temp_flag.at(0) << " " << temp_flag.at(1) << " " << temp_flag.at(2) << std::endl;
     // just projection ...

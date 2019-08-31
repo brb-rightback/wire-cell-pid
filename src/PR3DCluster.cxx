@@ -34,48 +34,8 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
   double low_dis_limit = 1.2*units::cm;
   double end_point_limit = 0.6*units::cm;
   PointVector pts = organize_wcps_path(path_wcps,low_dis_limit, end_point_limit); 
-  //  std::cout << pts.back() << std::endl;
   
-  // pts.clear();
-  
-  // {Point p(1671.32, 447.909, 6175); pts.push_back(p); }
-  // {Point p(1666.91, 445.311, 6170.5); pts.push_back(p); }
-  // {Point p(1662.51, 441.847, 6164.5); pts.push_back(p);}
-  // {Point p(1658.11, 439.249, 6166); pts.push_back(p);}
-  // {Point p(1653.7, 436.651, 6161.5); pts.push_back(p);}
-  // {Point p(1649.3, 429.723, 6158.5); pts.push_back(p);}
-  // {Point p(1642.69, 426.259, 6155.5); pts.push_back(p);}
-  // {Point p(1638.29, 423.66, 6151); pts.push_back(p);}
-  // {Point p(1633.88, 421.062, 6146.5); pts.push_back(p);}
-  // {Point p(1629.48, 419.33, 6143.5); pts.push_back(p);}
-  // {Point p(1625.08, 413.268, 6139); pts.push_back(p);}
-  // {Point p(1622.87, 410.67, 6134.5); pts.push_back(p);}
-  // {Point p(1616.27, 404.608, 6130); pts.push_back(p);}
-  // {Point p(1609.66, 397.68, 6124); pts.push_back(p);}
-  // {Point p(1605.26, 396.814, 6116.5); pts.push_back(p);}
-  // {Point p(1598.65, 393.35, 6113.5); pts.push_back(p);}
-  // {Point p(1596.45, 388.153, 6107.5); pts.push_back(p);}
-  // {Point p(1594.25, 383.823, 6100); pts.push_back(p);}
-  // {Point p(1587.64, 382.091, 6097); pts.push_back(p);}
-  // {Point p(1581.04, 379.493, 6092.5); pts.push_back(p);}
-  // {Point p(1578.83, 373.431, 6088); pts.push_back(p);}
-  // {Point p(1572.23, 370.833, 6083.5); pts.push_back(p);}
-  // {Point p(1567.82, 368.235, 6079); pts.push_back(p);}
-  // {Point p(1565.62, 367.369, 6071.5); pts.push_back(p);}
-  // {Point p(1561.22, 356.977, 6065.5); pts.push_back(p);}
-  // {Point p(1561.22, 353.512, 6059.5); pts.push_back(p);}
-  // {Point p(1559.02, 347.45, 6055); pts.push_back(p);}
-  // {Point p(1554.61, 343.986, 6049); pts.push_back(p);}
-  // {Point p(1550.21, 338.79, 6040); pts.push_back(p);}
-  // {Point p(1545.8, 333.594, 6037); pts.push_back(p);}
-  // {Point p(1541.4, 328.398, 6034); pts.push_back(p);}
-  // {Point p(1537, 324.934, 6028); pts.push_back(p);}
-  // {Point p(1532.59, 318.005, 6022); pts.push_back(p);}
-  // {Point p(1528.19, 315.407, 6017.5); pts.push_back(p);}
-  // {Point p(1523.78, 309.345, 6013); pts.push_back(p);}
-  // {Point p(1519.38, 305.881, 6007); pts.push_back(p);}
-  // {Point p(1514.98, 300.685, 6004); pts.push_back(p);}
-  // {Point p(1508.37, 298.087, 6002.5); pts.push_back(p);}
+
   
   // for (size_t i=0;i+1!=pts.size();i++){
   //  std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
@@ -83,34 +43,35 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
   
   // form association ...
   // map 3D index to set of 2D points
-  std::map<int,std::pair<std::set<std::pair<int,int>>, int> > map_3D_2DU_set;
-  std::map<int,std::pair<std::set<std::pair<int,int>>, int> > map_3D_2DV_set;
-  std::map<int,std::pair<std::set<std::pair<int,int>>, int> > map_3D_2DW_set;
+  std::map<int,std::pair<std::set<std::pair<int,int>>, float> > map_3D_2DU_set;
+  std::map<int,std::pair<std::set<std::pair<int,int>>, float> > map_3D_2DV_set;
+  std::map<int,std::pair<std::set<std::pair<int,int>>, float> > map_3D_2DW_set;
   // map 2D points to 3D indices
   std::map<std::pair<int,int>,std::set<int>> map_2DU_3D_set;
   std::map<std::pair<int,int>,std::set<int>> map_2DV_3D_set;
   std::map<std::pair<int,int>,std::set<int>> map_2DW_3D_set;
   
   form_map(ct_point_cloud, pts,
-	   map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
-	   map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
-	   map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set);
+  	   map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
+  	   map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
+  	   map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set);
 
-  // for (size_t i=0;i+1!=pts.size();i++){
-  //   std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))/units::cm << " " << map_3D_2DU_set[i].first.size() << " " << map_3D_2DV_set[i].first.size() << " " << map_3D_2DW_set[i].first.size() << std::endl;
+  // for (size_t i=0;i!=pts.size();i++){
+  //   std::cout << i << " " << pts.at(i) << " " << map_3D_2DU_set[i].first.size() << " " << map_3D_2DV_set[i].first.size() << " " << map_3D_2DW_set[i].first.size()  << " " << map_3D_2DU_set[i].second << " " <<  map_3D_2DV_set[i].second << " " << map_3D_2DW_set[i].second << std::endl; 
+  //   //   std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))/units::cm << " " << map_3D_2DU_set[i].first.size() << " " << map_3D_2DV_set[i].first.size() << " " << map_3D_2DW_set[i].first.size() << std::endl;
   // }
   
   trajectory_fit(pts, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
-		 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
-		 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+  		 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
+  		 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
 
   
-  // for (size_t i=0;i+1!=pts.size();i++){
-  //   std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
-  // }
-  // std::cout << "Second round fit " << std::endl;
+  // // for (size_t i=0;i+1!=pts.size();i++){
+  // //   std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
+  // // }
+  // // std::cout << "Second round fit " << std::endl;
 
-  //  std::cout << pts.back() << std::endl;
+  // //  std::cout << pts.back() << std::endl;
   
   // second round trajectory fit ...
   low_dis_limit = 0.6*units::cm;
@@ -154,11 +115,9 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
   //std::cout << pts.size() << std::endl;
   // std::cout << "dQ/dx fit " << pts.size() << std::endl;
 
-  // std::cout << pts.back() << std::endl;
   
-  // std::vector<int> indices;
-  // // indices.push_back(14);
-  // fill_data_map_trajectory(indices, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+  
+  
   
   fine_tracking_path = pts;
   
@@ -170,7 +129,9 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
   // first round of dQ/dx fit ...
   dQ_dx_fit(global_wc_map, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, time, end_point_limit);
   
-  
+  // std::vector<int> indices;
+  // indices.push_back(21);
+  // fill_data_map_trajectory(indices, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,  map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
   
 }
 
