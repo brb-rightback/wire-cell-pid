@@ -114,7 +114,15 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
     pos_3D_init(3*i+1) = ps_vec.at(i).y;
     pos_3D_init(3*i+2) = ps_vec.at(i).z;
   }
-
+  for (size_t i=0;i!=n_2D_u;i++){
+    data_u_2D(i) = 0;
+  }
+  for (size_t i=0;i!=n_2D_v;i++){
+    data_v_2D(i) = 0;
+  }
+  for (size_t i=0;i!=n_2D_w;i++){
+    data_w_2D(i) = 0;
+  }
 
   
 
@@ -169,8 +177,10 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
   	double factor = exp(-0.5 * (pow((central_t-it->first.second)*time_slice_width,2) + pow((central_ch-it->first.first)*pitch_v,2))/pow(div_sigma,2));
   	map_Vdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = factor;
   	sum += factor;
-  	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+	//	if ( it->first.first == 2520 &&  it->first.second ==1)
+	//  std::cout << it->first.first << " " << it->first.second << " " << central_t << " " << central_ch << " " << factor << std::endl;
       }
+     
       for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
   	map_Vdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] /= sum;
       }
@@ -194,188 +204,209 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
   
   // additional error calculation based on mixture of dead channels
   for (size_t index = 0; index!=vec_2DU_index.size(); index++){
-    double charge = std::get<0>(map_2D_ut_charge[vec_2DU_index.at(index).first]);
-    double charge_err = std::get<1>(map_2D_ut_charge[vec_2DU_index.at(index).first]);
+    double charge, charge_err;
+
+    if (map_2D_ut_charge.find(vec_2DU_index.at(index).first)!=map_2D_ut_charge.end()){
+      charge = std::get<0>(map_2D_ut_charge[vec_2DU_index.at(index).first]);
+      charge_err = std::get<1>(map_2D_ut_charge[vec_2DU_index.at(index).first]);
+    }else{
+      charge = 100; // serve as regularization ...
+      charge_err = 1000;
+    }
+    if (charge <100){
+      charge = 100; // serve as regularization ...
+      charge_err = 1000;
+    }
+    
     int n_divide = map_2DU_3D_set[vec_2DU_index.at(index).first].size();
     // induction plane error is large, so they have less weights in the fit to decide X position
     double scaling = charge/charge_err * map_Udiv_fac[std::make_tuple(vec_2DU_index.at(index).first.first, vec_2DU_index.at(index).first.second, vec_2DU_index.at(index).second)];
 
     int index_3D = vec_2DU_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z
 
-    if (map_3D_2DU_set[index_3D].second < 0.5)
-      scaling *= pow(map_3D_2DU_set[index_3D].second/0.5,1);
-
-    //    std::cout << scaling << std::endl;
+    if (map_3D_2DU_set[index_3D].second < 0.5){
+      if (map_3D_2DU_set[index_3D].second!=0)
+	scaling *= pow(map_3D_2DU_set[index_3D].second/0.5,1);
+      else
+	scaling *= 1;
+    }
     
-    data_u_2D(2*index) =  scaling * (vec_2DU_index.at(index).first.first - offset_u);
-    data_u_2D(2*index+1) = scaling * (vec_2DU_index.at(index).first.second - offset_t);
-
-    RU.insert(2*index,3*index_3D+1) = scaling * slope_yu; // Y--> U
-    RU.insert(2*index,3*index_3D+2) = scaling * slope_zu; // Z--> U
-    RU.insert(2*index+1,3*index_3D) = scaling * slope_x; // X --> T
+    //    std::cout << scaling << std::endl;
+    if (scaling!=0){
+      if (index_3D == 88)
+	std::cout << "U: " << vec_2DU_index.at(index).first.first << " " << vec_2DU_index.at(index).first.second << std::endl;
+      
+      data_u_2D(2*index) =  scaling * (vec_2DU_index.at(index).first.first - offset_u);
+      data_u_2D(2*index+1) = scaling * (vec_2DU_index.at(index).first.second - offset_t);
+      
+      RU.insert(2*index,3*index_3D+1) = scaling * slope_yu; // Y--> U
+      RU.insert(2*index,3*index_3D+2) = scaling * slope_zu; // Z--> U
+      RU.insert(2*index+1,3*index_3D) = scaling * slope_x; // X --> T
+    }
   }
 
   for (size_t index = 0; index!=vec_2DV_index.size(); index++){
-    double charge = std::get<0>(map_2D_vt_charge[vec_2DV_index.at(index).first]);
-    double charge_err = std::get<1>(map_2D_vt_charge[vec_2DV_index.at(index).first]);
+    double charge, charge_err;
+    if (map_2D_vt_charge.find(vec_2DV_index.at(index).first)!=map_2D_vt_charge.end()){
+      charge = std::get<0>(map_2D_vt_charge[vec_2DV_index.at(index).first]);
+      charge_err = std::get<1>(map_2D_vt_charge[vec_2DV_index.at(index).first]);
+    }else{
+      charge = 100;
+      charge_err = 1000;
+    }
+    if (charge < 100){
+      charge = 100;
+      charge_err = 1000;
+    }
+
     int n_divide = map_2DV_3D_set[vec_2DV_index.at(index).first].size();
     // induction plane error is large, so they have less weights in the fit to decide X position
     double scaling = charge/charge_err * map_Vdiv_fac[std::make_tuple(vec_2DV_index.at(index).first.first, vec_2DV_index.at(index).first.second, vec_2DV_index.at(index).second)];
 
+    //  if (charge==100) std::cout << scaling << std::endl;
     int index_3D = vec_2DV_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z
 
+    
+    
+    if (map_3D_2DV_set[index_3D].second < 0.5){
+      if (map_3D_2DV_set[index_3D].second!=0)
+	scaling *= pow(map_3D_2DV_set[index_3D].second/0.5,1);
+      else
+	scaling *= 1;
+    }
 
-    if (map_3D_2DV_set[index_3D].second < 0.5)
-      scaling *= pow(map_3D_2DV_set[index_3D].second/0.5,1);
-
+    //    if (charge==100) std::cout << "V: " << charge << " " << charge_err << " " << index_3D << " " << map_3D_2DV_set[index_3D].second << " " << scaling << " " << vec_2DV_index.at(index).first.first << " " << vec_2DV_index.at(index).first.second << std::endl;
+   
     //    if (index_3D == 20) scaling *= 0.3;
     //    std::cout << scaling << std::endl;
-    
-    data_v_2D(2*index) =  scaling * (vec_2DV_index.at(index).first.first - offset_v);
-    data_v_2D(2*index+1) = scaling * (vec_2DV_index.at(index).first.second - offset_t);
-
-    RV.insert(2*index,3*index_3D+1) = scaling * slope_yv; // Y--> V
-    RV.insert(2*index,3*index_3D+2) = scaling * slope_zv; // Z--> V
-    RV.insert(2*index+1,3*index_3D) = scaling * slope_x; // X --> T
+    if (scaling!=0){
+      if (index_3D == 88)
+	std::cout << "V: " << vec_2DV_index.at(index).first.first << " " << vec_2DV_index.at(index).first.second << std::endl;
+	    
+      data_v_2D(2*index) =  scaling * (vec_2DV_index.at(index).first.first - offset_v);
+      data_v_2D(2*index+1) = scaling * (vec_2DV_index.at(index).first.second - offset_t);
+      
+      RV.insert(2*index,3*index_3D+1) = scaling * slope_yv; // Y--> V
+      RV.insert(2*index,3*index_3D+2) = scaling * slope_zv; // Z--> V
+      RV.insert(2*index+1,3*index_3D) = scaling * slope_x; // X --> T
+    }
   }
 
   for (size_t index = 0; index!=vec_2DW_index.size(); index++){
-    double charge = std::get<0>(map_2D_wt_charge[vec_2DW_index.at(index).first]);
-    double charge_err = std::get<1>(map_2D_wt_charge[vec_2DW_index.at(index).first]);
+    double charge, charge_err;
+    if (map_2D_wt_charge.find(vec_2DW_index.at(index).first) !=map_2D_wt_charge.end()){
+      charge = std::get<0>(map_2D_wt_charge[vec_2DW_index.at(index).first]);
+      charge_err = std::get<1>(map_2D_wt_charge[vec_2DW_index.at(index).first]);
+    }else{
+
+      charge = 100;
+      charge_err  =1000;
+    }
+    if (charge < 100){
+      charge = 100;
+      charge_err = 1000;
+    }
     int n_divide = map_2DW_3D_set[vec_2DW_index.at(index).first].size();
     // induction plane error is large, so they have less weights in the fit to decide X position
     double scaling = charge/charge_err * map_Wdiv_fac[std::make_tuple(vec_2DW_index.at(index).first.first, vec_2DW_index.at(index).first.second, vec_2DW_index.at(index).second)];
 
     int index_3D = vec_2DW_index.at(index).second; // 3*index_3D -->x  3*index_3D+1 --> y 3*index_3D+2 --> z
 
-    if (map_3D_2DW_set[index_3D].second < 0.5)
-      scaling *= pow(map_3D_2DW_set[index_3D].second/0.5,1);
-
-    //    std::cout << scaling << std::endl;
+    // if (charge==100)             std::cout << "W: " << charge << " " << charge_err << " " << index_3D << " " << map_3D_2DW_set[index_3D].second << std::endl;
+    if (map_3D_2DW_set[index_3D].second < 0.5){
+      if (map_3D_2DW_set[index_3D].second!=0)
+	scaling *= pow(map_3D_2DW_set[index_3D].second/0.5,1);
+      else
+	scaling *= 1;
+    }
     
-    data_w_2D(2*index) =  scaling * (vec_2DW_index.at(index).first.first - offset_w);
-    data_w_2D(2*index+1) = scaling * (vec_2DW_index.at(index).first.second - offset_t);
-
-    RW.insert(2*index,3*index_3D+2) = scaling * slope_zw; // Z--> W
-    RW.insert(2*index+1,3*index_3D) = scaling * slope_x; // X --> T
+    //    std::cout << scaling << std::endl;
+    if (scaling!=0){
+      if (index_3D == 88)
+	std::cout << "W: " << vec_2DW_index.at(index).first.first << " " << vec_2DW_index.at(index).first.second << std::endl;
+	    
+      data_w_2D(2*index) =  scaling * (vec_2DW_index.at(index).first.first - offset_w);
+      data_w_2D(2*index+1) = scaling * (vec_2DW_index.at(index).first.second - offset_t);
+      
+      RW.insert(2*index,3*index_3D+2) = scaling * slope_zw; // Z--> W
+      RW.insert(2*index+1,3*index_3D) = scaling * slope_x; // X --> T
+    }
   }
   
   Eigen::SparseMatrix<double> RUT = Eigen::SparseMatrix<double>(RU.transpose());
   Eigen::SparseMatrix<double> RVT = Eigen::SparseMatrix<double>(RV.transpose());
   Eigen::SparseMatrix<double> RWT = Eigen::SparseMatrix<double>(RW.transpose());
   
-  /* // when to apply regularization ... how??? */
-  /* Eigen::SparseMatrix<double> FMatrix_1(n_3D_pos, n_3D_pos), FMatrix_2(n_3D_pos, n_3D_pos); */
+  // when to apply regularization ... how???
+  Eigen::SparseMatrix<double> FMatrix(n_3D_pos, n_3D_pos);//, PMatrix(n_3D_pos, n_3D_pos);
   
-  /* for (size_t i=0;i!=ps_vec.size();i++){ */
+  for (size_t i=0;i!=ps_vec.size();i++){
 
-  /*   /\* if (i!=0) *\/ */
-  /*     /\* std::cout << i << " " << ps_vec.at(i) << " " << map_3D_2DU_set[i].first.size() << " " << *\/ */
-  /*     /\* 	map_3D_2DV_set[i].first.size() << " " << map_3D_2DW_set[i].first.size()  << " " << map_3D_2DV_set[i].first.size()*1.0 << " " <<  map_3D_2DV_set[i].second << std::endl; *\/ */
+    /* if (i!=0) */
+      /* std::cout << i << " " << ps_vec.at(i) << " " << map_3D_2DU_set[i].first.size() << " " << */
+      /* 	map_3D_2DV_set[i].first.size() << " " << map_3D_2DW_set[i].first.size()  << " " << map_3D_2DV_set[i].first.size()*1.0 << " " <<  map_3D_2DV_set[i].second << std::endl; */
     
-  /*   if (i==0){ */
-  /*     if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 || */
-  /* 	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 || */
-  /* 	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){ */
-  /* 	/\* FMatrix_1.insert(0,0) = 1./distances.at(0); // X *\/ */
-  /* 	/\* FMatrix_1.insert(0,3) = -1./distances.at(0); *\/ */
+    if (i==0){
+      if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ||
+  	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 ||
+  	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){
+  	FMatrix.insert(1,1) = 1.;//1./distances.at(0); // Y
+  	FMatrix.insert(1,4) = -1;//-1./distances.at(0);
 	
-  /* 	FMatrix_1.insert(1,1) = 1.;//1./distances.at(0); // Y */
-  /* 	FMatrix_1.insert(1,4) = -1;//-1./distances.at(0); */
-	
-  /* 	FMatrix_1.insert(2,2) = 1.;//1./distances.at(0); // Z */
-  /* 	FMatrix_1.insert(2,5) = -1;//-1./distances.at(0); */
+  	FMatrix.insert(2,2) = 1.;//1./distances.at(0); // Z
+  	FMatrix.insert(2,5) = -1;//-1./distances.at(0);
+      }
+    }else if (i+1==ps_vec.size()){
+      if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ||
+  	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 ||
+  	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){
+    	FMatrix.insert(3*i+1,3*i+1) = -1;//-1./distances.at(ps_vec.size()-2);
+  	FMatrix.insert(3*i+1,3*i-2) = 1;//1./distances.at(ps_vec.size()-2);
 
-  /* 	/\* FMatrix_2.insert(0,0) = 1./distances.at(0); // X *\/ */
-  /* 	/\* FMatrix_2.insert(0,3) = -1./distances.at(0); *\/ */
-	
-  /* 	FMatrix_2.insert(1,1) = 1;//1./distances.at(0); // Y */
-  /* 	FMatrix_2.insert(1,4) = -1;//-1./distances.at(0); */
-	
-  /* 	FMatrix_2.insert(2,2) = 1;//1./distances.at(0); // Z */
-  /* 	FMatrix_2.insert(2,5) = -1;//-1./distances.at(0); */
-  /*     } */
-  /*   }else if (i+1==ps_vec.size()){ */
-  /*     if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 || */
-  /* 	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 || */
-  /* 	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){ */
-  /* 	/\* FMatrix_1.insert(3*i,3*i) = -1./distances.at(ps_vec.size()-2); // X *\/ */
-  /* 	/\* FMatrix_1.insert(3*i,3*i-3) = 1./distances.at(ps_vec.size()-2); *\/ */
+  	FMatrix.insert(3*i+2,3*i+2) = -1;//-1./distances.at(ps_vec.size()-2);
+  	FMatrix.insert(3*i+2,3*i-1) = 1;//1./distances.at(ps_vec.size()-2);
+      }
+    }else{
+      if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ||
+  	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 ||
+  	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){
 
-  /* 	FMatrix_1.insert(3*i+1,3*i+1) = -1;//-1./distances.at(ps_vec.size()-2); */
-  /* 	FMatrix_1.insert(3*i+1,3*i-2) = 1;//1./distances.at(ps_vec.size()-2); */
+	//	PMatrix.insert(3*i,3*i) = 1;
+	//	PMatrix.insert(3*i+1,3*i+1) = 1;
+	//      PMatrix.insert(3*i+2,3*i+2) = 1;
+	
+  	/* FMatrix_1.insert(3*i+1,3*i-2) = 1;//1./distances.at(i-1); */
+  	/* FMatrix_1.insert(3*i+1,3*i+1) = -1;//-1./distances.at(i-1); */
+	
+  	/* FMatrix_1.insert(3*i+2,3*i-1) = 1;//1./distances.at(i-1); */
+  	/* FMatrix_1.insert(3*i+2,3*i+2) = -1;//-1./distances.at(i-1); */
+	
+  	/* FMatrix_2.insert(3*i+1,3*i+1) = 1.;//1./distances.at(i); */
+  	/* FMatrix_2.insert(3*i+1,3*i+4) = -1;//-1./distances.at(i); */
+	
+  	/* FMatrix_2.insert(3*i+2,3*i+2) = 1.;//1./distances.at(i); */
+  	/* FMatrix_2.insert(3*i+2,3*i+5) = -1;//-1./distances.at(i); */
+	
+      }
+    }
+  }
 
-  /* 	FMatrix_1.insert(3*i+2,3*i+2) = -1;//-1./distances.at(ps_vec.size()-2); */
-  /* 	FMatrix_1.insert(3*i+2,3*i-1) = 1;//1./distances.at(ps_vec.size()-2); */
-
-  /* 	/\* FMatrix_2.insert(3*i,3*i) = -1./distances.at(ps_vec.size()-2); // X *\/ */
-  /* 	/\* FMatrix_2.insert(3*i,3*i-3) = 1./distances.at(ps_vec.size()-2); *\/ */
-
-  /* 	FMatrix_2.insert(3*i+1,3*i+1) = -1;//-1./distances.at(ps_vec.size()-2); */
-  /* 	FMatrix_2.insert(3*i+1,3*i-2) = 1;//1./distances.at(ps_vec.size()-2); */
-
-  /* 	FMatrix_2.insert(3*i+2,3*i+2) = -1;//-1./distances.at(ps_vec.size()-2); */
-  /* 	FMatrix_2.insert(3*i+2,3*i-1) = 1;//1./distances.at(ps_vec.size()-2); */
-  /*     } */
-  /*   }else{ */
-  /*     if (map_3D_2DU_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 || */
-  /* 	  map_3D_2DU_set[i].first.size()==0 && map_3D_2DW_set[i].first.size()==0 || */
-  /* 	  map_3D_2DW_set[i].first.size()==0 && map_3D_2DV_set[i].first.size()==0 ){ */
-
-
-	  
-  /* 	/\* FMatrix_1.insert(3*i,3*i-3) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); *\/ */
-  /* 	/\* FMatrix_1.insert(3*i,3*i) = -1./distances.at(i-1)/distances.at(i); *\/ */
-  /* 	/\* FMatrix_1.insert(3*i,3*i+3) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); *\/ */
-	
-  /* 	/\* FMatrix_1.insert(3*i+1,3*i-2) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); *\/ */
-  /* 	/\* FMatrix_1.insert(3*i+1,3*i+1) = -1./distances.at(i-1)/distances.at(i); *\/ */
-  /* 	/\* FMatrix_1.insert(3*i+1,3*i+4) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); *\/ */
-	
-  /* 	/\* FMatrix_1.insert(3*i+2,3*i-1) = 1./distances.at(i-1)/(distances.at(i)+distances.at(i-1)); *\/ */
-  /* 	/\* FMatrix_1.insert(3*i+2,3*i+2) = -1./distances.at(i-1)/distances.at(i); *\/ */
-  /* 	/\* FMatrix_1.insert(3*i+2,3*i+5) = 1./distances.at(i)/(distances.at(i)+distances.at(i-1)); *\/ */
-	
-  /* 	/\* FMatrix_1.insert(3*i,3*i-3) = 1./distances.at(i-1); *\/ */
-  /* 	/\* FMatrix_1.insert(3*i,3*i) = -1./distances.at(i-1); *\/ */
-	
-  /* 	FMatrix_1.insert(3*i+1,3*i-2) = 1;//1./distances.at(i-1); */
-  /* 	FMatrix_1.insert(3*i+1,3*i+1) = -1;//-1./distances.at(i-1); */
-	
-  /* 	FMatrix_1.insert(3*i+2,3*i-1) = 1;//1./distances.at(i-1); */
-  /* 	FMatrix_1.insert(3*i+2,3*i+2) = -1;//-1./distances.at(i-1); */
-	
-  /* 	/\* FMatrix_2.insert(3*i,3*i) = 1./distances.at(i); *\/ */
-  /* 	/\* FMatrix_2.insert(3*i,3*i+3) = -1./distances.at(i); *\/ */
-	
-  /* 	FMatrix_2.insert(3*i+1,3*i+1) = 1.;//1./distances.at(i); */
-  /* 	FMatrix_2.insert(3*i+1,3*i+4) = -1;//-1./distances.at(i); */
-	
-  /* 	FMatrix_2.insert(3*i+2,3*i+2) = 1.;//1./distances.at(i); */
-  /* 	FMatrix_2.insert(3*i+2,3*i+5) = -1;//-1./distances.at(i); */
-	
-  /*     } */
-  /*   } */
-  /* } */
-
-  /* double lambda = 1; */
-  /* /\* lambda = 2 // strength *\/ */
-  /* /\*   * sqrt(9. //  average chi2 guessted *\/ */
-  /* /\* 	   * (vec_2DU_index.size() + vec_2DV_index.size() + vec_2DW_index.size()) // how many of them *\/ */
-  /* /\* 	   * 6 * 6 // charge/charge_err estimation ... *\/ */
-  /* /\* 	   /(ps_vec.size() * 1.)); //weighting *\/ */
-  /* /\* double angle_range = 0.25 * 100.; *\/ */
-  /* FMatrix_1 *= lambda; // disable the angle cut ... */
-  /* FMatrix_2 *= lambda; // disable the angle cut ... */
+  double lambda = 0.01;
+  /* lambda = 2 // strength */
+  /*   * sqrt(9. //  average chi2 guessted */
+  /* 	   * (vec_2DU_index.size() + vec_2DV_index.size() + vec_2DW_index.size()) // how many of them */
+  /* 	   * 6 * 6 // charge/charge_err estimation ... */
+  /* 	   /(ps_vec.size() * 1.)); //weighting */
+  /* double angle_range = 0.25 * 100.; */
+  FMatrix *= lambda; // disable the angle cut ...
   
   
-  /* Eigen::SparseMatrix<double> FMatrix_1T = Eigen::SparseMatrix<double>(FMatrix_1.transpose()); */
-  /* Eigen::SparseMatrix<double> FMatrix_2T = Eigen::SparseMatrix<double>(FMatrix_2.transpose()); */
-  /* // Eigen::SparseMatrix<double> PMatrixT = Eigen::SparseMatrix<double>(PMatrix.transpose()); */
+  Eigen::SparseMatrix<double> FMatrixT = Eigen::SparseMatrix<double>(FMatrix.transpose());
+  
   Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
-  Eigen::VectorXd b = RUT * data_u_2D + RVT * data_v_2D + RWT * data_w_2D;// + PMatrixT * pos_3D_init * pow(lambda/dis_range,2);
+  Eigen::VectorXd b = RUT * data_u_2D + RVT * data_v_2D + RWT * data_w_2D;// + PMatrixT * pos_3D_init ;
   
-  Eigen::SparseMatrix<double> A =   RUT * RU + RVT * RV + RWT * RW ;//+ 0.5*(FMatrix_1T * FMatrix_1 + FMatrix_2T*FMatrix_2);// + PMatrixT * PMatrix * pow(lambda/dis_range,2);
+  Eigen::SparseMatrix<double> A =   RUT * RU + RVT * RV + RWT * RW + FMatrixT * FMatrix;// + PMatrixT*PMatrix;
 
   //  std::cout << "Solve1 " << std::endl;
   
@@ -404,8 +435,10 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
   
   //std::cout << path_wcps_vec.size() << " " << map_2DU_index.size() << " " << map_2DV_index.size() << " " << map_2DW_index.size() << std::endl;
 
+  //  std::cout << std::isnan(solver.error()) << std::endl;
+  
   if (std::isnan(solver.error())){
-    //std::cout << "Bad fit" << std::endl;
+    std::cout << "Bad fit" << std::endl;
     fine_tracking_path.clear();
     pu.clear();
     pv.clear();
@@ -425,7 +458,7 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
       pt.push_back(offset_t + 0.5 + slope_x * p.x );
     }
   }else{
-    // std::cout << "Good fit" << std::endl;
+    std::cout << "Good fit" << std::endl;
     flag_fine_tracking = true; 
     fine_tracking_path.clear();
     pu.clear();
@@ -439,256 +472,277 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
       p.x = pos_3D(3*i);
       p.y = pos_3D(3*i+1);
       p.z = pos_3D(3*i+2);
-      
-      if (std::isnan(p.x) || std::isnan(p.y) || std::isnan(p.z)){
-	//std::cout << "gaga " << std::endl;
-      }else{
 
-	//examine the calculation
+      //      if (i==70)
+      //  std::cout << i << " " << p.x/units::cm << " " << p.y/units::cm << " " << p.z/units::cm << std::endl;
+      
+      //examine the calculation
+      {
+	int t1 = std::floor(offset_t + 0.5 + slope_x * p.x);
+	int u1 = std::floor(offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z));
+	int v1 = std::floor(offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z));
+	int w1 = std::floor(offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z));
+	
+	double c1_u=0;
 	{
-	  int t1 = std::floor(offset_t + 0.5 + slope_x * p.x);
-	  int u1 = std::floor(offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z));
-	  int v1 = std::floor(offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z));
-	  int w1 = std::floor(offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z));
- 
-	  double c1_u=0;
-	  {
-	    auto it = map_2D_ut_charge.find(std::make_pair(u1,t1));
-	    if (it != map_2D_ut_charge.end()){
+	  auto it = map_2D_ut_charge.find(std::make_pair(u1,t1));
+	  if (it != map_2D_ut_charge.end()){
 	      if (std::get<2>(it->second)!=0){
 		c1_u += std::get<0>(it->second);
 		//if (i==9) std::cout << std::get<0>(it->second) << " " ;
 	      }
-	    }
-	    auto it1 = map_2D_ut_charge.find(std::make_pair(u1,t1+1));
-	    if (it1 != map_2D_ut_charge.end()){
-	      if (std::get<2>(it1->second)!=0){
-		c1_u += std::get<0>(it1->second);
-		//if (i==9) std::cout << std::get<0>(it->second) << " " ;
-	      }
-	    }
-	    auto it2 = map_2D_ut_charge.find(std::make_pair(u1,t1-1));
-	    if (it2 != map_2D_ut_charge.end()){
-	      if (std::get<2>(it2->second)!=0){
-		c1_u += std::get<0>(it2->second);
-		//	if (i==9) std::cout << std::get<0>(it->second) << " " ;
-	      }
-	    }
-	    auto it3 = map_2D_ut_charge.find(std::make_pair(u1+1,t1));
-	    if (it3 != map_2D_ut_charge.end()){
-	      if (std::get<2>(it3->second)!=0)
-		c1_u += std::get<0>(it3->second);
-	    }
-	    auto it4 = map_2D_ut_charge.find(std::make_pair(u1-1,t1));
-	    if (it4 != map_2D_ut_charge.end()){
-	      if (std::get<2>(it4->second)!=0)
-		c1_u += std::get<0>(it4->second);
+	  }
+	  auto it1 = map_2D_ut_charge.find(std::make_pair(u1,t1+1));
+	  if (it1 != map_2D_ut_charge.end()){
+	    if (std::get<2>(it1->second)!=0){
+	      c1_u += std::get<0>(it1->second);
+	      //if (i==9) std::cout << std::get<0>(it->second) << " " ;
 	    }
 	  }
-
-	  double c1_v=0;
-	  {
-	    auto it = map_2D_vt_charge.find(std::make_pair(v1,t1));
-	    if (it != map_2D_vt_charge.end()){
-	      if (std::get<2>(it->second)!=0){
-		c1_v += std::get<0>(it->second);
-		//		if (i==9) std::cout << std::get<0>(it->second) << " " ;
-	      }
-	    }
-	    auto it1 = map_2D_vt_charge.find(std::make_pair(v1,t1+1));
-	    if (it1 != map_2D_vt_charge.end()){
-	      if (std::get<2>(it1->second)!=0){
-		c1_v += std::get<0>(it1->second);
-		//if (i==9) std::cout << std::get<0>(it1->second) << " " ;
-	      }
-	    }
-	    auto it2 = map_2D_vt_charge.find(std::make_pair(v1,t1-1));
-	    if (it2 != map_2D_vt_charge.end()){
-	      if (std::get<2>(it2->second)!=0){
-		c1_v += std::get<0>(it2->second);
-		//if (i==9) std::cout << std::get<0>(it2->second) << " " ;
-	      }
-	    }
-	    auto it3 = map_2D_vt_charge.find(std::make_pair(v1+1,t1));
-	    if (it3 != map_2D_vt_charge.end()){
-	      if (std::get<2>(it3->second)!=0){
-		c1_v += std::get<0>(it3->second);
-		//	if (i==9) std::cout << std::get<0>(it3->second) << " " ;
-	      }
-	    }
-	    auto it4 = map_2D_vt_charge.find(std::make_pair(v1-1,t1));
-	    if (it4 != map_2D_vt_charge.end()){
-	      if (std::get<2>(it4->second)!=0){
-		c1_v += std::get<0>(it4->second);
-		//if (i==9) std::cout << std::get<0>(it4->second) << " " ;
-	      }
-	    }
-	    //	    if (i==9) std::cout << std::endl;
-	  }
-	  
-
-	  double c1_w=0;
-	  {
-	    auto it = map_2D_wt_charge.find(std::make_pair(w1,t1));
-	    if (it != map_2D_wt_charge.end()){
-	      if (std::get<2>(it->second)!=0)
-		c1_w += std::get<0>(it->second);
-	    }
-	    auto it1 = map_2D_wt_charge.find(std::make_pair(w1,t1+1));
-	    if (it1 != map_2D_wt_charge.end()){
-	      if (std::get<2>(it1->second)!=0)
-		c1_w += std::get<0>(it1->second);
-	    }
-	    auto it2 = map_2D_wt_charge.find(std::make_pair(w1,t1-1));
-	    if (it2 != map_2D_wt_charge.end()){
-	      if (std::get<2>(it2->second)!=0)
-		c1_w += std::get<0>(it2->second);
-	    }
-	    auto it3 = map_2D_wt_charge.find(std::make_pair(w1+1,t1));
-	    if (it3 != map_2D_wt_charge.end()){
-	      if (std::get<2>(it3->second)!=0)
-		c1_w += std::get<0>(it3->second);
-	    }
-	    auto it4 = map_2D_wt_charge.find(std::make_pair(w1-1,t1));
-	    if (it4 != map_2D_wt_charge.end()){
-	      if (std::get<2>(it4->second)!=0)
-		c1_w += std::get<0>(it4->second);
+	  auto it2 = map_2D_ut_charge.find(std::make_pair(u1,t1-1));
+	  if (it2 != map_2D_ut_charge.end()){
+	    if (std::get<2>(it2->second)!=0){
+	      c1_u += std::get<0>(it2->second);
+	      //	if (i==9) std::cout << std::get<0>(it->second) << " " ;
 	    }
 	  }
-	  
-	  
-	  int t2 = std::floor(offset_t + 0.5 + slope_x * ps_vec.at(i).x);
-	  int u2 = std::floor(offset_u + 0.5 + (slope_yu * ps_vec.at(i).y + slope_zu * ps_vec.at(i).z));
-	  int v2 = std::floor(offset_v + 0.5 + (slope_yv * ps_vec.at(i).y + slope_zv * ps_vec.at(i).z));
-	  int w2 = std::floor(offset_w + 0.5 + (slope_yw * ps_vec.at(i).y + slope_zw * ps_vec.at(i).z));
-
-	  
-	  double c2_u=0;
-	  {
-	    auto it = map_2D_ut_charge.find(std::make_pair(u2,t2));
-	    if (it != map_2D_ut_charge.end()){
-	      if (std::get<2>(it->second)!=0)
-		c2_u += std::get<0>(it->second);
-	    }
-	    auto it1 = map_2D_ut_charge.find(std::make_pair(u2,t2+1));
-	    if (it1 != map_2D_ut_charge.end()){
-	      if (std::get<2>(it1->second)!=0)
-		c2_u += std::get<0>(it1->second);
-	    }
-	    auto it2 = map_2D_ut_charge.find(std::make_pair(u2,t2-1));
-	    if (it2 != map_2D_ut_charge.end()){
-	      if (std::get<2>(it2->second)!=0)
-		c2_u += std::get<0>(it2->second);
-	    }
-	    auto it3 = map_2D_ut_charge.find(std::make_pair(u2+1,t2));
-	    if (it3 != map_2D_ut_charge.end()){
-	      if (std::get<2>(it3->second)!=0)
-		c2_u += std::get<0>(it3->second);
-	    }
-	    auto it4 = map_2D_ut_charge.find(std::make_pair(u2-1,t2));
-	    if (it4 != map_2D_ut_charge.end()){
-	      if (std::get<2>(it4->second)!=0)
-		c2_u += std::get<0>(it4->second);
-	    }
+	  auto it3 = map_2D_ut_charge.find(std::make_pair(u1+1,t1));
+	  if (it3 != map_2D_ut_charge.end()){
+	    if (std::get<2>(it3->second)!=0)
+	      c1_u += std::get<0>(it3->second);
 	  }
-
-	  double c2_v=0;
-	  {
-	    auto it = map_2D_vt_charge.find(std::make_pair(v2,t2));
-	    if (it != map_2D_vt_charge.end()){
-	      if (std::get<2>(it->second)!=0){
-		c2_v += std::get<0>(it->second);
-		//		if (i==9) std::cout << std::get<0>(it->second) << " ";
-	      }
-	    }
-	    auto it1 = map_2D_vt_charge.find(std::make_pair(v2,t2+1));
-	    if (it1 != map_2D_vt_charge.end()){
-	      if (std::get<2>(it1->second)!=0){
-		c2_v += std::get<0>(it1->second);
-		//if (i==9) std::cout << std::get<0>(it1->second) << " ";
-	      }
-	    }
-	    auto it2 = map_2D_vt_charge.find(std::make_pair(v2,t2-1));
-	    if (it2 != map_2D_vt_charge.end()){
-	      if (std::get<2>(it2->second)!=0){
-		c2_v += std::get<0>(it2->second);
-		//if (i==9) std::cout << std::get<0>(it2->second) << " ";
-	      }
-	    }
-	    auto it3 = map_2D_vt_charge.find(std::make_pair(v2+1,t2));
-	    if (it3 != map_2D_vt_charge.end()){
-	      if (std::get<2>(it3->second)!=0){
-		c2_v += std::get<0>(it3->second);
-		//if (i==9) std::cout << std::get<0>(it3->second) << " ";
-	      }
-	    }
-	    auto it4 = map_2D_vt_charge.find(std::make_pair(v2-1,t2));
-	    if (it4 != map_2D_vt_charge.end()){
-	      if (std::get<2>(it4->second)!=0){
-		c2_v += std::get<0>(it4->second);
-		//if (i==9) std::cout << std::get<0>(it4->second) << " ";
-	      }
-	    }
-	    //	    if (i==9) std::cout << std::endl;
+	  auto it4 = map_2D_ut_charge.find(std::make_pair(u1-1,t1));
+	  if (it4 != map_2D_ut_charge.end()){
+	    if (std::get<2>(it4->second)!=0)
+	      c1_u += std::get<0>(it4->second);
 	  }
-
-	  double c2_w=0;
-	  {
-	    auto it = map_2D_wt_charge.find(std::make_pair(w2,t2));
-	    if (it != map_2D_wt_charge.end()){
-	      if (std::get<2>(it->second)!=0)
-		c2_w += std::get<0>(it->second);
-	    }
-	    auto it1 = map_2D_wt_charge.find(std::make_pair(w2,t2+1));
-	    if (it1 != map_2D_wt_charge.end()){
-	      if (std::get<2>(it1->second)!=0)
-		c2_w += std::get<0>(it1->second);
-	    }
-	    auto it2 = map_2D_wt_charge.find(std::make_pair(w2,t2-1));
-	    if (it2 != map_2D_wt_charge.end()){
-	      if (std::get<2>(it2->second)!=0)
-		c2_w += std::get<0>(it2->second);
-	    }
-	    auto it3 = map_2D_wt_charge.find(std::make_pair(w2+1,t2));
-	    if (it3 != map_2D_wt_charge.end()){
-	      if (std::get<2>(it3->second)!=0)
-		c2_w += std::get<0>(it3->second);
-	    }
-	    auto it4 = map_2D_wt_charge.find(std::make_pair(w2-1,t2));
-	    if (it4 != map_2D_wt_charge.end()){
-	      if (std::get<2>(it4->second)!=0)
-		c2_w += std::get<0>(it4->second);
-	    }
-	  }
-	  /* if (i==9) */
-	  /*   std::cout << u1 << " " << v1 << " " << w1 << " " << t1 << " " */
-	  /* 	      << u2 << " " << v2 << " " << w2 << " " << t2 << " " */
-	  /* 	      <<  offset_v + (slope_yv * p.y + slope_zv * p.z) << " " << offset_v + (slope_yv * ps_vec.at(i).y + slope_zv * ps_vec.at(i).z) << std::endl; */
-
-	  double ratio=0;
-	  if (c2_u!=0) ratio += c1_u/c2_u; else ratio += 1;
-	  if (c2_v!=0) ratio += c1_v/c2_v; else ratio += 1;
-	  if (c2_w!=0) ratio += c1_w/c2_w; else ratio += 1;
-
-	  if (ratio/3. < 0.97){
-	  // if (c1_u + c1_v + c1_w < (c2_u + c2_v + c2_w)) {
-	    /* std::cout << i << " " << ratio/3. << " " << (c1_u+c1_v+c1_w)*1./(c2_u + c2_v + c2_w) << " " << c1_u * 1.0/c2_u << " " << c1_v*1.0/c2_v << " " << c1_w*1.0/c2_w << " " << sqrt(pow(p.x-ps_vec.at(i).x,2) + pow(p.y-ps_vec.at(i).y,2) + pow(p.z-ps_vec.at(i).z,2)) << " " */
-	    /* 	      << u1 << " " << v1 << " " << w1 << " " << t1 << " " << u2 << " " << v2 << " " << w2 << " " << t2 << std::endl;// */
-	    p = ps_vec.at(i);
-	  }
-	  //	  std::cout << c1_u + c1_v + c1_w << " " << c2_u + c2_v + c2_w << std::endl;
 	}
 	
-
+	double c1_v=0;
+	{
+	  auto it = map_2D_vt_charge.find(std::make_pair(v1,t1));
+	  if (it != map_2D_vt_charge.end()){
+	    if (std::get<2>(it->second)!=0){
+	      c1_v += std::get<0>(it->second);
+	      //		if (i==9) std::cout << std::get<0>(it->second) << " " ;
+	    }
+	  }
+	  auto it1 = map_2D_vt_charge.find(std::make_pair(v1,t1+1));
+	  if (it1 != map_2D_vt_charge.end()){
+	    if (std::get<2>(it1->second)!=0){
+	      c1_v += std::get<0>(it1->second);
+	      //if (i==9) std::cout << std::get<0>(it1->second) << " " ;
+	    }
+	  }
+	  auto it2 = map_2D_vt_charge.find(std::make_pair(v1,t1-1));
+	  if (it2 != map_2D_vt_charge.end()){
+	    if (std::get<2>(it2->second)!=0){
+	      c1_v += std::get<0>(it2->second);
+	      //if (i==9) std::cout << std::get<0>(it2->second) << " " ;
+	    }
+	  }
+	  auto it3 = map_2D_vt_charge.find(std::make_pair(v1+1,t1));
+	  if (it3 != map_2D_vt_charge.end()){
+	    if (std::get<2>(it3->second)!=0){
+	      c1_v += std::get<0>(it3->second);
+	      //	if (i==9) std::cout << std::get<0>(it3->second) << " " ;
+	    }
+	  }
+	  auto it4 = map_2D_vt_charge.find(std::make_pair(v1-1,t1));
+	  if (it4 != map_2D_vt_charge.end()){
+	    if (std::get<2>(it4->second)!=0){
+	      c1_v += std::get<0>(it4->second);
+	      //if (i==9) std::cout << std::get<0>(it4->second) << " " ;
+	    }
+	  }
+	  //	    if (i==9) std::cout << std::endl;
+	}
 	
-	fine_tracking_path.push_back(p);
-	//fine_tracking_path.push_back(ps_vec.at(i));
-	pu.push_back(offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z));
-	pv.push_back(offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z)+2400);
-	pw.push_back(offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z)+4800);
-	pt.push_back(offset_t + 0.5 + slope_x * p.x );
-	//	std::cout << ps_vec.at(i) << " " << p << " " << sqrt(pow(ps_vec.at(i).x-p.x,2)+pow(ps_vec.at(i).y-p.y,2)+pow(ps_vec.at(i).z-p.z,2))/units::mm <<std::endl;
+	
+	double c1_w=0;
+	{
+	  auto it = map_2D_wt_charge.find(std::make_pair(w1,t1));
+	  if (it != map_2D_wt_charge.end()){
+	    if (std::get<2>(it->second)!=0)
+	      c1_w += std::get<0>(it->second);
+	  }
+	  auto it1 = map_2D_wt_charge.find(std::make_pair(w1,t1+1));
+	  if (it1 != map_2D_wt_charge.end()){
+	    if (std::get<2>(it1->second)!=0)
+	      c1_w += std::get<0>(it1->second);
+	  }
+	  auto it2 = map_2D_wt_charge.find(std::make_pair(w1,t1-1));
+	  if (it2 != map_2D_wt_charge.end()){
+	    if (std::get<2>(it2->second)!=0)
+	      c1_w += std::get<0>(it2->second);
+	  }
+	  auto it3 = map_2D_wt_charge.find(std::make_pair(w1+1,t1));
+	  if (it3 != map_2D_wt_charge.end()){
+	    if (std::get<2>(it3->second)!=0)
+	      c1_w += std::get<0>(it3->second);
+	  }
+	  auto it4 = map_2D_wt_charge.find(std::make_pair(w1-1,t1));
+	  if (it4 != map_2D_wt_charge.end()){
+	    if (std::get<2>(it4->second)!=0)
+	      c1_w += std::get<0>(it4->second);
+	  }
+	}
+	
+	
+	int t2 = std::floor(offset_t + 0.5 + slope_x * ps_vec.at(i).x);
+	int u2 = std::floor(offset_u + 0.5 + (slope_yu * ps_vec.at(i).y + slope_zu * ps_vec.at(i).z));
+	int v2 = std::floor(offset_v + 0.5 + (slope_yv * ps_vec.at(i).y + slope_zv * ps_vec.at(i).z));
+	int w2 = std::floor(offset_w + 0.5 + (slope_yw * ps_vec.at(i).y + slope_zw * ps_vec.at(i).z));
+	
+	
+	double c2_u=0;
+	{
+	  auto it = map_2D_ut_charge.find(std::make_pair(u2,t2));
+	  if (it != map_2D_ut_charge.end()){
+	    if (std::get<2>(it->second)!=0)
+	      c2_u += std::get<0>(it->second);
+	  }
+	  auto it1 = map_2D_ut_charge.find(std::make_pair(u2,t2+1));
+	  if (it1 != map_2D_ut_charge.end()){
+	    if (std::get<2>(it1->second)!=0)
+	      c2_u += std::get<0>(it1->second);
+	  }
+	  auto it2 = map_2D_ut_charge.find(std::make_pair(u2,t2-1));
+	  if (it2 != map_2D_ut_charge.end()){
+	    if (std::get<2>(it2->second)!=0)
+	      c2_u += std::get<0>(it2->second);
+	  }
+	  auto it3 = map_2D_ut_charge.find(std::make_pair(u2+1,t2));
+	  if (it3 != map_2D_ut_charge.end()){
+	    if (std::get<2>(it3->second)!=0)
+	      c2_u += std::get<0>(it3->second);
+	  }
+	  auto it4 = map_2D_ut_charge.find(std::make_pair(u2-1,t2));
+	  if (it4 != map_2D_ut_charge.end()){
+	    if (std::get<2>(it4->second)!=0)
+	      c2_u += std::get<0>(it4->second);
+	  }
+	}
+	
+	double c2_v=0;
+	{
+	  auto it = map_2D_vt_charge.find(std::make_pair(v2,t2));
+	  if (it != map_2D_vt_charge.end()){
+	    if (std::get<2>(it->second)!=0){
+	      c2_v += std::get<0>(it->second);
+	      //		if (i==9) std::cout << std::get<0>(it->second) << " ";
+	    }
+	  }
+	  auto it1 = map_2D_vt_charge.find(std::make_pair(v2,t2+1));
+	  if (it1 != map_2D_vt_charge.end()){
+	    if (std::get<2>(it1->second)!=0){
+	      c2_v += std::get<0>(it1->second);
+	      //if (i==9) std::cout << std::get<0>(it1->second) << " ";
+	    }
+	  }
+	  auto it2 = map_2D_vt_charge.find(std::make_pair(v2,t2-1));
+	  if (it2 != map_2D_vt_charge.end()){
+	    if (std::get<2>(it2->second)!=0){
+	      c2_v += std::get<0>(it2->second);
+	      //if (i==9) std::cout << std::get<0>(it2->second) << " ";
+	    }
+	  }
+	  auto it3 = map_2D_vt_charge.find(std::make_pair(v2+1,t2));
+	  if (it3 != map_2D_vt_charge.end()){
+	    if (std::get<2>(it3->second)!=0){
+	      c2_v += std::get<0>(it3->second);
+	      //if (i==9) std::cout << std::get<0>(it3->second) << " ";
+	    }
+	  }
+	  auto it4 = map_2D_vt_charge.find(std::make_pair(v2-1,t2));
+	  if (it4 != map_2D_vt_charge.end()){
+	    if (std::get<2>(it4->second)!=0){
+		c2_v += std::get<0>(it4->second);
+		//if (i==9) std::cout << std::get<0>(it4->second) << " ";
+	    }
+	  }
+	  //	    if (i==9) std::cout << std::endl;
+	}
+	
+	double c2_w=0;
+	{
+	  auto it = map_2D_wt_charge.find(std::make_pair(w2,t2));
+	  if (it != map_2D_wt_charge.end()){
+	    if (std::get<2>(it->second)!=0)
+	      c2_w += std::get<0>(it->second);
+	  }
+	  auto it1 = map_2D_wt_charge.find(std::make_pair(w2,t2+1));
+	  if (it1 != map_2D_wt_charge.end()){
+	    if (std::get<2>(it1->second)!=0)
+	      c2_w += std::get<0>(it1->second);
+	  }
+	  auto it2 = map_2D_wt_charge.find(std::make_pair(w2,t2-1));
+	  if (it2 != map_2D_wt_charge.end()){
+	    if (std::get<2>(it2->second)!=0)
+	      c2_w += std::get<0>(it2->second);
+	  }
+	  auto it3 = map_2D_wt_charge.find(std::make_pair(w2+1,t2));
+	  if (it3 != map_2D_wt_charge.end()){
+	    if (std::get<2>(it3->second)!=0)
+	      c2_w += std::get<0>(it3->second);
+	  }
+	  auto it4 = map_2D_wt_charge.find(std::make_pair(w2-1,t2));
+	  if (it4 != map_2D_wt_charge.end()){
+	    if (std::get<2>(it4->second)!=0)
+	      c2_w += std::get<0>(it4->second);
+	  }
+	}
+	/* if (i==9) */
+	/*   std::cout << u1 << " " << v1 << " " << w1 << " " << t1 << " " */
+	/* 	      << u2 << " " << v2 << " " << w2 << " " << t2 << " " */
+	/* 	      <<  offset_v + (slope_yv * p.y + slope_zv * p.z) << " " << offset_v + (slope_yv * ps_vec.at(i).y + slope_zv * ps_vec.at(i).z) << std::endl; */
+	
+	double ratio=0;
+	if (c2_u!=0) ratio += c1_u/c2_u; else ratio += 1;
+	if (c2_v!=0) ratio += c1_v/c2_v; else ratio += 1;
+	if (c2_w!=0) ratio += c1_w/c2_w; else ratio += 1;
+
+	if (i==88) std::cout << ratio/3. << std::endl;
+	
+	if (ratio/3. < 0.97){
+	  // if (c1_u + c1_v + c1_w < (c2_u + c2_v + c2_w)) {
+	  /* std::cout << i << " " << ratio/3. << " " << (c1_u+c1_v+c1_w)*1./(c2_u + c2_v + c2_w) << " " << c1_u * 1.0/c2_u << " " << c1_v*1.0/c2_v << " " << c1_w*1.0/c2_w << " " << sqrt(pow(p.x-ps_vec.at(i).x,2) + pow(p.y-ps_vec.at(i).y,2) + pow(p.z-ps_vec.at(i).z,2)) << " " */
+	  /* 	      << u1 << " " << v1 << " " << w1 << " " << t1 << " " << u2 << " " << v2 << " " << w2 << " " << t2 << std::endl;// */
+	  p = ps_vec.at(i);
+	}
+	//	  std::cout << c1_u + c1_v + c1_w << " " << c2_u + c2_v + c2_w << std::endl;
       }
+
+      // examine angle ...
+      if (fine_tracking_path.size() >=2){
+	TVector3 v1(fine_tracking_path.at(fine_tracking_path.size()-1).x - fine_tracking_path.at(fine_tracking_path.size()-2).x,
+		    fine_tracking_path.at(fine_tracking_path.size()-1).y - fine_tracking_path.at(fine_tracking_path.size()-2).y,
+		    fine_tracking_path.at(fine_tracking_path.size()-1).z - fine_tracking_path.at(fine_tracking_path.size()-2).z);
+	TVector3 v2(p.x - fine_tracking_path.at(fine_tracking_path.size()-1).x,
+		    p.y - fine_tracking_path.at(fine_tracking_path.size()-1).y,
+		    p.z - fine_tracking_path.at(fine_tracking_path.size()-1).z);
+
+	if (i==88)
+	  std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << map_3D_2DU_set[i].second << " " << map_3D_2DV_set[i].second << " " << map_3D_2DW_set[i].second << std::endl;
+	
+	/* if (v1.Angle(v2)/3.1415926*180. > 45 && ((map_3D_2DU_set[i].second==0 && map_3D_2DV_set[i].second==0) || */
+	/* 					 (map_3D_2DU_set[i].second==0 && map_3D_2DW_set[i].second==0) || */
+	/* 					 (map_3D_2DV_set[i].second==0 && map_3D_2DW_set[i].second==0))) */
+	/*   continue; */
+	
+      }
+
+      if (i==88)
+	std::cout << offset_t + 0.5 + slope_x * p.x << " " << offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z) << " " << offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z)+2400 << " " << offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z)+4800 << std::endl;
+      
+      fine_tracking_path.push_back(p);
+      //fine_tracking_path.push_back(ps_vec.at(i));
+      pu.push_back(offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z));
+      pv.push_back(offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z)+2400);
+      pw.push_back(offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z)+4800);
+      pt.push_back(offset_t + 0.5 + slope_x * p.x );
+      //	std::cout << ps_vec.at(i) << " " << p << " " << sqrt(pow(ps_vec.at(i).x-p.x,2)+pow(ps_vec.at(i).y-p.y,2)+pow(ps_vec.at(i).z-p.z,2))/units::mm <<std::endl;
+      
     }
 
     ps_vec = fine_tracking_path;
@@ -696,7 +750,7 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
 }
 
 
-std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt,
+std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vector<int>& temp_results, std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt,
 								     std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge, double charge_cut){
 
   std::set<int> temp_types_u;
@@ -713,9 +767,9 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::set<
   for (auto it = temp_2dut.begin(); it!=temp_2dut.end(); it++){
     auto it1 = map_2D_ut_charge.find(*it);
     if (it1!=map_2D_ut_charge.end() && std::get<0>(it1->second) > charge_cut ){
-      temp_types_u.insert(std::get<2>(it1->second));
-      if (std::get<2>(it1->second)==0) results.at(0)++;
-      saved_2dut.insert(*it);
+	temp_types_u.insert(std::get<2>(it1->second));
+	if (std::get<2>(it1->second)==0) results.at(0)++;
+	saved_2dut.insert(*it);
     }
   }
 
@@ -767,10 +821,33 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::set<
     results.at(2) = 0;
   }
 
+  if (saved_2dut.size()==0 && saved_2dvt.size()==0){
+    //    temp_2dwt = saved_2dwt;
+    saved_2dut.insert(std::make_pair(temp_results.at(1), temp_results.at(0)));
+    saved_2dvt.insert(std::make_pair(temp_results.at(2), temp_results.at(0)));
+    std::cout << "haha1 " << temp_results.at(0) << " " << temp_results.at(1) << " " << temp_results.at(2) << " " << temp_results.at(3) << std::endl;
+  }else if (saved_2dut.size()==0 && saved_2dwt.size()==0){
+    //temp_2dvt = saved_2dvt;
+    saved_2dut.insert(std::make_pair(temp_results.at(1), temp_results.at(0)));
+    saved_2dwt.insert(std::make_pair(temp_results.at(3), temp_results.at(0)));
+    std::cout << "haha2 " << temp_results.at(0) << " " << temp_results.at(1) << " " << temp_results.at(2) << " " << temp_results.at(3) << std::endl;
+  }else if (saved_2dvt.size()==0 && saved_2dwt.size()==0){
+    //temp_2dut = saved_2dut;
+    saved_2dvt.insert(std::make_pair(temp_results.at(2), temp_results.at(0)));
+    saved_2dwt.insert(std::make_pair(temp_results.at(3), temp_results.at(0)));
+    std::cout << "haha3 " << temp_results.at(0) << " " << temp_results.at(1) << " " << temp_results.at(2) << " " << temp_results.at(3) << std::endl;
+  }
+  
+
+  //  std::cout << " " << saved_2dut.size() << " " << saved_2dvt.size() << " " << saved_2dwt.size() << " " << temp_2dut.size() << " " << temp_2dvt.size() << " " << temp_2dwt.size() << std::endl;
   
   temp_2dut = saved_2dut;
   temp_2dvt = saved_2dvt;
   temp_2dwt = saved_2dwt;
+  
+  
+ 
+  
   
   return results;
 }
@@ -1206,9 +1283,11 @@ void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::s
     std::vector<int> temp_results = ct_point_cloud.convert_3Dpoint_time_ch(p);
     int cur_time_slice = temp_results.at(0);
     int cur_index_u = temp_results.at(1);
-    int cur_index_v = temp_results.at(2);
-    int cur_index_w = temp_results.at(3);
+    int cur_index_v = temp_results.at(2)-2400;
+    int cur_index_w = temp_results.at(3)-4800;
 
+    // std::cout << cur_time_slice << " " << cur_index_u << " " << cur_index_v << " " << cur_index_w << std::endl;
+    
     for (int i=-time_cut; i!=time_cut+1;i++){
       for (int j=-time_cut; j!=time_cut+1; j++){
 	if (abs(i)+abs(j) <= time_cut){
@@ -1266,13 +1345,22 @@ void WireCellPID::PR3DCluster::form_map(WireCell::ToyCTPointCloud& ct_point_clou
     std::set<std::pair<int,int> > temp_2dut, temp_2dvt, temp_2dwt;
     form_point_association(pts.at(i), temp_2dut, temp_2dvt, temp_2dwt, ct_point_cloud, dis_cut, nlevel, time_cut);
     // examine ...
+
+    // std::cout << (*temp_2dvt.begin()).first << " " << (*temp_2dvt.end()).second << std::endl;
+
+    std::vector<int> temp_results = ct_point_cloud.convert_3Dpoint_time_ch(pts.at(i));
+    temp_results.at(2)-=2400;
+    temp_results.at(3)-=4800;
     
-    std::vector<float> temp_flag = examine_point_association(temp_2dut, temp_2dvt, temp_2dwt, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,charge_cut);
+    std::cout << i << " ";// << pts.at(i) << " " << temp_results.at(0) << " " << temp_results.at(1) << " " << temp_results.at(2) << " " << temp_results.at(3) << std::endl;
+    
+    std::vector<float> temp_flag = examine_point_association(temp_results, temp_2dut, temp_2dvt, temp_2dwt, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,charge_cut);
 
     //    std::cout << temp_2dut.size() << " " << temp_2dvt.size() << " " << temp_2dwt.size() << " " << temp_flag.at(0) << " " << temp_flag.at(1) << " " << temp_flag.at(2) << std::endl;
     // just projection ...
     // fill the data ...
-    if (temp_2dut.size() + temp_2dvt.size() + temp_2dwt.size() > 0){
+    //    if (temp_2dut.size() + temp_2dvt.size() + temp_2dwt.size() > 0){
+    if (temp_flag.at(0) + temp_flag.at(1) + temp_flag.at(2) > 0){
       map_3D_2DU_set[count] = std::make_pair(temp_2dut,temp_flag.at(0));
       map_3D_2DV_set[count] = std::make_pair(temp_2dvt,temp_flag.at(1));
       map_3D_2DW_set[count] = std::make_pair(temp_2dwt,temp_flag.at(2));
@@ -1419,6 +1507,7 @@ void WireCellPID::PR3DCluster::organize_ps_path(WireCell::PointVector& pts, doub
   for (size_t i=0;i!=ps_vec.size(); i++){
     Point p1 = ps_vec.at(i);
     double dis = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));
+    
     if (dis < low_dis_limit * 0.8 ){
       continue;
     }else if (dis < low_dis_limit * 1.6){

@@ -450,10 +450,10 @@ int main(int argc, char* argv[])
   if (T_bad_ch!=0){
     Int_t chid, plane;
     Int_t start_time,end_time;
-    T_bad_ch->Branch("chid",&chid,"chid/I");
-    T_bad_ch->Branch("plane",&plane,"plane/I");
-    T_bad_ch->Branch("start_time",&start_time,"start_time/I");
-    T_bad_ch->Branch("end_time",&end_time,"end_time/I");
+    T_bad_ch->SetBranchAddress("chid",&chid);
+    T_bad_ch->SetBranchAddress("plane",&plane);
+    T_bad_ch->SetBranchAddress("start_time",&start_time);
+    T_bad_ch->SetBranchAddress("end_time",&end_time);
     
     for (int i=0;i!=T_bad_ch->GetEntries();i++){
       T_bad_ch->GetEntry(i);
@@ -588,7 +588,7 @@ int main(int argc, char* argv[])
   
   //std::cout << saved_parent_tpc_cluster_ids.size() << std::endl;
   for (size_t i=0; i!=live_clusters.size();i++){
-    if (live_clusters.at(i)->get_cluster_id()!=25) continue;
+    if (live_clusters.at(i)->get_cluster_id()!=32 ) continue;
     
     if (live_clusters.at(i)->get_num_points()<=2) continue;
 
