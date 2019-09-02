@@ -187,12 +187,14 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
       }
       // induction plane error is large, so they have less weights in the fit to decide X position
       double scaling = charge/charge_err * map_Udiv_fac[std::make_tuple(it->first, it->second, i)];
+      
       if (map_3D_2DU_set[i].second < 0.5){
 	if (map_3D_2DU_set[i].second!=0)
 	  scaling *= pow(map_3D_2DU_set[i].second/0.5,1);
 	else
-	  scaling *= 0.01;
+	  scaling *= 0.05;
       }
+      
       if (scaling!=0){
 	data_u_2D(2*index) =  scaling * (it->first - offset_u);
 	data_u_2D(2*index+1) = scaling * (it->second - offset_t);
@@ -224,8 +226,9 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
 	if (map_3D_2DV_set[i].second!=0)
 	  scaling *= pow(map_3D_2DV_set[i].second/0.5,1);
 	else
-	  scaling *= 0.01;
+	  scaling *= 0.05;
       }
+      
       if (scaling!=0){
 	data_v_2D(2*index) =  scaling * (it->first - offset_v);
 	data_v_2D(2*index+1) = scaling * (it->second - offset_t);
@@ -253,11 +256,12 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
       }
       // induction plane error is large, so they have less weights in the fit to decide X position
       double scaling = charge/charge_err * map_Wdiv_fac[std::make_tuple(it->first, it->second, i)];
+      
       if (map_3D_2DW_set[i].second < 0.5){
 	if (map_3D_2DW_set[i].second!=0)
 	  scaling *= pow(map_3D_2DW_set[i].second/0.5,1);
 	else
-	  scaling *= 0.01;
+	  scaling *= 0.05;
       }
       if (scaling!=0){
 	data_w_2D(2*index) =  scaling * (it->first - offset_w);
@@ -651,22 +655,297 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vect
     results.at(2) = 0;
   }
 
-  if (saved_2dut.size()==0 && saved_2dvt.size()==0){
+
+  // U and V planes are dead ...
+  if (saved_2dut.size()==0 && saved_2dvt.size()==0 && saved_2dwt.size()!=0){
     //    temp_2dwt = saved_2dwt;
     saved_2dut.insert(std::make_pair(temp_results.at(1), temp_results.at(0)));
     saved_2dvt.insert(std::make_pair(temp_results.at(2), temp_results.at(0)));
-    //    std::cout << "haha1 " << temp_results.at(0) << " " << temp_results.at(1) << " " << temp_results.at(2) << " " << temp_results.at(3) << std::endl;
-  }else if (saved_2dut.size()==0 && saved_2dwt.size()==0){
+    //std::cout << "haha1 " << temp_results.at(0) << " " << temp_results.at(1) << " " << temp_results.at(2) << " " << temp_results.at(3) << std::endl;
+    // W plane check
+    {
+      std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
+      double total_charge = 0;
+      for (auto it1 = saved_2dwt.begin(); it1 != saved_2dwt.end(); it1++){
+	auto it2 = map_2D_wt_charge.find(*it1);
+	if (it2!=map_2D_wt_charge.end()){
+	  ave_pos.first += it1->first * (std::get<0>(it2->second));
+	  ave_pos.second += it1->second * (std::get<0>(it2->second));
+	  total_charge += std::get<0>(it2->second);
+	}
+      }
+      if (total_charge!=0){
+	ave_pos.first /= total_charge;
+	ave_pos.second /= total_charge;
+      }
+      double rms = 0;
+      for (auto it1 = saved_2dwt.begin(); it1 != saved_2dwt.end(); it1++){
+	rms += pow(it1->first-ave_pos.first,2) + pow(it1->second-ave_pos.second,2);
+      }
+      rms = sqrt(rms/saved_2dwt.size());
+
+      if ( sqrt(pow(ave_pos.first - temp_results.at(3),2) + pow(ave_pos.second - temp_results.at(0),2)) > 0.75*rms && saved_2dwt.size() <=5 && saved_2dwt.size() < 0.2 * temp_2dwt.size()){
+	saved_2dwt.clear();
+	saved_2dwt.insert(std::make_pair(temp_results.at(3), temp_results.at(0)));
+	results.at(2) = 0;
+	/* std::cout << sqrt(pow(ave_pos.first - temp_results.at(3),2) + pow(ave_pos.second - temp_results.at(0),2)) << " " << rms << " " << saved_2dwt.size() << " " << temp_2dwt.size() << std::endl; */
+      }
+    }
+  }else if (saved_2dut.size()==0 && saved_2dwt.size()==0 && saved_2dvt.size()!=0){
+    // U and W planes are dead ...
     //temp_2dvt = saved_2dvt;
     saved_2dut.insert(std::make_pair(temp_results.at(1), temp_results.at(0)));
     saved_2dwt.insert(std::make_pair(temp_results.at(3), temp_results.at(0)));
     //std::cout << "haha2 " << temp_results.at(0) << " " << temp_results.at(1) << " " << temp_results.at(2) << " " << temp_results.at(3) << std::endl;
-  }else if (saved_2dvt.size()==0 && saved_2dwt.size()==0){
+    // V plane check
+    {
+      std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
+      double total_charge = 0;
+      for (auto it1 = saved_2dvt.begin(); it1 != saved_2dvt.end(); it1++){
+	auto it2 = map_2D_vt_charge.find(*it1);
+	if (it2!=map_2D_vt_charge.end()){
+	  ave_pos.first += it1->first * (std::get<0>(it2->second));
+	  ave_pos.second += it1->second * (std::get<0>(it2->second));
+	  total_charge += std::get<0>(it2->second);
+	}
+      }
+      if (total_charge!=0){
+	ave_pos.first /= total_charge;
+	ave_pos.second /= total_charge;
+      }
+      double rms = 0;
+      for (auto it1 = saved_2dvt.begin(); it1 != saved_2dvt.end(); it1++){
+	rms += pow(it1->first-ave_pos.first,2) + pow(it1->second-ave_pos.second,2);
+      }
+      rms = sqrt(rms/saved_2dvt.size());
+
+      if ( sqrt(pow(ave_pos.first - temp_results.at(3),2) + pow(ave_pos.second - temp_results.at(0),2)) > 0.75*rms && saved_2dvt.size() <=5 && saved_2dvt.size() < 0.2 * temp_2dvt.size()){
+	saved_2dvt.clear();
+	saved_2dvt.insert(std::make_pair(temp_results.at(2), temp_results.at(0)));
+	results.at(1) = 0;
+      }
+    }
+  }else if (saved_2dvt.size()==0 && saved_2dwt.size()==0 && saved_2dut.size()!=0){
+    // V and W planes are dead ...
     //temp_2dut = saved_2dut;
     saved_2dvt.insert(std::make_pair(temp_results.at(2), temp_results.at(0)));
     saved_2dwt.insert(std::make_pair(temp_results.at(3), temp_results.at(0)));
     //std::cout << "haha3 " << temp_results.at(0) << " " << temp_results.at(1) << " " << temp_results.at(2) << " " << temp_results.at(3) << std::endl;
+    // U plane check
+    {
+      std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
+      double total_charge = 0;
+      for (auto it1 = saved_2dut.begin(); it1 != saved_2dut.end(); it1++){
+	auto it2 = map_2D_ut_charge.find(*it1);
+	if (it2!=map_2D_ut_charge.end()){
+	  ave_pos.first += it1->first * (std::get<0>(it2->second));
+	  ave_pos.second += it1->second * (std::get<0>(it2->second));
+	  total_charge += std::get<0>(it2->second);
+	}
+      }
+      if (total_charge!=0){
+	ave_pos.first /= total_charge;
+	ave_pos.second /= total_charge;
+      }
+      double rms = 0;
+      for (auto it1 = saved_2dut.begin(); it1 != saved_2dut.end(); it1++){
+	rms += pow(it1->first-ave_pos.first,2) + pow(it1->second-ave_pos.second,2);
+      }
+      rms = sqrt(rms/saved_2dut.size());
+
+      if ( sqrt(pow(ave_pos.first - temp_results.at(3),2) + pow(ave_pos.second - temp_results.at(0),2)) > 0.75*rms && saved_2dut.size() <=5 && saved_2dut.size() < 0.2 * temp_2dut.size()){
+	saved_2dut.clear();
+	saved_2dut.insert(std::make_pair(temp_results.at(1), temp_results.at(0)));
+	results.at(0) = 0;
+      }
+    }
+  }else if (saved_2dut.size()==0 && saved_2dwt.size()!=0 && saved_2dvt.size()!=0){
+    // only U plane is dead ...  one of the other plane is problematic ...
+
+    // W plane check
+    {
+      std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
+      double total_charge = 0;
+      for (auto it1 = saved_2dwt.begin(); it1 != saved_2dwt.end(); it1++){
+	auto it2 = map_2D_wt_charge.find(*it1);
+	if (it2!=map_2D_wt_charge.end()){
+	  ave_pos.first += it1->first * (std::get<0>(it2->second));
+	  ave_pos.second += it1->second * (std::get<0>(it2->second));
+	  total_charge += std::get<0>(it2->second);
+	}
+      }
+      if (total_charge!=0){
+	ave_pos.first /= total_charge;
+	ave_pos.second /= total_charge;
+      }
+      double rms = 0;
+      for (auto it1 = saved_2dwt.begin(); it1 != saved_2dwt.end(); it1++){
+	rms += pow(it1->first-ave_pos.first,2) + pow(it1->second-ave_pos.second,2);
+      }
+      rms = sqrt(rms/saved_2dwt.size());
+
+      if ( sqrt(pow(ave_pos.first - temp_results.at(3),2) + pow(ave_pos.second - temp_results.at(0),2)) > 0.75*rms && saved_2dwt.size() <=5 && saved_2dwt.size() < 0.2 * temp_2dwt.size()){
+	saved_2dwt.clear();
+	saved_2dwt.insert(std::make_pair(temp_results.at(3), temp_results.at(0)));
+	results.at(2) = 0;
+	/* std::cout << sqrt(pow(ave_pos.first - temp_results.at(3),2) + pow(ave_pos.second - temp_results.at(0),2)) << " " << rms << " " << saved_2dwt.size() << " " << temp_2dwt.size() << std::endl; */
+      }
+    }
+
+    // V plane
+    {
+      std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
+      double total_charge = 0;
+      for (auto it1 = saved_2dvt.begin(); it1 != saved_2dvt.end(); it1++){
+	auto it2 = map_2D_vt_charge.find(*it1);
+	if (it2!=map_2D_vt_charge.end()){
+	  ave_pos.first += it1->first * (std::get<0>(it2->second));
+	  ave_pos.second += it1->second * (std::get<0>(it2->second));
+	  total_charge += std::get<0>(it2->second);
+	}
+      }
+      if (total_charge!=0){
+	ave_pos.first /= total_charge;
+	ave_pos.second /= total_charge;
+      }
+      double rms = 0;
+      for (auto it1 = saved_2dvt.begin(); it1 != saved_2dvt.end(); it1++){
+	rms += pow(it1->first-ave_pos.first,2) + pow(it1->second-ave_pos.second,2);
+      }
+      rms = sqrt(rms/saved_2dvt.size());
+
+      if ( sqrt(pow(ave_pos.first - temp_results.at(3),2) + pow(ave_pos.second - temp_results.at(0),2)) > 0.75*rms && saved_2dvt.size() <=5 && saved_2dvt.size() < 0.2 * temp_2dvt.size()){
+	saved_2dvt.clear();
+	saved_2dvt.insert(std::make_pair(temp_results.at(2), temp_results.at(0)));
+	results.at(1) = 0;
+      }
+    }
+    
+  }else if (saved_2dvt.size()==0 && saved_2dut.size()!=0 && saved_2dwt.size()!=0){
+    // only V plane is dead ... one of the other plane is problematic ...
+
+    // U plane
+    {
+      std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
+      double total_charge = 0;
+      for (auto it1 = saved_2dut.begin(); it1 != saved_2dut.end(); it1++){
+	auto it2 = map_2D_ut_charge.find(*it1);
+	if (it2!=map_2D_ut_charge.end()){
+	  ave_pos.first += it1->first * (std::get<0>(it2->second));
+	  ave_pos.second += it1->second * (std::get<0>(it2->second));
+	  total_charge += std::get<0>(it2->second);
+	}
+      }
+      if (total_charge!=0){
+	ave_pos.first /= total_charge;
+	ave_pos.second /= total_charge;
+      }
+      double rms = 0;
+      for (auto it1 = saved_2dut.begin(); it1 != saved_2dut.end(); it1++){
+	rms += pow(it1->first-ave_pos.first,2) + pow(it1->second-ave_pos.second,2);
+      }
+      rms = sqrt(rms/saved_2dut.size());
+
+      if ( sqrt(pow(ave_pos.first - temp_results.at(3),2) + pow(ave_pos.second - temp_results.at(0),2)) > 0.75*rms && saved_2dut.size() <=5 && saved_2dut.size() < 0.2 * temp_2dut.size()){
+	saved_2dut.clear();
+	saved_2dut.insert(std::make_pair(temp_results.at(1), temp_results.at(0)));
+	results.at(0) = 0;
+      }
+    }
+
+    
+    // W plane
+    {
+      std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
+      double total_charge = 0;
+      for (auto it1 = saved_2dwt.begin(); it1 != saved_2dwt.end(); it1++){
+	auto it2 = map_2D_wt_charge.find(*it1);
+	if (it2!=map_2D_wt_charge.end()){
+	  ave_pos.first += it1->first * (std::get<0>(it2->second));
+	  ave_pos.second += it1->second * (std::get<0>(it2->second));
+	  total_charge += std::get<0>(it2->second);
+	}
+      }
+      if (total_charge!=0){
+	ave_pos.first /= total_charge;
+	ave_pos.second /= total_charge;
+      }
+      double rms = 0;
+      for (auto it1 = saved_2dwt.begin(); it1 != saved_2dwt.end(); it1++){
+	rms += pow(it1->first-ave_pos.first,2) + pow(it1->second-ave_pos.second,2);
+      }
+      rms = sqrt(rms/saved_2dwt.size());
+
+      if ( sqrt(pow(ave_pos.first - temp_results.at(3),2) + pow(ave_pos.second - temp_results.at(0),2)) > 0.75*rms && saved_2dwt.size() <=5 && saved_2dwt.size() < 0.2 * temp_2dwt.size()){
+	saved_2dwt.clear();
+	saved_2dwt.insert(std::make_pair(temp_results.at(3), temp_results.at(0)));
+	results.at(2) = 0;
+	/* std::cout << sqrt(pow(ave_pos.first - temp_results.at(3),2) + pow(ave_pos.second - temp_results.at(0),2)) << " " << rms << " " << saved_2dwt.size() << " " << temp_2dwt.size() << std::endl; */
+      }
+    }
+    
+  }else if (saved_2dwt.size()==0 && saved_2dut.size()!=0 && saved_2dvt.size()!=0){
+    // only W plane is dead ... one of the other plane is problematic ...
+
+    // U plane
+    {
+      std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
+      double total_charge = 0;
+      for (auto it1 = saved_2dut.begin(); it1 != saved_2dut.end(); it1++){
+	auto it2 = map_2D_ut_charge.find(*it1);
+	if (it2!=map_2D_ut_charge.end()){
+	  ave_pos.first += it1->first * (std::get<0>(it2->second));
+	  ave_pos.second += it1->second * (std::get<0>(it2->second));
+	  total_charge += std::get<0>(it2->second);
+	}
+      }
+      if (total_charge!=0){
+	ave_pos.first /= total_charge;
+	ave_pos.second /= total_charge;
+      }
+      double rms = 0;
+      for (auto it1 = saved_2dut.begin(); it1 != saved_2dut.end(); it1++){
+	rms += pow(it1->first-ave_pos.first,2) + pow(it1->second-ave_pos.second,2);
+      }
+      rms = sqrt(rms/saved_2dut.size());
+
+      if ( sqrt(pow(ave_pos.first - temp_results.at(3),2) + pow(ave_pos.second - temp_results.at(0),2)) > 0.75*rms && saved_2dut.size() <=5 && saved_2dut.size() < 0.2 * temp_2dut.size()){
+	saved_2dut.clear();
+	saved_2dut.insert(std::make_pair(temp_results.at(1), temp_results.at(0)));
+	results.at(0) = 0;
+      }
+    }
+    
+    // V plane
+    {
+      std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
+      double total_charge = 0;
+      for (auto it1 = saved_2dvt.begin(); it1 != saved_2dvt.end(); it1++){
+	auto it2 = map_2D_vt_charge.find(*it1);
+	if (it2!=map_2D_vt_charge.end()){
+	  ave_pos.first += it1->first * (std::get<0>(it2->second));
+	  ave_pos.second += it1->second * (std::get<0>(it2->second));
+	  total_charge += std::get<0>(it2->second);
+	}
+      }
+      if (total_charge!=0){
+	ave_pos.first /= total_charge;
+	ave_pos.second /= total_charge;
+      }
+      double rms = 0;
+      for (auto it1 = saved_2dvt.begin(); it1 != saved_2dvt.end(); it1++){
+	rms += pow(it1->first-ave_pos.first,2) + pow(it1->second-ave_pos.second,2);
+      }
+      rms = sqrt(rms/saved_2dvt.size());
+
+      if ( sqrt(pow(ave_pos.first - temp_results.at(3),2) + pow(ave_pos.second - temp_results.at(0),2)) > 0.75*rms && saved_2dvt.size() <=5 && saved_2dvt.size() < 0.2 * temp_2dvt.size()){
+	saved_2dvt.clear();
+	saved_2dvt.insert(std::make_pair(temp_results.at(2), temp_results.at(0)));
+	results.at(1) = 0;
+      }
+    }
   }
+  
   
 
   //  std::cout << " " << saved_2dut.size() << " " << saved_2dvt.size() << " " << saved_2dwt.size() << " " << temp_2dut.size() << " " << temp_2dvt.size() << " " << temp_2dwt.size() << std::endl;
