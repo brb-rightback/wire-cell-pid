@@ -573,9 +573,9 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
     MW.insert(k,k) = 1;
   }
 
-  // cal_compact_matrix(MU, RUT, n_2D_u, n_3D_pos);
+  cal_compact_matrix(MU, RUT, n_2D_u, n_3D_pos);
   cal_compact_matrix(MV, RVT, n_2D_v, n_3D_pos);
-  //cal_compact_matrix(MW, RWT, n_2D_w, n_3D_pos);
+  cal_compact_matrix(MW, RWT, n_2D_w, n_3D_pos);
   
   
   
