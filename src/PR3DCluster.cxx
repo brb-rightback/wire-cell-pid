@@ -9,7 +9,7 @@
 #include <boost/graph/connected_components.hpp>
 #include <boost/graph/prim_minimum_spanning_tree.hpp>
 
-#include <Eigen/Sparse>
+
 #include <Eigen/IterativeLinearSolvers>
 
 using namespace WireCell;

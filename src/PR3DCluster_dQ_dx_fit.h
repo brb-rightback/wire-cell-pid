@@ -1,5 +1,88 @@
 #include <Eigen/SVD>
 
+void WireCellPID::PR3DCluster::cal_compact_matrix(Eigen::SparseMatrix<double>& MW, Eigen::SparseMatrix<double>& RWT, int n_2D_w, int n_3D_pos)
+// W plane ...
+{         
+  // initial data ...
+  std::vector<int> count_2D(n_2D_w,1);
+  std::map<int, std::set<int> > map_2D_3D;
+  std::map<int, std::set<int> > map_3D_2D;
+  std::map<std::pair<int, int>, double> map_pair_val;    
+  for (int k=0;k<RWT.outerSize(); ++k){
+    int count = 0;
+    
+    for (Eigen::SparseMatrix<double>::InnerIterator it(RWT,k); it; ++it){
+
+      if (map_2D_3D.find(it.col()) != map_2D_3D.end()){
+	map_2D_3D[it.col()].insert(it.row());
+      }else{
+	std::set<int> temp_set;
+	temp_set.insert(it.row());
+	map_2D_3D[it.col()] = temp_set;
+      }
+      
+      if (map_3D_2D.find(it.row())!=map_3D_2D.end()){
+	map_3D_2D[it.row()].insert(it.col());
+      }else{
+	std::set<int> temp_set;
+	temp_set.insert(it.col());
+	map_3D_2D[it.row()] = temp_set;
+      }
+      
+      map_pair_val[std::make_pair(it.row(), it.col())] = it.value();
+      count ++;
+    }
+    
+    count_2D.at(k) = count;
+
+    /* if (count > 2) */
+    /*   std::cout << k << " " << count << std::endl; */
+    //    if (count>2){
+    // MW.coeffRef(k,k)=pow(1./(count-1.),2);
+    // }
+    
+  }
+  
+  // figure out the 3D count
+  std::vector<std::pair<double,int> > ave_count(n_3D_pos);
+  for (auto it = map_3D_2D.begin(); it!=map_3D_2D.end(); it++){
+    int row = it->first;
+    double sum1 = 0;
+    double sum2 = 0;
+    int flag = 0;
+    for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+      int col = *it1;
+      double val = map_pair_val[std::make_pair(row, col)];
+      sum1 += count_2D[col] * val;
+      sum2 += val;
+      if (count_2D[col] > 2) flag = 1;
+      // std::cout << row << " " << count_2D[col] << " " << val << std::endl;
+    }
+    ave_count.at(row) = std::make_pair(sum1/sum2, flag);
+  }
+  
+  // figure out the 2D count ..
+  for (auto it = map_2D_3D.begin(); it!=map_2D_3D.end(); it++){
+    int col = it->first;
+    double sum1 = 0;
+    double sum2 = 0;
+    int flag = 0;
+    for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+      int row = *it1;
+      double val = map_pair_val[std::make_pair(row, col)];
+      if (ave_count.at(row).second==1) flag = 1;
+      sum1 += ave_count.at(row).first * val;
+      sum2 += val;
+    }
+    if (flag==1 && MW.coeffRef(col,col)==1 && sum1 > 2*sum2){
+      MW.coeffRef(col,col)=pow(1./(sum1/sum2-1.),2);
+      //      std::cout << col << " " << sum1/sum2 << " " << flag << std::endl;
+    }
+  }
+  
+  
+}
+
 double WireCellPID::PR3DCluster::cal_gaus_integral_seg(int tbin, int wbin, std::vector<double>& t_centers, std::vector<double>& t_sigmas, std::vector<double>& w_centers, std::vector<double>& w_sigmas, std::vector<double>& weights, int flag, double nsigma){
   double result = 0;
   double result1 = 0;
@@ -474,14 +557,37 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
       }
     }
   }
+
+
+  // check the compact view, relax the uncertainties ...
+  // A(i,j), i is row, j is column,  One row corresponding to a data point ...
+
+  Eigen::SparseMatrix<double> MU(n_2D_u, n_2D_u), MV(n_2D_v, n_2D_v), MW(n_2D_w, n_2D_w);
+  for (int k=0;k!=n_2D_u;k++){
+    MU.insert(k,k) = 1;
+  }
+  for (int k=0;k!=n_2D_v;k++){
+    MV.insert(k,k) = 1;
+  }
+  for (int k=0;k!=n_2D_w;k++){
+    MW.insert(k,k) = 1;
+  }
+
+  // cal_compact_matrix(MU, RUT, n_2D_u, n_3D_pos);
+  cal_compact_matrix(MV, RVT, n_2D_v, n_3D_pos);
+  //cal_compact_matrix(MW, RWT, n_2D_w, n_3D_pos);
+  
+  
+  
+
   
   double lambda = 0.001;
   FMatrix *= lambda;
   Eigen::SparseMatrix<double> FMatrixT = Eigen::SparseMatrix<double>(FMatrix.transpose());
   
   Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
-  Eigen::VectorXd b = RUT * data_u_2D + RVT * data_v_2D + RWT * data_w_2D;
-  Eigen::SparseMatrix<double> A =  RUT * RU + RVT * RV + RWT * RW + FMatrixT * FMatrix;//
+  Eigen::VectorXd b = RUT * MU * data_u_2D + RVT * MV * data_v_2D + RWT * MW * data_w_2D;
+  Eigen::SparseMatrix<double> A =  RUT * MU * RU + RVT * MV * RV + RWT * MW * RW + FMatrixT * FMatrix;//
   solver.compute(A);
   
   pos_3D = solver.solveWithGuess(b,pos_3D_init);
