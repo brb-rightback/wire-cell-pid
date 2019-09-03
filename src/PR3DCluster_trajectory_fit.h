@@ -558,7 +558,7 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
 		  p.z - fine_tracking_path.at(fine_tracking_path.size()-1).z);
       
       //      if (i==56)
-      // std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << v2.Mag()/units::cm << " " << map_3D_2DU_set[i].second << " " << map_3D_2DV_set[i].second << " " << map_3D_2DW_set[i].second << std::endl;
+      
 
       double angle = v1.Angle(v2)/3.1415926*180.;
 
@@ -574,6 +574,11 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
       // protected against the last point ...
       if (i+1==ps_vec.size() && angle > 45 && v2.Mag() < 0.5*units::cm)
 	continue;
+
+      // short distance ...
+      /* if (v2.Mag() < 0.45*units::cm && angle > 60) */
+      /* 	continue; */
+      // std::cout << i << " " << angle << " " << v2.Mag()/units::cm << " " << map_3D_2DU_set[i].second << " " << map_3D_2DV_set[i].second << " " << map_3D_2DW_set[i].second << " " << offset_t + 0.5 + slope_x * p.x << " " << offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z) << " " << offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z)+2400 << " " << offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z)+4800 << std::endl;
       
     }
     

@@ -1,6 +1,6 @@
 #include <Eigen/SVD>
 
-void WireCellPID::PR3DCluster::cal_compact_matrix(Eigen::SparseMatrix<double>& MW, Eigen::SparseMatrix<double>& RWT, int n_2D_w, int n_3D_pos)
+std::vector<std::pair<double, double> >  WireCellPID::PR3DCluster::cal_compact_matrix(Eigen::SparseMatrix<double>& MW, Eigen::SparseMatrix<double>& RWT, int n_2D_w, int n_3D_pos, double cut_pos)
 // W plane ...
 {         
   // initial data ...
@@ -61,6 +61,7 @@ void WireCellPID::PR3DCluster::cal_compact_matrix(Eigen::SparseMatrix<double>& M
     ave_count.at(row) = std::make_pair(sum1/sum2, flag);
   }
   
+  
   // figure out the 2D count ..
   for (auto it = map_2D_3D.begin(); it!=map_2D_3D.end(); it++){
     int col = it->first;
@@ -74,13 +75,62 @@ void WireCellPID::PR3DCluster::cal_compact_matrix(Eigen::SparseMatrix<double>& M
       sum1 += ave_count.at(row).first * val;
       sum2 += val;
     }
-    if (flag==1 && MW.coeffRef(col,col)==1 && sum1 > 2*sum2){
-      MW.coeffRef(col,col)=pow(1./(sum1/sum2-1.),2);
-      //      std::cout << col << " " << sum1/sum2 << " " << flag << std::endl;
+    if (flag==1 && MW.coeffRef(col,col)==1 && sum1 > cut_pos*sum2){
+      MW.coeffRef(col,col)=pow(1./(sum1/sum2-cut_pos+1),2);
+      //std::cout << col << " " << sum1/sum2 << " " << flag << std::endl;
     }
   }
-  
-  
+
+
+  std::vector<std::pair<double,double> > results(n_3D_pos, std::make_pair(0,0));
+  // figure out the sharing between two nearby points
+  for (auto it = map_3D_2D.begin(); it!=map_3D_2D.end(); it++){
+    int row = it->first;
+    auto it1 = map_3D_2D.find(row-1);
+    auto it2 = map_3D_2D.find(row+1);
+
+    double sum[3]={0,0,0};
+    for (auto it3 = it->second.begin(); it3!=it->second.end(); it3++){
+      int col = *it3;
+      // std::cout << col << " " ;
+      double val = map_pair_val[std::make_pair(row, col)];
+      sum[0] += 1;//val;
+    }
+    // std::cout << std::endl;
+    
+    if (it1!=map_3D_2D.end()){
+      std::vector<int> common_results(it->second.size());
+      {
+	auto it3 = std::set_intersection(it->second.begin(), it->second.end(), it1->second.begin(), it1->second.end(), common_results.begin());
+	common_results.resize(it3-common_results.begin());
+      }
+      for (auto it3 = common_results.begin(); it3!=common_results.end(); it3++){
+	int col = *it3;
+	//	std::cout << col << " ";
+	double val = map_pair_val[std::make_pair(row, col)];
+	sum[1] += 1;//val;
+      }
+      // std::cout << std::endl;
+    }
+    
+    if (it2!=map_3D_2D.end()){
+      std::vector<int> common_results(it->second.size());
+      {
+	auto it3 = std::set_intersection(it->second.begin(), it->second.end(), it2->second.begin(), it2->second.end(), common_results.begin());
+	common_results.resize(it3-common_results.begin());
+      }
+      for (auto it3 = common_results.begin(); it3!=common_results.end(); it3++){
+	int col = *it3;
+	double val = map_pair_val[std::make_pair(row, col)];
+	sum[2] += 1;//val;
+      }
+    }
+    results.at(row).first = sum[1]/sum[0];
+    results.at(row).second = sum[2]/sum[0];
+    //    std::cout << row << " " << sum[1]/sum[0] << " " << sum[2]/sum[0] << std::endl;
+  }
+
+  return results;
 }
 
 double WireCellPID::PR3DCluster::cal_gaus_integral_seg(int tbin, int wbin, std::vector<double>& t_centers, std::vector<double>& t_sigmas, std::vector<double>& w_centers, std::vector<double>& w_sigmas, std::vector<double>& weights, int flag, double nsigma){
@@ -262,6 +312,9 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
   double col_sigma_w_T = 0.188060 * pitch_w*0.2; // units::mm
   double ind_sigma_u_T = 0.402993 * pitch_u*0.3; // units::mm
   double ind_sigma_v_T = 0.402993 * pitch_v*0.5; // units::mm
+
+  double rel_uncer_ind = 0.1;
+  double rel_uncer_col = 0.035;
   
   // this is the longitudinal filters in the time dimension ...
   double add_sigma_L = 1.428249  * time_slice_width / nrebin / 0.5; // units::mm
@@ -297,31 +350,31 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
     int n_u = 0;
     for (auto it = map_2D_ut_charge.begin(); it!= map_2D_ut_charge.end(); it++){
       if (std::get<0>(it->second) > 0)
-	data_u_2D(n_u) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*0.1,2));
+	data_u_2D(n_u) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2));
       else
 	data_u_2D(n_u) = 0;
       if (std::isnan(data_u_2D(n_u)))
-	std::cout << "U: " << data_u_2D(n_u) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*0.035 << " " << std::endl;
+	std::cout << "U: " << data_u_2D(n_u) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*rel_uncer_ind << " " << std::endl;
       n_u ++;
     }
     int n_v = 0;
     for (auto it = map_2D_vt_charge.begin(); it!= map_2D_vt_charge.end(); it++){
       if (std::get<0>(it->second) > 0)
-	data_v_2D(n_v) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*0.1,2));
+	data_v_2D(n_v) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2));
       else
 	data_v_2D(n_v) = 0;
       if (std::isnan(data_v_2D(n_v)))
-	std::cout << "V: " << data_v_2D(n_v) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*0.035 << " " << std::endl;
+	std::cout << "V: " << data_v_2D(n_v) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*rel_uncer_ind << " " << std::endl;
       n_v ++;
     }
     int n_w = 0;
     for (auto it = map_2D_wt_charge.begin(); it!= map_2D_wt_charge.end(); it++){
       if (std::get<0>(it->second)>0)
-	data_w_2D(n_w) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*0.035,2));
+	data_w_2D(n_w) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_col,2));
       else
 	data_w_2D(n_w) = 0;
       if (std::isnan(data_w_2D(n_w)))
-	std::cout << "W: " << data_w_2D(n_w) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*0.035 << " " << std::endl;
+	std::cout << "W: " << data_w_2D(n_w) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*rel_uncer_col << " " << std::endl;
       n_w ++;
     }
   }
@@ -470,9 +523,10 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
       	  fabs(it->first.second - centers_T.front()) <= 10 ){
 	double value = cal_gaus_integral_seg(it->first.second, it->first.first,centers_T, sigmas_T, centers_U, sigmas_U, weights , 0 , 4);
 	sum_u += value;
+	// near dead channels ...
 	if (std::get<2>(it->second)==0) reg_flag_u.at(i) = 1;
 	if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
-	  RU.insert(n_u,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*0.1,2));
+	  RU.insert(n_u,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2));
 	  //  if (i==147) std::cout << "U: " << it->first.first << " " << it->first.second << " " << value << std::endl;
 	}
       }
@@ -486,10 +540,11 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
 	  fabs(it->first.second - centers_T.front()) <= 10 ){
 	double value = cal_gaus_integral_seg(it->first.second, it->first.first + 2400, centers_T, sigmas_T, centers_V, sigmas_V, weights , 0 , 4);
 	sum_v += value;
+	// near dead channels
 	if (std::get<2>(it->second)==0) reg_flag_v.at(i) = 1;
 	if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
 	  // if (i==147) std::cout << "V: " << it->first.first << " " << it->first.second << " " << value << std::endl;
-	  RV.insert(n_v,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*0.1,2));
+	  RV.insert(n_v,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2));
 	}
       }
       n_v ++;
@@ -503,9 +558,10 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
       	  fabs(it->first.second - centers_T.front()) <= 10 ){
 	double value = cal_gaus_integral_seg(it->first.second, it->first.first + 4800,centers_T, sigmas_T, centers_W, sigmas_W, weights , 0 , 4);
 	sum_w += value;
+	// near dead channels ...
 	if (std::get<2>(it->second)==0) reg_flag_w.at(i) = 1;
 	if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
-	  RW.insert(n_w,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*0.035,2));
+	  RW.insert(n_w,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_col,2));
 	  //  if (i==147) std::cout << "W: " << it->first.first << " " << it->first.second << " " << value << std::endl;
 	}
       }
@@ -517,46 +573,6 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
   Eigen::SparseMatrix<double> RUT = Eigen::SparseMatrix<double>(RU.transpose());
   Eigen::SparseMatrix<double> RVT = Eigen::SparseMatrix<double>(RV.transpose());
   Eigen::SparseMatrix<double> RWT = Eigen::SparseMatrix<double>(RW.transpose());
-
-  Eigen::SparseMatrix<double> FMatrix(n_3D_pos, n_3D_pos);
-
-  double reg_cut = 4*units::mm;
-  double ind_weight = 0.2;
-  double col_weight = 1;
-  for (size_t i=0;i!=n_3D_pos;i++){
-    bool flag_u = reg_flag_u.at(i);
-    bool flag_v = reg_flag_v.at(i);
-    bool flag_w = reg_flag_w.at(i);
-    
-    if (n_3D_pos!=1){
-      if (i==0){
-	double weight = 0;
-	if (flag_u) weight += ind_weight;
-	if (flag_v) weight += ind_weight;
-	if (flag_w) weight += col_weight;
-
-	FMatrix.insert(0,0) = -weight; 
-	FMatrix.insert(0,1) = weight;
-      }else if (i==n_3D_pos-1){
-	double weight = 0;
-	if (flag_u) weight += ind_weight;
-	if (flag_v) weight += ind_weight;
-	if (flag_w) weight += col_weight;
-
-	FMatrix.insert(i,i) = -weight; 
-	FMatrix.insert(i,i-1) = weight;
-      }else{
-	double weight = 0;
-	if (flag_u) weight += ind_weight;
-	if (flag_v) weight += ind_weight;
-	if (flag_w) weight += col_weight;
-
-	FMatrix.insert(i,i)=-2.*weight; 
-	FMatrix.insert(i,i+1)=weight; 
-	FMatrix.insert(i,i-1)=weight;
-      }
-    }
-  }
 
 
   // check the compact view, relax the uncertainties ...
@@ -573,15 +589,83 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
     MW.insert(k,k) = 1;
   }
 
-  cal_compact_matrix(MU, RUT, n_2D_u, n_3D_pos);
-  cal_compact_matrix(MV, RVT, n_2D_v, n_3D_pos);
-  cal_compact_matrix(MW, RWT, n_2D_w, n_3D_pos);
+  std::vector<std::pair<double, double> > overlap_u = cal_compact_matrix(MU, RUT, n_2D_u, n_3D_pos,3);
+  std::vector<std::pair<double, double> > overlap_v = cal_compact_matrix(MV, RVT, n_2D_v, n_3D_pos,3); // three wire sharing ...
+  std::vector<std::pair<double, double> > overlap_w = cal_compact_matrix(MW, RWT, n_2D_w, n_3D_pos,2); // two wire sharing  ...
+
+  /* for (size_t i=0;i!=n_3D_pos;i++){ */
+  /*   std::cout << i << " " << (overlap_u.at(i).first + overlap_u.at(i).second)/2. << " " */
+  /* 	      << (overlap_v.at(i).first + overlap_v.at(i).second)/2. << " " */
+  /* 	      << (overlap_w.at(i).first + overlap_w.at(i).second)/2. << " " */
+  /* 	      << MU.coeffRef(i,i) << " " << MV.coeffRef(i,i) << " " << MW.coeffRef(i,i) << std::endl; */
+  /* } */
+  
+  
+  // add regularization ...
+  Eigen::SparseMatrix<double> FMatrix(n_3D_pos, n_3D_pos);
+  
+  
+  double dead_ind_weight = 0.3;
+  double dead_col_weight = 0.9;
+
+  double close_ind_weight = 0.15;
+  double close_col_weight = 0.45;
+  
+  for (size_t i=0;i!=n_3D_pos;i++){
+    bool flag_u = reg_flag_u.at(i);
+    bool flag_v = reg_flag_v.at(i);
+    bool flag_w = reg_flag_w.at(i);
+    
+    if (n_3D_pos!=1){
+      if (i==0){
+	double weight = 0;
+	if (flag_u) weight += dead_ind_weight;
+	if (flag_v) weight += dead_ind_weight;
+	if (flag_w) weight += dead_col_weight;
+
+	if (overlap_u.at(i).second > 0.5) weight += close_ind_weight * pow(2*overlap_u.at(i).second-1,2);
+	if (overlap_v.at(i).second > 0.5) weight += close_ind_weight * pow(2*overlap_v.at(i).second-1,2);
+	if (overlap_w.at(i).second > 0.5) weight += close_col_weight * pow(2*overlap_w.at(i).second-1,2);
+	
+	FMatrix.insert(0,0) = -weight; 
+	FMatrix.insert(0,1) = weight;
+      }else if (i==n_3D_pos-1){
+	double weight = 0;
+	if (flag_u) weight += dead_ind_weight;
+	if (flag_v) weight += dead_ind_weight;
+	if (flag_w) weight += dead_col_weight;
+
+	if (overlap_u.at(i).first > 0.5) weight += close_ind_weight * pow(2*overlap_u.at(i).first-1,2);
+	if (overlap_v.at(i).first > 0.5) weight += close_ind_weight * pow(2*overlap_v.at(i).first-1,2);
+	if (overlap_w.at(i).first > 0.5) weight += close_col_weight * pow(2*overlap_w.at(i).first-1,2);
+	
+	FMatrix.insert(i,i) = -weight; 
+	FMatrix.insert(i,i-1) = weight;
+      }else{
+	double weight = 0;
+	if (flag_u) weight += dead_ind_weight;
+	if (flag_v) weight += dead_ind_weight;
+	if (flag_w) weight += dead_col_weight;
+
+	if (overlap_u.at(i).first + overlap_u.at(i).second > 1) weight += close_ind_weight * pow(overlap_u.at(i).first + overlap_u.at(i).second - 1,2);
+	if (overlap_v.at(i).first + overlap_v.at(i).second > 1) weight += close_ind_weight * pow(overlap_v.at(i).first + overlap_v.at(i).second - 1,2);
+	if (overlap_w.at(i).first + overlap_w.at(i).second > 1) weight += close_col_weight * pow(overlap_w.at(i).first + overlap_w.at(i).second - 1,2);
+	
+	FMatrix.insert(i,i)=-2.*weight; 
+	FMatrix.insert(i,i+1)=weight; 
+	FMatrix.insert(i,i-1)=weight;
+      }
+    }
+  }
+
+
+ 
   
   
   
 
   
-  double lambda = 0.001;
+  double lambda = 0.0005;
   FMatrix *= lambda;
   Eigen::SparseMatrix<double> FMatrixT = Eigen::SparseMatrix<double>(FMatrix.transpose());
   
@@ -623,17 +707,17 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
 
   int n_u = 0;
   for (auto it = map_2D_ut_charge.begin(); it!=map_2D_ut_charge.end(); it++){
-    proj_data_u_map[std::make_pair(it->first.first, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_u_2D(n_u) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*0.1,2)));
+    proj_data_u_map[std::make_pair(it->first.first, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_u_2D(n_u) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2)));
     n_u++;
   }
   int n_v = 0;
   for (auto it = map_2D_vt_charge.begin(); it!=map_2D_vt_charge.end(); it++){
-    proj_data_v_map[std::make_pair(it->first.first+2400, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_v_2D(n_v) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*0.1,2)));
+    proj_data_v_map[std::make_pair(it->first.first+2400, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_v_2D(n_v) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2)));
     n_v++;
   }
   int n_w = 0;
   for (auto it = map_2D_wt_charge.begin(); it!=map_2D_wt_charge.end(); it++){
-    proj_data_w_map[std::make_pair(it->first.first+4800, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_w_2D(n_w) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*0.035,2)));
+    proj_data_w_map[std::make_pair(it->first.first+4800, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_w_2D(n_w) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_col,2)));
     n_w++;
   }
 
