@@ -62,8 +62,8 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
   //  }
   
   trajectory_fit(pts, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
-  		 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
-  		 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+   		 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
+   		 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
 
   
   // for (size_t i=0;i+1!=pts.size();i++){

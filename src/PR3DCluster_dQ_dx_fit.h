@@ -390,6 +390,7 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
 	if (std::get<2>(it->second)==0) reg_flag_u.at(i) = 1;
 	if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
 	  RU.insert(n_u,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*0.1,2));
+	  //  if (i==147) std::cout << "U: " << it->first.first << " " << it->first.second << " " << value << std::endl;
 	}
       }
       n_u ++;
@@ -403,8 +404,10 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
 	double value = cal_gaus_integral_seg(it->first.second, it->first.first + 2400, centers_T, sigmas_T, centers_V, sigmas_V, weights , 0 , 4);
 	sum_v += value;
 	if (std::get<2>(it->second)==0) reg_flag_v.at(i) = 1;
-	if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0)
+	if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
+	  // if (i==147) std::cout << "V: " << it->first.first << " " << it->first.second << " " << value << std::endl;
 	  RV.insert(n_v,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*0.1,2));
+	}
       }
       n_v ++;
     }
@@ -418,8 +421,10 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
 	double value = cal_gaus_integral_seg(it->first.second, it->first.first + 4800,centers_T, sigmas_T, centers_W, sigmas_W, weights , 0 , 4);
 	sum_w += value;
 	if (std::get<2>(it->second)==0) reg_flag_w.at(i) = 1;
-	if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0)
+	if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
 	  RW.insert(n_w,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*0.035,2));
+	  //  if (i==147) std::cout << "W: " << it->first.first << " " << it->first.second << " " << value << std::endl;
+	}
       }
       n_w ++;
     }

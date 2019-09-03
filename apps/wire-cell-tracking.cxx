@@ -588,9 +588,9 @@ int main(int argc, char* argv[])
   
   //std::cout << saved_parent_tpc_cluster_ids.size() << std::endl;
   for (size_t i=0; i!=live_clusters.size();i++){
-    if (live_clusters.at(i)->get_cluster_id()!=32 ) continue;
+    if (live_clusters.at(i)->get_cluster_id() != 80) continue;
     
-    if (live_clusters.at(i)->get_num_points()<=2) continue;
+    if (live_clusters.at(i)->get_num_points() <= 2) continue;
 
     // no matched flash 
     if (map_tpc_flash_ids.find(map_cluster_parent_id[live_clusters.at(i)]) == map_tpc_flash_ids.end()) continue;

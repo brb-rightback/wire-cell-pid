@@ -557,18 +557,28 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
 		  p.y - fine_tracking_path.at(fine_tracking_path.size()-1).y,
 		  p.z - fine_tracking_path.at(fine_tracking_path.size()-1).z);
       
-      //      if (i==88)
-      //	std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << map_3D_2DU_set[i].second << " " << map_3D_2DV_set[i].second << " " << map_3D_2DW_set[i].second << std::endl;
+      //      if (i==56)
+      // std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << v2.Mag()/units::cm << " " << map_3D_2DU_set[i].second << " " << map_3D_2DV_set[i].second << " " << map_3D_2DW_set[i].second << std::endl;
+
+      double angle = v1.Angle(v2)/3.1415926*180.;
+
+      // related to the dead channels
+      if (angle > 45 && ((map_3D_2DU_set[i].second==0 && map_3D_2DV_set[i].second==0) ||
+      					 (map_3D_2DU_set[i].second==0 && map_3D_2DW_set[i].second==0) ||
+					       (map_3D_2DV_set[i].second==0 && map_3D_2DW_set[i].second==0)) )
+        continue;
       
-      /* if (v1.Angle(v2)/3.1415926*180. > 45 && ((map_3D_2DU_set[i].second==0 && map_3D_2DV_set[i].second==0) || */
-      /* 					 (map_3D_2DU_set[i].second==0 && map_3D_2DW_set[i].second==0) || */
-      /* 					 (map_3D_2DV_set[i].second==0 && map_3D_2DW_set[i].second==0))) */
-      /*   continue; */
+      if (angle > 160) // completely fold back ...
+	continue;
+
+      // protected against the last point ...
+      if (i+1==ps_vec.size() && angle > 45 && v2.Mag() < 0.5*units::cm)
+	continue;
       
     }
     
     //    if (i==88)
-    //  std::cout << offset_t + 0.5 + slope_x * p.x << " " << offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z) << " " << offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z)+2400 << " " << offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z)+4800 << std::endl;
+    //    std::cout << i << " " << offset_t + 0.5 + slope_x * p.x << " " << offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z) << " " << offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z)+2400 << " " << offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z)+4800 << std::endl;
     
     fine_tracking_path.push_back(p);
     //fine_tracking_path.push_back(ps_vec.at(i));
@@ -585,7 +595,7 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
 
 
 std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vector<int>& temp_results, std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt,
-								     std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge, double charge_cut){
+								       std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge, bool flag_end_point, double charge_cut){
 
   std::set<int> temp_types_u;
   std::set<int> temp_types_v;
@@ -655,6 +665,7 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vect
     results.at(2) = 0;
   }
 
+  //  std::cout << saved_2dut.size() << " " << saved_2dvt.size() << " " << saved_2dwt.size() << std::endl;
 
   // U and V planes are dead ...
   if (saved_2dut.size()==0 && saved_2dvt.size()==0 && saved_2dwt.size()!=0){
@@ -663,6 +674,7 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vect
     saved_2dvt.insert(std::make_pair(temp_results.at(2), temp_results.at(0)));
     //std::cout << "haha1 " << temp_results.at(0) << " " << temp_results.at(1) << " " << temp_results.at(2) << " " << temp_results.at(3) << std::endl;
     // W plane check
+    if (!flag_end_point)
     {
       std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
       double total_charge = 0;
@@ -698,6 +710,7 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vect
     saved_2dwt.insert(std::make_pair(temp_results.at(3), temp_results.at(0)));
     //std::cout << "haha2 " << temp_results.at(0) << " " << temp_results.at(1) << " " << temp_results.at(2) << " " << temp_results.at(3) << std::endl;
     // V plane check
+    if (!flag_end_point)
     {
       std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
       double total_charge = 0;
@@ -732,6 +745,7 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vect
     saved_2dwt.insert(std::make_pair(temp_results.at(3), temp_results.at(0)));
     //std::cout << "haha3 " << temp_results.at(0) << " " << temp_results.at(1) << " " << temp_results.at(2) << " " << temp_results.at(3) << std::endl;
     // U plane check
+    if (!flag_end_point)
     {
       std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
       double total_charge = 0;
@@ -763,6 +777,7 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vect
     // only U plane is dead ...  one of the other plane is problematic ...
 
     // W plane check
+    if (!flag_end_point)
     {
       std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
       double total_charge = 0;
@@ -788,11 +803,13 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vect
 	saved_2dwt.clear();
 	saved_2dwt.insert(std::make_pair(temp_results.at(3), temp_results.at(0)));
 	results.at(2) = 0;
+	//	std::cout << "haha1 " << std::endl;
 	/* std::cout << sqrt(pow(ave_pos.first - temp_results.at(3),2) + pow(ave_pos.second - temp_results.at(0),2)) << " " << rms << " " << saved_2dwt.size() << " " << temp_2dwt.size() << std::endl; */
       }
     }
 
     // V plane
+    if (!flag_end_point)
     {
       std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
       double total_charge = 0;
@@ -818,6 +835,7 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vect
 	saved_2dvt.clear();
 	saved_2dvt.insert(std::make_pair(temp_results.at(2), temp_results.at(0)));
 	results.at(1) = 0;
+	//	std::cout << "haha2 " << std::endl;
       }
     }
     
@@ -825,6 +843,7 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vect
     // only V plane is dead ... one of the other plane is problematic ...
 
     // U plane
+    if (!flag_end_point)
     {
       std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
       double total_charge = 0;
@@ -855,6 +874,7 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vect
 
     
     // W plane
+    if (!flag_end_point)
     {
       std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
       double total_charge = 0;
@@ -888,6 +908,7 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vect
     // only W plane is dead ... one of the other plane is problematic ...
 
     // U plane
+    if (!flag_end_point)
     {
       std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
       double total_charge = 0;
@@ -917,6 +938,7 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vect
     }
     
     // V plane
+    if (!flag_end_point)
     {
       std::pair<double, double> ave_pos = std::make_pair(0,0); // average positon
       double total_charge = 0;
@@ -1462,8 +1484,12 @@ void WireCellPID::PR3DCluster::form_map(WireCell::ToyCTPointCloud& ct_point_clou
     temp_results.at(3)-=4800;
     
     //    std::cout << i << " ";// << pts.at(i) << " " << temp_results.at(0) << " " << temp_results.at(1) << " " << temp_results.at(2) << " " << temp_results.at(3) << std::endl;
-    
-    std::vector<float> temp_flag = examine_point_association(temp_results, temp_2dut, temp_2dvt, temp_2dwt, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,charge_cut);
+    std::vector<float> temp_flag;
+    if (i==0 || i==1 || i+1 ==pts.size() || i+2 == pts.size()){
+      temp_flag = examine_point_association(temp_results, temp_2dut, temp_2dvt, temp_2dwt, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,true,charge_cut);
+    }else{
+      temp_flag = examine_point_association(temp_results, temp_2dut, temp_2dvt, temp_2dwt, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,false,charge_cut);
+    }
 
     //    std::cout << temp_2dut.size() << " " << temp_2dvt.size() << " " << temp_2dwt.size() << " " << temp_flag.at(0) << " " << temp_flag.at(1) << " " << temp_flag.at(2) << std::endl;
     // just projection ...
