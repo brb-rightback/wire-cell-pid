@@ -546,6 +546,7 @@ void WireCellPID::PR3DCluster::get_projection(std::vector<int>& proj_channel, st
     GeomWireSelection& wwires = mcell->get_wwires();
 
     bool flag_reg_save = true;
+    bool flag_bad_plane = false;
     
     std::vector<WirePlaneType_t> bad_planes = mcell->get_bad_planes();
     if (find(bad_planes.begin(),bad_planes.end(),WirePlaneType_t(0))==bad_planes.end()){
@@ -566,6 +567,7 @@ void WireCellPID::PR3DCluster::get_projection(std::vector<int>& proj_channel, st
 	flag_reg_save = false;
     }else{
       flag_reg_save = false;
+      flag_bad_plane = true;
     }
 
     if (flag_reg_save){
@@ -593,12 +595,17 @@ void WireCellPID::PR3DCluster::get_projection(std::vector<int>& proj_channel, st
 	int charge = mcell->Get_Wire_Charge(wire);
 	int charge_err = mcell->Get_Wire_Charge_Err(wire);
 	
-	if (charge<=0){
+	if (charge<=0 && flag_bad_plane){
 	  charge = mcell->get_q()*1.0/uwires.size();
 	  charge_err = sqrt(pow(charge*0.1,2)+pow(600,2)); // assume 30% error
 	  temp_flag = 0;
 	}
-	 
+
+	if (charge <=0) {
+	  charge = 0;
+	  charge_err = 1000;
+	}
+	
 	//	if(cluster_id==18)
 	//std::cout << ch << " " << time_slice << " " << charge << std::endl;
 	//	if (saved_time_channel.find(std::make_pair(time_slice,ch))==saved_time_channel.end()){
@@ -613,6 +620,7 @@ void WireCellPID::PR3DCluster::get_projection(std::vector<int>& proj_channel, st
     }
     
     flag_reg_save = true;
+    flag_bad_plane = false;
     if (find(bad_planes.begin(),bad_planes.end(),WirePlaneType_t(1))==bad_planes.end()){
       int num_shared_wires = 0;
       for (int i=0;i!=vwires.size();i++){
@@ -631,6 +639,7 @@ void WireCellPID::PR3DCluster::get_projection(std::vector<int>& proj_channel, st
 	flag_reg_save = false;
     }else{
       flag_reg_save = false;
+      flag_bad_plane = true;
     }
 
     
@@ -657,13 +666,16 @@ void WireCellPID::PR3DCluster::get_projection(std::vector<int>& proj_channel, st
 	int temp_flag=1;
 	int charge = mcell->Get_Wire_Charge(wire);
 	int charge_err = mcell->Get_Wire_Charge_Err(wire);
-	if (charge<=0){
+	if (charge<=0 && flag_bad_plane){
 	  charge = mcell->get_q()*1.0/vwires.size();
 	  charge_err = sqrt(pow(charge*0.1,2)+pow(600,2));
 	  temp_flag= 0;
 	}
-	
-	
+
+	if (charge <=0) {
+	  charge = 0;
+	  charge_err = 1000;
+	}
 	
 	//if (saved_time_channel.find(std::make_pair(time_slice,ch))==saved_time_channel.end()){
 	proj_channel.push_back(ch);
@@ -677,6 +689,7 @@ void WireCellPID::PR3DCluster::get_projection(std::vector<int>& proj_channel, st
     }
     
     flag_reg_save = true;
+    flag_bad_plane = false;
     if (find(bad_planes.begin(),bad_planes.end(),WirePlaneType_t(2))==bad_planes.end()){
       int num_shared_wires = 0;
       for (int i=0;i!=wwires.size();i++){
@@ -695,6 +708,7 @@ void WireCellPID::PR3DCluster::get_projection(std::vector<int>& proj_channel, st
 	flag_reg_save = false;
     }else{
       flag_reg_save = false;
+      flag_bad_plane = true;
     }
 
 
@@ -721,10 +735,14 @@ void WireCellPID::PR3DCluster::get_projection(std::vector<int>& proj_channel, st
 	int temp_flag=1;
 	int charge = mcell->Get_Wire_Charge(wire);
 	int charge_err = mcell->Get_Wire_Charge_Err(wire);
-	if (charge<=0){
+	if (charge<=0 && flag_bad_plane){
 	  charge = mcell->get_q()*1.0/wwires.size();
 	  charge_err = sqrt(pow(charge*0.1,2) + pow(100,2));
 	  temp_flag = 0;
+	}
+	if (charge<=0) {
+	  charge = 0;
+	  charge_err = 1000;
 	}
 	//	if (saved_time_channel.find(std::make_pair(time_slice,ch))==saved_time_channel.end()){
 	proj_channel.push_back(ch);

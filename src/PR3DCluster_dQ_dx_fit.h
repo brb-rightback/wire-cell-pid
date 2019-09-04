@@ -524,14 +524,18 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
 	double value = cal_gaus_integral_seg(it->first.second, it->first.first,centers_T, sigmas_T, centers_U, sigmas_U, weights , 0 , 4);
 	sum_u += value;
 	// near dead channels ...
-	if (std::get<2>(it->second)==0) reg_flag_u.at(i) = 1;
+	if (std::get<2>(it->second)==0 && value > 0) reg_flag_u.at(i) = 1;
+	
 	if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
+	  // if (i!=143)
 	  RU.insert(n_u,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2));
-	  //  if (i==147) std::cout << "U: " << it->first.first << " " << it->first.second << " " << value << std::endl;
+	  // if (i==143) std::cout << "U: " << it->first.first << " " << it->first.second << " " << value << std::endl;
 	}
       }
       n_u ++;
     }
+
+    
 
     int n_v = 0;
     double sum_v = 0;
@@ -541,9 +545,15 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
 	double value = cal_gaus_integral_seg(it->first.second, it->first.first + 2400, centers_T, sigmas_T, centers_V, sigmas_V, weights , 0 , 4);
 	sum_v += value;
 	// near dead channels
-	if (std::get<2>(it->second)==0) reg_flag_v.at(i) = 1;
+	if (std::get<2>(it->second)==0 && value > 0) {
+	  // if (i==136) std::cout << it->first.first << " " << it->first.second << std::endl;
+	  reg_flag_v.at(i) = 1;
+	}
+
+	
 	if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
-	  // if (i==147) std::cout << "V: " << it->first.first << " " << it->first.second << " " << value << std::endl;
+	  //	  if (i==136) std::cout << "V: " << it->first.first << " " << it->first.second << " " << value << std::endl;
+	  // if (i!=143)
 	  RV.insert(n_v,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2));
 	}
       }
@@ -559,14 +569,47 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
 	double value = cal_gaus_integral_seg(it->first.second, it->first.first + 4800,centers_T, sigmas_T, centers_W, sigmas_W, weights , 0 , 4);
 	sum_w += value;
 	// near dead channels ...
-	if (std::get<2>(it->second)==0) reg_flag_w.at(i) = 1;
+	if (std::get<2>(it->second)==0 && value > 0) reg_flag_w.at(i) = 1;
+	
+	
+		
+	// relevant && charge > 0 && not dead channel ...
 	if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
+	  // if (i!=143)
 	  RW.insert(n_w,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_col,2));
 	  //  if (i==147) std::cout << "W: " << it->first.first << " " << it->first.second << " " << value << std::endl;
 	}
       }
       n_w ++;
     }
+
+    // additional checks on the dead channels ...
+    if (reg_flag_u.at(i)==0){
+      for (size_t kk = 0; kk!=centers_U.size(); kk++){
+    	if (map_2D_ut_charge.find(std::make_pair(int(centers_U.at(kk)), int(centers_T.at(kk)) ))==map_2D_ut_charge.end()) {
+    	  reg_flag_u.at(i) =1;
+    	  break;
+    	}
+      }
+    }
+    if (reg_flag_v.at(i)==0){
+      for (size_t kk = 0; kk!=centers_V.size(); kk++){
+    	if (map_2D_vt_charge.find(std::make_pair(int(centers_V.at(kk)-2400), int(centers_T.at(kk)) ))==map_2D_vt_charge.end()) {
+	  //if (i==136)  std::cout << centers_V.at(kk) << " " << centers_T.at(kk) << std::endl;
+    	  reg_flag_v.at(i) =1;
+    	  break;
+    	}
+      }
+    }
+    if (reg_flag_w.at(i)==0){
+      for (size_t kk = 0; kk!=centers_W.size(); kk++){
+    	if (map_2D_wt_charge.find(std::make_pair(int(centers_W.at(kk)-4800), int(centers_T.at(kk)) ))==map_2D_wt_charge.end()) {
+    	  reg_flag_w.at(i) =1;
+    	  break;
+    	}
+      }
+    }
+
   }
 
 
@@ -593,12 +636,13 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
   std::vector<std::pair<double, double> > overlap_v = cal_compact_matrix(MV, RVT, n_2D_v, n_3D_pos,3); // three wire sharing ...
   std::vector<std::pair<double, double> > overlap_w = cal_compact_matrix(MW, RWT, n_2D_w, n_3D_pos,2); // two wire sharing  ...
 
-  /* for (size_t i=0;i!=n_3D_pos;i++){ */
+  //  for (size_t i=0;i!=n_3D_pos;i++){
+    //    std::cout << i << " " << reg_flag_u.at(i) << " " << reg_flag_v.at(i) << " " << reg_flag_w.at(i) << std::endl;
   /*   std::cout << i << " " << (overlap_u.at(i).first + overlap_u.at(i).second)/2. << " " */
   /* 	      << (overlap_v.at(i).first + overlap_v.at(i).second)/2. << " " */
   /* 	      << (overlap_w.at(i).first + overlap_w.at(i).second)/2. << " " */
   /* 	      << MU.coeffRef(i,i) << " " << MV.coeffRef(i,i) << " " << MW.coeffRef(i,i) << std::endl; */
-  /* } */
+  //} 
   
   
   // add regularization ...
