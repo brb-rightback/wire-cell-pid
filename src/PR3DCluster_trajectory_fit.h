@@ -304,6 +304,8 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
   pv.clear();
   pw.clear();
   pt.clear();
+
+  WireCell::PointVector temp_fine_tracking_path;
   
   for (size_t i=0;i!=ps_vec.size();i++){
     Point p;
@@ -314,16 +316,53 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
     bool flag_skip = skip_trajectory_point(p, i, ps_vec, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, fine_tracking_path, offset_t, slope_x,  offset_u,  slope_yu,  slope_zu,  offset_v,  slope_yv,  slope_zv,  offset_w, slope_yw,  slope_zw);
     
     if (flag_skip)  continue;
+
+    temp_fine_tracking_path.push_back(ps_vec.at(i));
     
     fine_tracking_path.push_back(p);
     //fine_tracking_path.push_back(ps_vec.at(i));
+    
+    //	std::cout << ps_vec.at(i) << " " << p << " " << sqrt(pow(ps_vec.at(i).x-p.x,2)+pow(ps_vec.at(i).y-p.y,2)+pow(ps_vec.at(i).z-p.z,2))/units::mm <<std::endl;
+  }
+
+  for (size_t i=0; i!=fine_tracking_path.size(); i++){
+    if (i == 0 || i+1 == fine_tracking_path.size()) continue;
+    double a = sqrt(pow(fine_tracking_path.at(i-1).x - fine_tracking_path.at(i).x,2)
+		    +pow(fine_tracking_path.at(i-1).y - fine_tracking_path.at(i).y,2)
+		    +pow(fine_tracking_path.at(i-1).z - fine_tracking_path.at(i).z,2));
+    double b = sqrt(pow(fine_tracking_path.at(i+1).x - fine_tracking_path.at(i).x,2)
+		    +pow(fine_tracking_path.at(i+1).y - fine_tracking_path.at(i).y,2)
+		    +pow(fine_tracking_path.at(i+1).z - fine_tracking_path.at(i).z,2));
+    double c = sqrt(pow(fine_tracking_path.at(i-1).x - fine_tracking_path.at(i+1).x,2)
+		    +pow(fine_tracking_path.at(i-1).y - fine_tracking_path.at(i+1).y,2)
+		    +pow(fine_tracking_path.at(i-1).z - fine_tracking_path.at(i+1).z,2));
+    double s = (a+b+c)/2.;
+    double area1 = sqrt(s*(s-a)*(s-b)*(s-c));
+
+    a = sqrt(pow(fine_tracking_path.at(i-1).x - temp_fine_tracking_path.at(i).x,2)
+		    +pow(fine_tracking_path.at(i-1).y - temp_fine_tracking_path.at(i).y,2)
+		    +pow(fine_tracking_path.at(i-1).z - temp_fine_tracking_path.at(i).z,2));
+    b = sqrt(pow(fine_tracking_path.at(i+1).x - temp_fine_tracking_path.at(i).x,2)
+		    +pow(fine_tracking_path.at(i+1).y - temp_fine_tracking_path.at(i).y,2)
+		    +pow(fine_tracking_path.at(i+1).z - temp_fine_tracking_path.at(i).z,2));
+    s = (a+b+c)/2.;
+    double area2 = sqrt(s*(s-a)*(s-b)*(s-c));
+
+    if (area1 > 1.2*units::mm * c && area1 > 3 * area2)
+      fine_tracking_path.at(i) = temp_fine_tracking_path.at(i);
+      //      std::cout << i << " " << area1/c << " " << area2/c << std::endl;
+    
+  }
+
+  for (size_t i=0; i!=fine_tracking_path.size(); i++){
+    WireCell::Point p = fine_tracking_path.at(i);
     pu.push_back(offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z));
     pv.push_back(offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z)+2400);
     pw.push_back(offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z)+4800);
     pt.push_back(offset_t + 0.5 + slope_x * p.x );
-    //	std::cout << ps_vec.at(i) << " " << p << " " << sqrt(pow(ps_vec.at(i).x-p.x,2)+pow(ps_vec.at(i).y-p.y,2)+pow(ps_vec.at(i).z-p.z,2))/units::mm <<std::endl;
-    
   }
+
+  
   ps_vec = fine_tracking_path;
   
 }
@@ -553,13 +592,28 @@ bool WireCellPID::PR3DCluster::skip_trajectory_point(WireCell::Point& p, int i, 
   /* 	      <<  offset_v + (slope_yv * p.y + slope_zv * p.z) << " " << offset_v + (slope_yv * ps_vec.at(i).y + slope_zv * ps_vec.at(i).z) << std::endl; */
   
   double ratio=0;
-  if (c2_u!=0) ratio += c1_u/c2_u; else ratio += 1;
-  if (c2_v!=0) ratio += c1_v/c2_v; else ratio += 1;
-  if (c2_w!=0) ratio += c1_w/c2_w; else ratio += 1;
-  
+  double ratio_1 = 1;
+  if (c2_u!=0) {
+    ratio += c1_u/c2_u; ratio_1 *= c1_u/c2_u;
+  }else {
+    ratio += 1; 
+  }
+  if (c2_v!=0) {
+    ratio += c1_v/c2_v; ratio_1 *= c1_v/c2_v;
+  }else {
+    ratio += 1;
+  }
+  if (c2_w!=0) {
+    ratio += c1_w/c2_w; ratio_1 *= c1_w/c2_w;
+  }else {
+    ratio += 1;
+  }
+
+  /* if (ratio/3. >= 0.97 && ratio_1 < 1) */
+  /*   std::cout << i << " " << ratio/3. << " " << ratio_1 << std::endl; */
   //      if (i==88) std::cout << ratio/3. << std::endl;
   
-  if (ratio/3. < 0.97){
+  if (ratio/3. < 0.97 || ratio_1 < 0.75){
     // if (c1_u + c1_v + c1_w < (c2_u + c2_v + c2_w)) {
     /* std::cout << i << " " << ratio/3. << " " << (c1_u+c1_v+c1_w)*1./(c2_u + c2_v + c2_w) << " " << c1_u * 1.0/c2_u << " " << c1_v*1.0/c2_v << " " << c1_w*1.0/c2_w << " " << sqrt(pow(p.x-ps_vec.at(i).x,2) + pow(p.y-ps_vec.at(i).y,2) + pow(p.z-ps_vec.at(i).z,2)) << " " */
     /* 	      << u1 << " " << v1 << " " << w1 << " " << t1 << " " << u2 << " " << v2 << " " << w2 << " " << t2 << std::endl;// */
