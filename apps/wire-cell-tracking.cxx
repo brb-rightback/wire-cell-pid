@@ -588,12 +588,12 @@ int main(int argc, char* argv[])
   
   //std::cout << saved_parent_tpc_cluster_ids.size() << std::endl;
   for (size_t i=0; i!=live_clusters.size();i++){
-    if (live_clusters.at(i)->get_cluster_id() != 21
+    // if (live_clusters.at(i)->get_cluster_id() != 34
     	//     	&& live_clusters.at(i)->get_cluster_id() != 2
      	//&& live_clusters.at(i)->get_cluster_id() != 6
      	//&& live_clusters.at(i)->get_cluster_id() != 21 
-	// 	&& live_clusters.at(i)->get_cluster_id() != 80 
-    	) continue;
+    	// 	&& live_clusters.at(i)->get_cluster_id() != 80 
+    // ) continue;
     
     if (live_clusters.at(i)->get_num_points() <= 2) continue;
 

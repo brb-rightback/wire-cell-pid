@@ -326,33 +326,106 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
   }
 
   for (size_t i=0; i!=fine_tracking_path.size(); i++){
-    if (i == 0 || i+1 == fine_tracking_path.size()) continue;
-    double a = sqrt(pow(fine_tracking_path.at(i-1).x - fine_tracking_path.at(i).x,2)
-		    +pow(fine_tracking_path.at(i-1).y - fine_tracking_path.at(i).y,2)
-		    +pow(fine_tracking_path.at(i-1).z - fine_tracking_path.at(i).z,2));
-    double b = sqrt(pow(fine_tracking_path.at(i+1).x - fine_tracking_path.at(i).x,2)
-		    +pow(fine_tracking_path.at(i+1).y - fine_tracking_path.at(i).y,2)
-		    +pow(fine_tracking_path.at(i+1).z - fine_tracking_path.at(i).z,2));
-    double c = sqrt(pow(fine_tracking_path.at(i-1).x - fine_tracking_path.at(i+1).x,2)
-		    +pow(fine_tracking_path.at(i-1).y - fine_tracking_path.at(i+1).y,2)
-		    +pow(fine_tracking_path.at(i-1).z - fine_tracking_path.at(i+1).z,2));
-    double s = (a+b+c)/2.;
-    double area1 = sqrt(s*(s-a)*(s-b)*(s-c));
 
-    a = sqrt(pow(fine_tracking_path.at(i-1).x - temp_fine_tracking_path.at(i).x,2)
-		    +pow(fine_tracking_path.at(i-1).y - temp_fine_tracking_path.at(i).y,2)
-		    +pow(fine_tracking_path.at(i-1).z - temp_fine_tracking_path.at(i).z,2));
-    b = sqrt(pow(fine_tracking_path.at(i+1).x - temp_fine_tracking_path.at(i).x,2)
-		    +pow(fine_tracking_path.at(i+1).y - temp_fine_tracking_path.at(i).y,2)
-		    +pow(fine_tracking_path.at(i+1).z - temp_fine_tracking_path.at(i).z,2));
-    s = (a+b+c)/2.;
-    double area2 = sqrt(s*(s-a)*(s-b)*(s-c));
-
-    if (area1 > 1.2*units::mm * c && area1 > 3 * area2)
-      fine_tracking_path.at(i) = temp_fine_tracking_path.at(i);
-      //      std::cout << i << " " << area1/c << " " << area2/c << std::endl;
+    bool flag_replace = false;
     
+    if (i != 0 && i+1 != fine_tracking_path.size()) {
+      // -1 vs. +1
+      double a = sqrt(pow(fine_tracking_path.at(i-1).x - fine_tracking_path.at(i).x,2)
+		      +pow(fine_tracking_path.at(i-1).y - fine_tracking_path.at(i).y,2)
+		      +pow(fine_tracking_path.at(i-1).z - fine_tracking_path.at(i).z,2));
+      double b = sqrt(pow(fine_tracking_path.at(i+1).x - fine_tracking_path.at(i).x,2)
+		      +pow(fine_tracking_path.at(i+1).y - fine_tracking_path.at(i).y,2)
+		      +pow(fine_tracking_path.at(i+1).z - fine_tracking_path.at(i).z,2));
+      double c = sqrt(pow(fine_tracking_path.at(i-1).x - fine_tracking_path.at(i+1).x,2)
+		      +pow(fine_tracking_path.at(i-1).y - fine_tracking_path.at(i+1).y,2)
+		      +pow(fine_tracking_path.at(i-1).z - fine_tracking_path.at(i+1).z,2));
+      double s = (a+b+c)/2.;
+      double area1 = sqrt(s*(s-a)*(s-b)*(s-c));
+
+      a = sqrt(pow(fine_tracking_path.at(i-1).x - temp_fine_tracking_path.at(i).x,2)
+	       +pow(fine_tracking_path.at(i-1).y - temp_fine_tracking_path.at(i).y,2)
+	       +pow(fine_tracking_path.at(i-1).z - temp_fine_tracking_path.at(i).z,2));
+      b = sqrt(pow(fine_tracking_path.at(i+1).x - temp_fine_tracking_path.at(i).x,2)
+	       +pow(fine_tracking_path.at(i+1).y - temp_fine_tracking_path.at(i).y,2)
+	       +pow(fine_tracking_path.at(i+1).z - temp_fine_tracking_path.at(i).z,2));
+      s = (a+b+c)/2.;
+      double area2 = sqrt(s*(s-a)*(s-b)*(s-c));
+
+      //      std::cout << i << " A " << area1/c << " " << area2/c  << std::endl;
+
+      if (area1 > 1.8*units::mm * c && area1 > 1.7 * area2)
+	flag_replace = true;
+    }
+      
+    // -2, +1
+    if ((!flag_replace) && i>=2 && i+1 != fine_tracking_path.size()){
+      double a = sqrt(pow(fine_tracking_path.at(i-2).x - fine_tracking_path.at(i).x,2)
+		      +pow(fine_tracking_path.at(i-2).y - fine_tracking_path.at(i).y,2)
+		      +pow(fine_tracking_path.at(i-2).z - fine_tracking_path.at(i).z,2));
+      double b = sqrt(pow(fine_tracking_path.at(i+1).x - fine_tracking_path.at(i).x,2)
+		      +pow(fine_tracking_path.at(i+1).y - fine_tracking_path.at(i).y,2)
+		      +pow(fine_tracking_path.at(i+1).z - fine_tracking_path.at(i).z,2));
+      double c = sqrt(pow(fine_tracking_path.at(i-2).x - fine_tracking_path.at(i+1).x,2)
+		      +pow(fine_tracking_path.at(i-2).y - fine_tracking_path.at(i+1).y,2)
+		      +pow(fine_tracking_path.at(i-2).z - fine_tracking_path.at(i+1).z,2));
+      double s = (a+b+c)/2.;
+      double area1 = sqrt(s*(s-a)*(s-b)*(s-c));
+
+      a = sqrt(pow(fine_tracking_path.at(i-2).x - temp_fine_tracking_path.at(i).x,2)
+	       +pow(fine_tracking_path.at(i-2).y - temp_fine_tracking_path.at(i).y,2)
+	       +pow(fine_tracking_path.at(i-2).z - temp_fine_tracking_path.at(i).z,2));
+      b = sqrt(pow(fine_tracking_path.at(i+1).x - temp_fine_tracking_path.at(i).x,2)
+	       +pow(fine_tracking_path.at(i+1).y - temp_fine_tracking_path.at(i).y,2)
+	       +pow(fine_tracking_path.at(i+1).z - temp_fine_tracking_path.at(i).z,2));
+      s = (a+b+c)/2.;
+      double area2 = sqrt(s*(s-a)*(s-b)*(s-c));
+      //std::cout << i << " B " << area1/c << " " << area2/c  << std::endl;
+      if (area1 > 1.8*units::mm * c && area1 > 1.7 * area2)
+	flag_replace = true;	
+     
+      
+    }
+    
+    
+    // -1, +2
+    if ((!flag_replace) && i>0 && i+2<fine_tracking_path.size()){
+      double a = sqrt(pow(fine_tracking_path.at(i-1).x - fine_tracking_path.at(i).x,2)
+		      +pow(fine_tracking_path.at(i-1).y - fine_tracking_path.at(i).y,2)
+		      +pow(fine_tracking_path.at(i-1).z - fine_tracking_path.at(i).z,2));
+      double b = sqrt(pow(fine_tracking_path.at(i+2).x - fine_tracking_path.at(i).x,2)
+		      +pow(fine_tracking_path.at(i+2).y - fine_tracking_path.at(i).y,2)
+		      +pow(fine_tracking_path.at(i+2).z - fine_tracking_path.at(i).z,2));
+      double c = sqrt(pow(fine_tracking_path.at(i-1).x - fine_tracking_path.at(i+2).x,2)
+		      +pow(fine_tracking_path.at(i-1).y - fine_tracking_path.at(i+2).y,2)
+		      +pow(fine_tracking_path.at(i-1).z - fine_tracking_path.at(i+2).z,2));
+      double s = (a+b+c)/2.;
+      double area1 = sqrt(s*(s-a)*(s-b)*(s-c));
+
+      a = sqrt(pow(fine_tracking_path.at(i-1).x - temp_fine_tracking_path.at(i).x,2)
+	       +pow(fine_tracking_path.at(i-1).y - temp_fine_tracking_path.at(i).y,2)
+	       +pow(fine_tracking_path.at(i-1).z - temp_fine_tracking_path.at(i).z,2));
+      b = sqrt(pow(fine_tracking_path.at(i+2).x - temp_fine_tracking_path.at(i).x,2)
+	       +pow(fine_tracking_path.at(i+2).y - temp_fine_tracking_path.at(i).y,2)
+	       +pow(fine_tracking_path.at(i+2).z - temp_fine_tracking_path.at(i).z,2));
+      s = (a+b+c)/2.;
+      double area2 = sqrt(s*(s-a)*(s-b)*(s-c));
+
+      //      std::cout << i << " C " << area1/c << " " << area2/c  << std::endl;
+      
+      if (area1 > 1.8*units::mm * c && area1 > 1.7 * area2)
+	flag_replace = true;
+    }
+
+    
+    if (flag_replace){
+      fine_tracking_path.at(i) = temp_fine_tracking_path.at(i);
+      //      std::cout << i << std::endl;
+    }
+    // if (area1 > area2 && area1 > 1.0*units::mm * c)
+    // std::cout << i << " " << area1/c << " " << area2/c << std::endl;
   }
+  
 
   for (size_t i=0; i!=fine_tracking_path.size(); i++){
     WireCell::Point p = fine_tracking_path.at(i);
@@ -594,23 +667,38 @@ bool WireCellPID::PR3DCluster::skip_trajectory_point(WireCell::Point& p, int i, 
   double ratio=0;
   double ratio_1 = 1;
   if (c2_u!=0) {
-    ratio += c1_u/c2_u; ratio_1 *= c1_u/c2_u;
+    ratio += c1_u/c2_u;
+    if (c1_u!=0)
+      ratio_1 *= c1_u/c2_u;
+    else
+      ratio_1 *= 0.25;
+    //    std::cout << i << " " << c1_u << " " << c2_u << std::endl;
   }else {
     ratio += 1; 
   }
   if (c2_v!=0) {
-    ratio += c1_v/c2_v; ratio_1 *= c1_v/c2_v;
+    ratio += c1_v/c2_v;
+    if (c1_v!=0)
+      ratio_1 *= c1_v/c2_v;
+    else
+      ratio_1 *= 0.25;
+    //std::cout << i << " " << c1_v << " " << c2_v << std::endl;
   }else {
     ratio += 1;
   }
   if (c2_w!=0) {
-    ratio += c1_w/c2_w; ratio_1 *= c1_w/c2_w;
+    ratio += c1_w/c2_w;
+    if (c1_w!=0)
+      ratio_1 *= c1_w/c2_w;
+    else
+      ratio_1 *= 0.25;
+    //    std::cout << i << " " << c1_w << " " << c2_w << std::endl;
   }else {
     ratio += 1;
   }
 
   /* if (ratio/3. >= 0.97 && ratio_1 < 1) */
-  /*   std::cout << i << " " << ratio/3. << " " << ratio_1 << std::endl; */
+  //  std::cout << i << " " << ratio/3. << " " << ratio_1 << std::endl; 
   //      if (i==88) std::cout << ratio/3. << std::endl;
   
   if (ratio/3. < 0.97 || ratio_1 < 0.75){
