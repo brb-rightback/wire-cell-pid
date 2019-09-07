@@ -1843,7 +1843,8 @@ void WireCellPID::PR3DCluster::organize_ps_path(WireCell::PointVector& pts, doub
   for (size_t i=0;i!=ps_vec.size(); i++){
     Point p1 = ps_vec.at(i);
     double dis = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));
-    
+
+    // std::cout << i << " " << dis/units::cm << " " << low_dis_limit/units::cm << std::endl;
     if (dis < low_dis_limit * 0.8 ){
       continue;
     }else if (dis < low_dis_limit * 1.6){
@@ -1880,7 +1881,7 @@ void WireCellPID::PR3DCluster::organize_ps_path(WireCell::PointVector& pts, doub
   }else{
     Point p1 = ps_vec.back();
     double dis1 = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));
-    if (dis1 > 0.3*units::cm)
+    if (dis1 >= 0.45*units::cm)
       pts.push_back(p1);
   }
   
