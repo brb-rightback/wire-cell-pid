@@ -743,6 +743,8 @@ int main(int argc, char* argv[])
   t_rec_charge->Branch("pv",&pv,"pv/D");
   t_rec_charge->Branch("pw",&pw,"pw/D");
   t_rec_charge->Branch("pt",&pt,"pt/D");
+  Double_t reduced_chi2;
+  t_rec_charge->Branch("reduced_chi2",&reduced_chi2,"reduced_chi2/D");
   
   TTree *T_proj_data = new TTree("T_proj_data","T_proj_data");
   std::vector<int> *proj_data_cluster_id = new std::vector<int>;
@@ -829,6 +831,7 @@ int main(int argc, char* argv[])
     std::vector<double>& tpv = cluster->get_pv();
     std::vector<double>& tpw = cluster->get_pw();
     std::vector<double>& tpt = cluster->get_pt();
+    std::vector<double>& Vreduced_chi2 = cluster->get_reduced_chi2();
     //hack for now 
     // for (auto it = pts.begin(); it!=pts.end(); it++){
     //   dQ.push_back(0);
@@ -869,6 +872,7 @@ int main(int argc, char* argv[])
       pv = tpv.at(i);
       pw = tpw.at(i);
       pt = tpt.at(i);
+      reduced_chi2 = Vreduced_chi2.at(i);
       t_rec_charge->Fill();
     }
     

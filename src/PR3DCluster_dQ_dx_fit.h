@@ -380,7 +380,7 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
 	std::cout << "W: " << data_w_2D(n_w) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*rel_uncer_col << " " << std::endl;
 
 
-      std::cout << "W: " << data_w_2D(n_w) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*rel_uncer_col << " " << std::endl;
+      //      std::cout << "W: " << data_w_2D(n_w) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*rel_uncer_col << " " << std::endl;
       
       n_w ++;
     }
@@ -774,7 +774,7 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
 
 
   // label the data comparison ...
-  
+  reduced_chi2.clear();
   for (int k=0;k!=RU.outerSize(); ++k){
     double sum[3] = {0,0,0};
     double sum1[3] = {0,0,0};
@@ -795,7 +795,8 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
       //      std::cout << it.value() << " " << it.row() << " " << it.col() << std::endl;
       sum1[2] += (it.value()*pos_3D(k))/pred_data_w_2D(it.row());
     }
-    std::cout << "Xin: " << cluster_id << " " << k << " " << sum[0] << " " << sum[1] << " " << sum[2] << " " << sum1[0] << " " << sum1[1] << " " << sum1[2] << " " <<  (fine_tracking_path.at(k).x - time_slice_width /( nrebin * 0.5*units::microsecond) * flash_time)/units::cm << " " <<  fine_tracking_path.at(k).y/units::cm << " " <<  fine_tracking_path.at(k).z/units::cm << std::endl;
+    reduced_chi2.push_back(sqrt((sum[0] + sum[1] + sum[2]/4.)/(sum1[0]+sum1[1]+sum1[2])));
+    //    std::cout << "Xin: " << cluster_id << " " << k << " " << sum[0] << " " << sum[1] << " " << sum[2] << " " << sum1[0] << " " << sum1[1] << " " << sum1[2] << " " <<  (fine_tracking_path.at(k).x - time_slice_width /( nrebin * 0.5*units::microsecond) * flash_time)/units::cm << " " <<  fine_tracking_path.at(k).y/units::cm << " " <<  fine_tracking_path.at(k).z/units::cm << std::endl;
   }
   
   

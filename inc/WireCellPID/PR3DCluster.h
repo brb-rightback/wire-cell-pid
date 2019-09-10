@@ -145,7 +145,8 @@ namespace WireCellPID{
     std::vector<double>& get_pv(){return pv;};
     std::vector<double>& get_pw(){return pw;};
     std::vector<double>& get_pt(){return pt;};
-
+    std::vector<double>& get_reduced_chi2(){return reduced_chi2;};
+    
     // main function to do the overall tracking, 
     void do_tracking(WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, double time = 4*units::microsecond);
     // organize path from the shortest path 
@@ -241,6 +242,7 @@ namespace WireCellPID{
     std::vector<double> pv;
     std::vector<double> pw;
     std::vector<double> pt;
+    std::vector<double> reduced_chi2;
 
     std::map<std::pair<int,int>, std::tuple<double,double,double> > proj_data_u_map;
     std::map<std::pair<int,int>, std::tuple<double,double,double> > proj_data_v_map;
