@@ -313,8 +313,11 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
   double ind_sigma_u_T = 0.402993 * pitch_u*0.3; // units::mm
   double ind_sigma_v_T = 0.402993 * pitch_v*0.5; // units::mm
 
-  double rel_uncer_ind = 0.1;
-  double rel_uncer_col = 0.035;
+  double rel_uncer_ind = 0.075; // original 0.1
+  double rel_uncer_col = 0.05; // original 0.035
+
+  double add_uncer_ind = 0.0;
+  double add_uncer_col = 300.0; // if 800 can reach balance with induction planes ...
   
   // this is the longitudinal filters in the time dimension ...
   double add_sigma_L = 1.428249  * time_slice_width / nrebin / 0.5; // units::mm
@@ -350,7 +353,7 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
     int n_u = 0;
     for (auto it = map_2D_ut_charge.begin(); it!= map_2D_ut_charge.end(); it++){
       if (std::get<0>(it->second) > 0)
-	data_u_2D(n_u) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2));
+	data_u_2D(n_u) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2) + pow(add_uncer_ind,2));
       else
 	data_u_2D(n_u) = 0;
       if (std::isnan(data_u_2D(n_u)))
@@ -360,7 +363,7 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
     int n_v = 0;
     for (auto it = map_2D_vt_charge.begin(); it!= map_2D_vt_charge.end(); it++){
       if (std::get<0>(it->second) > 0)
-	data_v_2D(n_v) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2));
+	data_v_2D(n_v) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2) + pow(add_uncer_ind,2));
       else
 	data_v_2D(n_v) = 0;
       if (std::isnan(data_v_2D(n_v)))
@@ -370,11 +373,15 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
     int n_w = 0;
     for (auto it = map_2D_wt_charge.begin(); it!= map_2D_wt_charge.end(); it++){
       if (std::get<0>(it->second)>0)
-	data_w_2D(n_w) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_col,2));
+	data_w_2D(n_w) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_col,2) + pow(add_uncer_col,2));
       else
 	data_w_2D(n_w) = 0;
       if (std::isnan(data_w_2D(n_w)))
 	std::cout << "W: " << data_w_2D(n_w) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*rel_uncer_col << " " << std::endl;
+
+
+      std::cout << "W: " << data_w_2D(n_w) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*rel_uncer_col << " " << std::endl;
+      
       n_w ++;
     }
   }
@@ -528,7 +535,7 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
 	
 	if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
 	  // if (i!=143)
-	  RU.insert(n_u,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2));
+	  RU.insert(n_u,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2) + pow(add_uncer_ind,2));
 	  // if (i==143) std::cout << "U: " << it->first.first << " " << it->first.second << " " << value << std::endl;
 	}
       }
@@ -554,7 +561,7 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
 	if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
 	  //	  if (i==136) std::cout << "V: " << it->first.first << " " << it->first.second << " " << value << std::endl;
 	  // if (i!=143)
-	  RV.insert(n_v,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2));
+	  RV.insert(n_v,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2) + pow(add_uncer_ind,2));
 	}
       }
       n_v ++;
@@ -576,7 +583,7 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
 	// relevant && charge > 0 && not dead channel ...
 	if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
 	  // if (i!=143)
-	  RW.insert(n_w,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_col,2));
+	  RW.insert(n_w,i) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_col,2) + pow(add_uncer_col,2));
 	  //  if (i==147) std::cout << "W: " << it->first.first << " " << it->first.second << " " << value << std::endl;
 	}
       }
@@ -751,20 +758,45 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
 
   int n_u = 0;
   for (auto it = map_2D_ut_charge.begin(); it!=map_2D_ut_charge.end(); it++){
-    proj_data_u_map[std::make_pair(it->first.first, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_u_2D(n_u) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2)));
+    proj_data_u_map[std::make_pair(it->first.first, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_u_2D(n_u) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2)+pow(add_uncer_ind,2)));
     n_u++;
   }
   int n_v = 0;
   for (auto it = map_2D_vt_charge.begin(); it!=map_2D_vt_charge.end(); it++){
-    proj_data_v_map[std::make_pair(it->first.first+2400, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_v_2D(n_v) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2)));
+    proj_data_v_map[std::make_pair(it->first.first+2400, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_v_2D(n_v) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2) + pow(add_uncer_ind,2)));
     n_v++;
   }
   int n_w = 0;
   for (auto it = map_2D_wt_charge.begin(); it!=map_2D_wt_charge.end(); it++){
-    proj_data_w_map[std::make_pair(it->first.first+4800, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_w_2D(n_w) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_col,2)));
+    proj_data_w_map[std::make_pair(it->first.first+4800, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_w_2D(n_w) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_col,2)+pow(add_uncer_col,2)));
     n_w++;
   }
 
+
+  // label the data comparison ...
+  
+  for (int k=0;k!=RU.outerSize(); ++k){
+    double sum[3] = {0,0,0};
+    double sum1[3] = {0,0,0};
+    for (Eigen::SparseMatrix<double>::InnerIterator it(RU,k); it; ++it){
+      sum[0] += pow(data_u_2D(it.row()) - pred_data_u_2D(it.row()),2) * (it.value() * pos_3D(k) )/pred_data_u_2D(it.row());
+      //      std::cout << it.value() << " " << it.row() << " " << it.col() << std::endl;
+      sum1[0] += (it.value() * pos_3D(k) )/pred_data_u_2D(it.row());
+    }
+
+    for (Eigen::SparseMatrix<double>::InnerIterator it(RV,k); it; ++it){
+      sum[1] += pow(data_v_2D(it.row()) - pred_data_v_2D(it.row()),2) * (it.value() * pos_3D(k))/pred_data_v_2D(it.row());
+      //      std::cout << it.value() << " " << it.row() << " " << it.col() << std::endl;
+      sum1[1] += (it.value() * pos_3D(k))/pred_data_v_2D(it.row());
+    }
+
+    for (Eigen::SparseMatrix<double>::InnerIterator it(RW,k); it; ++it){
+      sum[2] += pow(data_w_2D(it.row()) - pred_data_w_2D(it.row()),2) * (it.value() * pos_3D(k))/pred_data_w_2D(it.row());
+      //      std::cout << it.value() << " " << it.row() << " " << it.col() << std::endl;
+      sum1[2] += (it.value()*pos_3D(k))/pred_data_w_2D(it.row());
+    }
+    std::cout << "Xin: " << cluster_id << " " << k << " " << sum[0] << " " << sum[1] << " " << sum[2] << " " << sum1[0] << " " << sum1[1] << " " << sum1[2] << " " <<  (fine_tracking_path.at(k).x - time_slice_width /( nrebin * 0.5*units::microsecond) * flash_time)/units::cm << " " <<  fine_tracking_path.at(k).y/units::cm << " " <<  fine_tracking_path.at(k).z/units::cm << std::endl;
+  }
   
   
   
