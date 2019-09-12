@@ -1917,7 +1917,10 @@ WireCell::PointVector WireCellPID::PR3DCluster::organize_wcps_path(std::list<WCP
   for (size_t i=0;i!=temp_wcps_vec.size(); i++){
     Point p1(temp_wcps_vec.at(i).x, temp_wcps_vec.at(i).y, temp_wcps_vec.at(i).z);
 
-    double dis = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));
+    
+    double dis = low_dis_limit;
+    if (pts.size()>0)
+      dis = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));
 
 
     

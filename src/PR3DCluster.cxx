@@ -36,8 +36,9 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
   // first round of organizing the path from the path_wcps (shortest path)
   double low_dis_limit = 1.2*units::cm;
   double end_point_limit = 0.6*units::cm;
+  //std::cout << path_wcps.size() << std::endl;
   PointVector pts = organize_wcps_path(path_wcps,low_dis_limit, end_point_limit); 
-
+  //std::cout << pts.size() << std::endl;
   
   // for (size_t i=0;i+1!=pts.size();i++){
   //  std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
