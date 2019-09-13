@@ -49,9 +49,15 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
   double first_u_dis = mp.get_first_u_dis();
   double first_v_dis = mp.get_first_v_dis();
   double first_w_dis = mp.get_first_w_dis();
+
+  /* for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){ */
+  /*   std::cout  << " " << it->mcell << std::endl; */
+  /* } */
   
   double slope_x = 1./time_slice_width;
-  double first_t_dis = path_wcps.front().mcell->GetTimeSlice()*time_slice_width - path_wcps.front().x;
+  //mcell
+  double first_t_dis = point_cloud->get_cloud().pts[0].mcell->GetTimeSlice()*time_slice_width - point_cloud->get_cloud().pts[0].x;
+    //  double first_t_dis = path_wcps.front().mcell->GetTimeSlice()*time_slice_width - path_wcps.front().x;
   double offset_t = first_t_dis / time_slice_width;
 
   //  convert Z to W ... 
