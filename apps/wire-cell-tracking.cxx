@@ -588,12 +588,12 @@ int main(int argc, char* argv[])
   
   //std::cout << saved_parent_tpc_cluster_ids.size() << std::endl;
   for (size_t i=0; i!=live_clusters.size();i++){
-    // if (live_clusters.at(i)->get_cluster_id() !=65
-    // // 	//     	&& live_clusters.at(i)->get_cluster_id() != 2
-    // //  	//&& live_clusters.at(i)->get_cluster_id() != 6
-    // //  	//&& live_clusters.at(i)->get_cluster_id() != 21 
-    // // 	// 	&& live_clusters.at(i)->get_cluster_id() != 80 
-    // 	) continue;
+    // if (live_clusters.at(i)->get_cluster_id() !=70
+    // 	//     	&& live_clusters.at(i)->get_cluster_id() != 2
+    //  	//&& live_clusters.at(i)->get_cluster_id() != 6
+    //  	//&& live_clusters.at(i)->get_cluster_id() != 21 
+    // 	// 	&& live_clusters.at(i)->get_cluster_id() != 80 
+    //  	) continue;
     
     if (live_clusters.at(i)->get_num_points() <= 2) continue;
 
@@ -780,6 +780,15 @@ int main(int argc, char* argv[])
       // std::cout << wcps.second.x/units::cm << " " << wcps.second.y/units::cm << " " << wcps.second.z/units::cm << std::endl;
       new_cluster->dijkstra_shortest_paths(wcps.first,2); 
       new_cluster->cal_shortest_path(wcps.second,2);
+
+      // std::cout << new_cluster->get_path_wcps().front().x/units::cm << " " << new_cluster->get_path_wcps().front().y/units::cm << " " << new_cluster->get_path_wcps().front().z/units::cm << std::endl;
+
+      // std::cout << new_cluster->get_path_wcps().back().x/units::cm << " " << new_cluster->get_path_wcps().back().y/units::cm << " " << new_cluster->get_path_wcps().back().z/units::cm << std::endl;
+
+      // for (auto it3 = new_cluster->get_path_wcps().begin(); it3!=new_cluster->get_path_wcps().end(); it3++){
+      // 	std::cout << it3->x/units::cm << " " << it3->y/units::cm << " " << it3->z/units::cm << std::endl;
+      // }
+      
       // not enough points ...
       if (new_cluster->get_path_wcps().size()<2) continue;
     }

@@ -312,6 +312,8 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
   pt.clear();
 
   WireCell::PointVector temp_fine_tracking_path;
+
+  int skip_count = 0;
   
   for (size_t i=0;i!=ps_vec.size();i++){
     Point p;
@@ -320,9 +322,16 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
     p.z = pos_3D(3*i+2);
 
     bool flag_skip = skip_trajectory_point(p, i, ps_vec, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, fine_tracking_path, offset_t, slope_x,  offset_u,  slope_yu,  slope_zu,  offset_v,  slope_yv,  slope_zv,  offset_w, slope_yw,  slope_zw);
-    
-    if (flag_skip)  continue;
 
+    // protection ...
+    if (flag_skip){
+      skip_count ++;
+      if (skip_count <=3)
+	continue;
+      else
+	skip_count = 0;
+    }
+    
     temp_fine_tracking_path.push_back(ps_vec.at(i));
     
     fine_tracking_path.push_back(p);
@@ -331,6 +340,8 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
     //	std::cout << ps_vec.at(i) << " " << p << " " << sqrt(pow(ps_vec.at(i).x-p.x,2)+pow(ps_vec.at(i).y-p.y,2)+pow(ps_vec.at(i).z-p.z,2))/units::mm <<std::endl;
   }
 
+  //  std::cout << fine_tracking_path.size() << " " << ps_vec.size() << std::endl;
+  
   for (size_t i=0; i!=fine_tracking_path.size(); i++){
 
     bool flag_replace = false;
@@ -726,9 +737,17 @@ bool WireCellPID::PR3DCluster::skip_trajectory_point(WireCell::Point& p, int i, 
 		p.z - fine_tracking_path.at(fine_tracking_path.size()-1).z);
     
     //      if (i==56)
-    
+
+    TVector3 v3(ps_vec.at(i-1).x - ps_vec.at(i-2).x, ps_vec.at(i-1).y - ps_vec.at(i-2).y, ps_vec.at(i-1).z - ps_vec.at(i-2).z);
+    TVector3 v4(ps_vec.at(i).x - ps_vec.at(i-1).x, ps_vec.at(i).y - ps_vec.at(i-1).y, ps_vec.at(i).z - ps_vec.at(i-1).z);
+
+    double angle1 = v3.Angle(v4)/3.1415926*180.;
+
     
     double angle = v1.Angle(v2)/3.1415926*180.;
+
+    //    std::cout << i << " " << angle << " " << angle1 << " " << map_3D_2DU_set[i].second << " " << map_3D_2DV_set[i].second << " " << map_3D_2DW_set[i].second << std::endl;
+
     
     // related to the dead channels
     if (angle > 45 && ((map_3D_2DU_set[i].second==0 && map_3D_2DV_set[i].second==0) ||
@@ -736,9 +755,10 @@ bool WireCellPID::PR3DCluster::skip_trajectory_point(WireCell::Point& p, int i, 
 		       (map_3D_2DV_set[i].second==0 && map_3D_2DW_set[i].second==0)) )
       return true;
     
-    if (angle > 160) // completely fold back ...
+    if (angle > 160 || angle > angle1 + 90) {
+      // completely fold back ...
       return true;
-    
+    }
     // protected against the last point ...
     if (i+1==ps_vec.size() && angle > 45 && v2.Mag() < 0.5*units::cm)
       return true;
