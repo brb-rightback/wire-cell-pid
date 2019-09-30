@@ -637,6 +637,20 @@ int main(int argc, char* argv[])
 	(*it1)->recover_steiner_graph();
       }
     }
+
+    // holder ...
+    if (main_cluster->get_point_cloud_steiner()!=0){
+      if (main_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
+	std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = main_cluster->get_two_boundary_wcps(2); 
+	main_cluster->dijkstra_shortest_paths(wcps.first,2); 
+	main_cluster->cal_shortest_path(wcps.second,2);
+      }
+      if (main_cluster->get_path_wcps().size()>=2){
+	main_cluster->collect_charge_trajectory(ct_point_cloud);
+	main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+      }
+    }
+    
     // if STM
     event_type |= 1UL << 5;
     
