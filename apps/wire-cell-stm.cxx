@@ -165,6 +165,7 @@ int main(int argc, char* argv[])
   std::map<int, std::pair<int, double> > map_flash_info;
   std::map<int, int> map_flash_tpc_ids;
   std::map<int, int> map_tpc_flash_ids;
+  std::map<std::pair<int, int>, int> map_flash_tpc_pair_type;
   
   
   for (int i=0;i!=T_flash->GetEntries();i++){
@@ -176,6 +177,7 @@ int main(int argc, char* argv[])
     if (flash_id==-1) continue;
     map_flash_tpc_ids[flash_id] = tpc_cluster_id;
     map_tpc_flash_ids[tpc_cluster_id] = flash_id;
+    map_flash_tpc_pair_type[std::make_pair(flash_id, tpc_cluster_id)] = event_type;
   }
   
 
@@ -263,8 +265,9 @@ int main(int argc, char* argv[])
   //  CellIndexMap map_mcell_cluster_id;
   WireCellPID::PR3DClusterSelection live_clusters;
   WireCellPID::PR3DCluster *cluster;
-  std::map<WireCellPID::PR3DCluster*, int> map_cluster_parent_id;
-  std::map<int, std::vector<WireCellPID::PR3DCluster*> > map_parentid_clusters;
+  std::map<WireCellPID::PR3DCluster*, int> map_cluster_parent_id; // cluster to main cluster
+  std::map<int, std::vector<WireCellPID::PR3DCluster*> > map_parentid_clusters; // main cluster to clusters
+
   int prev_cluster_id=-1;
   int ident = 0;
   TC->GetEntry(0);
@@ -591,33 +594,58 @@ int main(int argc, char* argv[])
  
   
 
-  
- 
-  // for (size_t i=0; i!=live_clusters.size();i++){
-  //   if (live_clusters.at(i)->get_num_points() <= 2) continue;
-  //   // no matched flash 
-  //   if (map_tpc_flash_ids.find(map_cluster_parent_id[live_clusters.at(i)]) == map_tpc_flash_ids.end()) continue;
-  //   double flash_time = map_flash_info[map_tpc_flash_ids[map_cluster_parent_id[live_clusters.at(i)]]].second;
-  //   if (flag_in_time_only && (flash_time < lowerwindow || flash_time > upperwindow)) continue;
-  //   if (flag_main_cluster_only){
-  //     if (live_clusters.at(i)->get_cluster_id() == map_cluster_parent_id[live_clusters.at(i)]){
-  // 	live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-  //     live_clusters.at(i)->recover_steiner_graph();
-  //     }
-  //   }else{
-  //     live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-  //     live_clusters.at(i)->recover_steiner_graph();
-  //   }
-  // }
-  // cout << em("Build graph for all clusters") << std::endl;
-  
-  
   TFile *file1 = new TFile(Form("stm_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
   Trun->CloneTree(-1,"fast");
   if (T_bad_ch!=0){
      T_bad_ch->CloneTree(-1,"fast");
   }
 
+
+  
+  TTree *T_match1 = new TTree("T_match","T_match");
+  T_match1->SetDirectory(file1);
+  Int_t ncluster;
+  T_match1->Branch("tpc_cluster_id",&ncluster,"tpc_cluster_id/I");
+  T_match1->Branch("flash_id",&flash_id,"flash_id/I");
+  T_match1->Branch("event_type",&event_type,"event_type/I");
+  Double_t flash_time;
+  T_match1->Branch("flash_time",&flash_time,"flash_time/D");
+  
+  for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
+    flash_time = map_flash_info[it->first].second;
+    if (flag_in_time_only && (flash_time < lowerwindow || flash_time > upperwindow)) continue;
+
+    event_type = 0;
+    ncluster = it->second;
+    flash_id = it->first;
+    
+    double offset_x = (flash_time - time_offset)*2./nrebin*time_slice_width;
+    std::vector<WireCellPID::PR3DCluster*> temp_clusters = map_parentid_clusters[it->second];
+    WireCellPID::PR3DCluster* main_cluster = 0;
+    for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
+      if ((*it1)->get_cluster_id() == it->second){
+	main_cluster = *it1;
+	break;
+      }
+    }
+    if (flag_main_cluster_only){
+      main_cluster->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+      main_cluster->recover_steiner_graph();
+    }else{
+      for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
+	(*it1)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+	(*it1)->recover_steiner_graph();
+      }
+    }
+    // std::cout << it->first << " " << flash_time << " " << it->second << " " << main_cluster << std::endl;
+    T_match1->Fill();
+  }
+  T_match1->Write();
+  cout << em("STM tagger") << std::endl;
+  
+  
+  
+  
   if (flag_debug_output){
     TTree *T_cluster ;
     Double_t x,y,z,q,nq;
@@ -752,7 +780,7 @@ int main(int argc, char* argv[])
 	T_rec->Fill();
       }
     }
-    cout << em("shortest path ...") << std::endl;
+    //    cout << em("shortest path ...") << std::endl;
     
     for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
       WireCellPID::PR3DCluster* cluster = *it;
