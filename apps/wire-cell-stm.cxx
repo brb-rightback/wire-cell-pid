@@ -761,19 +761,6 @@ int main(int argc, char* argv[])
     for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
       
       WireCellPID::PR3DCluster* new_cluster = *it;
-      if (new_cluster->get_point_cloud_steiner()==0) continue;
-      // if (new_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
-      // 	std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps(2); 
-      // 	new_cluster->dijkstra_shortest_paths(wcps.first,2); 
-      // 	new_cluster->cal_shortest_path(wcps.second,2);
-	
-      // 	// not enough points ...
-      // 	if (new_cluster->get_path_wcps().size()<2) continue;
-      // }
-      // new_cluster->collect_charge_trajectory(ct_point_cloud);
-      // double flash_time = map_flash_info[map_tpc_flash_ids[map_cluster_parent_id[*it]]].second;
-      // new_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
-      
       ndf_save = new_cluster->get_cluster_id();
       charge_save = 0;
       ncharge_save = 0;
