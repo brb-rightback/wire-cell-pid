@@ -616,6 +616,11 @@ int main(int argc, char* argv[])
     if (flag_in_time_only && (flash_time < lowerwindow || flash_time > upperwindow)) continue;
 
     event_type = map_flash_tpc_pair_type[std::make_pair(it->first, it->second)];
+
+    int flag_tgm = (event_type >> 3) & 1U;
+    int flag_low_energy = (event_type >> 4) & 1U;
+    int flag_lm = (event_type >> 1) & 1U;
+    
     ncluster = it->second;
     flash_id = it->first;
     
@@ -628,31 +633,33 @@ int main(int argc, char* argv[])
 	break;
       }
     }
-    if (flag_main_cluster_only){
-      main_cluster->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-      main_cluster->recover_steiner_graph();
-    }else{
-      for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
-	(*it1)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-	(*it1)->recover_steiner_graph();
-      }
-    }
 
-    // holder ...
-    if (main_cluster->get_point_cloud_steiner()!=0){
-      if (main_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
-	std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = main_cluster->get_two_boundary_wcps(2); 
-	main_cluster->dijkstra_shortest_paths(wcps.first,2); 
-	main_cluster->cal_shortest_path(wcps.second,2);
+    if (flag_tgm == 0 && flag_low_energy == 0 && flag_lm ==0){
+      if (flag_main_cluster_only){
+	main_cluster->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+	main_cluster->recover_steiner_graph();
+      }else{
+	for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
+	  (*it1)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+	  (*it1)->recover_steiner_graph();
+	}
       }
-      if (main_cluster->get_path_wcps().size()>=2){
-	main_cluster->collect_charge_trajectory(ct_point_cloud);
-	main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+      
+      // holder ...
+      if (main_cluster->get_point_cloud_steiner()!=0){
+	if (main_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
+	  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = main_cluster->get_two_boundary_wcps(2); 
+	  main_cluster->dijkstra_shortest_paths(wcps.first,2); 
+	  main_cluster->cal_shortest_path(wcps.second,2);
+	}
+	if (main_cluster->get_path_wcps().size()>=2){
+	  main_cluster->collect_charge_trajectory(ct_point_cloud);
+	  main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+	}
       }
+      // if STM
+      event_type |= 1UL << 5;
     }
-    
-    // if STM
-    event_type |= 1UL << 5;
     
     // std::cout << it->first << " " << flash_time << " " << it->second << " " << main_cluster << std::endl;
     T_match1->Fill();

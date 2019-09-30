@@ -24,17 +24,13 @@ namespace WireCellPID{
 
     void set_offset_t(double value){offset_t=value;};
     
-    //    bool check_neutrino_candidate(WireCell::PR3DCluster *main_cluster, WireCell::WCPointCloud<double>::WCPoint& wcp1 ,WireCell::WCPointCloud<double>::WCPoint& wcp2, double offset_x, WireCell::ToyCTPointCloud& ct_point_cloud, bool flag_2view_check = true);
+    
     bool inside_fiducial_volume(WireCell::Point& p, double offset_x=0);
     bool inside_dead_region(WireCell::Point& p);
     bool check_dead_volume(WireCell::Point& p, TVector3& dir, double step = 1.0*units::cm, double offset_x=0);
     
     bool check_signal_processing(WireCell::Point& p, TVector3& dir, WireCell::ToyCTPointCloud& ct_point_cloud, double step = 1.0*units::cm, double offset_x=0);
-
-    /* bool check_tgm(WireCell::FlashTPCBundle *bundle, double offset_x, WireCell::ToyCTPointCloud& ct_point_cloud,std::map<WireCell::PR3DCluster*, WireCell::PR3DCluster*>& old_new_cluster_map, int flag = 1); */
     
-    /* bool check_fully_contained(WireCell::FlashTPCBundle *bundle, double offset_x, WireCell::ToyCTPointCloud& ct_point_cloud,std::map<WireCell::PR3DCluster*, WireCell::PR3DCluster*>& old_new_cluster_map, unsigned int* fail_mode=nullptr, int flag = 1); */
-
     bool check_stm(WireCellPID::PR3DCluster* cluster, double offset_x, double flash_time);
     
     void AddDeadRegion(WireCell::SlimMergeGeomCell* mcell, std::vector<int>& time_slices);
