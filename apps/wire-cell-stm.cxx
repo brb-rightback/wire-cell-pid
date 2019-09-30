@@ -615,7 +615,7 @@ int main(int argc, char* argv[])
     flash_time = map_flash_info[it->first].second;
     if (flag_in_time_only && (flash_time < lowerwindow || flash_time > upperwindow)) continue;
 
-    event_type = 0;
+    event_type = map_flash_tpc_pair_type[std::make_pair(it->first, it->second)];
     ncluster = it->second;
     flash_id = it->first;
     
@@ -637,15 +637,15 @@ int main(int argc, char* argv[])
 	(*it1)->recover_steiner_graph();
       }
     }
+    // if STM
+    event_type |= 1UL << 5;
+    
     // std::cout << it->first << " " << flash_time << " " << it->second << " " << main_cluster << std::endl;
     T_match1->Fill();
   }
   T_match1->Write();
   cout << em("STM tagger") << std::endl;
-  
-  
-  
-  
+    
   if (flag_debug_output){
     TTree *T_cluster ;
     Double_t x,y,z,q,nq;
