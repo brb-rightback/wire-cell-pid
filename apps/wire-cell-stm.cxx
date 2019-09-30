@@ -386,15 +386,19 @@ int main(int argc, char* argv[])
   TDC->GetEntry(0);
   for (int i=0;i!=cluster_id_vec->size();i++){
     int cluster_id = cluster_id_vec->at(i);
+    SlimMergeGeomCell *mcell = new SlimMergeGeomCell(ident);
     std::vector<int> time_slices = time_slices_vec->at(i);
     std::vector<int> wire_index_u = wire_index_u_vec->at(i);
     std::vector<int> wire_index_v = wire_index_v_vec->at(i);
     std::vector<int> wire_index_w = wire_index_w_vec->at(i);
+
+    mcell->SetTimeSlice(time_slices.at(0));
     
     double temp_x1 = (time_slices.front()*nrebin/2.*unit_dis/10. - frame_length/2.*unit_dis/10.) * units::cm;
     double temp_x2 = (time_slices.back()*nrebin/2.*unit_dis/10. - frame_length/2.*unit_dis/10.) * units::cm;
     
     if (flag_u_vec->at(i)==0){
+      mcell->add_bad_planes(WirePlaneType_t(0));
       for (int j=0;j!=nwire_u_vec->at(i);j++){
 	if (dead_u_index.find(wire_index_u.at(j))==dead_u_index.end()){
 	  dead_u_index[wire_index_u.at(j)] = std::make_pair(temp_x1-0.1*units::cm,temp_x2+0.1*units::cm);
@@ -408,6 +412,7 @@ int main(int argc, char* argv[])
       }
     }
     if (flag_v_vec->at(i)==0){
+      mcell->add_bad_planes(WirePlaneType_t(1));
       for (int j=0;j!=nwire_v_vec->at(i);j++){
 	if (dead_v_index.find(wire_index_v.at(j))==dead_v_index.end()){
 	  dead_v_index[wire_index_v.at(j)] = std::make_pair(temp_x1-0.1*units::cm,temp_x2+0.1*units::cm);
@@ -421,6 +426,7 @@ int main(int argc, char* argv[])
       }
     }
     if (flag_w_vec->at(i)==0){
+      mcell->add_bad_planes(WirePlaneType_t(2));
       for (int j=0;j!=nwire_w_vec->at(i);j++){
 	if (dead_w_index.find(wire_index_w.at(j))==dead_w_index.end()){
 	  dead_w_index[wire_index_w.at(j)] = std::make_pair(temp_x1-0.1*units::cm,temp_x2+0.1*units::cm);
@@ -433,6 +439,19 @@ int main(int argc, char* argv[])
 	}
       }
     }
+    for (int j=0;j!=nwire_u_vec->at(i);j++){
+      const GeomWire *wire = gds.by_planeindex(WirePlaneType_t(0),wire_index_u.at(j));
+      mcell->AddWire(wire,WirePlaneType_t(0));
+    }
+    for (int j=0;j!=nwire_v_vec->at(i);j++){
+      const GeomWire *wire = gds.by_planeindex(WirePlaneType_t(1),wire_index_v.at(j));
+      mcell->AddWire(wire,WirePlaneType_t(1));
+    }
+    for (int j=0;j!=nwire_w_vec->at(i);j++){
+      const GeomWire *wire = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.at(j));
+      mcell->AddWire(wire,WirePlaneType_t(2));
+    }
+    fid->AddDeadRegion(mcell,time_slices);
     ident++;
   }
  
@@ -556,6 +575,9 @@ int main(int argc, char* argv[])
   
   double first_t_dis = live_clusters.at(0)->get_mcells().front()->GetTimeSlice()*time_slice_width - live_clusters.at(0)->get_mcells().front()->get_sampling_points().front().x;
   double offset_t = first_t_dis/time_slice_width;
+
+  // test the fiducial volume cut 
+  fid->set_offset_t(offset_t);
   
   ToyCTPointCloud ct_point_cloud(0,2399,2400,4799,4800,8255, // channel range
 				 offset_t, -first_u_dis/pitch_u, -first_v_dis/pitch_v, -first_w_dis/pitch_w, // offset
