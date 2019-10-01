@@ -11,6 +11,7 @@
 #include "WireCellPID/PR3DCluster.h"
 
 #include "TVector3.h"
+#include "TGraph.h"
 
 #include <vector>
 #include <map>

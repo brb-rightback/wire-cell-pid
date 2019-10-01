@@ -49,14 +49,20 @@ void WireCellPID::PR3DCluster::do_stm_crawl(WireCell::WCPointCloud<double>::WCPo
 
   
   //std::cout << first_wcp.x << " " << first_wcp.y << " " << first_wcp.z << " " << curr_wcp.x << " " << curr_wcp.y << " " << curr_wcp.z << std::endl;
-    
-  //Find the shortest path between first and middle point
-  dijkstra_shortest_paths(first_wcp,2);
-  cal_shortest_path(curr_wcp,2);
 
-  //If middle point is far away from last_wcp, find the shortest path
   double dis = sqrt(pow(curr_wcp.x-last_wcp.x,2) + pow(curr_wcp.y-last_wcp.y,2) + pow(curr_wcp.z-last_wcp.z,2));
-  if (dis > 1*units::cm){
+  // Find the shortest path between first and middle point
+  
+  // If middle point is far away from last_wcp, find the shortest path
+  if (dis < 1*units::cm){
+    
+    dijkstra_shortest_paths(first_wcp,2);
+    cal_shortest_path(last_wcp,2);
+
+  }else{
+    dijkstra_shortest_paths(first_wcp,2);
+    cal_shortest_path(curr_wcp,2);
+
     std::list<WireCell::WCPointCloud<double>::WCPoint> temp_path_wcps = path_wcps;
 
     dijkstra_shortest_paths(curr_wcp,2);
@@ -84,16 +90,17 @@ void WireCellPID::PR3DCluster::do_stm_crawl(WireCell::WCPointCloud<double>::WCPo
     path_wcps = temp_path_wcps;
     
     
-  }
   
-  for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
-    std::cout << (*it).x << " " << (*it).y << " " << (*it).z << std::endl;
-    
-    if (path_mcells.size()==0){
-      path_mcells.push_back( (*it).mcell);
-    }else{
-      if ( (*it).mcell!=path_mcells.back())
+  
+    for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
+      //std::cout << (*it).x << " " << (*it).y << " " << (*it).z << std::endl;
+      
+      if (path_mcells.size()==0){
 	path_mcells.push_back( (*it).mcell);
+      }else{
+	if ( (*it).mcell!=path_mcells.back())
+	  path_mcells.push_back( (*it).mcell);
+      }
     }
   }
        
