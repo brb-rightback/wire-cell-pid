@@ -121,7 +121,7 @@ WireCellPID::ToyFiducial::ToyFiducial(int dead_region_ch_ext, double offset_t, d
 }
 
 
-bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster, double offset_x, double flash_time, WireCell::ToyCTPointCloud& ct_point_cloud){
+bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster, double offset_x, double flash_time, WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map){
 
   TVector3 drift_dir(1,0,0);
   // hard coded for U and V plane ... 
@@ -236,9 +236,9 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   if (temp_set.size()==2) flag_double_end = true;
   main_cluster->do_stm_crawl(first_wcp, last_wcp);
   
-  
   // fitting trajectory and dQ/dx...
-
+  main_cluster->collect_charge_trajectory(ct_point_cloud);
+  main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
   
   // STM identification
   

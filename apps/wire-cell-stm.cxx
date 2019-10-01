@@ -658,7 +658,7 @@ int main(int argc, char* argv[])
       // 	}
       // }
       // if STM
-      if (fid->check_stm(main_cluster, offset_x, flash_time, ct_point_cloud))
+      if (fid->check_stm(main_cluster, offset_x, flash_time, ct_point_cloud, global_wc_map))
 	event_type |= 1UL << 5;
     }
     
