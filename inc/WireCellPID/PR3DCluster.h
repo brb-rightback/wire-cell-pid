@@ -186,7 +186,8 @@ namespace WireCellPID{
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & get_proj_data_u_map(){return proj_data_u_map;};
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & get_proj_data_v_map(){return proj_data_v_map;};
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & get_proj_data_w_map(){return proj_data_w_map;};
-
+    // crawl alg for stm
+    void do_stm_crawl(WireCell::WCPointCloud<double>::WCPoint& first_wcp, WireCell::WCPointCloud<double>::WCPoint& last_wcp);
     
   protected:
     

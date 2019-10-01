@@ -218,17 +218,30 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     }
   }
 
-  if (temp_set.size()==0) return false;
   // It is possible that we have two points out of fiducial
   // Michel electron is outside the boundary ...
-
+  if (temp_set.size()==0) return false;
   
   // Crawl backward according to the graph ??? ...
+  WCPointCloud<double>::WCPoint first_wcp;
+  WCPointCloud<double>::WCPoint last_wcp;
+  bool flag_double_end = false;
+  if (*temp_set.begin()==0){
+    first_wcp = wcps.first;
+    last_wcp = wcps.second;
+  }else{
+    first_wcp = wcps.second;
+    last_wcp = wcps.first;
+  }
+  if (temp_set.size()==2) flag_double_end = true;
+  main_cluster->do_stm_crawl(first_wcp, last_wcp);
   
   
   // fitting trajectory and dQ/dx...
- 
+
+  
   // STM identification
+  
   
   return false;
 }

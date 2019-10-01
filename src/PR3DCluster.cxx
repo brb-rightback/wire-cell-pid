@@ -19,6 +19,7 @@ using namespace WireCell;
 #include "PR3DCluster_path.h"
 #include "PR3DCluster_trajectory_fit.h"
 #include "PR3DCluster_dQ_dx_fit.h"
+#include "PR3DCluster_crawl.h"
 
 void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double time){
 
