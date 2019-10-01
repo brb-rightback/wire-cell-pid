@@ -256,11 +256,11 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   std::vector<double> dQ_dx(pts.size(),0);
   double dis = 0;
   L.at(0) = dis;
-  dQ_dx.at(0) = dQ.at(0)/(dx.at(0)+1e-9);
+  dQ_dx.at(0) = dQ.at(0)/(dx.at(0)/units::cm+1e-9);
   for (size_t i=1;i!=pts.size();i++){
     dis += sqrt(pow(pts.at(i).x-pts.at(i-1).x,2) + pow(pts.at(i).y-pts.at(i-1).y,2) + pow(pts.at(i).z - pts.at(i-1).z,2));
     L.at(i) = dis;
-    dQ_dx.at(i) = dQ.at(i)/(dx.at(i)+1e-9);
+    dQ_dx.at(i) = dQ.at(i)/(dx.at(i)/units::cm+1e-9);
   }
   //std::cout << L.size() << " " << dQ.size() << " " << dx.size() << std::endl;
   double end_L = L.back();
