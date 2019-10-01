@@ -12,6 +12,7 @@
 
 #include "TVector3.h"
 #include "TGraph.h"
+#include "TFile.h"
 
 #include <vector>
 #include <map>
@@ -81,6 +82,13 @@ namespace WireCellPID{
     double angle_u, angle_v, angle_w;
 
     int dead_region_ch_ext;
+
+    TFile *file;
+    TGraph *g_muon;
+    TGraph *g_pion;
+    TGraph *g_kaon;
+    TGraph *g_proton;
+    TGraph *g_electron;
     
   };
 }

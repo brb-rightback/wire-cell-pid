@@ -37,6 +37,14 @@ WireCellPID::ToyFiducial::ToyFiducial(int dead_region_ch_ext, double offset_t, d
   , m_cathode(cathode)
 {
 
+  file = new TFile("./input_data_files/stopping_ave_dQ_dx.root");
+  g_muon = (TGraph*)file->Get("muon");
+  g_pion = (TGraph*)file->Get("pion");
+  g_kaon = (TGraph*)file->Get("kaon");
+  g_proton = (TGraph*)file->Get("proton");
+  g_electron = (TGraph*)file->Get("electron");
+  
+  
   if (flag_data){
     std::cout << "Data Reco Fiducial Volume! " << std::endl;
     // data 
@@ -240,8 +248,100 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   main_cluster->collect_charge_trajectory(ct_point_cloud);
   main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
   
-  // STM identification
+  // STM identification with KS test ...
+  WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
+  std::vector<double>& dQ = main_cluster->get_dQ();
+  std::vector<double>& dx = main_cluster->get_dx();
+  std::vector<double> L(pts.size(),0);
+  std::vector<double> dQ_dx(pts.size(),0);
+  double dis = 0;
+  L.at(0) = dis;
+  dQ_dx.at(0) = dQ.at(0)/(dx.at(0)+1e-9);
+  for (size_t i=1;i!=pts.size();i++){
+    dis += sqrt(pow(pts.at(i).x-pts.at(i-1).x,2) + pow(pts.at(i).y-pts.at(i-1).y,2) + pow(pts.at(i).z - pts.at(i-1).z,2));
+    L.at(i) = dis;
+    dQ_dx.at(i) = dQ.at(i)/(dx.at(i)+1e-9);
+  }
+  //std::cout << L.size() << " " << dQ.size() << " " << dx.size() << std::endl;
+  double end_L = L.back();
+  double max_bin = -1;
+  double max_sum = 0;
+  for (size_t i=0;i!=L.size();i++){
+    double sum = 0;
+    double nsum = 0;
+    double temp_max_bin = i;
+    double temp_max_val = dQ_dx.at(i);
+    if (L.at(i) < end_L + 0.5*units::cm && L.at(i) > end_L - 40*units::cm){
+      sum += dQ_dx.at(i); nsum ++;
+      if (i>=2){
+	sum += dQ_dx.at(i-2); nsum++;
+	if (dQ_dx.at(i-2) > temp_max_val){
+	  temp_max_val = dQ_dx.at(i-2);
+	  temp_max_bin = i-2;
+	}
+      }
+      if (i>=1){
+	sum += dQ_dx.at(i-1); nsum++;
+	if (dQ_dx.at(i-1) > temp_max_val){
+	  temp_max_val = dQ_dx.at(i-1);
+	  temp_max_bin = i-1;
+	}
+      }
+      if (i+1<L.size()){
+	sum += dQ_dx.at(i+1); nsum++;
+	if (dQ_dx.at(i+1) > temp_max_val){
+	  temp_max_val = dQ_dx.at(i+1);
+	  temp_max_bin = i+1;
+	}
+      }
+      if (i+2<L.size()){
+	sum += dQ_dx.at(i+2); nsum++;
+	if (dQ_dx.at(i+2) > temp_max_val){
+	  temp_max_val = dQ_dx.at(i+2);
+	  temp_max_bin = i+2;
+	}
+      }
+      sum /= nsum;
+      if (sum>max_sum){
+	max_sum = sum;
+	max_bin = temp_max_bin;
+      }
+    }
+  }
+  //std::cout << max_bin << " " << max_sum << std::endl;
+  end_L = L.at(max_bin)+0.5*units::cm;
+  int ncount = 0;
+  std::vector<double> vec_x;
+  std::vector<double> vec_y;
+  for (size_t i=0;i!=L.size(); i++){
+    if (end_L - L.at(i) < 35*units::cm && end_L - L.at(i) > 0){
+      vec_x.push_back(end_L-L.at(i));
+      vec_y.push_back(dQ_dx.at(i));
+      ncount ++;
+    }
+  }
+
+  TH1F *h1 = new TH1F("h1","h1",ncount,0,ncount);
+  TH1F *h2 = new TH1F("h2","h2",ncount,0,ncount);
+  TH1F *h3 = new TH1F("h3","h3",ncount,0,ncount);
+
+  for (size_t i=0;i!=ncount;i++){
+    h1->SetBinContent(i+1,vec_y.at(i));
+    h2->SetBinContent(i+1,g_muon->Eval(vec_x.at(i)/units::cm));
+    h3->SetBinContent(i+1,50e3);
+  }
+  double ks1 = h2->KolmogorovTest(h1,"M");
+  double ratio1 = h2->GetSum()/(h1->GetSum()+1e-9);
+  double ks2 = h3->KolmogorovTest(h1,"M");
+  double ratio2 = h3->GetSum()/(h1->GetSum()+1e-9);
   
+  delete h1;
+  delete h2;
+  delete h3;
+  //std::cout << ncount << std::endl;
+
+  std::cout << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << std::endl;
+  if (ks1-ks2<-0.02) return true;
   
   return false;
 }
@@ -338,6 +438,13 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
 
 
 WireCellPID::ToyFiducial::~ToyFiducial(){
+  delete g_muon;
+  delete g_pion;
+  delete g_proton;
+  delete g_kaon;
+  delete g_electron;
+  delete file;
+		 
 }
 
 bool WireCellPID::ToyFiducial::check_signal_processing(WireCell::Point& p, TVector3& dir, WireCell::ToyCTPointCloud& ct_point_cloud, double step, double offset_x){
