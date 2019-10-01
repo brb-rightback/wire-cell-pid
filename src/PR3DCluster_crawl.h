@@ -58,15 +58,37 @@ void WireCellPID::PR3DCluster::do_stm_crawl(WireCell::WCPointCloud<double>::WCPo
   double dis = sqrt(pow(curr_wcp.x-last_wcp.x,2) + pow(curr_wcp.y-last_wcp.y,2) + pow(curr_wcp.z-last_wcp.z,2));
   if (dis > 1*units::cm){
     std::list<WireCell::WCPointCloud<double>::WCPoint> temp_path_wcps = path_wcps;
+
     dijkstra_shortest_paths(curr_wcp,2);
     cal_shortest_path(last_wcp,2);
+
+    auto it1 = temp_path_wcps.rbegin();
+    int count = 0;
     for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
-      if (it == path_wcps.begin()) continue;
+      if ( (*it).index==(*it1).index){
+	count ++;
+	it1++;
+      }
+    }
+    for (int i=0;i!=count;i++){
+      if (i!=count-1){
+	temp_path_wcps.pop_back();
+      }
+      path_wcps.pop_front();
+    }
+
+    for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
       temp_path_wcps.push_back(*it);
     }
+
     path_wcps = temp_path_wcps;
+    
+    
   }
+  
   for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
+    std::cout << (*it).x << " " << (*it).y << " " << (*it).z << std::endl;
+    
     if (path_mcells.size()==0){
       path_mcells.push_back( (*it).mcell);
     }else{
