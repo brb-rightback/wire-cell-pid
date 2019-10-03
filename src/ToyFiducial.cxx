@@ -210,13 +210,19 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     }
   }
 
+ 
+  
   // fully contained, so not a STM
   if (candidate_exit_wcps.size()==0) return false;
+
+  //std::cout << wcps.first.x << " " <<wcps.first.y << " " << wcps.first.z << std::endl;
   
   std::set<int> temp_set;
   for (size_t i=0; i!=candidate_exit_wcps.size(); i++){
-    double dis1 = pow(candidate_exit_wcps.at(i).x - wcps.first.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.first.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.first.z,2);
-    double dis2 = pow(candidate_exit_wcps.at(i).x - wcps.second.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.second.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.second.z,2);
+    double dis1 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.first.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.first.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.first.z,2));
+    double dis2 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.second.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.second.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.second.z,2));
+
+    //    std::cout << dis1 << " " << dis2 << std::endl;
     
     // essentially one of the extreme points ...
     if (dis1 < dis2){
@@ -226,23 +232,41 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     }
   }
 
+  
+  
   // It is possible that we have two points out of fiducial
   // Michel electron is outside the boundary ...
-  if (temp_set.size()==0) return false;
+
   
   // Crawl backward according to the graph ??? ...
   WCPointCloud<double>::WCPoint first_wcp;
   WCPointCloud<double>::WCPoint last_wcp;
   bool flag_double_end = false;
-  if (*temp_set.begin()==0){
-    first_wcp = wcps.first;
-    last_wcp = wcps.second;
+
+  if (temp_set.size()!=0){
+    if (*temp_set.begin()==0){
+      first_wcp = wcps.first;
+      last_wcp = wcps.second;
+    }else{
+      first_wcp = wcps.second;
+      last_wcp = wcps.first;
+    }
+    if (temp_set.size()==2) flag_double_end = true;
+    
   }else{
-    first_wcp = wcps.second;
-    last_wcp = wcps.first;
+    if (candidate_exit_wcps.size()==1){
+      first_wcp = candidate_exit_wcps.at(0);
+      if (sqrt(pow(candidate_exit_wcps.at(0).x - wcps.first.x,2) + pow(candidate_exit_wcps.at(0).y - wcps.first.y,2) + pow(candidate_exit_wcps.at(0).z - wcps.first.z,2)) < sqrt(pow(candidate_exit_wcps.at(0).x - wcps.second.x,2) + pow(candidate_exit_wcps.at(0).y - wcps.second.y,2) + pow(candidate_exit_wcps.at(0).z - wcps.second.z,2))){
+	last_wcp = wcps.second;
+      }else{
+	last_wcp = wcps.first;
+      }
+    }else{
+      return false;
+    }
   }
-  if (temp_set.size()==2) flag_double_end = true;
   main_cluster->do_stm_crawl(first_wcp, last_wcp);
+  
   
   // fitting trajectory and dQ/dx...
   main_cluster->collect_charge_trajectory(ct_point_cloud);
@@ -326,6 +350,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   TH1F *h3 = new TH1F("h3","h3",ncount,0,ncount);
 
   for (size_t i=0;i!=ncount;i++){
+    // std::cout << i << " " << vec_y.at(i) << std::endl;
     h1->SetBinContent(i+1,vec_y.at(i));
     h2->SetBinContent(i+1,g_muon->Eval(vec_x.at(i)/units::cm));
     h3->SetBinContent(i+1,50e3);

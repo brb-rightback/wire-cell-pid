@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
   }
   TH1::AddDirectory(kFALSE);
   
-  bool flag_in_time_only = false; // default to run all code
+  bool flag_in_time_only = true; // default to not run all code
   bool flag_main_cluster_only = true; // default to run only on the main cluster
   bool flag_debug_output = true; // output
   int datatier = 0; // data=0, overlay=1, full mc=2
