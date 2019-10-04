@@ -259,7 +259,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
       if (sqrt(pow(candidate_exit_wcps.at(0).x - wcps.first.x,2) + pow(candidate_exit_wcps.at(0).y - wcps.first.y,2) + pow(candidate_exit_wcps.at(0).z - wcps.first.z,2)) < sqrt(pow(candidate_exit_wcps.at(0).x - wcps.second.x,2) + pow(candidate_exit_wcps.at(0).y - wcps.second.y,2) + pow(candidate_exit_wcps.at(0).z - wcps.second.z,2))){
 	last_wcp = wcps.second;
       }else{
-	last_wcp = wcps.first;
+	last_wcp = wcps.first; 
       }
     }else{
       return false;
