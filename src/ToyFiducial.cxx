@@ -254,9 +254,6 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
       last_wcp = wcps.first;
     }
     if (temp_set.size()==2) flag_double_end = true;
-
-    // regular crawling ...
-    main_cluster->do_stm_crawl(first_wcp, last_wcp);
     
   }else{
     if (candidate_exit_wcps.size()==1){
@@ -279,7 +276,6 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
 	}else{
 	  last_wcp = wcps.first; 
 	}
-	main_cluster->do_stm_crawl(first_wcp, last_wcp);
       }
       
     }else{
@@ -287,7 +283,10 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     }
   }
   
-  
+  // regular crawling ...
+  Point mid_p = main_cluster->do_stm_crawl(first_wcp, last_wcp); 
+
+
   
   // fitting trajectory and dQ/dx...
   main_cluster->collect_charge_trajectory(ct_point_cloud);
@@ -389,12 +388,17 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   delete h3;
   //std::cout << ncount << std::endl;
 
-  std::cout << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << std::endl;
+  std::cout << "KS value: " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << std::endl;
+  std::cout << "Mid Point " << inside_dead_region(mid_p) << " " << mid_p << std::endl;
   if (ks1-ks2<-0.02) return true;
 
-  // check both end points
-  if ((!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x)))
-    return true;
+  // check both end points for TGM ...
+  if ((!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))) return true;
+  
+  // check 5512-209-10491
+  if (inside_dead_region(mid_p)) return true;
+  //  
+
   // end check ...
   
   return false;

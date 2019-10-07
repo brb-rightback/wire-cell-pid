@@ -1,4 +1,4 @@
-void WireCellPID::PR3DCluster::do_stm_crawl(WireCell::WCPointCloud<double>::WCPoint& first_wcp, WireCell::WCPointCloud<double>::WCPoint& last_wcp, int flag_end){
+WireCell::Point WireCellPID::PR3DCluster::do_stm_crawl(WireCell::WCPointCloud<double>::WCPoint& first_wcp, WireCell::WCPointCloud<double>::WCPoint& last_wcp, int flag_end){
   path_wcps.clear();
   
   Point test_p;
@@ -14,6 +14,7 @@ void WireCellPID::PR3DCluster::do_stm_crawl(WireCell::WCPointCloud<double>::WCPo
     last_wcp = point_cloud_steiner->get_closest_wcpoint(test_p);
   }
 
+  TVector3 drift_dir(1,0,0);
   
   //Crawl in point cloud 
   float step_dis = 1*units::cm;
@@ -35,8 +36,11 @@ void WireCellPID::PR3DCluster::do_stm_crawl(WireCell::WCPointCloud<double>::WCPo
 
       next_wcp = point_cloud->get_closest_wcpoint(test_p);
       TVector3 dir1(next_wcp.x - curr_wcp.x, next_wcp.y - curr_wcp.y, next_wcp.z - curr_wcp.z);
-      //std::cout <<curr_wcp.x << " " << curr_wcp.y << " " << curr_wcp.z << " " << i << " " << dir1.Mag() << " " << dir1.Angle(dir)/3.14151926*180. << " " << test_p << std::endl;
-      if (dir1.Mag()!=0 && dir1.Angle(dir)/3.1415926*180. < 30){
+
+      std::cout << dir.X() << " " << dir.Y() << " " << dir.Z() << " " << dir1.X() << " " << dir1.Y() << " " << dir1.Z() << " " << drift_dir.Angle(dir)/3.1415926*180. << " " << drift_dir.Angle(dir1)/3.1415926*180. << std::endl;
+      std::cout <<curr_wcp.x << " " << curr_wcp.y << " " << curr_wcp.z << " " << i << " " << dir1.Mag() << " " << dir1.Angle(dir)/3.14151926*180. << " " << test_p << " " << next_wcp.x << " " << next_wcp.y << " " << next_wcp.z << std::endl;
+
+      if (dir1.Mag()!=0 && (dir1.Angle(dir)/3.1415926*180. < 30 || (fabs(drift_dir.Angle(dir)/3.1415926*180.-90.)<10. && fabs(drift_dir.Angle(dir1)/3.1415926*180.-90.)<10.) && fabs(drift_dir.Angle(dir)-drift_dir.Angle(dir1))/3.1415926*180. < 20 && dir1.Angle(dir)/3.1415926*180. < 60)){
 	flag_continue = true;
 	curr_wcp = next_wcp;
       	dir = dir1 + dir * 5 * units::cm; // momentum trick ...
@@ -46,7 +50,10 @@ void WireCellPID::PR3DCluster::do_stm_crawl(WireCell::WCPointCloud<double>::WCPo
       
       next_wcp = point_cloud_steiner->get_closest_wcpoint(test_p);
       TVector3 dir2(next_wcp.x - curr_wcp.x, next_wcp.y - curr_wcp.y, next_wcp.z - curr_wcp.z);
-      if (dir2.Mag()!=0 && dir2.Angle(dir)/3.1415926*180. < 30){
+
+      std::cout << dir2.Angle(dir)/3.1415926*180. << " " << i << " " << drift_dir.Angle(dir2)/3.1415926*180. << " "<< drift_dir.Angle(dir)/3.1415926*180. << std::endl;
+      
+      if (dir2.Mag()!=0 && (dir2.Angle(dir)/3.1415926*180. < 30 || (fabs(drift_dir.Angle(dir)/3.1415926*180.-90.)<10. && fabs(drift_dir.Angle(dir2)/3.1415926*180.-90.)<10.) && fabs(drift_dir.Angle(dir) - drift_dir.Angle(dir2))/3.1415926*180. < 20 && dir2.Angle(dir)/3.1415926*180. < 60)){
 	flag_continue = true;
 	curr_wcp = next_wcp;
       	dir = dir1 + dir * 5 * units::cm; // momentum trick ...
@@ -77,13 +84,14 @@ void WireCellPID::PR3DCluster::do_stm_crawl(WireCell::WCPointCloud<double>::WCPo
     //    double dis1 = sqrt(pow(curr_wcp.x - last_wcp.x,2)+pow(curr_wcp.y - last_wcp.y,2)+pow(curr_wcp.z - last_wcp.z,2));
     //    double dis2 = sqrt(pow(first_wcp.x - last_wcp.x,2)+pow(first_wcp.y - last_wcp.y,2)+pow(first_wcp.z - last_wcp.z,2));
 
-    // std::cout << first_wcp.x << " " << first_wcp.y << " " << first_wcp.z << std::endl;
-    // std::cout << curr_wcp.x << " " << curr_wcp.y << " " << curr_wcp.z << std::endl;
-    // std::cout << last_wcp.x << " " << last_wcp.y << " " << last_wcp.z << std::endl;
+    std::cout << first_wcp.x << " " << first_wcp.y << " " << first_wcp.z << std::endl;
+    std::cout << curr_wcp.x << " " << curr_wcp.y << " " << curr_wcp.z << std::endl;
+    std::cout << last_wcp.x << " " << last_wcp.y << " " << last_wcp.z << std::endl;
     // std::cout << dis1 << " " << dis2 << std::endl;
 
     dijkstra_shortest_paths(first_wcp,2);
     cal_shortest_path(curr_wcp,2);
+
     
     if (flag_end == 1 ){
       std::list<WireCell::WCPointCloud<double>::WCPoint> temp_path_wcps = path_wcps;
@@ -130,9 +138,11 @@ void WireCellPID::PR3DCluster::do_stm_crawl(WireCell::WCPointCloud<double>::WCPo
   //  std::cout << (*it).x << " " << (*it).y << " " << (*it).z << std::endl;
   // }
   
+  test_p.x = curr_wcp.x;
+  test_p.y = curr_wcp.y;
+  test_p.z = curr_wcp.z;
   
-  
-  
+  return test_p;
   
  
 }
