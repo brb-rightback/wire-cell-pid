@@ -215,14 +215,15 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   // fully contained, so not a STM
   if (candidate_exit_wcps.size()==0) return false;
 
-  //std::cout << wcps.first.x << " " <<wcps.first.y << " " << wcps.first.z << std::endl;
+  // std::cout << wcps.first.x << " " <<wcps.first.y << " " << wcps.first.z << std::endl;
+  // std::cout << wcps.second.x << " " <<wcps.second.y << " " << wcps.second.z << std::endl;
   
   std::set<int> temp_set;
   for (size_t i=0; i!=candidate_exit_wcps.size(); i++){
     double dis1 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.first.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.first.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.first.z,2));
     double dis2 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.second.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.second.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.second.z,2));
 
-    //    std::cout << dis1 << " " << dis2 << std::endl;
+    //  std::cout << candidate_exit_wcps.at(i).x << " " << candidate_exit_wcps.at(i).y << " " << candidate_exit_wcps.at(i).z << " " << dis1 << " " << dis2 << std::endl;
     
     // essentially one of the extreme points ...
     if (dis1 < dis2){
@@ -233,6 +234,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   }
 
   
+  //std::cout << temp_set.size() << " " << candidate_exit_wcps.size() << std::endl;
   
   // It is possible that we have two points out of fiducial
   // Michel electron is outside the boundary ...
@@ -252,20 +254,39 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
       last_wcp = wcps.first;
     }
     if (temp_set.size()==2) flag_double_end = true;
+
+    // regular crawling ...
+    main_cluster->do_stm_crawl(first_wcp, last_wcp);
     
   }else{
     if (candidate_exit_wcps.size()==1){
       first_wcp = candidate_exit_wcps.at(0);
-      if (sqrt(pow(candidate_exit_wcps.at(0).x - wcps.first.x,2) + pow(candidate_exit_wcps.at(0).y - wcps.first.y,2) + pow(candidate_exit_wcps.at(0).z - wcps.first.z,2)) < sqrt(pow(candidate_exit_wcps.at(0).x - wcps.second.x,2) + pow(candidate_exit_wcps.at(0).y - wcps.second.y,2) + pow(candidate_exit_wcps.at(0).z - wcps.second.z,2))){
-	last_wcp = wcps.second;
+      TVector3 dir1(wcps.first.x - candidate_exit_wcps.at(0).x,
+		    wcps.first.y - candidate_exit_wcps.at(0).y,
+		    wcps.first.z - candidate_exit_wcps.at(0).z);
+      TVector3 dir2(wcps.second.x - candidate_exit_wcps.at(0).x,
+		    wcps.second.y - candidate_exit_wcps.at(0).y,
+		    wcps.second.z - candidate_exit_wcps.at(0).z);
+      double dis1 = dir1.Mag();
+      double dis2 = dir2.Mag();
+
+      if (dir1.Angle(dir2) > 120/180.*3.1415926 && dis1 > 20*units::cm &&
+      	  dis2 > 20*units::cm){
+      	return false;
       }else{
-	last_wcp = wcps.first; 
+	if (dis1 < dis2){
+	  last_wcp = wcps.second;	   
+	}else{
+	  last_wcp = wcps.first; 
+	}
+	main_cluster->do_stm_crawl(first_wcp, last_wcp);
       }
+      
     }else{
       return false;
     }
   }
-  main_cluster->do_stm_crawl(first_wcp, last_wcp);
+  
   
   
   // fitting trajectory and dQ/dx...
