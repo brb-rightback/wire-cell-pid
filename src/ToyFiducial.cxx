@@ -295,6 +295,9 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   
   // STM identification with KS test ...
   WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
+
+  
+
   std::vector<double>& dQ = main_cluster->get_dQ();
   std::vector<double>& dx = main_cluster->get_dx();
   std::vector<double> L(pts.size(),0);
@@ -388,6 +391,11 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
 
   std::cout << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << std::endl;
   if (ks1-ks2<-0.02) return true;
+
+  // check both end points
+  if ((!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x)))
+    return true;
+  // end check ...
   
   return false;
 }
