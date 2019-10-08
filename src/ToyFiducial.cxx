@@ -291,7 +291,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   main_cluster->collect_charge_trajectory(ct_point_cloud); 
   main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
   
-  
+
   
   Point mid_p = main_cluster->adjust_rough_path(); //->do_stm_crawl();
   // main_cluster->do_stm_crawl(first_wcp, last_wcp); 

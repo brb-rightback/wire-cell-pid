@@ -290,7 +290,7 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
   double offset_u = -first_u_dis/pitch_u + 0.5;
   double offset_v = -first_v_dis/pitch_v + 0.5;
   
-  double first_t_dis = path_wcps.front().mcell->GetTimeSlice()*time_slice_width - path_wcps.front().x;
+  double first_t_dis = point_cloud->get_cloud().pts[0].mcell->GetTimeSlice()*time_slice_width - point_cloud->get_cloud().pts[0].x;
   double slope_xt = 1./time_slice_width;
   double offset_t =  first_t_dis/time_slice_width + 0.5;
   
@@ -713,13 +713,13 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
  
   
   
-  
 
-  
   double lambda = 0.0005;
   FMatrix *= lambda;
+
   if (!flag_dQ_dx_fit_reg)
     FMatrix *=0.01;
+  
   Eigen::SparseMatrix<double> FMatrixT = Eigen::SparseMatrix<double>(FMatrix.transpose());
   
   Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
