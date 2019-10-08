@@ -21,8 +21,18 @@ using namespace WireCell;
 #include "PR3DCluster_dQ_dx_fit.h"
 #include "PR3DCluster_crawl.h"
 
-void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double time){
-
+void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double time, bool flag_dQ_dx_fit_reg){
+  fine_tracking_path.clear();
+  dQ.clear();
+  dx.clear();
+  pu.clear();
+  pv.clear();
+  pw.clear();
+  pt.clear();
+  reduced_chi2.clear();
+  
+  
+  
   bool flag_1st_tracking = true;
   bool flag_2nd_tracking = true;
   bool flag_dQ_dx = true;
@@ -135,7 +145,7 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
     //std::cout << map_2D_ut_charge.size() << " " << map_2D_vt_charge.size() << " " << map_2D_wt_charge.size() << " " << pts.size() << std::endl;
     
     // first round of dQ/dx fit ...
-    dQ_dx_fit(global_wc_map, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, time, end_point_limit);
+    dQ_dx_fit(global_wc_map, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, time, end_point_limit, flag_dQ_dx_fit_reg);
     
     // std::vector<int> indices;
     // indices.push_back(86);

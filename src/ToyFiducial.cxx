@@ -140,8 +140,11 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   // figure out the end points ...
   std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps = main_cluster->get_extreme_wcps();
 
+  
+  
   // get two extreme points ...
-  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = main_cluster->get_two_boundary_wcps(2); 
+  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = main_cluster->get_two_boundary_wcps(2);
+
   {
     std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
     temp_wcps.push_back(wcps.first);
@@ -233,12 +236,12 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     }
   }
 
-  
-  //std::cout << temp_set.size() << " " << candidate_exit_wcps.size() << std::endl;
-  
+    //std::cout << temp_set.size() << " " << candidate_exit_wcps.size() << std::endl;
+
   // It is possible that we have two points out of fiducial
   // Michel electron is outside the boundary ...
 
+  
   
   // Crawl backward according to the graph ??? ...
   WCPointCloud<double>::WCPoint first_wcp;
@@ -284,12 +287,18 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   }
   
   // regular crawling ...
-  Point mid_p = main_cluster->do_stm_crawl(first_wcp, last_wcp); 
-
+  main_cluster->do_rough_path(first_wcp, last_wcp);
+  main_cluster->collect_charge_trajectory(ct_point_cloud); 
+  main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
+  
+  
+  
+  Point mid_p = main_cluster->adjust_rough_path(); //->do_stm_crawl();
+  // main_cluster->do_stm_crawl(first_wcp, last_wcp); 
 
   
   // fitting trajectory and dQ/dx...
-  main_cluster->collect_charge_trajectory(ct_point_cloud);
+  main_cluster->collect_charge_trajectory(ct_point_cloud); 
   main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
   
   // STM identification with KS test ...

@@ -253,7 +253,7 @@ double WireCellPID::PR3DCluster::cal_gaus_integral(int tbin, int wbin, double t_
 }
 
 
-void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,  std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, double flash_time,double dis_end_point_ext){
+void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,  std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, double flash_time,double dis_end_point_ext, bool flag_dQ_dx_fit_reg){
   if (fine_tracking_path.size()<=1) return;
   pu.clear();
   pv.clear();
@@ -718,6 +718,8 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
   
   double lambda = 0.0005;
   FMatrix *= lambda;
+  if (!flag_dQ_dx_fit_reg)
+    FMatrix *=0.01;
   Eigen::SparseMatrix<double> FMatrixT = Eigen::SparseMatrix<double>(FMatrix.transpose());
   
   Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;

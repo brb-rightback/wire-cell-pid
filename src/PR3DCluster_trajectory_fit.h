@@ -304,7 +304,6 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
      }
   }
   
-  flag_fine_tracking = true; 
   fine_tracking_path.clear();
   pu.clear();
   pv.clear();

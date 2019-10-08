@@ -137,7 +137,6 @@ namespace WireCellPID{
 
 
     //fine tracking related ...
-    bool get_fine_tracking_flag(){return flag_fine_tracking;};
     WireCell::PointVector& get_fine_tracking_path(){return fine_tracking_path;};
     std::vector<double>& get_dQ(){return dQ;};
     std::vector<double>& get_dx(){return dx;};
@@ -148,7 +147,7 @@ namespace WireCellPID{
     std::vector<double>& get_reduced_chi2(){return reduced_chi2;};
     
     // main function to do the overall tracking, 
-    void do_tracking(WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, double time = 4*units::microsecond);
+    void do_tracking(WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, double time = 4*units::microsecond, bool flag_dQ_dx_fit_reg = true);
     // organize path from the shortest path 
     WireCell::PointVector organize_wcps_path(std::list<WireCell::WCPointCloud<double>::WCPoint>& path_wcps_list,  double low_dis_limit, double end_point_limit);
     void organize_ps_path(WireCell::PointVector& ps_vec, double low_dis_limit, double end_point_limit);
@@ -177,7 +176,7 @@ namespace WireCellPID{
     double cal_gaus_integral(int tbin, int wbin, double t_center, double t_sigma, double w_center, double w_sigma, int flag=0, double nsigma = 3);
     double cal_gaus_integral_seg(int tbin, int wbin, std::vector<double>& t_centers, std::vector<double>& t_sigmas, std::vector<double>& w_centers, std::vector<double>& w_sigmas, std::vector<double>& weights, int flag=0, double nsigma = 3);
 
-    void dQ_dx_fit(std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,  std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, double flash_time = 4*units::microsecond, double dis_end_point_ext = 4.5*units::mm);
+    void dQ_dx_fit(std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,  std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, double flash_time = 4*units::microsecond, double dis_end_point_ext = 4.5*units::mm, bool flag_dQ_dx_fit_reg = true);
     void update_data_dQ_dx_fit(std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_wt_charge);
 
     std::vector<std::pair<double,double> > cal_compact_matrix(Eigen::SparseMatrix<double>& MW, Eigen::SparseMatrix<double>& RWT, int n_2D_w, int n_3D_pos, double cut_pos = 2);
@@ -187,8 +186,11 @@ namespace WireCellPID{
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & get_proj_data_v_map(){return proj_data_v_map;};
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & get_proj_data_w_map(){return proj_data_w_map;};
     // crawl alg for stm
-
+    void do_rough_path(WireCell::WCPointCloud<double>::WCPoint& first_wcp, WireCell::WCPointCloud<double>::WCPoint& last_wcp);
+    WireCell::Point adjust_rough_path();
+    
     WireCell::Point do_stm_crawl(WireCell::WCPointCloud<double>::WCPoint& first_wcp, WireCell::WCPointCloud<double>::WCPoint& last_wcp, int flag_end = 1);
+
     
   protected:
     
@@ -236,7 +238,6 @@ namespace WireCellPID{
 
 
      // fine tracking related ...
-    bool flag_fine_tracking;
     WireCell::PointVector fine_tracking_path;
     std::vector<double> dQ;
     std::vector<double> dx;
