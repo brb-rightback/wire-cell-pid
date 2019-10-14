@@ -365,7 +365,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     }
   }
   //std::cout << max_bin << " " << max_sum << std::endl;
-  end_L = L.at(max_bin)+0.5*units::cm;
+  end_L = L.at(max_bin)+0.2*units::cm;
   int ncount = 0;
   std::vector<double> vec_x;
   std::vector<double> vec_y;
