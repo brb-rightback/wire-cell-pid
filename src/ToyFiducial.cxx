@@ -300,11 +300,34 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   // fitting trajectory and dQ/dx...
   main_cluster->collect_charge_trajectory(ct_point_cloud); 
   main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
-  
-  // STM identification with KS test ...
-  WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
 
+  // check both end points for TGM ...
+  WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
+  if ((!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))) return true;
   
+  double ks1, ks2, ratio1, ratio2;
+  std::vector<double> ks_results = eval_stm(main_cluster, 40*units::cm, 0., 35*units::cm);
+  ks1 = ks_results.at(0);
+  ks2 = ks_results.at(1);
+  ratio1 = ks_results.at(2);
+  ratio2 = ks_results.at(3);
+
+  std::cout << "KS value: " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << std::endl;
+  std::cout << "Mid Point " << inside_dead_region(mid_p) << " " << mid_p << std::endl;
+  if (ks1-ks2<-0.02) return true;
+  
+  
+  // check 5512-209-10491
+  if (inside_dead_region(mid_p)) return true;
+  //  
+
+  // end check ...
+  
+  return false;
+}
+
+std::vector<double> WireCellPID::ToyFiducial::eval_stm(WireCellPID::PR3DCluster* main_cluster,double peak_range, double offset_length, double com_range){
+  WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
 
   std::vector<double>& dQ = main_cluster->get_dQ();
   std::vector<double>& dx = main_cluster->get_dx();
@@ -327,7 +350,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     double nsum = 0;
     double temp_max_bin = i;
     double temp_max_val = dQ_dx.at(i);
-    if (L.at(i) < end_L + 0.5*units::cm && L.at(i) > end_L - 40*units::cm){
+    if (L.at(i) < end_L + 0.5*units::cm && L.at(i) > end_L - peak_range){
       sum += dQ_dx.at(i); nsum ++;
       if (i>=2){
 	sum += dQ_dx.at(i-2); nsum++;
@@ -370,7 +393,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   std::vector<double> vec_x;
   std::vector<double> vec_y;
   for (size_t i=0;i!=L.size(); i++){
-    if (end_L - L.at(i) < 35*units::cm && end_L - L.at(i) > 0){
+    if (end_L - L.at(i) < com_range && end_L - L.at(i) > 0){
       vec_x.push_back(end_L-L.at(i));
       vec_y.push_back(dQ_dx.at(i));
       ncount ++;
@@ -384,7 +407,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   for (size_t i=0;i!=ncount;i++){
     // std::cout << i << " " << vec_y.at(i) << std::endl;
     h1->SetBinContent(i+1,vec_y.at(i));
-    h2->SetBinContent(i+1,g_muon->Eval(vec_x.at(i)/units::cm));
+    h2->SetBinContent(i+1,g_muon->Eval((vec_x.at(i)+offset_length)/units::cm));
     h3->SetBinContent(i+1,50e3);
   }
   double ks1 = h2->KolmogorovTest(h1,"M");
@@ -395,22 +418,14 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   delete h1;
   delete h2;
   delete h3;
-  //std::cout << ncount << std::endl;
 
-  std::cout << "KS value: " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << std::endl;
-  std::cout << "Mid Point " << inside_dead_region(mid_p) << " " << mid_p << std::endl;
-  if (ks1-ks2<-0.02) return true;
-
-  // check both end points for TGM ...
-  if ((!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))) return true;
+  std::vector<double> results;
+  results.push_back(ks1);
+  results.push_back(ks2);
+  results.push_back(ratio1);
+  results.push_back(ratio2);
+  return results;
   
-  // check 5512-209-10491
-  if (inside_dead_region(mid_p)) return true;
-  //  
-
-  // end check ...
-  
-  return false;
 }
 
 // bool WireCellPID::ToyFiducial::check_fully_contained(WireCell::FlashTPCBundle *bundle, double offset_x, WireCell::ToyCTPointCloud& ct_point_cloud,std::map<PR3DCluster*, PR3DCluster*>& old_new_cluster_map, unsigned int* fail_mode, int flag){
