@@ -305,18 +305,30 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
   if ((!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))) return true;
   
-  double ks1, ks2, ratio1, ratio2;
-  std::vector<double> ks_results = eval_stm(main_cluster, 40*units::cm, 0., 35*units::cm);
-  ks1 = ks_results.at(0);
-  ks2 = ks_results.at(1);
-  ratio1 = ks_results.at(2);
-  ratio2 = ks_results.at(3);
+  bool flag_pass;
+  flag_pass = eval_stm(main_cluster, 40*units::cm, 0., 35*units::cm) ||
+    eval_stm(main_cluster, 40*units::cm, 5.*units::cm, 35*units::cm);
 
-  std::cout << "KS value: " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << std::endl;
+  if (flag_pass)
+    return true;
+  else
+    flag_pass = eval_stm(main_cluster, 40*units::cm, 0., 15*units::cm) ||
+      eval_stm(main_cluster, 40*units::cm, 5.*units::cm, 15*units::cm);
+  
+  if (flag_pass)
+    return true;
+  else
+    flag_pass = eval_stm(main_cluster, 20*units::cm, 0., 40*units::cm) ||
+      eval_stm(main_cluster, 20*units::cm, 5.*units::cm, 40*units::cm);
+
+  if (flag_pass)
+    return true;
+  else
+    flag_pass = eval_stm(main_cluster, 20*units::cm, 0., 15*units::cm) ||
+      eval_stm(main_cluster, 20*units::cm, 5.*units::cm, 15*units::cm);
+  
+  
   std::cout << "Mid Point " << inside_dead_region(mid_p) << " " << mid_p << std::endl;
-  if (ks1-ks2<-0.02) return true;
-  
-  
   // check 5512-209-10491
   if (inside_dead_region(mid_p)) return true;
   //  
@@ -326,7 +338,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   return false;
 }
 
-std::vector<double> WireCellPID::ToyFiducial::eval_stm(WireCellPID::PR3DCluster* main_cluster,double peak_range, double offset_length, double com_range){
+bool WireCellPID::ToyFiducial::eval_stm(WireCellPID::PR3DCluster* main_cluster,double peak_range, double offset_length, double com_range){
   WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
 
   std::vector<double>& dQ = main_cluster->get_dQ();
@@ -419,12 +431,19 @@ std::vector<double> WireCellPID::ToyFiducial::eval_stm(WireCellPID::PR3DCluster*
   delete h2;
   delete h3;
 
-  std::vector<double> results;
-  results.push_back(ks1);
-  results.push_back(ks2);
-  results.push_back(ratio1);
-  results.push_back(ratio2);
-  return results;
+  std::cout << "KS value: " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.6*0.3 << std::endl;
+  
+  // std::vector<double> results;
+  // results.push_back(ks1);
+  // results.push_back(ks2);
+  // results.push_back(ratio1);
+  // results.push_back(ratio2);
+  // return results;
+
+  if (ks1-ks2 >= 0.0) return false;
+  if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.6*0.3 < 0) return true;
+  if (ratio2 > 1.5 && ks1 - ks2 < -0.02) return true;
+  return false;
   
 }
 
