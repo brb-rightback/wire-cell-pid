@@ -318,10 +318,9 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   }
   std::cout << "Left: " << left_L/units::cm << " " << (left_Q/(left_L*units::cm+1e-9))/50e3 << std::endl;
   
-  if (left_L > 40*units::cm || (left_Q/left_L*units::cm)/50e3 >1.5){
-    //  std::cout << left_L/units::cm << " " <<  << std::endl;
-     std::cout << "Mid Point " << inside_dead_region(mid_p) << " " << mid_p << std::endl;
-     return false;
+  if (left_L > 40*units::cm || (left_Q/(left_L*units::cm+1e-9)/50e3 >1.5)){
+    std::cout << "Mid Point A " << inside_dead_region(mid_p) << " " << mid_p << " " << left_L  << " " << (left_Q/(left_L*units::cm+1e-9)/50e3) << std::endl;
+    return false;
   }else{
    
     bool flag_pass = false;
@@ -455,12 +454,16 @@ bool WireCellPID::ToyFiducial::eval_stm(WireCellPID::PR3DCluster* main_cluster,i
     dQ_dx.at(i) = dQ.at(i)/(dx.at(i)/units::cm+1e-9);
   }
   //std::cout << L.size() << " " << dQ.size() << " " << dx.size() << std::endl;
-  double end_L = L.at(kink_num)-0.5*units::cm;
-  double max_num = kink_num;
-  if (kink_num == dQ.size()){
+  double end_L; 
+  double max_num; 
+  if (kink_num == pts.size()){
     end_L = L.back();
     max_num = L.size();
+  }else{
+    end_L = L.at(kink_num)-0.5*units::cm;
+    max_num = kink_num;
   }
+  
   double max_bin = -1;
   double max_sum = 0;
   for (size_t i=0;i!=L.size();i++){
