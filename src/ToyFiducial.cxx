@@ -307,30 +307,30 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   
   bool flag_pass;
   flag_pass = eval_stm(main_cluster, 40*units::cm, 0., 35*units::cm) ||
-    eval_stm(main_cluster, 40*units::cm, 5.*units::cm, 35*units::cm);
+    eval_stm(main_cluster, 40*units::cm, 3.*units::cm, 35*units::cm);
 
   if (flag_pass)
     return true;
   else
     flag_pass = eval_stm(main_cluster, 40*units::cm, 0., 15*units::cm) ||
-      eval_stm(main_cluster, 40*units::cm, 5.*units::cm, 15*units::cm);
+      eval_stm(main_cluster, 40*units::cm, 3.*units::cm, 15*units::cm);
   
   if (flag_pass)
     return true;
   else
     flag_pass = eval_stm(main_cluster, 20*units::cm, 0., 40*units::cm) ||
-      eval_stm(main_cluster, 20*units::cm, 5.*units::cm, 40*units::cm);
+      eval_stm(main_cluster, 20*units::cm, 3.*units::cm, 40*units::cm);
 
   if (flag_pass)
     return true;
   else
     flag_pass = eval_stm(main_cluster, 20*units::cm, 0., 15*units::cm) ||
-      eval_stm(main_cluster, 20*units::cm, 5.*units::cm, 15*units::cm);
+      eval_stm(main_cluster, 20*units::cm, 3.*units::cm, 15*units::cm);
   
   
   std::cout << "Mid Point " << inside_dead_region(mid_p) << " " << mid_p << std::endl;
   // check 5512-209-10491
-  if (inside_dead_region(mid_p)) return true;
+  // if (inside_dead_region(mid_p)) return true;
   //  
 
   // end check ...
@@ -431,7 +431,7 @@ bool WireCellPID::ToyFiducial::eval_stm(WireCellPID::PR3DCluster* main_cluster,d
   delete h2;
   delete h3;
 
-  std::cout << "KS value: " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.6*0.3 << std::endl;
+  std::cout << "KS value: " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << std::endl;
   
   // std::vector<double> results;
   // results.push_back(ks1);
@@ -441,8 +441,12 @@ bool WireCellPID::ToyFiducial::eval_stm(WireCellPID::PR3DCluster* main_cluster,d
   // return results;
 
   if (ks1-ks2 >= 0.0) return false;
-  if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.6*0.3 < 0) return true;
+
+  if (sqrt(pow(ks2/0.06,2)+pow((ratio2-1)/0.06,2))< 1.4) return false;
+  
+  if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0) return true;
   if (ratio2 > 1.5 && ks1 - ks2 < -0.02) return true;
+
   return false;
   
 }
