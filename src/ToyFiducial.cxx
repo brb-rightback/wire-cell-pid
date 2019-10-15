@@ -316,9 +316,9 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     left_L += dx.at(i);
     left_Q += dQ.at(i);
   }
-  std::cout << "Left: " << left_L/units::cm << " " << (left_Q/(left_L*units::cm+1e-9))/50e3 << std::endl;
+  std::cout << "Left: " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << std::endl;
   
-  if (left_L > 40*units::cm || (left_Q/(left_L*units::cm+1e-9)/50e3 >1.5)){
+  if (left_L > 40*units::cm || (left_Q/(left_L/units::cm+1e-9)/50e3 >1.5)){
     std::cout << "Mid Point A " << inside_dead_region(mid_p) << " " << mid_p << " " << left_L  << " " << (left_Q/(left_L*units::cm+1e-9)/50e3) << std::endl;
     return false;
   }else{
@@ -429,7 +429,7 @@ int WireCellPID::ToyFiducial::find_first_kink(WireCellPID::PR3DCluster* main_clu
 
     
     
-    if (refl_angles.at(i) > 25 && sum_angles > 12.5){
+    if (refl_angles.at(i) > 25 && sum_angles > 12.5 && inside_fiducial_volume(fine_tracking_path.at(i))){
       std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << sum_angles << " " << max_num << std::endl;
       return max_num;
     }
