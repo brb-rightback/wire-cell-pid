@@ -303,42 +303,143 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
 
   // check both end points for TGM ...
   WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
+  std::vector<double>& dQ = main_cluster->get_dQ();
+  std::vector<double>& dx = main_cluster->get_dx();
+    
   if ((!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))) return true;
-  
-  bool flag_pass;
-  flag_pass = eval_stm(main_cluster, 40*units::cm, 0., 35*units::cm) ||
-    eval_stm(main_cluster, 40*units::cm, 3.*units::cm, 35*units::cm);
 
-  if (flag_pass)
-    return true;
-  else
-    flag_pass = eval_stm(main_cluster, 40*units::cm, 0., 15*units::cm) ||
-      eval_stm(main_cluster, 40*units::cm, 3.*units::cm, 15*units::cm);
-  
-  if (flag_pass)
-    return true;
-  else
-    flag_pass = eval_stm(main_cluster, 20*units::cm, 0., 40*units::cm) ||
-      eval_stm(main_cluster, 20*units::cm, 3.*units::cm, 40*units::cm);
+  int kink_num = find_first_kink(main_cluster);
 
-  if (flag_pass)
-    return true;
-  else
-    flag_pass = eval_stm(main_cluster, 20*units::cm, 0., 15*units::cm) ||
-      eval_stm(main_cluster, 20*units::cm, 3.*units::cm, 15*units::cm);
+  double left_L = 0;
+  double left_Q = 0;
+  for (size_t i = kink_num; i!=dx.size(); i++){
+    left_L += dx.at(i);
+    left_Q += dQ.at(i);
+  }
+  std::cout << "Left: " << left_L/units::cm << " " << (left_Q/(left_L*units::cm+1e-9))/50e3 << std::endl;
   
-  
-  std::cout << "Mid Point " << inside_dead_region(mid_p) << " " << mid_p << std::endl;
+  if (left_L > 40*units::cm || (left_Q/left_L*units::cm)/50e3 >1.5){
+    //  std::cout << left_L/units::cm << " " <<  << std::endl;
+     std::cout << "Mid Point " << inside_dead_region(mid_p) << " " << mid_p << std::endl;
+     return false;
+  }else{
+   
+    bool flag_pass = false;
+    if (left_L < 40*units::cm) {
+      flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 35*units::cm) ||
+	eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 35*units::cm);
+    
+      if (flag_pass)
+	return true;
+      else
+	flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 15*units::cm) ||
+	  eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 15*units::cm);
+    }
+
+    if (left_L < 20*units::cm){
+      if (flag_pass)
+	return true;
+      else
+	flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 35*units::cm) ||
+	  eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 35*units::cm);
+      
+      if (flag_pass)
+	return true;
+      else
+	flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 15*units::cm) ||
+	  eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 15*units::cm);
+    }
+    
+
+  }
   // check 5512-209-10491
   // if (inside_dead_region(mid_p)) return true;
   //  
 
   // end check ...
-  
+  std::cout << "Mid Point " << inside_dead_region(mid_p) << " " << mid_p << std::endl;  
   return false;
 }
 
-bool WireCellPID::ToyFiducial::eval_stm(WireCellPID::PR3DCluster* main_cluster,double peak_range, double offset_length, double com_range){
+int WireCellPID::ToyFiducial::find_first_kink(WireCellPID::PR3DCluster* main_cluster){
+  WireCell::PointVector& fine_tracking_path = main_cluster->get_fine_tracking_path();
+
+  TVector3 drift_dir(1,0,0);
+
+  std::vector<double> refl_angles(fine_tracking_path.size(),0);
+  std::vector<double> para_angles(fine_tracking_path.size(),0);
+  std::vector<double> ave_angles(fine_tracking_path.size(),0);
+  std::vector<int> max_numbers(fine_tracking_path.size(),-1);
+  
+  for (size_t i=0;i!=fine_tracking_path.size(); i++){
+    double angle1 = 0;
+    double angle2 = 0;
+    for (int j=0;j!=6;j++){    
+      TVector3 v10(0,0,0);
+      TVector3 v20(0,0,0);
+      if (i>j)
+	v10.SetXYZ(fine_tracking_path.at(i).x - fine_tracking_path.at(i-j-1).x,
+		   fine_tracking_path.at(i).y - fine_tracking_path.at(i-j-1).y,
+		   fine_tracking_path.at(i).z - fine_tracking_path.at(i-j-1).z);
+      
+      if (i+j+1<fine_tracking_path.size())
+	v20.SetXYZ(fine_tracking_path.at(i+j+1).x - fine_tracking_path.at(i).x,
+		   fine_tracking_path.at(i+j+1).y - fine_tracking_path.at(i).y,
+		   fine_tracking_path.at(i+j+1).z - fine_tracking_path.at(i).z);
+      
+      if (j==0){
+	angle1 = v10.Angle(v20)/3.1415926*180.;
+	angle2 = std::max(fabs(v10.Angle(drift_dir)/3.1415926*180.-90.),
+			  fabs(v20.Angle(drift_dir)/3.1415926*180.-90.));
+      }else{
+	if (v10.Mag()!=0 && v20.Mag()!=0){
+	  angle1 = std::min(v10.Angle(v20)/3.1415926*180., angle1);
+	  angle2 = std::min(std::max(fabs(v10.Angle(drift_dir)/3.1415926*180.-90.),
+				     fabs(v20.Angle(drift_dir)/3.1415926*180.-90.)),angle2);
+	}
+      }
+    }
+
+    refl_angles.at(i) = angle1;
+    para_angles.at(i) = angle2;
+  }
+
+  for (int i=0;i!=fine_tracking_path.size();i++){
+    double sum_angles = 0;
+    double nsum = 0;
+    double max_angle = 0;
+    int max_num = -1;
+    
+    for (int j = -2; j!=3;j++){
+
+      if (i+j>=0 && i+j<fine_tracking_path.size()){
+	if (para_angles.at(i+j)>10){
+	  sum_angles += pow(refl_angles.at(i+j),2);
+	  nsum ++;
+	  if (refl_angles.at(i+j) > max_angle){
+	    max_angle = refl_angles.at(i+j);
+	    max_num = i+j;
+	  }
+	}
+      }
+    }
+
+    if (nsum!=0) sum_angles=sqrt(sum_angles/nsum);
+    ave_angles.at(i) = sum_angles;
+    max_numbers.at(i) = max_num;
+
+    
+    
+    if (refl_angles.at(i) > 25 && sum_angles > 12.5){
+      std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << sum_angles << " " << max_num << std::endl;
+      return max_num;
+    }
+  }
+  
+  return fine_tracking_path.size();
+}
+
+bool WireCellPID::ToyFiducial::eval_stm(WireCellPID::PR3DCluster* main_cluster,int kink_num,double peak_range, double offset_length, double com_range){
   WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
 
   std::vector<double>& dQ = main_cluster->get_dQ();
@@ -354,7 +455,12 @@ bool WireCellPID::ToyFiducial::eval_stm(WireCellPID::PR3DCluster* main_cluster,d
     dQ_dx.at(i) = dQ.at(i)/(dx.at(i)/units::cm+1e-9);
   }
   //std::cout << L.size() << " " << dQ.size() << " " << dx.size() << std::endl;
-  double end_L = L.back();
+  double end_L = L.at(kink_num)-0.5*units::cm;
+  double max_num = kink_num;
+  if (kink_num == dQ.size()){
+    end_L = L.back();
+    max_num = L.size();
+  }
   double max_bin = -1;
   double max_sum = 0;
   for (size_t i=0;i!=L.size();i++){
@@ -362,32 +468,32 @@ bool WireCellPID::ToyFiducial::eval_stm(WireCellPID::PR3DCluster* main_cluster,d
     double nsum = 0;
     double temp_max_bin = i;
     double temp_max_val = dQ_dx.at(i);
-    if (L.at(i) < end_L + 0.5*units::cm && L.at(i) > end_L - peak_range){
+    if (L.at(i) < end_L + 0.5*units::cm && L.at(i) > end_L - peak_range && i < max_num){
       sum += dQ_dx.at(i); nsum ++;
       if (i>=2){
 	sum += dQ_dx.at(i-2); nsum++;
-	if (dQ_dx.at(i-2) > temp_max_val){
+	if (dQ_dx.at(i-2) > temp_max_val && i-2 < max_num){
 	  temp_max_val = dQ_dx.at(i-2);
 	  temp_max_bin = i-2;
 	}
       }
       if (i>=1){
 	sum += dQ_dx.at(i-1); nsum++;
-	if (dQ_dx.at(i-1) > temp_max_val){
+	if (dQ_dx.at(i-1) > temp_max_val && i-1 < max_num){
 	  temp_max_val = dQ_dx.at(i-1);
 	  temp_max_bin = i-1;
 	}
       }
       if (i+1<L.size()){
 	sum += dQ_dx.at(i+1); nsum++;
-	if (dQ_dx.at(i+1) > temp_max_val){
+	if (dQ_dx.at(i+1) > temp_max_val && i+1 < max_num){
 	  temp_max_val = dQ_dx.at(i+1);
 	  temp_max_bin = i+1;
 	}
       }
       if (i+2<L.size()){
 	sum += dQ_dx.at(i+2); nsum++;
-	if (dQ_dx.at(i+2) > temp_max_val){
+	if (dQ_dx.at(i+2) > temp_max_val && i+2 < max_num){
 	  temp_max_val = dQ_dx.at(i+2);
 	  temp_max_bin = i+2;
 	}

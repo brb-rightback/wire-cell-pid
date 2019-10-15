@@ -35,9 +35,13 @@ namespace WireCellPID{
     
     bool check_stm(WireCellPID::PR3DCluster* cluster, double offset_x, double flash_time, WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map);
 
-    bool eval_stm(WireCellPID::PR3DCluster* main_cluster, double peak_range = 40*units::cm, double offset_x = 0*units::cm, double com_range = 35*units::cm);
+    bool eval_stm(WireCellPID::PR3DCluster* main_cluster, int kink_num, double peak_range = 40*units::cm, double offset_x = 0*units::cm, double com_range = 35*units::cm);
+
+    int find_first_kink(WireCellPID::PR3DCluster* main_cluster);
     
     void AddDeadRegion(WireCell::SlimMergeGeomCell* mcell, std::vector<int>& time_slices);
+
+    
     
   protected:
     // boundary
