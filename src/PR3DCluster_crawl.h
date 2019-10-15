@@ -111,7 +111,7 @@ WireCell::Point WireCellPID::PR3DCluster::adjust_rough_path(){
     Point prev_p(0,0,0);
     int num_p = 0;
     for (size_t i=1;i!=6;i++){
-      if (save_i-i>=0){
+      if (save_i>=i){
 	prev_p.x += fine_tracking_path.at(save_i-i).x;
 	prev_p.y += fine_tracking_path.at(save_i-i).y;
 	prev_p.z += fine_tracking_path.at(save_i-i).z;
