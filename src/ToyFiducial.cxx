@@ -139,11 +139,9 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   
   // figure out the end points ...
   std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps = main_cluster->get_extreme_wcps();
-
-  
   
   // get two extreme points ...
-  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = main_cluster->get_two_boundary_wcps(2);
+  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = main_cluster->get_two_boundary_wcps(2,true);
 
   {
     std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
@@ -216,17 +214,20 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
  
   
   // fully contained, so not a STM
-  if (candidate_exit_wcps.size()==0) return false;
+  if (candidate_exit_wcps.size()==0) {
+    std::cout << "Mid Point: " << std::endl;
+    return false;
+  }
 
-  // std::cout << wcps.first.x << " " <<wcps.first.y << " " << wcps.first.z << std::endl;
-  // std::cout << wcps.second.x << " " <<wcps.second.y << " " << wcps.second.z << std::endl;
+  std::cout << wcps.first.x << " " <<wcps.first.y << " " << wcps.first.z << std::endl;
+  std::cout << wcps.second.x << " " <<wcps.second.y << " " << wcps.second.z << std::endl;
   
   std::set<int> temp_set;
   for (size_t i=0; i!=candidate_exit_wcps.size(); i++){
     double dis1 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.first.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.first.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.first.z,2));
     double dis2 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.second.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.second.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.second.z,2));
 
-    //  std::cout << candidate_exit_wcps.at(i).x << " " << candidate_exit_wcps.at(i).y << " " << candidate_exit_wcps.at(i).z << " " << dis1 << " " << dis2 << std::endl;
+    std::cout << candidate_exit_wcps.at(i).x << " " << candidate_exit_wcps.at(i).y << " " << candidate_exit_wcps.at(i).z << " " << dis1 << " " << dis2 << std::endl;
     
     // essentially one of the extreme points ...
     if (dis1 < dis2){
@@ -236,7 +237,22 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     }
   }
 
-    //std::cout << temp_set.size() << " " << candidate_exit_wcps.size() << std::endl;
+  // protection against two end point situation
+  if (temp_set.size()==2){
+    WireCell::Point tp1(wcps.first.x,wcps.first.y,wcps.first.z);
+    WireCell::Point tp2(wcps.second.x,wcps.second.y,wcps.second.z);
+
+    temp_set.clear();
+    
+    if ((!inside_fiducial_volume(tp1,offset_x))) temp_set.insert(0);
+    if ((!inside_fiducial_volume(tp2,offset_x))) temp_set.insert(1);
+    if (temp_set.size()==0){
+      temp_set.insert(0);
+      temp_set.insert(1);
+    }
+  }
+  
+  std::cout << "end_point: " << temp_set.size() << " " << candidate_exit_wcps.size() << std::endl;
 
   // It is possible that we have two points out of fiducial
   // Michel electron is outside the boundary ...
@@ -272,7 +288,8 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
 
       if (dir1.Angle(dir2) > 120/180.*3.1415926 && dis1 > 20*units::cm &&
       	  dis2 > 20*units::cm){
-      	return false;
+	std::cout << "Mid Point: " << std::endl;
+	return false;
       }else{
 	if (dis1 < dis2){
 	  last_wcp = wcps.second;	   
@@ -282,6 +299,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
       }
       
     }else{
+      std::cout << "Mid Point: " << std::endl;
       return false;
     }
   }
@@ -291,11 +309,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   main_cluster->collect_charge_trajectory(ct_point_cloud); 
   main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
   
-
-  
-  Point mid_p = main_cluster->adjust_rough_path(); //->do_stm_crawl();
-  // main_cluster->do_stm_crawl(first_wcp, last_wcp); 
-
+  Point mid_p = main_cluster->adjust_rough_path(); 
   
   // fitting trajectory and dQ/dx...
   main_cluster->collect_charge_trajectory(ct_point_cloud); 
@@ -306,7 +320,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   std::vector<double>& dQ = main_cluster->get_dQ();
   std::vector<double>& dx = main_cluster->get_dx();
     
-  if ((!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))) return true;
+  
 
   int kink_num = find_first_kink(main_cluster);
   
@@ -322,9 +336,13 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     left_L += dx.at(i);
     left_Q += dQ.at(i);
   }
+  
   std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << " " << (exit_Q/(exit_L/units::cm+1e-9)/50e3) << std::endl;
 
-  
+  if ((exit_L < 3*units::cm || left_L < 3*units::cm) && (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
+    std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+    return true;
+  }
   
   if (left_L > 40*units::cm || left_L > 7.5*units::cm && (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0){
     std::cout << "Mid Point A " << inside_dead_region(mid_p) << " " << mid_p << " " << left_L  << " " << (left_Q/(left_L/units::cm+1e-9)/50e3) << std::endl;

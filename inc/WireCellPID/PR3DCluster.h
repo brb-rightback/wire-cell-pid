@@ -122,7 +122,7 @@ namespace WireCellPID{
     std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_main_axis_wcps(int flag = 1);
 
     std::vector<std::vector<WireCell::WCPointCloud<double>::WCPoint>> get_extreme_wcps(int flag = 1, std::map<int,WireCell::SMGCSelection>* old_time_mcells_map=0);
-    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_two_boundary_wcps(int flag = 1);
+    std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> get_two_boundary_wcps(int flag = 1, bool flag_cosmic = false);
     
     std::pair<WireCell::Point,WireCell::Point> get_two_extreme_points(int flag = 1);
 

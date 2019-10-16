@@ -155,7 +155,7 @@ WireCell::Point WireCellPID::PR3DCluster::adjust_rough_path(){
       double angle3 = v10.Angle(v20)/3.1415926*180.;
       if (angle3 < 20) continue;
       
-      std::cout << "Mid_Point_Break: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << min_dQ_dx << " " << fine_tracking_path.at(i).x << " " << fine_tracking_path.at(i).y << " " << fine_tracking_path.at(i).z << std::endl;
+      std::cout << "Mid_Point_Break: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << angle3 << " " << min_dQ_dx << " " << fine_tracking_path.at(i).x << " " << fine_tracking_path.at(i).y << " " << fine_tracking_path.at(i).z << std::endl;
       flag_crawl = true;
       save_i = i;
       break;
@@ -244,7 +244,7 @@ WireCell::Point WireCellPID::PR3DCluster::adjust_rough_path(){
     test_p.z = curr_wcp.z;
     curr_wcp = point_cloud_steiner->get_closest_wcpoint(test_p);
   
-    std::cout << first_wcp.x << " " << first_wcp.y << " " << first_wcp.z << " " << curr_wcp.x << " " << curr_wcp.y << " " << curr_wcp.z << std::endl;
+    std::cout << "First, Center: " << first_wcp.x << " " << first_wcp.y << " " << first_wcp.z << " " << curr_wcp.x << " " << curr_wcp.y << " " << curr_wcp.z << std::endl;
     
   
     double dis = sqrt(pow(curr_wcp.x-last_wcp.x,2) + pow(curr_wcp.y-last_wcp.y,2) + pow(curr_wcp.z-last_wcp.z,2));

@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
        << " " << gds.angle(WirePlaneType_t(1)) 
        << " " << gds.angle(WirePlaneType_t(2))
        << endl;
-
+  std::cout << argv[2] << std::endl;
   TString filename = argv[2];
   TFile *file = new TFile(filename);
   TTree *Trun = (TTree*)file->Get("Trun");

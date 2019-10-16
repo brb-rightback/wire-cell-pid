@@ -278,7 +278,7 @@ std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WireCellP
   return std::make_pair(highest_wcp,lowest_wcp);
 }
 
-std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> WireCellPID::PR3DCluster::get_two_boundary_wcps(int flag){
+std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>::WCPoint> WireCellPID::PR3DCluster::get_two_boundary_wcps(int flag, bool flag_cosmic){
   Create_point_cloud();
   
   ToyPointCloud *temp_point_cloud = point_cloud;
@@ -460,6 +460,12 @@ std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>
     + fabs(boundary_points.first.index_u - boundary_points.second.index_u) * 0.0 + ncount_live_u * 1.0
     + fabs(boundary_points.first.index_v - boundary_points.second.index_v) * 0.0 + ncount_live_v * 1.0
     + fabs(boundary_points.first.index_w - boundary_points.second.index_w) * 0.0 + ncount_live_w * 1.0;
+  if (flag_cosmic)
+    boundary_value = fabs(boundary_points.first.x-boundary_points.second.x)/(units::mm)
+    + fabs(boundary_points.first.index_u - boundary_points.second.index_u) * 1.0 + ncount_live_u * 1.
+    + fabs(boundary_points.first.index_v - boundary_points.second.index_v) * 1.0 + ncount_live_v * 1.
+    + fabs(boundary_points.first.index_w - boundary_points.second.index_w) * 1.0 + ncount_live_w * 1.
+      + sqrt(pow(boundary_points.first.x - boundary_points.second.x,2) + pow(boundary_points.first.y - boundary_points.second.y,2) + pow(boundary_points.first.z - boundary_points.second.z,2))/(units::mm);
   
   for (int i=0;i<14;i++){
     for (int j=i+1;j<14;j++){
@@ -504,14 +510,21 @@ std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>
 	+ fabs(extreme_wcp[i].index_u - extreme_wcp[j].index_u) * 0 + ncount_live_u * 1.0
 	+ fabs(extreme_wcp[i].index_v - extreme_wcp[j].index_v) * 0 + ncount_live_v * 1.0
 	+ fabs(extreme_wcp[i].index_w - extreme_wcp[j].index_w) * 0 + ncount_live_w * 1.0;
-      
-      
+
+      if (flag_cosmic)
+	value = fabs(extreme_wcp[i].x - extreme_wcp[j].x)/(units::mm)
+	+ fabs(extreme_wcp[i].index_u - extreme_wcp[j].index_u) * 1.0 + ncount_live_u * 1.
+	+ fabs(extreme_wcp[i].index_v - extreme_wcp[j].index_v) * 1.0 + ncount_live_v * 1.
+	+ fabs(extreme_wcp[i].index_w - extreme_wcp[j].index_w) * 1.0 + ncount_live_w * 1.
+	  + sqrt(pow(extreme_wcp[i].x-extreme_wcp[j].x,2) + pow(extreme_wcp[i].y-extreme_wcp[j].y,2) + pow(extreme_wcp[i].z-extreme_wcp[j].z,2))/(units::mm)*1;
+     
 
       if (value > boundary_value){
 	/* if (cluster_id==28&& value > 275) */
-	/* std::cout << extreme_wcp[i].x/units::cm << " " << extreme_wcp[i].y/units::cm << " " << extreme_wcp[i].z/units::cm << " " */
-	/* 	  << extreme_wcp[j].x/units::cm << " " << extreme_wcp[j].y/units::cm << " " << extreme_wcp[j].z/units::cm << " " << value << " " << ncount_live_u << " " << ncount_live_v << " " << ncount_live_w << std::endl; */
 	
+	 /* std::cout << extreme_wcp[i].x/units::cm << " " << extreme_wcp[i].y/units::cm << " " << extreme_wcp[i].z/units::cm << " " */
+	 /* 	  << extreme_wcp[j].x/units::cm << " " << extreme_wcp[j].y/units::cm << " " << extreme_wcp[j].z/units::cm << " " << value << " " << ncount_live_u << " " << ncount_live_v << " " << ncount_live_w << std::endl; */
+	 
 	boundary_value = value;
 	if (extreme_wcp[i].y > extreme_wcp[j].y){
 	  boundary_points.first = extreme_wcp[i];
