@@ -323,17 +323,20 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << std::endl;
   
   if (left_L > 40*units::cm || left_L > 7.5*units::cm && (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0){
-    std::cout << "Mid Point A " << inside_dead_region(mid_p) << " " << mid_p << " " << left_L  << " " << (left_Q/(left_L*units::cm+1e-9)/50e3) << std::endl;
+    std::cout << "Mid Point A " << inside_dead_region(mid_p) << " " << mid_p << " " << left_L  << " " << (left_Q/(left_L/units::cm+1e-9)/50e3) << std::endl;
     return false;
   }else{
-    if (left_L < 8*units::cm && (left_Q/(left_L*units::cm+1e-9)/50e3)< 1.5 ||
-	left_L < 6*units::cm && (left_Q/(left_L*units::cm+1e-9)/50e3) < 1.7 ||
-	left_L < 3*units::cm && (left_Q/(left_L*units::cm+1e-9)/50e3) < 1.9){
+    if (left_L < 8*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3)< 1.5 ||
+	left_L < 6*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.7 ||
+	left_L < 3*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.9){
       left_L = 0;
       kink_num = dQ.size();
-      exit_L = 40*units::cm;
+      if (exit_L <20*units::cm)
+	exit_L = 40*units::cm;
     }
 
+    
+    
     bool flag_pass = false;
     if (left_L < 40*units::cm) {
       if (exit_L < 35*units::cm){
