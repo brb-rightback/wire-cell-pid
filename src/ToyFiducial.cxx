@@ -645,6 +645,12 @@ int WireCellPID::ToyFiducial::find_first_kink(WireCellPID::PR3DCluster* main_clu
   WireCell::PointVector& fine_tracking_path = main_cluster->get_fine_tracking_path();
   std::vector<double>& dQ = main_cluster->get_dQ();
   std::vector<double>& dx = main_cluster->get_dx();
+  std::vector<double>& pu = main_cluster->get_pu();
+  std::vector<double>& pv = main_cluster->get_pv();
+  std::vector<double>& pw = main_cluster->get_pw();
+  std::vector<double>& pt = main_cluster->get_pt();
+
+  //  std::cout << dQ.size() << " " << pu.size() << std::endl;
   
   TVector3 drift_dir(1,0,0);
 
@@ -724,6 +730,20 @@ int WireCellPID::ToyFiducial::find_first_kink(WireCellPID::PR3DCluster* main_clu
       double angle3 = v10.Angle(v20)/3.1415926*180.;
       if (angle3 < 20 && ave_angles.at(i) < 20 || angle3 < 12.5 && inside_dead_region(fine_tracking_path.at(i)) || angle3 < 7.5 || i<=4) continue;
       if (angle3 > 30){
+
+	// shorted Y ...
+	if (pw.at(i) > 7135 && pw.at(i)< 7264){
+	  bool flag_bad = false;
+	  for (int k=-1;k!=2;k++){
+	    auto it1 = ch_mcell_set_map.find(std::round(pv.at(i)+k));
+	    if ( it1!=ch_mcell_set_map.end() && it1->second.size()>0){
+	      flag_bad = true;
+	      break;
+	    }
+	  }
+	  if (flag_bad) continue;
+	}
+	
 	double sum_fQ = 0;
 	double sum_fx = 0;
 	double sum_bQ = 0;
@@ -740,9 +760,10 @@ int WireCellPID::ToyFiducial::find_first_kink(WireCellPID::PR3DCluster* main_clu
 	}
 	sum_fQ /= (sum_fx/units::cm+1e-9)*50e3;
 	sum_bQ /= (sum_bx/units::cm+1e-9)*50e3;
+	
 	//std::cout << sum_fQ << " " << sum_bQ << std::endl;
 	if (sum_fQ > 0.6 && sum_bQ > 0.6){
-	  std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << ave_angles.at(i) << " " << max_numbers.at(i) << " " << angle3 << " " << dQ.at(i)/dx.at(i)*units::cm/50e3 << std::endl;
+	  std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << ave_angles.at(i) << " " << max_numbers.at(i) << " " << angle3 << " " << dQ.at(i)/dx.at(i)*units::cm/50e3 << " " << pu.at(i) << " " << pv.at(i) << " " << pw.at(i) << std::endl;
 	  return max_numbers.at(i);
 	}
       }
@@ -761,6 +782,51 @@ int WireCellPID::ToyFiducial::find_first_kink(WireCellPID::PR3DCluster* main_clu
       double angle3 = v10.Angle(v20)/3.1415926*180.;
       if (angle3 < 20 && ave_angles.at(i) < 20 || angle3 < 12.5 && inside_dead_region(fine_tracking_path.at(i)) || angle3 < 7.5 || i<=4) continue;
       if (angle3 > 30){
+	// shorted Y ...
+	if (pw.at(i) > 7135 && pw.at(i)< 7264){
+	  bool flag_bad = false;
+	  for (int k=-1;k!=2;k++){
+	    auto it1 = ch_mcell_set_map.find(std::round(pv.at(i)+k));
+	    if (it1!=ch_mcell_set_map.end() && it1->second.size()>0){
+	      flag_bad = true;
+	      break;
+	    }
+	  }
+	  if (flag_bad) continue;
+	}
+
+	bool flag_bad_u = false;
+	{
+	  for (int k=-1;k!=2;k++){
+	    auto it1 = ch_mcell_set_map.find(std::round(pu.at(i)+k));
+	    if (it1!=ch_mcell_set_map.end() && it1->second.size()>0){
+	      flag_bad_u = true;
+	      break;
+	    }
+	  }
+	}
+	bool flag_bad_v = false;
+	{
+	  for (int k=-1;k!=2;k++){
+	    auto it1 = ch_mcell_set_map.find(std::round(pv.at(i)+k));
+	    if (it1!=ch_mcell_set_map.end() && it1->second.size()>0){
+	      flag_bad_v = true;
+	      break;
+	    }
+	  }
+	}
+	bool flag_bad_w = false;
+	{
+	  for (int k=-1;k!=2;k++){
+	    auto it1 = ch_mcell_set_map.find(std::round(pw.at(i)+k));
+	    if (it1!=ch_mcell_set_map.end() && it1->second.size()>0){
+	      flag_bad_w = true;
+	      break;
+	    }
+	  }
+	}
+	
+	
 	double sum_fQ = 0;
 	double sum_fx = 0;
 	double sum_bQ = 0;
@@ -778,7 +844,9 @@ int WireCellPID::ToyFiducial::find_first_kink(WireCellPID::PR3DCluster* main_clu
 	sum_fQ /= (sum_fx/units::cm+1e-9)*50e3;
 	sum_bQ /= (sum_bx/units::cm+1e-9)*50e3;
 	//std::cout << sum_fQ << " " << sum_bQ << std::endl;
-	if (sum_fQ > 0.6 && sum_bQ > 0.6){
+	if (fabs(sum_fQ-sum_bQ) < 0.07*(sum_fQ+sum_bQ) && (flag_bad_u||flag_bad_v||flag_bad_w)) continue;
+	
+	if (sum_fQ > 0.6 && sum_bQ > 0.6 ){
 	  std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << ave_angles.at(i) << " " << max_numbers.at(i) << " " << angle3 << " " << dQ.at(i)/dx.at(i)*units::cm/50e3 << std::endl;
 	  return max_numbers.at(i);
 	}
