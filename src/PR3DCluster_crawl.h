@@ -30,68 +30,132 @@ WireCell::Point WireCellPID::PR3DCluster::adjust_rough_path(){
 
   int save_i = 0;
   bool flag_crawl = false;
+
+  std::vector<double> refl_angles(fine_tracking_path.size(),0);
+  std::vector<double> para_angles(fine_tracking_path.size(),0);
   
   for (size_t i=0;i!=fine_tracking_path.size(); i++){
-    TVector3 v10(0,0,0);
-    TVector3 v20(0,0,0);
-
-    TVector3 v11(0,0,0);
-    TVector3 v21(0,0,0);
-
-    TVector3 v12(0,0,0);
-    TVector3 v22(0,0,0);
     
-    if (i>0)
-      v10.SetXYZ(fine_tracking_path.at(i).x - fine_tracking_path.at(i-1).x,
-		 fine_tracking_path.at(i).y - fine_tracking_path.at(i-1).y,
-		 fine_tracking_path.at(i).z - fine_tracking_path.at(i-1).z);
-    if (i>1)
-      v11.SetXYZ(fine_tracking_path.at(i).x - fine_tracking_path.at(i-2).x,
-		 fine_tracking_path.at(i).y - fine_tracking_path.at(i-2).y,
-		 fine_tracking_path.at(i).z - fine_tracking_path.at(i-2).z);
-    if (i>2)
-      v12.SetXYZ(fine_tracking_path.at(i).x - fine_tracking_path.at(i-3).x,
-		 fine_tracking_path.at(i).y - fine_tracking_path.at(i-3).y,
-		 fine_tracking_path.at(i).z - fine_tracking_path.at(i-3).z);
+    /* TVector3 v10(0,0,0); */
+    /* TVector3 v20(0,0,0); */
+
+    /* TVector3 v11(0,0,0); */
+    /* TVector3 v21(0,0,0); */
+
+    /* TVector3 v12(0,0,0); */
+    /* TVector3 v22(0,0,0); */
     
-    if (i+1<fine_tracking_path.size())
-      v20.SetXYZ(fine_tracking_path.at(i+1).x - fine_tracking_path.at(i).x,
-		 fine_tracking_path.at(i+1).y - fine_tracking_path.at(i).y,
-		 fine_tracking_path.at(i+1).z - fine_tracking_path.at(i).z);
-    if (i+2<fine_tracking_path.size())
-      v21.SetXYZ(fine_tracking_path.at(i+2).x - fine_tracking_path.at(i).x,
-		 fine_tracking_path.at(i+2).y - fine_tracking_path.at(i).y,
-		 fine_tracking_path.at(i+2).z - fine_tracking_path.at(i).z);
-    if (i+3<fine_tracking_path.size())
-      v22.SetXYZ(fine_tracking_path.at(i+3).x - fine_tracking_path.at(i).x,
-		 fine_tracking_path.at(i+3).y - fine_tracking_path.at(i).y,
-		 fine_tracking_path.at(i+3).z - fine_tracking_path.at(i).z);
+    /* if (i>0) */
+    /*   v10.SetXYZ(fine_tracking_path.at(i).x - fine_tracking_path.at(i-1).x, */
+    /* 		 fine_tracking_path.at(i).y - fine_tracking_path.at(i-1).y, */
+    /* 		 fine_tracking_path.at(i).z - fine_tracking_path.at(i-1).z); */
+    /* if (i>1) */
+    /*   v11.SetXYZ(fine_tracking_path.at(i).x - fine_tracking_path.at(i-2).x, */
+    /* 		 fine_tracking_path.at(i).y - fine_tracking_path.at(i-2).y, */
+    /* 		 fine_tracking_path.at(i).z - fine_tracking_path.at(i-2).z); */
+    /* if (i>2) */
+    /*   v12.SetXYZ(fine_tracking_path.at(i).x - fine_tracking_path.at(i-3).x, */
+    /* 		 fine_tracking_path.at(i).y - fine_tracking_path.at(i-3).y, */
+    /* 		 fine_tracking_path.at(i).z - fine_tracking_path.at(i-3).z); */
     
+    /* if (i+1<fine_tracking_path.size()) */
+    /*   v20.SetXYZ(fine_tracking_path.at(i+1).x - fine_tracking_path.at(i).x, */
+    /* 		 fine_tracking_path.at(i+1).y - fine_tracking_path.at(i).y, */
+    /* 		 fine_tracking_path.at(i+1).z - fine_tracking_path.at(i).z); */
+    /* if (i+2<fine_tracking_path.size()) */
+    /*   v21.SetXYZ(fine_tracking_path.at(i+2).x - fine_tracking_path.at(i).x, */
+    /* 		 fine_tracking_path.at(i+2).y - fine_tracking_path.at(i).y, */
+    /* 		 fine_tracking_path.at(i+2).z - fine_tracking_path.at(i).z); */
+    /* if (i+3<fine_tracking_path.size()) */
+    /*   v22.SetXYZ(fine_tracking_path.at(i+3).x - fine_tracking_path.at(i).x, */
+    /* 		 fine_tracking_path.at(i+3).y - fine_tracking_path.at(i).y, */
+    /* 		 fine_tracking_path.at(i+3).z - fine_tracking_path.at(i).z); */
     
+    /* double angle1 = v10.Angle(v20)/3.1415926*180.; */
+    /* angle1 = std::min(v11.Angle(v21)/3.1415926*180.,angle1); */
+    /* angle1 = std::min(v12.Angle(v22)/3.1415926*180., angle1); */
+
+    /* TVector3 v30 = v10+v20; */
+    /* double angle2 = fabs(v30.Angle(drift_dir)/3.1415926*180.-90); */
+    /* v30 = v11 + v21; */
+    /* angle2 = std::min(fabs(v30.Angle(drift_dir)/3.1415926*180.-90),angle2); */
+    /* v30 = v12 + v22; */
+    /* angle2 = std::min(fabs(v30.Angle(drift_dir)/3.1415926*180.-90),angle2); */
     
 
-    double angle1 = v10.Angle(v20)/3.1415926*180.;
-    angle1 = std::min(v11.Angle(v21)/3.1415926*180.,angle1);
-    angle1 = std::min(v12.Angle(v22)/3.1415926*180., angle1);
+    double angle1 = 0;
+    double angle2 = 0;
 
-    TVector3 v30 = v10+v20;
-    double angle2 = fabs(v30.Angle(drift_dir)/3.1415926*180.-90);
-    v30 = v11 + v21;
-    angle2 = std::min(fabs(v30.Angle(drift_dir)/3.1415926*180.-90),angle2);
-    v30 = v12 + v22;
-    angle2 = std::min(fabs(v30.Angle(drift_dir)/3.1415926*180.-90),angle2);
-    double min_dQ_dx = dQ.at(i)/dx.at(i);
-
-    for (size_t j = 1;j!=6;j++){
-      if (i+j<fine_tracking_path.size())
-	if (dQ.at(i+j)/dx.at(i+j) < min_dQ_dx)
-	  min_dQ_dx = dQ.at(i+j)/dx.at(i+j);
+    for (int j=0;j!=6;j++){    
+      TVector3 v10(0,0,0);
+      TVector3 v20(0,0,0);
+      if (i>j)
+	v10.SetXYZ(fine_tracking_path.at(i).x - fine_tracking_path.at(i-j-1).x,
+		   fine_tracking_path.at(i).y - fine_tracking_path.at(i-j-1).y,
+		   fine_tracking_path.at(i).z - fine_tracking_path.at(i-j-1).z);
+      
+      if (i+j+1<fine_tracking_path.size())
+	v20.SetXYZ(fine_tracking_path.at(i+j+1).x - fine_tracking_path.at(i).x,
+		   fine_tracking_path.at(i+j+1).y - fine_tracking_path.at(i).y,
+		   fine_tracking_path.at(i+j+1).z - fine_tracking_path.at(i).z);
+      
+      if (j==0){
+	angle1 = v10.Angle(v20)/3.1415926*180.;
+	angle2 = std::max(fabs(v10.Angle(drift_dir)/3.1415926*180.-90.),
+			  fabs(v20.Angle(drift_dir)/3.1415926*180.-90.));
+      }else{
+	if (v10.Mag()!=0 && v20.Mag()!=0){
+	  angle1 = std::min(v10.Angle(v20)/3.1415926*180., angle1);
+	  angle2 = std::min(std::max(fabs(v10.Angle(drift_dir)/3.1415926*180.-90.),
+				     fabs(v20.Angle(drift_dir)/3.1415926*180.-90.)),angle2);
+	}
+      }
     }
-
-
     
-    if (min_dQ_dx < 1000 && angle2 > 10 && angle1 > 25){
-      std::cout << "Mid_Point_Break: " << i << " " << angle1 << " " << angle2 << " " << min_dQ_dx << " " << fine_tracking_path.at(i).x << " " << fine_tracking_path.at(i).y << " " << fine_tracking_path.at(i).z << std::endl;
+    refl_angles.at(i) = angle1;
+    para_angles.at(i) = angle2;
+    //    std::cout << i << " " << angle2 << " " << angle1 << " " << min_dQ_dx << std::endl;
+  }
+
+
+   for (int i=0;i!=fine_tracking_path.size();i++){
+     double min_dQ_dx = dQ.at(i)/dx.at(i);
+     for (size_t j = 1;j!=6;j++){
+       if (i+j<fine_tracking_path.size())
+	 if (dQ.at(i+j)/dx.at(i+j) < min_dQ_dx)
+	   min_dQ_dx = dQ.at(i+j)/dx.at(i+j);
+     }
+     
+    double sum_angles = 0;
+    double nsum = 0;
+
+    for (int j = -2; j!=3;j++){
+      if (i+j>=0 && i+j<fine_tracking_path.size()){
+	if (para_angles.at(i+j)>10){
+	  sum_angles += pow(refl_angles.at(i+j),2);
+	  nsum ++;
+	}
+      }
+    }
+    if (nsum!=0) sum_angles=sqrt(sum_angles/nsum);
+       
+    
+    if (min_dQ_dx < 1000 && para_angles.at(i) > 10 && refl_angles.at(i) > 25){
+      std::cout << "Mid_Point_Break: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << min_dQ_dx << " " << fine_tracking_path.at(i).x << " " << fine_tracking_path.at(i).y << " " << fine_tracking_path.at(i).z << std::endl;
+      flag_crawl = true;
+      save_i = i;
+      break;
+    }else if (para_angles.at(i) > 15 && refl_angles.at(i) > 27 && sum_angles > 12.5){
+       TVector3 v10(fine_tracking_path.at(i).x - fine_tracking_path.front().x,
+		   fine_tracking_path.at(i).y - fine_tracking_path.front().y,
+		   fine_tracking_path.at(i).z - fine_tracking_path.front().z);
+      TVector3 v20(fine_tracking_path.back().x - fine_tracking_path.at(i).x,
+		   fine_tracking_path.back().y - fine_tracking_path.at(i).y,
+		   fine_tracking_path.back().z - fine_tracking_path.at(i).z);
+      double angle3 = v10.Angle(v20)/3.1415926*180.;
+      if (angle3 < 20) continue;
+      
+      std::cout << "Mid_Point_Break: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << min_dQ_dx << " " << fine_tracking_path.at(i).x << " " << fine_tracking_path.at(i).y << " " << fine_tracking_path.at(i).z << std::endl;
       flag_crawl = true;
       save_i = i;
       break;
