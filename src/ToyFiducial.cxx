@@ -136,120 +136,231 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   TVector3 U_dir(0,cos(60./180.*3.1415926),sin(60./180.*3.1415926));
   TVector3 V_dir(0,cos(60./180.*3.1415926),-sin(60./180.*3.1415926));
   TVector3 W_dir(0,1,0);
-  
-  // figure out the end points ...
-  std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps = main_cluster->get_extreme_wcps();
-  
-  // get two extreme points ...
-  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = main_cluster->get_two_boundary_wcps(2,true);
 
-  {
-    std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
-    temp_wcps.push_back(wcps.first);
-    out_vec_wcps.push_back(temp_wcps);
-  }
-  {
-    std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
-    temp_wcps.push_back(wcps.second);
-    out_vec_wcps.push_back(temp_wcps);
-  }
-  
   Vector main_dir = main_cluster->get_PCA_axis(0);
   TVector3 dir_main(main_dir.x,main_dir.y,main_dir.z);
-
+  
   std::vector<WCPointCloud<double>::WCPoint> candidate_exit_wcps;
-
-  // boundary check
-  for (size_t i=0;i!=out_vec_wcps.size();i++){
-    bool flag_save = false;
-    // check all the points ... 
-    for (size_t j=0;j!=out_vec_wcps.at(i).size();j++){
-      Point p1(out_vec_wcps.at(i).at(j).x,out_vec_wcps.at(i).at(j).y,out_vec_wcps.at(i).at(j).z);
-      if (!inside_fiducial_volume(p1,offset_x)){
-	candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
-	flag_save = true;
-	break;
-      }
+  std::set<int> temp_set;
+  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps;
+  
+  // first round check
+  {
+    // get two extreme points ...
+    wcps = main_cluster->get_two_boundary_wcps(2,true);
+    // figure out the end points ...
+    std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps = main_cluster->get_extreme_wcps();
+    
+    {
+      std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
+      temp_wcps.push_back(wcps.first);
+      out_vec_wcps.push_back(temp_wcps);
     }
-
-    if (!flag_save){
-      // check direction
-      Point p1(out_vec_wcps.at(i).at(0).x,out_vec_wcps.at(i).at(0).y,out_vec_wcps.at(i).at(0).z);
-      TVector3 dir = main_cluster->VHoughTrans(p1,30*units::cm);
-      dir *= (-1);
-      
-      // check U and V and W
-      TVector3 dir_1(0,dir.Y(),dir.Z());
-      double angle1 = dir_1.Angle(U_dir);
-      TVector3 tempV1(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle1),0);
-      double angle1_1 = tempV1.Angle(drift_dir)/3.1415926*180.;
-      
-      double angle2 = dir_1.Angle(V_dir);
-      TVector3 tempV2(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle2),0);
-      double angle2_1 = tempV2.Angle(drift_dir)/3.1415926*180.;
-      
-      double angle3 = dir_1.Angle(W_dir);
-      TVector3 tempV3(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle3),0);
-      double angle3_1 = tempV3.Angle(drift_dir)/3.1415926*180.;
-      
-      
-      if ( (angle1_1 < 10 || angle2_1 < 10 || angle3_1 < 5)){
-	if (!check_signal_processing(p1,dir,ct_point_cloud,1*units::cm,offset_x)){
-	  flag_save = true;
+    {
+      std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
+      temp_wcps.push_back(wcps.second);
+      out_vec_wcps.push_back(temp_wcps);
+    }
+    
+    // boundary check
+    for (size_t i=0;i!=out_vec_wcps.size();i++){
+      bool flag_save = false;
+      // check all the points ... 
+      for (size_t j=0;j!=out_vec_wcps.at(i).size();j++){
+	Point p1(out_vec_wcps.at(i).at(j).x,out_vec_wcps.at(i).at(j).y,out_vec_wcps.at(i).at(j).z);
+	if (!inside_fiducial_volume(p1,offset_x)){
 	  candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	  flag_save = true;
+	  break;
 	}
       }
-
+      
       if (!flag_save){
-	if (fabs((3.1415926/2.-dir.Angle(dir_main))/3.1415926*180.)>60 ){
-	  if (!check_dead_volume(p1,dir,1*units::cm,offset_x)){
+	// check direction
+	Point p1(out_vec_wcps.at(i).at(0).x,out_vec_wcps.at(i).at(0).y,out_vec_wcps.at(i).at(0).z);
+	TVector3 dir = main_cluster->VHoughTrans(p1,30*units::cm);
+	dir *= (-1);
+	
+	// check U and V and W
+	TVector3 dir_1(0,dir.Y(),dir.Z());
+	double angle1 = dir_1.Angle(U_dir);
+	TVector3 tempV1(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle1),0);
+	double angle1_1 = tempV1.Angle(drift_dir)/3.1415926*180.;
+	
+	double angle2 = dir_1.Angle(V_dir);
+	TVector3 tempV2(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle2),0);
+	double angle2_1 = tempV2.Angle(drift_dir)/3.1415926*180.;
+	
+	double angle3 = dir_1.Angle(W_dir);
+	TVector3 tempV3(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle3),0);
+	double angle3_1 = tempV3.Angle(drift_dir)/3.1415926*180.;
+	
+	
+	if ( (angle1_1 < 10 || angle2_1 < 10 || angle3_1 < 5)){
+	  if (!check_signal_processing(p1,dir,ct_point_cloud,1*units::cm,offset_x)){
 	    flag_save = true;
 	    candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
 	  }
 	}
+	
+	if (!flag_save){
+	  if (fabs((3.1415926/2.-dir.Angle(dir_main))/3.1415926*180.)>60 ){
+	    if (!check_dead_volume(p1,dir,1*units::cm,offset_x)){
+	      flag_save = true;
+	      candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	    }
+	  }
+	}
+      }
+    }
+    
+    //std::cout << wcps.first.x << " " <<wcps.first.y << " " << wcps.first.z << std::endl;
+    //std::cout << wcps.second.x << " " <<wcps.second.y << " " << wcps.second.z << std::endl;
+    
+    for (size_t i=0; i!=candidate_exit_wcps.size(); i++){
+      double dis1 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.first.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.first.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.first.z,2));
+      double dis2 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.second.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.second.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.second.z,2));
+      
+      //      std::cout << candidate_exit_wcps.at(i).x << " " << candidate_exit_wcps.at(i).y << " " << candidate_exit_wcps.at(i).z << " " << dis1 << " " << dis2 << std::endl;
+      
+      // essentially one of the extreme points ...
+      if (dis1 < dis2){
+	if (dis1 < 1.0*units::cm)  temp_set.insert(0);
+      }else{
+	if (dis2 < 1.0*units::cm)  temp_set.insert(1);
+      }
+    }
+
+    //    std::cout << temp_set.size() << " " << candidate_exit_wcps.size() << std::endl;
+    
+    // protection against two end point situation
+    if (temp_set.size()==2){
+      WireCell::Point tp1(wcps.first.x,wcps.first.y,wcps.first.z);
+      WireCell::Point tp2(wcps.second.x,wcps.second.y,wcps.second.z);
+      
+      temp_set.clear();
+      
+      if ((!inside_fiducial_volume(tp1,offset_x))) temp_set.insert(0);
+      if ((!inside_fiducial_volume(tp2,offset_x))) temp_set.insert(1);
+      if (temp_set.size()==0){
+	temp_set.insert(0);
+	temp_set.insert(1);
       }
     }
   }
 
- 
+  if (temp_set.size()==0){
+    candidate_exit_wcps.clear();
+       // get two extreme points ...
+    wcps = main_cluster->get_two_boundary_wcps(2);
+    // figure out the end points ...
+    std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps = main_cluster->get_extreme_wcps();
+    
+    {
+      std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
+      temp_wcps.push_back(wcps.first);
+      out_vec_wcps.push_back(temp_wcps);
+    }
+    {
+      std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
+      temp_wcps.push_back(wcps.second);
+      out_vec_wcps.push_back(temp_wcps);
+    }
+    
+    // boundary check
+    for (size_t i=0;i!=out_vec_wcps.size();i++){
+      bool flag_save = false;
+      // check all the points ... 
+      for (size_t j=0;j!=out_vec_wcps.at(i).size();j++){
+	Point p1(out_vec_wcps.at(i).at(j).x,out_vec_wcps.at(i).at(j).y,out_vec_wcps.at(i).at(j).z);
+	if (!inside_fiducial_volume(p1,offset_x)){
+	  candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	  flag_save = true;
+	  break;
+	}
+      }
+      
+      if (!flag_save){
+	// check direction
+	Point p1(out_vec_wcps.at(i).at(0).x,out_vec_wcps.at(i).at(0).y,out_vec_wcps.at(i).at(0).z);
+	TVector3 dir = main_cluster->VHoughTrans(p1,30*units::cm);
+	dir *= (-1);
+	
+	// check U and V and W
+	TVector3 dir_1(0,dir.Y(),dir.Z());
+	double angle1 = dir_1.Angle(U_dir);
+	TVector3 tempV1(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle1),0);
+	double angle1_1 = tempV1.Angle(drift_dir)/3.1415926*180.;
+	
+	double angle2 = dir_1.Angle(V_dir);
+	TVector3 tempV2(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle2),0);
+	double angle2_1 = tempV2.Angle(drift_dir)/3.1415926*180.;
+	
+	double angle3 = dir_1.Angle(W_dir);
+	TVector3 tempV3(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle3),0);
+	double angle3_1 = tempV3.Angle(drift_dir)/3.1415926*180.;
+	
+	
+	if ( (angle1_1 < 10 || angle2_1 < 10 || angle3_1 < 5)){
+	  if (!check_signal_processing(p1,dir,ct_point_cloud,1*units::cm,offset_x)){
+	    flag_save = true;
+	    candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	  }
+	}
+	
+	if (!flag_save){
+	  if (fabs((3.1415926/2.-dir.Angle(dir_main))/3.1415926*180.)>60 ){
+	    if (!check_dead_volume(p1,dir,1*units::cm,offset_x)){
+	      flag_save = true;
+	      candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	    }
+	  }
+	}
+      }
+    }
+    
+    //std::cout << wcps.first.x << " " <<wcps.first.y << " " << wcps.first.z << std::endl;
+    //std::cout << wcps.second.x << " " <<wcps.second.y << " " << wcps.second.z << std::endl;
+    
+    for (size_t i=0; i!=candidate_exit_wcps.size(); i++){
+      double dis1 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.first.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.first.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.first.z,2));
+      double dis2 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.second.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.second.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.second.z,2));
+      
+      //std::cout << candidate_exit_wcps.at(i).x << " " << candidate_exit_wcps.at(i).y << " " << candidate_exit_wcps.at(i).z << " " << dis1 << " " << dis2 << std::endl;
+      
+      // essentially one of the extreme points ...
+      if (dis1 < dis2){
+	if (dis1 < 1.0*units::cm)  temp_set.insert(0);
+      }else{
+	if (dis2 < 1.0*units::cm)  temp_set.insert(1);
+      }
+    }
+
+    //std::cout << temp_set.size() << " " << candidate_exit_wcps.size() << std::endl;
+    
+    
+    // protection against two end point situation
+    if (temp_set.size()==2){
+      WireCell::Point tp1(wcps.first.x,wcps.first.y,wcps.first.z);
+      WireCell::Point tp2(wcps.second.x,wcps.second.y,wcps.second.z);
+      
+      temp_set.clear();
+      
+      if ((!inside_fiducial_volume(tp1,offset_x))) temp_set.insert(0);
+      if ((!inside_fiducial_volume(tp2,offset_x))) temp_set.insert(1);
+      if (temp_set.size()==0){
+	temp_set.insert(0);
+	temp_set.insert(1);
+      }
+    }
+  }
+  
+
   
   // fully contained, so not a STM
   if (candidate_exit_wcps.size()==0) {
     std::cout << "Mid Point: " << std::endl;
     return false;
-  }
-
-  std::cout << wcps.first.x << " " <<wcps.first.y << " " << wcps.first.z << std::endl;
-  std::cout << wcps.second.x << " " <<wcps.second.y << " " << wcps.second.z << std::endl;
-  
-  std::set<int> temp_set;
-  for (size_t i=0; i!=candidate_exit_wcps.size(); i++){
-    double dis1 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.first.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.first.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.first.z,2));
-    double dis2 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.second.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.second.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.second.z,2));
-
-    std::cout << candidate_exit_wcps.at(i).x << " " << candidate_exit_wcps.at(i).y << " " << candidate_exit_wcps.at(i).z << " " << dis1 << " " << dis2 << std::endl;
-    
-    // essentially one of the extreme points ...
-    if (dis1 < dis2){
-      if (dis1 < 1.0*units::cm)  temp_set.insert(0);
-    }else{
-      if (dis2 < 1.0*units::cm)  temp_set.insert(1);
-    }
-  }
-
-  // protection against two end point situation
-  if (temp_set.size()==2){
-    WireCell::Point tp1(wcps.first.x,wcps.first.y,wcps.first.z);
-    WireCell::Point tp2(wcps.second.x,wcps.second.y,wcps.second.z);
-
-    temp_set.clear();
-    
-    if ((!inside_fiducial_volume(tp1,offset_x))) temp_set.insert(0);
-    if ((!inside_fiducial_volume(tp2,offset_x))) temp_set.insert(1);
-    if (temp_set.size()==0){
-      temp_set.insert(0);
-      temp_set.insert(1);
-    }
   }
   
   std::cout << "end_point: " << temp_set.size() << " " << candidate_exit_wcps.size() << std::endl;
