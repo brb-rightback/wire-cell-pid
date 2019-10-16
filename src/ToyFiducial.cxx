@@ -313,14 +313,18 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   double left_L = 0;
   double left_Q = 0;
   double exit_L = 0;
+  double exit_Q = 0;
   for (size_t i=0;i!=kink_num;i++){
     exit_L += dx.at(i);
+    exit_Q += dQ.at(i);
   }
   for (size_t i = kink_num; i!=dx.size(); i++){
     left_L += dx.at(i);
     left_Q += dQ.at(i);
   }
-  std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << std::endl;
+  std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << " " << (exit_Q/(exit_L/units::cm+1e-9)/50e3) << std::endl;
+
+  
   
   if (left_L > 40*units::cm || left_L > 7.5*units::cm && (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0){
     std::cout << "Mid Point A " << inside_dead_region(mid_p) << " " << mid_p << " " << left_L  << " " << (left_Q/(left_L/units::cm+1e-9)/50e3) << std::endl;
@@ -451,7 +455,7 @@ int WireCellPID::ToyFiducial::find_first_kink(WireCellPID::PR3DCluster* main_clu
     for (int j = -2; j!=3;j++){
 
       if (i+j>=0 && i+j<fine_tracking_path.size()){
-	if (para_angles.at(i+j)>10){
+	if (para_angles.at(i+j)>12){
 	  sum_angles += pow(refl_angles.at(i+j),2);
 	  nsum ++;
 	  if (refl_angles.at(i+j) > max_angle){
