@@ -415,117 +415,229 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     }
   }
   
-  // regular crawling ...
-  main_cluster->do_rough_path(first_wcp, last_wcp);
-  main_cluster->collect_charge_trajectory(ct_point_cloud); 
-  main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
-  
-  Point mid_p = main_cluster->adjust_rough_path(); 
-  
-  // fitting trajectory and dQ/dx...
-  main_cluster->collect_charge_trajectory(ct_point_cloud); 
-  main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+  // forward check ...
+  {
+    if (flag_double_end) std::cout << "Forward check! " << std::endl;
+    // regular crawling ...
+    main_cluster->do_rough_path(first_wcp, last_wcp);
+    main_cluster->collect_charge_trajectory(ct_point_cloud); 
+    main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
+    Point mid_p = main_cluster->adjust_rough_path(); 
+    // fitting trajectory and dQ/dx...
+    main_cluster->collect_charge_trajectory(ct_point_cloud); 
+    main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
 
-  // check both end points for TGM ...
-  WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
-  std::vector<double>& dQ = main_cluster->get_dQ();
-  std::vector<double>& dx = main_cluster->get_dx();
+    // check both end points for TGM ...
+    WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
+    std::vector<double>& dQ = main_cluster->get_dQ();
+    std::vector<double>& dx = main_cluster->get_dx();
     
-  
-
-  int kink_num = find_first_kink(main_cluster);
-  
-  double left_L = 0;
-  double left_Q = 0;
-  double exit_L = 0;
-  double exit_Q = 0;
-  for (size_t i=0;i!=kink_num;i++){
-    exit_L += dx.at(i);
-    exit_Q += dQ.at(i);
-  }
-  for (size_t i = kink_num; i!=dx.size(); i++){
-    left_L += dx.at(i);
-    left_Q += dQ.at(i);
-  }
-  
-  std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << " " << (exit_Q/(exit_L/units::cm+1e-9)/50e3) << std::endl;
-
-  if ((exit_L < 3*units::cm || left_L < 3*units::cm) && (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
-    std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
-    return true;
-  }
-  
-  if (left_L > 40*units::cm || left_L > 7.5*units::cm && (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0){
-    std::cout << "Mid Point A " << inside_dead_region(mid_p) << " " << mid_p << " " << left_L  << " " << (left_Q/(left_L/units::cm+1e-9)/50e3) << std::endl;
-    return false;
-  }else{
-    if (left_L < 8*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3)< 1.5 ||
-	left_L < 6*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.7 ||
-	left_L < 3*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.9){
-      left_L = 0;
-      kink_num = dQ.size();
-      exit_L = 40*units::cm;
+    int kink_num = find_first_kink(main_cluster);
+    
+    double left_L = 0;
+    double left_Q = 0;
+    double exit_L = 0;
+    double exit_Q = 0;
+    for (size_t i=0;i!=kink_num;i++){
+      exit_L += dx.at(i);
+      exit_Q += dQ.at(i);
     }
-
+    for (size_t i = kink_num; i!=dx.size(); i++){
+      left_L += dx.at(i);
+      left_Q += dQ.at(i);
+    }
     
+    std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << " " << (exit_Q/(exit_L/units::cm+1e-9)/50e3) << std::endl;
     
-    bool flag_pass = false;
-    if (left_L < 40*units::cm) {
-      if (exit_L < 35*units::cm){
-	flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
-	  eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
-      }else{
-	flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 35*units::cm) ||
-	  eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 35*units::cm);
+    if ((exit_L < 3*units::cm || left_L < 3*units::cm) && (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
+      std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+      return true;
+    }
+  
+    if (left_L > 40*units::cm || left_L > 7.5*units::cm && (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0){
+      if (!flag_double_end){
+	std::cout << "Mid Point A " << inside_dead_region(mid_p) << " " << mid_p << " " << left_L  << " " << (left_Q/(left_L/units::cm+1e-9)/50e3) << std::endl;
+	return false;
       }
+    }else{
+      bool flag_fix_end = false;
+      if (exit_L < 35*units::cm || (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0&& left_L > 2*units::cm) flag_fix_end = true;
       
-      if (flag_pass)
-	return true;
-      else{
-	if (exit_L < 35*units::cm){
-	  flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 15*units::cm) ||
-	    eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 15*units::cm);
-	}else{
-	  flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 15*units::cm) ||
-	    eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 15*units::cm);
-	}
+      if (left_L < 8*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3)< 1.5 ||
+	  left_L < 6*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.7 ||
+	  left_L < 3*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.9){
+	left_L = 0;
+	kink_num = dQ.size();
+	exit_L = 40*units::cm;
+	flag_fix_end = false;
       }
-    }
     
-    if (left_L < 20*units::cm){
-      if (flag_pass)
-	return true;
-      else{
-	if (exit_L < 35*units::cm){
+    
+      bool flag_pass = false;
+      if (left_L < 40*units::cm) {
+	if (flag_fix_end){
 	  flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
 	    eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
 	}else{
-	  flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 35*units::cm) ||
-	    eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	  flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 35*units::cm) ||
+	    eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	}
+	
+	if (flag_pass)
+	  return true;
+	else{
+	  if (flag_fix_end){
+	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 15*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 15*units::cm);
+	  }else{
+	    flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 15*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	  }
 	}
       }
       
-      if (flag_pass)
-	return true;
-      else{
-	if (exit_L < 35*units::cm){
-	  flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm , 0., 15*units::cm) ||
-	    eval_stm(main_cluster, kink_num, 5*units::cm , 3.*units::cm, 15*units::cm);
-	}else{
-	  flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 15*units::cm) ||
-	    eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 15*units::cm);
+      if (left_L < 20*units::cm){
+	if (flag_pass)
+	  return true;
+	else{
+	  if (flag_fix_end){
+	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
+	  }else{
+	    flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 35*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	  }
+	}
+	
+	if (flag_pass)
+	  return true;
+	else{
+	  if (flag_fix_end){
+	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm , 0., 15*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 5*units::cm , 3.*units::cm, 15*units::cm);
+	  }else{
+	    flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 15*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	  }
 	}
       }
     }
-    
-
   }
+  
+  // backward check ...
+  if (flag_double_end){
+    std::cout << "Backward check! " << std::endl;
+    // regular crawling ...
+    main_cluster->do_rough_path( last_wcp, first_wcp);
+    main_cluster->collect_charge_trajectory(ct_point_cloud); 
+    main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
+    Point mid_p = main_cluster->adjust_rough_path(); 
+    // fitting trajectory and dQ/dx...
+    main_cluster->collect_charge_trajectory(ct_point_cloud); 
+    main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+
+    // check both end points for TGM ...
+    WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
+    std::vector<double>& dQ = main_cluster->get_dQ();
+    std::vector<double>& dx = main_cluster->get_dx();
+    
+    int kink_num = find_first_kink(main_cluster);
+    
+    double left_L = 0;
+    double left_Q = 0;
+    double exit_L = 0;
+    double exit_Q = 0;
+    for (size_t i=0;i!=kink_num;i++){
+      exit_L += dx.at(i);
+      exit_Q += dQ.at(i);
+    }
+    for (size_t i = kink_num; i!=dx.size(); i++){
+      left_L += dx.at(i);
+      left_Q += dQ.at(i);
+    }
+    
+    std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << " " << (exit_Q/(exit_L/units::cm+1e-9)/50e3) << std::endl;
+    
+    if ((exit_L < 3*units::cm || left_L < 3*units::cm) && (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
+      std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+      return true;
+    }
+  
+    if (left_L > 40*units::cm || left_L > 7.5*units::cm && (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0){
+      std::cout << "Mid Point A " << inside_dead_region(mid_p) << " " << mid_p << " " << left_L  << " " << (left_Q/(left_L/units::cm+1e-9)/50e3) << std::endl;
+      return false;
+    }else{
+      bool flag_fix_end = false;
+      if (exit_L < 35*units::cm || (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0 && left_L > 2*units::cm) flag_fix_end = true;
+      
+      if (left_L < 8*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3)< 1.5 ||
+	  left_L < 6*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.7 ||
+	  left_L < 3*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.9){
+	left_L = 0;
+	kink_num = dQ.size();
+	exit_L = 40*units::cm;
+	flag_fix_end = false;
+      }
+
+    
+    
+      bool flag_pass = false;
+      if (left_L < 40*units::cm) {
+	if (flag_fix_end){
+	  flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
+	    eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
+	}else{
+	  flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 35*units::cm) ||
+	    eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	}
+	
+	if (flag_pass)
+	  return true;
+	else{
+	  if (flag_fix_end){
+	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 15*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 15*units::cm);
+	  }else{
+	    flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 15*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	  }
+	}
+      }
+      
+      if (left_L < 20*units::cm){
+	if (flag_pass)
+	  return true;
+	else{
+	  if (flag_fix_end){
+	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
+	  }else{
+	    flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 35*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	  }
+	}
+	
+	if (flag_pass)
+	  return true;
+	else{
+	  if (flag_fix_end){
+	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm , 0., 15*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 5*units::cm , 3.*units::cm, 15*units::cm);
+	  }else{
+	    flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 15*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	  }
+	}
+      }
+    }
+  }
+  
   // check 5512-209-10491
   // if (inside_dead_region(mid_p)) return true;
   //  
 
   // end check ...
-  std::cout << "Mid Point " << inside_dead_region(mid_p) << " " << mid_p << std::endl;  
+  std::cout << "Mid Point " << std::endl;  
   return false;
 }
 
