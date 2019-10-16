@@ -724,8 +724,27 @@ int WireCellPID::ToyFiducial::find_first_kink(WireCellPID::PR3DCluster* main_clu
       double angle3 = v10.Angle(v20)/3.1415926*180.;
       if (angle3 < 20 && ave_angles.at(i) < 20 || angle3 < 12.5 && inside_dead_region(fine_tracking_path.at(i)) || angle3 < 7.5 || i<=4) continue;
       if (angle3 > 30){
-	std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << ave_angles.at(i) << " " << max_numbers.at(i) << " " << angle3 << " " << dQ.at(i)/dx.at(i)*units::cm/50e3 << std::endl;
-	return max_numbers.at(i);
+	double sum_fQ = 0;
+	double sum_fx = 0;
+	double sum_bQ = 0;
+	double sum_bx = 0;
+	for (int k=0;k!=10;k++){
+	  if (i>=k+1){
+	    sum_fQ += dQ.at(i-k-1);
+	    sum_fx += dx.at(i-k-1);
+	  }
+	  if (i+k+1 < dQ.size()){
+	    sum_bQ += dQ.at(i+k+1);
+	    sum_bx += dx.at(i+k+1);
+	  }
+	}
+	sum_fQ /= (sum_fx/units::cm+1e-9)*50e3;
+	sum_bQ /= (sum_bx/units::cm+1e-9)*50e3;
+	//std::cout << sum_fQ << " " << sum_bQ << std::endl;
+	if (sum_fQ > 0.6 && sum_bQ > 0.6){
+	  std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << ave_angles.at(i) << " " << max_numbers.at(i) << " " << angle3 << " " << dQ.at(i)/dx.at(i)*units::cm/50e3 << std::endl;
+	  return max_numbers.at(i);
+	}
       }
     }
   }
@@ -734,16 +753,35 @@ int WireCellPID::ToyFiducial::find_first_kink(WireCellPID::PR3DCluster* main_clu
     // std::cout << i << " " << refl_angles.at(i) << " " <<sum_angles << " " << inside_fiducial_volume(fine_tracking_path.at(i)) << std::endl;
     if ((refl_angles.at(i) > 20 && ave_angles.at(i) > 15 ) && inside_fiducial_volume(fine_tracking_path.at(i))){
       TVector3 v10(fine_tracking_path.at(i).x - fine_tracking_path.front().x,
-		   fine_tracking_path.at(i).y - fine_tracking_path.front().y,
-		   fine_tracking_path.at(i).z - fine_tracking_path.front().z);
+  		   fine_tracking_path.at(i).y - fine_tracking_path.front().y,
+  		   fine_tracking_path.at(i).z - fine_tracking_path.front().z);
       TVector3 v20(fine_tracking_path.back().x - fine_tracking_path.at(i).x,
-		   fine_tracking_path.back().y - fine_tracking_path.at(i).y,
-		   fine_tracking_path.back().z - fine_tracking_path.at(i).z);
+  		   fine_tracking_path.back().y - fine_tracking_path.at(i).y,
+  		   fine_tracking_path.back().z - fine_tracking_path.at(i).z);
       double angle3 = v10.Angle(v20)/3.1415926*180.;
       if (angle3 < 20 && ave_angles.at(i) < 20 || angle3 < 12.5 && inside_dead_region(fine_tracking_path.at(i)) || angle3 < 7.5 || i<=4) continue;
       if (angle3 > 30){
-	std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << ave_angles.at(i) << " " << max_numbers.at(i) << " " << angle3 << " " << dQ.at(i)/dx.at(i)*units::cm/50e3 << std::endl;
-	return max_numbers.at(i);
+	double sum_fQ = 0;
+	double sum_fx = 0;
+	double sum_bQ = 0;
+	double sum_bx = 0;
+	for (int k=0;k!=10;k++){
+	  if (i>=k+1){
+	    sum_fQ += dQ.at(i-k-1);
+	    sum_fx += dx.at(i-k-1);
+	  }
+	  if (i+k+1 < dQ.size()){
+	    sum_bQ += dQ.at(i+k+1);
+	    sum_bx += dx.at(i+k+1);
+	  }
+	}
+	sum_fQ /= (sum_fx/units::cm+1e-9)*50e3;
+	sum_bQ /= (sum_bx/units::cm+1e-9)*50e3;
+	//std::cout << sum_fQ << " " << sum_bQ << std::endl;
+	if (sum_fQ > 0.6 && sum_bQ > 0.6){
+	  std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << ave_angles.at(i) << " " << max_numbers.at(i) << " " << angle3 << " " << dQ.at(i)/dx.at(i)*units::cm/50e3 << std::endl;
+	  return max_numbers.at(i);
+	}
       }
     }
   }
