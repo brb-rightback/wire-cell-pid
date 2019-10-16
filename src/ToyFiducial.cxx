@@ -335,8 +335,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
 	left_L < 3*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.9){
       left_L = 0;
       kink_num = dQ.size();
-      if (exit_L <20*units::cm)
-	exit_L = 40*units::cm;
+      exit_L = 40*units::cm;
     }
 
     
