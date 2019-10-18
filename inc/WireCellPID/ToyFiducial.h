@@ -41,7 +41,7 @@ namespace WireCellPID{
     
     void AddDeadRegion(WireCell::SlimMergeGeomCell* mcell, std::vector<int>& time_slices);
 
-    std::set<WireCell::SlimMergeGeomCell*> get_Dead_mcells(){return ch_mcell_set_map.begin()->second;};
+    WireCell::SMGCSelection& get_Dead_mcells(){return mcells;};
 
     
     

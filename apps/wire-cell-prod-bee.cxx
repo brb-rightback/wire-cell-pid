@@ -427,6 +427,7 @@ int main(int argc, char* argv[])
   flag_v_vec->clear();
   flag_w_vec->clear();
 
+  
   TDC->GetEntry(entry_no);
   for (int i=0;i!=cluster_id_vec->size();i++){
     int cluster_id = cluster_id_vec->at(i);
@@ -495,10 +496,565 @@ int main(int argc, char* argv[])
       const GeomWire *wire = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.at(j));
       mcell->AddWire(wire,WirePlaneType_t(2));
     }
+
+    // figure out the boundary here ...
+    PointVector pcell;
+    if (flag_u_vec->at(i)==0 && flag_v_vec->at(i)==0){
+      const GeomWire *uwire_1 = gds.by_planeindex(WirePlaneType_t(0),wire_index_u.front());
+      const GeomWire *uwire_2 = gds.by_planeindex(WirePlaneType_t(0),wire_index_u.back());
+      float dis_u[3];
+      float u_pitch = gds.pitch(kUwire);
+      dis_u[0] = gds.wire_dist(*uwire_1) - u_pitch/2.;
+      dis_u[1] = gds.wire_dist(*uwire_2) + u_pitch/2.;
+
+      const GeomWire *vwire_1 = gds.by_planeindex(WirePlaneType_t(1),wire_index_v.front());
+      const GeomWire *vwire_2 = gds.by_planeindex(WirePlaneType_t(1),wire_index_v.back());
+      float dis_v[3];
+      float v_pitch = gds.pitch(kVwire);
+      dis_v[0] = gds.wire_dist(*vwire_1) - v_pitch/2.;
+      dis_v[1] = gds.wire_dist(*vwire_2) + v_pitch/2.;
+
+      std::vector<Vector> pcross(4);
+      bool flag1 = gds.crossing_point(dis_u[0],dis_v[0],kUwire,kVwire, pcross[0]); // check the inner point
+      
+      if (flag1){
+	// fill the outer point
+  	pcell.push_back(pcross[0]);
+      }else{
+  	// scan u-wire
+	for (int k=0;k!=wire_index_u.size();k++){
+	  const GeomWire *uwire_3 = gds.by_planeindex(WirePlaneType_t(0),wire_index_u.at(k));
+	  dis_u[2] =  gds.wire_dist(*uwire_3) - u_pitch/2.;
+
+	  if (gds.crossing_point(dis_u[2],dis_v[0],kUwire,kVwire, pcross[0])){
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[0].y,2) + pow(pcell.at(k1).z - pcross[0].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[0]);
+	    break;
+	  }
+	}
+	// scan v-wire
+	for (int k=0;k!=wire_index_v.size();k++){
+	  const GeomWire *vwire_3 = gds.by_planeindex(WirePlaneType_t(1),wire_index_v.at(k));
+	  dis_v[2] = gds.wire_dist(*vwire_3) - v_pitch/2.;
+	  if (gds.crossing_point(dis_u[0],dis_v[2],kUwire,kVwire, pcross[0])){
+
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[0].y,2) + pow(pcell.at(k1).z - pcross[0].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[0]);
+	    break;
+	  }
+	}
+      }
+
+      bool flag2 = gds.crossing_point(dis_u[0],dis_v[1],kUwire,kVwire, pcross[1]); 
+      if (flag2){
+  	pcell.push_back(pcross[1]);
+      }else{
+  	// scan u-wire
+	for (int k=0;k!=wire_index_u.size();k++){
+	  const GeomWire *uwire_3 = gds.by_planeindex(WirePlaneType_t(0),wire_index_u.at(k));
+	  dis_u[2] =  gds.wire_dist(*uwire_3) - u_pitch/2.;
+	  if (gds.crossing_point(dis_u[2],dis_v[1],kUwire,kVwire, pcross[1])){
+
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[1].y,2) + pow(pcell.at(k1).z - pcross[1].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[1]);
+	    break;
+	  }
+	}
+	// scan v-wire
+	for (int k=0;k!=wire_index_v.size();k++){
+	  const GeomWire *vwire_3 = gds.by_planeindex(WirePlaneType_t(1),wire_index_v.at(wire_index_v.size()-1-k));
+	  dis_v[2] = gds.wire_dist(*vwire_3) + v_pitch/2.;
+	  if (gds.crossing_point(dis_u[0],dis_v[2],kUwire,kVwire, pcross[1])){
+
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[1].y,2) + pow(pcell.at(k1).z - pcross[1].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[1]);
+	    break;
+	  }
+	}
+      }
+      
+      bool flag3 = gds.crossing_point(dis_u[1],dis_v[0],kUwire,kVwire, pcross[2]); 
+      if (flag3){
+  	pcell.push_back(pcross[2]);
+      }else{
+  	for (int k=0;k!=wire_index_u.size();k++){
+	  const GeomWire *uwire_3 = gds.by_planeindex(WirePlaneType_t(0),wire_index_u.at(wire_index_u.size()-1-k));
+	  dis_u[2] =  gds.wire_dist(*uwire_3) + u_pitch/2.;
+	  if (gds.crossing_point(dis_u[2],dis_v[0],kUwire,kVwire, pcross[2])){
+
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[2].y,2) + pow(pcell.at(k1).z - pcross[2].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[2]);
+	    break;
+	  }
+	}
+	// scan v-wire
+	for (int k=0;k!=wire_index_v.size();k++){
+	  const GeomWire *vwire_3 =  gds.by_planeindex(WirePlaneType_t(1),wire_index_v.at(k));
+	  dis_v[2] = gds.wire_dist(*vwire_3) - v_pitch/2.;
+	  if (gds.crossing_point(dis_u[1],dis_v[2],kUwire,kVwire, pcross[2])){
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[2].y,2) + pow(pcell.at(k1).z - pcross[2].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[2]);
+	    break;
+	  }
+	}
+      }
+      
+      bool flag4 = gds.crossing_point(dis_u[1],dis_v[1],kUwire,kVwire, pcross[3]);
+      if (flag4){
+  	pcell.push_back(pcross[3]);
+      }else{
+	// scan u-wire
+	for (int k=0;k!=wire_index_u.size();k++){
+	  const GeomWire *uwire_3 = gds.by_planeindex(WirePlaneType_t(0),wire_index_u.at(wire_index_u.size()-1-k));
+	  dis_u[2] =  gds.wire_dist(*uwire_3) + u_pitch/2.;
+	  if (gds.crossing_point(dis_u[2],dis_v[1],kUwire,kVwire, pcross[3])){
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[3].y,2) + pow(pcell.at(k1).z - pcross[3].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[3]);
+	    break;
+	  }
+	}
+	// scan v-wire
+	for (int k=0;k!=wire_index_v.size();k++){
+	  const GeomWire *vwire_3 = gds.by_planeindex(WirePlaneType_t(1),wire_index_v.at(wire_index_v.size()-1-k));
+	  dis_v[2] = gds.wire_dist(*vwire_3) + v_pitch/2.;
+	  if (gds.crossing_point(dis_u[1],dis_v[2],kUwire,kVwire, pcross[3])){
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[3].y,2) + pow(pcell.at(k1).z - pcross[3].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	    pcell.push_back(pcross[3]);
+	    break;
+	  }
+	}
+      }
+      
+      mcell->AddBoundary(pcell);
+      
+    }else if (flag_u_vec->at(i)==0 && flag_w_vec->at(i)==0){
+      const GeomWire *uwire_1 = gds.by_planeindex(WirePlaneType_t(0),wire_index_u.front());
+      const GeomWire *uwire_2 = gds.by_planeindex(WirePlaneType_t(0),wire_index_u.back());
+      float dis_u[2];
+      float u_pitch = gds.pitch(kUwire);
+      dis_u[0] = gds.wire_dist(*uwire_1) - u_pitch/2.;
+      dis_u[1] = gds.wire_dist(*uwire_2) + u_pitch/2.;
+
+      const GeomWire *wwire_1 = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.front());
+      const GeomWire *wwire_2 = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.back());
+      float dis_w[2];
+      float w_pitch = gds.pitch(kYwire);
+      dis_w[0] = gds.wire_dist(*wwire_1) - w_pitch/2.;
+      dis_w[1] = gds.wire_dist(*wwire_2) + w_pitch/2.;
+
+      std::vector<Vector> pcross(4);
+
+      bool flag1 = gds.crossing_point(dis_u[0],dis_w[0],kUwire,kYwire, pcross[0]); 
+      if (flag1){
+  	pcell.push_back(pcross[0]);
+      }else{
+  	// scan u-wire
+	for (int k=0;k!=wire_index_u.size();k++){
+	  const GeomWire *uwire_3 = gds.by_planeindex(WirePlaneType_t(0),wire_index_u.at(k));
+	  dis_u[2] =  gds.wire_dist(*uwire_3) - u_pitch/2.;
+	  if (gds.crossing_point(dis_u[2],dis_w[0],kUwire,kYwire, pcross[0])){
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[0].y,2) + pow(pcell.at(k1).z - pcross[0].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[0]);
+	    break;
+	  }
+	}
+	// scan w-wire
+	for (int k=0;k!=wire_index_w.size();k++){
+	  const GeomWire *wwire_3 = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.at(k));
+	  dis_w[2] = gds.wire_dist(*wwire_3) - w_pitch/2.;
+	  if (gds.crossing_point(dis_u[0],dis_w[2],kUwire,kYwire, pcross[0])){
+
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[0].y,2) + pow(pcell.at(k1).z - pcross[0].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[0]);
+	    break;
+	  }
+	}
+      }
+
+      bool flag2 = gds.crossing_point(dis_u[0],dis_w[1],kUwire,kYwire, pcross[1]); 
+      if (flag2){
+  	pcell.push_back(pcross[1]);
+      }else{
+  	// scan u-wire
+	for (int k=0;k!=wire_index_u.size();k++){
+	  const GeomWire *uwire_3 = gds.by_planeindex(WirePlaneType_t(0),wire_index_u.at(k));
+	  dis_u[2] =  gds.wire_dist(*uwire_3) - u_pitch/2.;
+	  if (gds.crossing_point(dis_u[2],dis_w[1],kUwire,kYwire, pcross[1])){
+
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[1].y,2) + pow(pcell.at(k1).z - pcross[1].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[1]);
+	    break;
+	  }
+	}
+	// scan w-wire
+	for (int k=0;k!=wire_index_w.size();k++){
+	  const GeomWire *wwire_3 = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.at(wire_index_w.size()-1-k));
+	  dis_w[2] = gds.wire_dist(*wwire_3) + w_pitch/2.;
+	  if (gds.crossing_point(dis_u[0],dis_w[2],kUwire,kYwire, pcross[1])){
+
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[1].y,2) + pow(pcell.at(k1).z - pcross[1].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[1]);
+	    break;
+	  }
+	}
+      }
+      
+      bool flag3 = gds.crossing_point(dis_u[1],dis_w[0],kUwire,kYwire, pcross[2]); 
+      if (flag3){
+  	pcell.push_back(pcross[2]);
+      }else{
+  	for (int k=0;k!=wire_index_u.size();k++){
+	  const GeomWire *uwire_3 =gds.by_planeindex(WirePlaneType_t(0),wire_index_u.at(wire_index_u.size()-1-k));
+	  dis_u[2] =  gds.wire_dist(*uwire_3) + u_pitch/2.;
+	  if (gds.crossing_point(dis_u[2],dis_w[0],kUwire,kYwire, pcross[2])){
+
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[2].y,2) + pow(pcell.at(k1).z - pcross[2].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[2]);
+	    break;
+	  }
+	}
+	// scan w-wire
+	for (int k=0;k!=wire_index_w.size();k++){
+	  const GeomWire *wwire_3 =gds.by_planeindex(WirePlaneType_t(2),wire_index_w.at(k));
+	  dis_w[2] = gds.wire_dist(*wwire_3) - w_pitch/2.;
+	  if (gds.crossing_point(dis_u[1],dis_w[2],kUwire,kYwire, pcross[2])){
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[2].y,2) + pow(pcell.at(k1).z - pcross[2].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[2]);
+	    break;
+	  }
+	}
+      }
+      
+      bool flag4 = gds.crossing_point(dis_u[1],dis_w[1],kUwire,kYwire, pcross[3]);
+      if (flag4){
+  	pcell.push_back(pcross[3]);
+      }else{
+	// scan u-wire
+	for (int k=0;k!=wire_index_u.size();k++){
+	  const GeomWire *uwire_3 =gds.by_planeindex(WirePlaneType_t(0),wire_index_u.at(wire_index_u.size()-1-k));
+	  dis_u[2] =  gds.wire_dist(*uwire_3) + u_pitch/2.;
+	  if (gds.crossing_point(dis_u[2],dis_w[1],kUwire,kYwire, pcross[3])){
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[3].y,2) + pow(pcell.at(k1).z - pcross[3].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[3]);
+	    break;
+	  }
+	}
+	// scan w-wire
+	for (int k=0;k!=wire_index_w.size();k++){
+	  const GeomWire *wwire_3 = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.at(wire_index_w.size()-1-k));
+	  dis_w[2] = gds.wire_dist(*wwire_3) + w_pitch/2.;
+	  if (gds.crossing_point(dis_u[1],dis_w[2],kUwire,kYwire, pcross[3])){
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[3].y,2) + pow(pcell.at(k1).z - pcross[3].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	    pcell.push_back(pcross[3]);
+	    break;
+	  }
+	}
+      }
+      mcell->AddBoundary(pcell);
+      
+    }else if (flag_v_vec->at(i)==0 && flag_w_vec->at(i)==0){
+      const GeomWire *wwire_1 = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.front());
+      const GeomWire *wwire_2 = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.back());
+      float dis_w[2];
+      float w_pitch = gds.pitch(kYwire);
+      dis_w[0] = gds.wire_dist(*wwire_1) - w_pitch/2.;
+      dis_w[1] = gds.wire_dist(*wwire_2) + w_pitch/2.;
+      
+      const GeomWire *vwire_1 = gds.by_planeindex(WirePlaneType_t(1),wire_index_v.front());
+      const GeomWire *vwire_2 = gds.by_planeindex(WirePlaneType_t(1),wire_index_v.back());
+      float dis_v[2];
+      float v_pitch = gds.pitch(kVwire);
+      dis_v[0] = gds.wire_dist(*vwire_1) - v_pitch/2.;
+      dis_v[1] = gds.wire_dist(*vwire_2) + v_pitch/2.;
+      
+      std::vector<Vector> pcross(4);
+
+       bool flag1 = gds.crossing_point(dis_w[0],dis_v[0],kYwire,kVwire, pcross[0]); 
+      if (flag1){
+  	pcell.push_back(pcross[0]);
+      }else{
+  	// scan u-wire
+	for (int k=0;k!=wire_index_w.size();k++){
+	  const GeomWire *wwire_3 = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.at(k));
+	  dis_w[2] =  gds.wire_dist(*wwire_3) - w_pitch/2.;
+	  if (gds.crossing_point(dis_w[2],dis_v[0],kYwire,kVwire, pcross[0])){
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[0].y,2) + pow(pcell.at(k1).z - pcross[0].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[0]);
+	    break;
+	  }
+	}
+	// scan v-wire
+	for (int k=0;k!=wire_index_v.size();k++){
+	  const GeomWire *vwire_3 = gds.by_planeindex(WirePlaneType_t(1),wire_index_v.at(k));
+	  dis_v[2] = gds.wire_dist(*vwire_3) - v_pitch/2.;
+	  if (gds.crossing_point(dis_w[0],dis_v[2],kYwire,kVwire, pcross[0])){
+
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[0].y,2) + pow(pcell.at(k1).z - pcross[0].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[0]);
+	    break;
+	  }
+	}
+      }
+
+      bool flag2 = gds.crossing_point(dis_w[0],dis_v[1],kYwire,kVwire, pcross[1]); 
+      if (flag2){
+  	pcell.push_back(pcross[1]);
+      }else{
+  	// scan u-wire
+	for (int k=0;k!=wire_index_w.size();k++){
+	  const GeomWire *wwire_3 = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.at(k));
+	  dis_w[2] =  gds.wire_dist(*wwire_3) - w_pitch/2.;
+	  if (gds.crossing_point(dis_w[2],dis_v[1],kYwire,kVwire, pcross[1])){
+
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[1].y,2) + pow(pcell.at(k1).z - pcross[1].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[1]);
+	    break;
+	  }
+	}
+	// scan v-wire
+	for (int k=0;k!=wire_index_v.size();k++){
+	  const GeomWire *vwire_3 = gds.by_planeindex(WirePlaneType_t(1),wire_index_v.at(wire_index_v.size()-1-k));
+	  dis_v[2] = gds.wire_dist(*vwire_3) + v_pitch/2.;
+	  if (gds.crossing_point(dis_w[0],dis_v[2],kYwire,kVwire, pcross[1])){
+
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[1].y,2) + pow(pcell.at(k1).z - pcross[1].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[1]);
+	    break;
+	  }
+	}
+      }
+      
+      bool flag3 = gds.crossing_point(dis_w[1],dis_v[0],kYwire,kVwire, pcross[2]); 
+      if (flag3){
+  	pcell.push_back(pcross[2]);
+      }else{
+  	for (int k=0;k!=wire_index_w.size();k++){
+	  const GeomWire *wwire_3 = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.at(wire_index_w.size()-1-k));
+	  dis_w[2] =  gds.wire_dist(*wwire_3) + w_pitch/2.;
+	  if (gds.crossing_point(dis_w[2],dis_v[0],kYwire,kVwire, pcross[2])){
+
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[2].y,2) + pow(pcell.at(k1).z - pcross[2].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[2]);
+	    break;
+	  }
+	}
+	// scan v-wire
+	for (int k=0;k!=wire_index_v.size();k++){
+	  const GeomWire *vwire_3 = gds.by_planeindex(WirePlaneType_t(1),wire_index_v.at(k));
+	  dis_v[2] = gds.wire_dist(*vwire_3) - v_pitch/2.;
+	  if (gds.crossing_point(dis_w[1],dis_v[2],kYwire,kVwire, pcross[2])){
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[2].y,2) + pow(pcell.at(k1).z - pcross[2].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[2]);
+	    break;
+	  }
+	}
+      }
+      
+      bool flag4 = gds.crossing_point(dis_w[1],dis_v[1],kYwire,kVwire, pcross[3]);
+      if (flag4){
+  	pcell.push_back(pcross[3]);
+      }else{
+	// scan u-wire
+	for (int k=0;k!=wire_index_w.size();k++){
+	  const GeomWire *wwire_3 = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.at(wire_index_w.size()-1-k));
+	  dis_w[2] =  gds.wire_dist(*wwire_3) + w_pitch/2.;
+	  if (gds.crossing_point(dis_w[2],dis_v[1],kYwire,kVwire, pcross[3])){
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[3].y,2) + pow(pcell.at(k1).z - pcross[3].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	      pcell.push_back(pcross[3]);
+	    break;
+	  }
+	}
+	// scan v-wire
+	for (int k=0;k!=wire_index_v.size();k++){
+	  const GeomWire *vwire_3 = gds.by_planeindex(WirePlaneType_t(1),wire_index_v.at(wire_index_v.size()-1-k));
+	  dis_v[2] = gds.wire_dist(*vwire_3) + v_pitch/2.;
+	  if (gds.crossing_point(dis_w[1],dis_v[2],kYwire,kVwire, pcross[3])){
+	    int flag_qx = 1;
+	    for (int k1 = 0;k1!=pcell.size();k1++){
+	      if (sqrt(pow(pcell.at(k1).y - pcross[3].y,2) + pow(pcell.at(k1).z - pcross[3].z,2))<0.5*units::mm){
+		flag_qx = 0;
+		break;
+	      }
+	    }
+	    if (flag_qx == 1)
+	    pcell.push_back(pcross[3]);
+	    break;
+	  }
+	}
+      }
+      mcell->AddBoundary(pcell);
+    }
+    // figure out the boundary ...
+    
     fid->AddDeadRegion(mcell,time_slices);
     ident++;
   }
- 
+  
+  
   // Load T_ch_bad tree ...
   TTree *T_bad_ch = (TTree*)file->Get("T_bad_ch");
   if (T_bad_ch!=0){
@@ -747,11 +1303,12 @@ int main(int argc, char* argv[])
   t_bad->Branch("bad_y",bad_y,"bad_y[bad_npoints]/D");
   t_bad->Branch("bad_z",bad_z,"bad_z[bad_npoints]/D");
 
-  std::set<WireCell::SlimMergeGeomCell*> dead_mcells = fid->get_Dead_mcells();
+  WireCell::SMGCSelection& dead_mcells = fid->get_Dead_mcells();
   for (auto it = dead_mcells.begin(); it!=dead_mcells.end(); it++){
     const SlimMergeGeomCell *cell = (SlimMergeGeomCell*)(*it);
     PointVector ps = cell->boundary();
     bad_npoints = ps.size();
+    //    std::cout << bad_npoints << std::endl;
     for (int j=0;j!=bad_npoints;j++){
       bad_y[j] = ps.at(j).y/units::cm;
       bad_z[j] = ps.at(j).z/units::cm;
