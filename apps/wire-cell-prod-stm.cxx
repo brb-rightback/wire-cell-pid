@@ -22,8 +22,8 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-  if (argc < 3) {
-    cerr << "usage: wire-cell-uboone /path/to/ChannelWireGeometry.txt /path/to/matching.root -t[0,1? in time flash only] -c[0,1? main cluster only] -o[0,1? debug output]" << endl;
+  if (argc < 4) {
+    cerr << "usage: wire-cell-uboone /path/to/ChannelWireGeometry.txt /path/to/matching.root #entry -t[0,1? in time flash only] -c[0,1? main cluster only] -o[0,1? debug output]" << endl;
     return 1;
   }
   TH1::AddDirectory(kFALSE);
@@ -71,11 +71,15 @@ int main(int argc, char* argv[])
        << " " << gds.angle(WirePlaneType_t(1)) 
        << " " << gds.angle(WirePlaneType_t(2))
        << endl;
-  std::cout << argv[2] << std::endl;
+  std::cout << argv[2] << " " << argv[3] << std::endl;
   TString filename = argv[2];
+  int entry_no = atoi(argv[3]);
+  
   TFile *file = new TFile(filename);
   TTree *Trun = (TTree*)file->Get("Trun");
 
+  if (entry_no >=Trun->GetEntries()) return 0;
+  
   int run_no, subrun_no, event_no;
   int time_offset;
   int nrebin;
@@ -104,7 +108,7 @@ int main(int argc, char* argv[])
   Trun->SetBranchAddress("raw_charge",&raw_charge);
   Trun->SetBranchAddress("raw_charge_err",&raw_charge_err);
     
-  Trun->GetEntry(0);
+  Trun->GetEntry(entry_no);
   double lowerwindow = 0;
   double upperwindow = 0;
   if(triggerbits==2048) { lowerwindow = 3.0; upperwindow = 5.0; }// bnb  
@@ -151,11 +155,18 @@ int main(int argc, char* argv[])
   Double_t time;
   Int_t type;
   Int_t flash_id;
+  Int_t temp_run_no, temp_subrun_no, temp_event_no;
+  T_flash->SetBranchAddress("runNo",&temp_run_no);
+  T_flash->SetBranchAddress("subRunNo",&temp_subrun_no);
+  T_flash->SetBranchAddress("eventNo",&temp_event_no);
   T_flash->SetBranchAddress("time",&time);
   T_flash->SetBranchAddress("type",&type);
   T_flash->SetBranchAddress("flash_id",&flash_id);
   
   TTree *T_match = (TTree*)file->Get("T_match");
+  T_match->SetBranchAddress("runNo",&temp_run_no);
+  T_match->SetBranchAddress("subRunNo",&temp_subrun_no);
+  T_match->SetBranchAddress("eventNo",&temp_event_no);
   Int_t tpc_cluster_id;
   Int_t event_type;
   T_match->SetBranchAddress("tpc_cluster_id",&tpc_cluster_id); // parent cluster id
@@ -170,10 +181,12 @@ int main(int argc, char* argv[])
   
   for (int i=0;i!=T_flash->GetEntries();i++){
     T_flash->GetEntry(i);
+    if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
     map_flash_info[flash_id] = std::make_pair(type, time);
   }
   for (int i=0;i!=T_match->GetEntries();i++){
     T_match->GetEntry(i);
+    if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
     if (flash_id==-1) continue;
     map_flash_tpc_ids[flash_id] = tpc_cluster_id;
     map_tpc_flash_ids[tpc_cluster_id] = flash_id;
@@ -270,7 +283,7 @@ int main(int argc, char* argv[])
 
   int prev_cluster_id=-1;
   int ident = 0;
-  TC->GetEntry(0);
+  TC->GetEntry(entry_no);
   for (int i=0;i!=cluster_id_vec->size();i++){
     int cluster_id = cluster_id_vec->at(i);
     SlimMergeGeomCell *mcell = new SlimMergeGeomCell(ident);
@@ -386,7 +399,7 @@ int main(int argc, char* argv[])
   flag_v_vec->clear();
   flag_w_vec->clear();
 
-  TDC->GetEntry(0);
+  TDC->GetEntry(entry_no);
   for (int i=0;i!=cluster_id_vec->size();i++){
     int cluster_id = cluster_id_vec->at(i);
     SlimMergeGeomCell *mcell = new SlimMergeGeomCell(ident);
@@ -467,9 +480,15 @@ int main(int argc, char* argv[])
     T_bad_ch->SetBranchAddress("plane",&plane);
     T_bad_ch->SetBranchAddress("start_time",&start_time);
     T_bad_ch->SetBranchAddress("end_time",&end_time);
+    Int_t temp_run_no, temp_subrun_no, temp_event_no;
+    T_bad_ch->SetBranchAddress("runNo",&temp_run_no);
+    T_bad_ch->SetBranchAddress("subRunNo",&temp_subrun_no);
+    T_bad_ch->SetBranchAddress("eventNo",&temp_event_no);
     
     for (int i=0;i!=T_bad_ch->GetEntries();i++){
       T_bad_ch->GetEntry(i);
+      if (temp_run_no != run_no || temp_subrun_no!=subrun_no || temp_event_no!=event_no) continue;
+	  
       double temp_x1 = (start_time/2.*unit_dis/10. - frame_length/2.*unit_dis/10.) * units::cm;
       double temp_x2 = (end_time/2.*unit_dis/10. - frame_length/2.*unit_dis/10.) * units::cm;
       if (plane==1){
@@ -595,10 +614,28 @@ int main(int argc, char* argv[])
   
 
   TFile *file1 = new TFile(Form("stm_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
-  Trun->CloneTree(-1,"fast");
-  if (T_bad_ch!=0){
-     T_bad_ch->CloneTree(-1,"fast");
-  }
+  TTree *Trun1 = new TTree("Trun","Trun");
+  Trun1->SetDirectory(file1);
+  Trun1->Branch("eventNo",&event_no,"eventNo/I");
+  Trun1->Branch("runNo",&run_no,"runNo/I");
+  Trun1->Branch("subRunNo",&subrun_no,"subRunNo/I");
+  
+  Trun1->Branch("triggerBits",&triggerbits,"triggerBits/i");
+  Trun1->Branch("unit_dis",&unit_dis,"unit_dis/F");
+  Trun1->Branch("frame_length",&frame_length,"frame_length/I");
+  Trun1->Branch("eve_num",&eve_num,"eve_num/I");
+  Trun1->Branch("nrebin",&nrebin,"nrebin/I");
+  Trun1->Branch("time_offset",&time_offset,"time_offset/I");
+  
+  Trun1->Branch("timesliceId",&timesliceId);
+  Trun1->Branch("timesliceChannel",&timesliceChannel);
+  Trun1->Branch("raw_charge",&raw_charge);
+  Trun1->Branch("raw_charge_err",&raw_charge_err);
+  Trun1->Fill();
+  // Trun->CloneTree(-1,"fast");
+  //if (T_bad_ch!=0){
+  //   T_bad_ch->CloneTree(-1,"fast");
+  //}
 
 
   
@@ -616,7 +653,7 @@ int main(int argc, char* argv[])
     if (flag_in_time_only && (flash_time < lowerwindow || flash_time > upperwindow)) continue;
 
     event_type = map_flash_tpc_pair_type[std::make_pair(it->first, it->second)];
-
+    
     int flag_tgm = (event_type >> 3) & 1U;
     int flag_low_energy = (event_type >> 4) & 1U;
     int flag_lm = (event_type >> 1) & 1U;
