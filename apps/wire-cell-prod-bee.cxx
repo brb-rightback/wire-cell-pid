@@ -23,29 +23,19 @@ using namespace std;
 int main(int argc, char* argv[])
 {
   if (argc < 4) {
-    cerr << "usage: wire-cell-uboone /path/to/ChannelWireGeometry.txt /path/to/matching.root #entry -t[0,1? in time flash only] -c[0,1? main cluster only] -o[0,1? debug output]" << endl;
+    cerr << "usage: wire-cell-prod-bee /path/to/ChannelWireGeometry.txt /path/to/matching.root #entry -d[data=0, overlay=1, full mc=2]" << endl;
     return 1;
   }
   TH1::AddDirectory(kFALSE);
   
-  bool flag_in_time_only = true; // default to not run all code
-  bool flag_main_cluster_only = true; // default to run only on the main cluster
+
   bool flag_debug_output = true; // output
   int datatier = 0; // data=0, overlay=1, full mc=2
   
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
-    case 't':
-      flag_in_time_only = atoi(&argv[i][2]); 
-      break;
-    case 'c':
-      flag_main_cluster_only = atoi(&argv[i][2]);
-      break;
     case 'd':
       datatier = atoi(&argv[i][2]);
-      break;
-    case 'o':
-      flag_debug_output = atoi(&argv[i][2]);
       break;
     }
   }
@@ -153,15 +143,31 @@ int main(int argc, char* argv[])
 
   TTree *T_flash = (TTree*)file->Get("T_flash");
   Double_t time;
+  Double_t low_time, high_time;
   Int_t type;
   Int_t flash_id;
   Int_t temp_run_no, temp_subrun_no, temp_event_no;
+  Double_t total_PE;
+  Double_t PE[32],PE_err[32];
+  // std::vector<int> matched_tpc_ids;
+  
   T_flash->SetBranchAddress("runNo",&temp_run_no);
   T_flash->SetBranchAddress("subRunNo",&temp_subrun_no);
   T_flash->SetBranchAddress("eventNo",&temp_event_no);
   T_flash->SetBranchAddress("time",&time);
   T_flash->SetBranchAddress("type",&type);
   T_flash->SetBranchAddress("flash_id",&flash_id);
+  T_flash->SetBranchAddress("low_time",&low_time);
+  T_flash->SetBranchAddress("high_time",&high_time);
+  T_flash->SetBranchAddress("total_PE",&total_PE);
+  T_flash->SetBranchAddress("PE",PE);
+  T_flash->SetBranchAddress("PE_err",PE_err);
+  std::vector<int> *fired_channels = new std::vector<int>;
+  std::vector<double> *l1_fired_time = new std::vector<double>;
+  std::vector<double> *l1_fired_pe = new std::vector<double>;
+  T_flash->SetBranchAddress("fired_channels",&fired_channels);
+  T_flash->SetBranchAddress("l1_fired_time",&l1_fired_time);
+  T_flash->SetBranchAddress("l1_fired_pe",&l1_fired_pe);
   
   TTree *T_match = (TTree*)file->Get("T_match");
   T_match->SetBranchAddress("runNo",&temp_run_no);
@@ -173,6 +179,28 @@ int main(int argc, char* argv[])
   T_match->SetBranchAddress("flash_id",&flash_id);  // flash id 
   T_match->SetBranchAddress("event_type",&event_type);
 
+  Double_t strength;
+  Double_t pe_pred[32];
+  Double_t pe_meas[32];
+  Double_t pe_meas_err[32];
+  T_match->SetBranchAddress("strength",&strength);
+  T_match->SetBranchAddress("pe_pred",pe_pred);
+  T_match->SetBranchAddress("pe_meas",pe_meas);
+  T_match->SetBranchAddress("pe_meas_err",pe_meas_err);
+  T_match->SetBranchAddress("event_type",&event_type);
+  bool flag_close_to_PMT;
+  bool flag_at_x_boundary;
+  double ks_dis;
+  double chi2;
+  int ndf;
+  double cluster_length;
+  
+  T_match->SetBranchAddress("ks_dis",&ks_dis);
+  T_match->SetBranchAddress("chi2",&chi2);
+  T_match->SetBranchAddress("ndf",&ndf);
+  T_match->SetBranchAddress("cluster_length",&cluster_length);
+  
+  
   std::map<int, std::pair<int, double> > map_flash_info;
   std::map<int, int> map_flash_tpc_ids;
   std::map<int, int> map_tpc_flash_ids;
@@ -595,23 +623,7 @@ int main(int argc, char* argv[])
   }
   cout << em("Add X, Y, Z points") << std::endl;
   
-  double first_t_dis = live_clusters.at(0)->get_mcells().front()->GetTimeSlice()*time_slice_width - live_clusters.at(0)->get_mcells().front()->get_sampling_points().front().x;
-  double offset_t = first_t_dis/time_slice_width;
-
-  // test the fiducial volume cut 
-  fid->set_offset_t(offset_t);
-  
-  ToyCTPointCloud ct_point_cloud(0,2399,2400,4799,4800,8255, // channel range
-				 offset_t, -first_u_dis/pitch_u, -first_v_dis/pitch_v, -first_w_dis/pitch_w, // offset
-				 1./time_slice_width, 1./pitch_u, 1./pitch_v, 1./pitch_w, // slope
-				 angle_u,angle_v,angle_w// angle
-				 );
-  ct_point_cloud.AddPoints(timesliceId,timesliceChannel,raw_charge,raw_charge_err);
-  ct_point_cloud.AddDeadChs(dead_u_index, dead_v_index, dead_w_index);
-  ct_point_cloud.build_kdtree_index();
-
- 
-  
+    
 
   TFile *file1 = new TFile(Form("bee_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
   TTree *Trun1 = new TTree("Trun","Trun");
@@ -626,313 +638,125 @@ int main(int argc, char* argv[])
   Trun1->Branch("eve_num",&eve_num,"eve_num/I");
   Trun1->Branch("nrebin",&nrebin,"nrebin/I");
   Trun1->Branch("time_offset",&time_offset,"time_offset/I");
-  
-  Trun1->Branch("timesliceId",&timesliceId);
-  Trun1->Branch("timesliceChannel",&timesliceChannel);
-  Trun1->Branch("raw_charge",&raw_charge);
-  Trun1->Branch("raw_charge_err",&raw_charge_err);
+  int detector = 0; // MicroBooNE
+  Trun1->Branch("detector",&detector,"detector/I");
+  // Trun1->Branch("timesliceId",&timesliceId);
+  // Trun1->Branch("timesliceChannel",&timesliceChannel);
+  // Trun1->Branch("raw_charge",&raw_charge);
+  // Trun1->Branch("raw_charge_err",&raw_charge_err);
   Trun1->Fill();
-  // Trun->CloneTree(-1,"fast");
-  //if (T_bad_ch!=0){
-  //   T_bad_ch->CloneTree(-1,"fast");
-  //}
+  
+  TTree *T_flash1 = new TTree("T_flash","T_flash");
+  T_flash1->SetDirectory(file1);
+  T_flash1->Branch("type",&type);
+  T_flash1->Branch("flash_id",&flash_id);
+  T_flash1->Branch("low_time",&low_time);
+  T_flash1->Branch("high_time",&high_time);
+  T_flash1->Branch("time",&time);
+  T_flash1->Branch("total_PE",&total_PE);
+  T_flash1->Branch("PE",PE,"PE[32]/D");
+  T_flash1->Branch("PE_err",PE_err,"PE_err[32]/D");
+  T_flash1->Branch("fired_channels",&fired_channels);
+  T_flash1->Branch("l1_fired_time",&l1_fired_time);
+  T_flash1->Branch("l1_fired_pe",&l1_fired_pe);
+  for (int i=0;i!=T_flash->GetEntries();i++){
+    T_flash->GetEntry(i);
+    if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
+    T_flash1->Fill();
+  }
 
-
+  
   
   TTree *T_match1 = new TTree("T_match","T_match");
   T_match1->SetDirectory(file1);
-  Int_t ncluster;
-  T_match1->Branch("tpc_cluster_id",&ncluster,"tpc_cluster_id/I");
-  T_match1->Branch("flash_id",&flash_id,"flash_id/I");
-  T_match1->Branch("event_type",&event_type,"event_type/I");
-  Double_t flash_time;
-  T_match1->Branch("flash_time",&flash_time,"flash_time/D");
+  T_match1->Branch("tpc_cluster_id",&tpc_cluster_id,"tpc_cluster_id/I"); // parent cluster id
+  T_match1->Branch("flash_id",&flash_id,"flash_id/I");  // flash id 
   
-  for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
-    flash_time = map_flash_info[it->first].second;
-    if (flag_in_time_only && (flash_time < lowerwindow || flash_time > upperwindow)) continue;
+  T_match1->Branch("strength",&strength,"strength/D");
+  T_match1->Branch("pe_pred",pe_pred,"pe_pred[32]/D");
+  T_match1->Branch("pe_meas",pe_meas,"pe_meas[32]/D");
+  T_match1->Branch("pe_meas_err",pe_meas_err,"pe_meas_err[32]/D");
+  T_match1->Branch("event_type",&event_type,"event_type/I");
+  T_match1->Branch("ks_dis",&ks_dis,"ks_dis/D");
+  T_match1->Branch("chi2",&chi2,"chi2/D");
+  T_match1->Branch("ndf",&ndf,"ndf/I");
+  T_match1->Branch("cluster_length",&cluster_length,"cluster_length/D");
 
-    event_type = map_flash_tpc_pair_type[std::make_pair(it->first, it->second)];
-    
-    int flag_tgm = (event_type >> 3) & 1U;
-    int flag_low_energy = (event_type >> 4) & 1U;
-    int flag_lm = (event_type >> 1) & 1U;
-    
-    ncluster = it->second;
-    flash_id = it->first;
-    
-    double offset_x = (flash_time - time_offset)*2./nrebin*time_slice_width;
-    std::vector<WireCellPID::PR3DCluster*> temp_clusters = map_parentid_clusters[it->second];
-    WireCellPID::PR3DCluster* main_cluster = 0;
-    for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
-      if ((*it1)->get_cluster_id() == it->second){
-	main_cluster = *it1;
-	break;
-      }
-    }
-
-    if (flag_tgm == 0 && flag_low_energy == 0 && flag_lm ==0){
-      if (flag_main_cluster_only){
-	main_cluster->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-	main_cluster->recover_steiner_graph();
-      }else{
-	for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
-	  (*it1)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-	  (*it1)->recover_steiner_graph();
-	}
-      }
-      
-      // // holder ...
-      // if (main_cluster->get_point_cloud_steiner()!=0){
-      // 	if (main_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
-      // 	  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = main_cluster->get_two_boundary_wcps(2); 
-      // 	  main_cluster->dijkstra_shortest_paths(wcps.first,2); 
-      // 	  main_cluster->cal_shortest_path(wcps.second,2);
-      // 	}
-      // 	if (main_cluster->get_path_wcps().size()>=2){
-      // 	  main_cluster->collect_charge_trajectory(ct_point_cloud);
-      // 	  main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
-      // 	}
-      // }
-      // if STM
-      if (fid->check_stm(main_cluster, offset_x, flash_time, ct_point_cloud, global_wc_map))
-	event_type |= 1UL << 5;
-    }
-    
-    // std::cout << it->first << " " << flash_time << " " << it->second << " " << main_cluster << std::endl;
+  for (int i=0;i!=T_match->GetEntries();i++){
+    T_match->GetEntry(i);
+    if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
     T_match1->Fill();
   }
-  T_match1->Write();
-  cout << em("STM tagger") << std::endl;
-    
-  if (flag_debug_output){
-    TTree *T_cluster ;
-    Double_t x,y,z,q,nq;
-    Int_t ncluster;
-    Int_t temp_time_slice, ch_u, ch_v, ch_w;
-    T_cluster = new TTree("T_cluster","T_cluster");
-    T_cluster->Branch("cluster_id",&ncluster,"cluster_id/I");
-    T_cluster->Branch("x",&x,"x/D");
-    T_cluster->Branch("y",&y,"y/D");
-    T_cluster->Branch("z",&z,"z/D");
-    T_cluster->Branch("q",&q,"q/D");
-    T_cluster->Branch("nq",&nq,"nq/D");
-    T_cluster->Branch("time_slice",&temp_time_slice,"time_slice/I");
-    T_cluster->Branch("ch_u",&ch_u,"ch_u/I");
-    T_cluster->Branch("ch_v",&ch_v,"ch_v/I");
-    T_cluster->Branch("ch_w",&ch_w,"ch_w/I");
-    T_cluster->SetDirectory(file1);
-    
-    for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-      WireCellPID::PR3DCluster* new_cluster = *it;  
-      ncluster = map_cluster_parent_id[new_cluster]; 
-      ToyPointCloud *pcloud = new_cluster->get_point_cloud();
-      if (pcloud!=0){
-	WireCell::WCPointCloud<double>& cloud = pcloud->get_cloud();
-	for (size_t i=0;i!=cloud.pts.size();i++){
-	  x = cloud.pts[i].x/units::cm;
-	  y = cloud.pts[i].y/units::cm;
-	  z = cloud.pts[i].z/units::cm;
-	  SlimMergeGeomCell *mcell = cloud.pts[i].mcell;
-	  ch_u = cloud.pts[i].index_u;
-	  ch_v = cloud.pts[i].index_v;
-	  ch_w = cloud.pts[i].index_w;
-	  
-	  if (mcell==0){
-	    temp_time_slice = -1;
-	    q = 1;
-	    nq = 1;
-	  }else{
-	    temp_time_slice = mcell->GetTimeSlice();
-	    nq = 1;
-	    const GeomWire *uwire = gds.by_planeindex(WirePlaneType_t(0),ch_u);
-	    const GeomWire *vwire = gds.by_planeindex(WirePlaneType_t(1),ch_v);
-	    const GeomWire *wwire = gds.by_planeindex(WirePlaneType_t(2),ch_w);
-	    q = (mcell->Get_Wire_Charge(uwire) + mcell->Get_Wire_Charge(vwire) + mcell->Get_Wire_Charge(wwire))/3.;
-	  }
-	  T_cluster->Fill();
-	}
-      }
-    }
-    
-    Double_t pu, pv, pw, pt;
-    Double_t charge_save=1, ncharge_save=1, chi2_save=1, ndf_save=1;
-    TTree *T_rec = new TTree("T_rec","T_rec");
-    T_rec->Branch("x",&x,"x/D");
-    T_rec->Branch("y",&y,"y/D");
-    T_rec->Branch("z",&z,"z/D");
-    T_rec->Branch("q",&charge_save,"q/D");
-    T_rec->Branch("nq",&ncharge_save,"nq/D");
-    T_rec->Branch("chi2",&chi2_save,"chi2/D");
-    T_rec->Branch("ndf",&ndf_save,"ndf/D");
-    T_rec->Branch("pu",&pu,"pu/D");
-    T_rec->Branch("pv",&pv,"pv/D");
-    T_rec->Branch("pw",&pw,"pw/D");
-    T_rec->Branch("pt",&pt,"pt/D");
-    T_rec->SetDirectory(file1);
-    
-    TTree *t_rec_charge = new TTree("T_rec_charge","T_rec_charge");
-    t_rec_charge->SetDirectory(file1);
-    t_rec_charge->Branch("x",&x,"x/D");
-    t_rec_charge->Branch("y",&y,"y/D");
-    t_rec_charge->Branch("z",&z,"z/D");
-    t_rec_charge->Branch("q",&charge_save,"q/D");
-    t_rec_charge->Branch("nq",&ncharge_save,"nq/D");
-    t_rec_charge->Branch("chi2",&chi2_save,"chi2/D");
-    t_rec_charge->Branch("ndf",&ndf_save,"ndf/D");
-    t_rec_charge->Branch("pu",&pu,"pu/D");
-    t_rec_charge->Branch("pv",&pv,"pv/D");
-    t_rec_charge->Branch("pw",&pw,"pw/D");
-    t_rec_charge->Branch("pt",&pt,"pt/D");
-    Double_t reduced_chi2;
-    t_rec_charge->Branch("reduced_chi2",&reduced_chi2,"reduced_chi2/D");
-    
-    TTree *T_proj_data = new TTree("T_proj_data","T_proj_data");
-    std::vector<int> *proj_data_cluster_id = new std::vector<int>;
-    std::vector<std::vector<int>> *proj_data_cluster_channel = new std::vector<std::vector<int>>;
-    std::vector<std::vector<int>> *proj_data_cluster_timeslice= new std::vector<std::vector<int>>;
-    std::vector<std::vector<int>> *proj_data_cluster_charge= new std::vector<std::vector<int>>;
-    std::vector<std::vector<int>> *proj_data_cluster_charge_err= new std::vector<std::vector<int>>;
-    std::vector<std::vector<int>> *proj_data_cluster_charge_pred= new std::vector<std::vector<int>>;
-    
-    T_proj_data->Branch("cluster_id",&proj_data_cluster_id);
-    T_proj_data->Branch("channel",&proj_data_cluster_channel);
-    T_proj_data->Branch("time_slice",&proj_data_cluster_timeslice);
-    T_proj_data->Branch("charge",&proj_data_cluster_charge);
-    T_proj_data->Branch("charge_err",&proj_data_cluster_charge_err);
-    T_proj_data->Branch("charge_pred",&proj_data_cluster_charge_pred);
-    T_proj_data->SetDirectory(file1);
-    
-    for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
       
-      WireCellPID::PR3DCluster* new_cluster = *it;
-      ndf_save = new_cluster->get_cluster_id();
-      charge_save = 0;
-      ncharge_save = 0;
-      chi2_save = 0;
-      
-      std::list<WCPointCloud<double>::WCPoint>& wcps_list = new_cluster->get_path_wcps();
-      for (auto it = wcps_list.begin(); it!=wcps_list.end(); it++){
-	x = (*it).x/units::cm;
-	y = (*it).y/units::cm;
-	z = (*it).z/units::cm;
+
+  TTree *T_cluster ;
+  Double_t x,y,z,q,nq;
+  Int_t ncluster;
+  Int_t temp_time_slice, ch_u, ch_v, ch_w;
+  T_cluster = new TTree("T_cluster","T_cluster");
+  T_cluster->Branch("cluster_id",&ncluster,"cluster_id/I");
+  T_cluster->Branch("x",&x,"x/D");
+  T_cluster->Branch("y",&y,"y/D");
+  T_cluster->Branch("z",&z,"z/D");
+  T_cluster->Branch("q",&q,"q/D");
+  T_cluster->Branch("nq",&nq,"nq/D");
+  T_cluster->Branch("time_slice",&temp_time_slice,"time_slice/I");
+  T_cluster->Branch("ch_u",&ch_u,"ch_u/I");
+  T_cluster->Branch("ch_v",&ch_v,"ch_v/I");
+  T_cluster->Branch("ch_w",&ch_w,"ch_w/I");
+  T_cluster->SetDirectory(file1);
+  
+  for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
+    WireCellPID::PR3DCluster* new_cluster = *it;  
+    ncluster = map_cluster_parent_id[new_cluster]; 
+    ToyPointCloud *pcloud = new_cluster->get_point_cloud();
+    if (pcloud!=0){
+      WireCell::WCPointCloud<double>& cloud = pcloud->get_cloud();
+      for (size_t i=0;i!=cloud.pts.size();i++){
+	x = cloud.pts[i].x/units::cm;
+	y = cloud.pts[i].y/units::cm;
+	z = cloud.pts[i].z/units::cm;
+	SlimMergeGeomCell *mcell = cloud.pts[i].mcell;
+	ch_u = cloud.pts[i].index_u;
+	ch_v = cloud.pts[i].index_v;
+	ch_w = cloud.pts[i].index_w;
 	
-	Point temp_p((*it).x,(*it).y,(*it).z);
-	std::vector<int> time_chs = ct_point_cloud.convert_3Dpoint_time_ch(temp_p);
-	pt = time_chs.at(0);
-	pu = time_chs.at(1);
-	pv = time_chs.at(2);
-	pw = time_chs.at(3);
-	T_rec->Fill();
+	if (mcell==0){
+	  temp_time_slice = -1;
+	  q = 1;
+	  nq = 1;
+	}else{
+	  temp_time_slice = mcell->GetTimeSlice();
+	  nq = 1;
+	  const GeomWire *uwire = gds.by_planeindex(WirePlaneType_t(0),ch_u);
+	  const GeomWire *vwire = gds.by_planeindex(WirePlaneType_t(1),ch_v);
+	  const GeomWire *wwire = gds.by_planeindex(WirePlaneType_t(2),ch_w);
+	  q = (mcell->Get_Wire_Charge(uwire) + mcell->Get_Wire_Charge(vwire) + mcell->Get_Wire_Charge(wwire))/3.;
+	}
+	T_cluster->Fill();
       }
     }
-    //    cout << em("shortest path ...") << std::endl;
-    
-    for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-      WireCellPID::PR3DCluster* cluster = *it;
-      
-      ndf_save = cluster->get_cluster_id();
-      // original
-      PointVector& pts = cluster->get_fine_tracking_path();
-      //std::vector<double> dQ, dx;
-      std::vector<double>& dQ = cluster->get_dQ();
-      std::vector<double>& dx = cluster->get_dx();
-      std::vector<double>& tpu = cluster->get_pu();
-      std::vector<double>& tpv = cluster->get_pv();
-      std::vector<double>& tpw = cluster->get_pw();
-      std::vector<double>& tpt = cluster->get_pt();
-      std::vector<double>& Vreduced_chi2 = cluster->get_reduced_chi2();
-          
-      if (pts.size()!=dQ.size() || pts.size()==0) continue;
-      
-      for (size_t i=0; i!=pts.size(); i++){
-	x = pts.at(i).x/units::cm;
-	y = pts.at(i).y/units::cm;
-	z = pts.at(i).z/units::cm;
-	charge_save = dQ.at(i);
-	ncharge_save = dx.at(i)/units::cm;
-	pu = tpu.at(i);
-	pv = tpv.at(i);
-	pw = tpw.at(i);
-	pt = tpt.at(i);
-	reduced_chi2 = Vreduced_chi2.at(i);
-	t_rec_charge->Fill();
-      }
-      
-      std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_u_map = cluster->get_proj_data_u_map();
-      std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_v_map = cluster->get_proj_data_v_map();
-      std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_w_map = cluster->get_proj_data_w_map();
-      
-      proj_data_cluster_id->push_back(ndf_save);
-      std::vector<int> temp_channel;
-      std::vector<int> temp_timeslice;
-      std::vector<int> temp_charge;
-      std::vector<int> temp_charge_err;
-      std::vector<int> temp_charge_pred;
-      for (auto it = proj_data_u_map.begin(); it!=proj_data_u_map.end(); it++){
-	temp_channel.push_back(it->first.first);
-	temp_timeslice.push_back(it->first.second);
-	temp_charge.push_back(std::get<0>(it->second));
-	temp_charge_err.push_back(std::get<1>(it->second));
-	temp_charge_pred.push_back(std::get<2>(it->second));
-      }
-      for (auto it = proj_data_v_map.begin(); it!=proj_data_v_map.end(); it++){
-	temp_channel.push_back(it->first.first);
-	temp_timeslice.push_back(it->first.second);
-	temp_charge.push_back(std::get<0>(it->second));
-	temp_charge_err.push_back(std::get<1>(it->second));
-	temp_charge_pred.push_back(std::get<2>(it->second));
-      }
-      for (auto it = proj_data_w_map.begin(); it!=proj_data_w_map.end(); it++){
-	temp_channel.push_back(it->first.first);
-	temp_timeslice.push_back(it->first.second);
-	temp_charge.push_back(std::get<0>(it->second));
-	temp_charge_err.push_back(std::get<1>(it->second));
-	temp_charge_pred.push_back(std::get<2>(it->second));
-      }
-      proj_data_cluster_channel->push_back(temp_channel);
-      proj_data_cluster_timeslice->push_back(temp_timeslice);
-      proj_data_cluster_charge->push_back(temp_charge);
-      proj_data_cluster_charge_err->push_back(temp_charge_err);
-      proj_data_cluster_charge_pred->push_back(temp_charge_pred);
-      
+  }
+  
+
+  TTree *t_bad = new TTree("T_bad","T_bad");
+  t_bad->SetDirectory(file1);
+  Int_t bad_npoints;
+  Double_t bad_y[100],bad_z[100];
+  t_bad->Branch("bad_npoints",&bad_npoints,"bad_npoints/I");
+  t_bad->Branch("bad_y",bad_y,"bad_y[bad_npoints]/D");
+  t_bad->Branch("bad_z",bad_z,"bad_z[bad_npoints]/D");
+
+  std::set<WireCell::SlimMergeGeomCell*> dead_mcells = fid->get_Dead_mcells();
+  for (auto it = dead_mcells.begin(); it!=dead_mcells.end(); it++){
+    const SlimMergeGeomCell *cell = (SlimMergeGeomCell*)(*it);
+    PointVector ps = cell->boundary();
+    bad_npoints = ps.size();
+    for (int j=0;j!=bad_npoints;j++){
+      bad_y[j] = ps.at(j).y/units::cm;
+      bad_z[j] = ps.at(j).z/units::cm;
     }
-    T_proj_data->Fill();
-    
-    
-    // now save the original projected charge information
-    // fill the bad channels ...
-    TTree *T_proj = new TTree("T_proj","T_proj");
-    std::vector<int> *proj_cluster_id = new std::vector<int>;
-    std::vector<std::vector<int>> *proj_cluster_channel = new std::vector<std::vector<int>>;
-    std::vector<std::vector<int>> *proj_cluster_timeslice= new std::vector<std::vector<int>>;
-    std::vector<std::vector<int>> *proj_cluster_charge= new std::vector<std::vector<int>>;
-    std::vector<std::vector<int>> *proj_cluster_charge_err= new std::vector<std::vector<int>>;
-    T_proj->Branch("cluster_id",&proj_cluster_id);
-    T_proj->Branch("channel",&proj_cluster_channel);
-    T_proj->Branch("time_slice",&proj_cluster_timeslice);
-    T_proj->Branch("charge",&proj_cluster_charge);
-    T_proj->Branch("charge_err",&proj_cluster_charge_err);
-    T_proj->SetDirectory(file1);
-    
-    for (auto it = map_parentid_clusters.begin(); it!=map_parentid_clusters.end(); it++){
-      int cluster_id = it->first;
-      std::vector<int> proj_channel;
-      std::vector<int> proj_timeslice;
-      std::vector<int> proj_charge;
-      std::vector<int> proj_charge_err;
-      std::vector<int> proj_flag;
-      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-	WireCellPID::PR3DCluster *cluster = (*it1);
-	cluster->get_projection(proj_channel,proj_timeslice,proj_charge, proj_charge_err, proj_flag, global_wc_map);
-      }
-      proj_cluster_id->push_back(cluster_id);
-      proj_cluster_channel->push_back(proj_channel);
-      proj_cluster_timeslice->push_back(proj_timeslice);
-      proj_cluster_charge->push_back(proj_charge);
-      proj_cluster_charge_err->push_back(proj_charge_err);
-    }
-    T_proj->Fill();
+    t_bad->Fill();
   }
   
   file1->Write();
