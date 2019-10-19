@@ -128,8 +128,52 @@ WireCellPID::ToyFiducial::ToyFiducial(int dead_region_ch_ext, double offset_t, d
   // }
 }
 
+bool WireCellPID::ToyFiducial::check_full_detector_dead(){
+  std::set<int> dead_chs;
+  for (auto it = mcell_time_map.begin(); it!=mcell_time_map.end(); it++){
+    SlimMergeGeomCell *mcell = it->first;
+    double start_x = (it->second.first-offset_t)/slope_t;
+    double end_x = (it->second.second-offset_t)/slope_t;
+    
+    GeomWireSelection& uwires = mcell->get_uwires();
+    GeomWireSelection& vwires = mcell->get_vwires();
+    GeomWireSelection& wwires = mcell->get_wwires();
+
+    if (end_x < -10*units::cm || start_x > 266*units::cm) continue;
+    
+    std::vector<WirePlaneType_t> bad_planes = mcell->get_bad_planes();
+    if (find(bad_planes.begin(), bad_planes.end(), WirePlaneType_t(0))!=bad_planes.end()){
+      for (auto it1 = uwires.begin(); it1!=uwires.end(); it1++){
+	int ch = (*it1)->channel();
+	dead_chs.insert(ch);
+	//std::cout << ch << std::endl;
+      }
+    }
+    if (find(bad_planes.begin(), bad_planes.end(), WirePlaneType_t(1))!=bad_planes.end()){
+      for (auto it1 = vwires.begin(); it1!=vwires.end(); it1++){
+	int ch = (*it1)->channel();
+	dead_chs.insert(ch);
+	//std::cout << ch << std::endl;
+      }
+    }
+    if (find(bad_planes.begin(), bad_planes.end(), WirePlaneType_t(2))!=bad_planes.end()){
+      for (auto it1 = wwires.begin(); it1!=wwires.end(); it1++){
+	int ch = (*it1)->channel();
+	dead_chs.insert(ch);
+	//std::cout << ch << std::endl;
+      }
+    }
+  }
+  //std::cout << dead_chs.size() << std::endl;
+
+  if (dead_chs.size()>8000) return true;
+  return false;
+  
+}
 
 bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster, double offset_x, double flash_time, WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map){
+
+  //  check_full_detector_dead();
 
   TVector3 drift_dir(1,0,0);
   // hard coded for U and V plane ... 
