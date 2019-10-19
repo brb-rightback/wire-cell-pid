@@ -936,7 +936,124 @@ int main(int argc, char* argv[])
     }
     T_proj->Fill();
   }
-  
+
+  {
+  // figure out the T_eval tree ...
+    TTree *T_eval = (TTree*)file->Get("T_eval");
+    TTree *T_eval1 = new TTree("T_eval","T_eval");
+    T_eval1->SetDirectory(file1);
+    
+    bool truth_isCC=false, truth_isEligible=false, truth_vtxInside=false;
+    int truth_nuPdg=-1;
+    float truth_nuTime=-1, truth_nuEnergy=-1., truth_energyInside=0., truth_electronInside=0.;
+    float truth_vtxX=-1., truth_vtxY=-1., truth_vtxZ=-1.;
+    float flash_time1=-1, flash_measPe=-1., flash_predPe=-1.;
+    bool flash_found=false, match_found=false;
+    float match_charge=0., match_energy=0.;
+    // 3D matching
+    float match_completeness=0./* matched/true */, match_completeness_energy=0., match_purity=0./* matched/reco */;
+    float match_purity_xz=0, match_purity_xy=0;
+    UInt_t match_type1=0;
+    bool match_notFC_FV=false, match_notFC_SP=false, match_notFC_DC=false, match_isTgm=false, match_isFC=false;
+    bool truth_isFC = true;
+
+    // additional
+    bool match_isSTM = false;
+    bool match_isFullDetDead =false;
+    
+    T_eval->SetBranchAddress("run", &temp_run_no);
+    T_eval->SetBranchAddress("subrun", &temp_subrun_no);
+    T_eval->SetBranchAddress("event", &temp_event_no);
+    T_eval->SetBranchAddress("flash_found", &flash_found);
+    T_eval->SetBranchAddress("flash_time", &flash_time1);
+    T_eval->SetBranchAddress("flash_measPe", &flash_measPe);
+    T_eval->SetBranchAddress("flash_predPe", &flash_predPe);
+    T_eval->SetBranchAddress("match_found", &match_found);
+    T_eval->SetBranchAddress("match_type", &match_type1);
+    T_eval->SetBranchAddress("match_isFC", &match_isFC);
+    T_eval->SetBranchAddress("match_isTgm", &match_isTgm);
+    T_eval->SetBranchAddress("match_notFC_FV", &match_notFC_FV);
+    T_eval->SetBranchAddress("match_notFC_SP", &match_notFC_SP);
+    T_eval->SetBranchAddress("match_notFC_DC", &match_notFC_DC);
+    
+    T_eval1->Branch("run", &temp_run_no);
+    T_eval1->Branch("subrun", &temp_subrun_no);
+    T_eval1->Branch("event", &temp_event_no);
+    T_eval1->Branch("flash_found", &flash_found);
+    T_eval1->Branch("flash_time", &flash_time1);
+    T_eval1->Branch("flash_measPe", &flash_measPe);
+    T_eval1->Branch("flash_predPe", &flash_predPe);
+    T_eval1->Branch("match_found", &match_found);
+    T_eval1->Branch("match_type", &match_type1);
+    T_eval1->Branch("match_isFC", &match_isFC);
+    T_eval1->Branch("match_isTgm", &match_isTgm);
+    T_eval1->Branch("match_notFC_FV", &match_notFC_FV);
+    T_eval1->Branch("match_notFC_SP", &match_notFC_SP);
+    T_eval1->Branch("match_notFC_DC", &match_notFC_DC);
+    T_eval1->Branch("match_isSTM",&match_isSTM);
+    T_eval1->Branch("match_isFullDetDead",&match_isFullDetDead);
+      
+    if(T_eval->GetBranch("truth_nuEnergy")){
+      T_eval->SetBranchAddress("truth_nuEnergy", &truth_nuEnergy);
+      T_eval->SetBranchAddress("truth_energyInside", &truth_energyInside);
+      T_eval->SetBranchAddress("truth_electronInside", &truth_electronInside);
+      T_eval->SetBranchAddress("truth_nuPdg", &truth_nuPdg);
+      T_eval->SetBranchAddress("truth_isCC", &truth_isCC);
+      T_eval->SetBranchAddress("truth_isEligible", &truth_isEligible);
+      T_eval->SetBranchAddress("truth_isFC", &truth_isFC);
+      T_eval->SetBranchAddress("truth_vtxInside", &truth_vtxInside);
+      T_eval->SetBranchAddress("truth_vtxX", &truth_vtxX);
+      T_eval->SetBranchAddress("truth_vtxY", &truth_vtxY);
+      T_eval->SetBranchAddress("truth_vtxZ", &truth_vtxZ);
+      T_eval->SetBranchAddress("truth_nuTime", &truth_nuTime);
+      T_eval->SetBranchAddress("match_completeness", &match_completeness);
+      T_eval->SetBranchAddress("match_completeness_energy", &match_completeness_energy);
+      T_eval->SetBranchAddress("match_purity", &match_purity);
+      T_eval->SetBranchAddress("match_purity_xz", &match_purity_xz);
+      T_eval->SetBranchAddress("match_purity_xy", &match_purity_xy);
+      T_eval->SetBranchAddress("match_charge", &match_charge);
+      T_eval->SetBranchAddress("match_energy", &match_energy);
+      
+      T_eval1->Branch("truth_nuEnergy", &truth_nuEnergy);
+      T_eval1->Branch("truth_energyInside", &truth_energyInside);
+      T_eval1->Branch("truth_electronInside", &truth_electronInside);
+      T_eval1->Branch("truth_nuPdg", &truth_nuPdg);
+      T_eval1->Branch("truth_isCC", &truth_isCC);
+      T_eval1->Branch("truth_isEligible", &truth_isEligible);
+      T_eval1->Branch("truth_isFC", &truth_isFC);
+      T_eval1->Branch("truth_vtxInside", &truth_vtxInside);
+      T_eval1->Branch("truth_vtxX", &truth_vtxX);
+      T_eval1->Branch("truth_vtxY", &truth_vtxY);
+      T_eval1->Branch("truth_vtxZ", &truth_vtxZ);
+      T_eval1->Branch("truth_nuTime", &truth_nuTime);
+      T_eval1->Branch("match_completeness", &match_completeness);
+      T_eval1->Branch("match_completeness_energy", &match_completeness_energy);
+      T_eval1->Branch("match_purity", &match_purity);
+      T_eval1->Branch("match_purity_xz", &match_purity_xz);
+      T_eval1->Branch("match_purity_xy", &match_purity_xy);
+      T_eval1->Branch("match_charge", &match_charge);
+      T_eval1->Branch("match_energy", &match_energy);
+    }
+
+    for (int i=0;i!=T_eval->GetEntries();i++){
+      T_eval->GetEntry(i);
+      if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
+      
+      match_isSTM = false;
+      match_isFullDetDead =false;
+
+      for (int j=0;j!=T_match1->GetEntries();j++){
+	T_match1->GetEntry(j);
+	if (fabs(flash_time-flash_time1)<0.1){
+	  match_isSTM = (event_type >> 5) & 1U;
+	  match_isFullDetDead = (event_type >> 6) & 1U;
+	}
+      }
+      
+      T_eval1->Fill();
+    }
+
+  }
   file1->Write();
   file1->Close();
   
