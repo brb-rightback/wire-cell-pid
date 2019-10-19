@@ -20,6 +20,7 @@ void WireCellPID::PR3DCluster::do_rough_path(WireCell::WCPointCloud<double>::WCP
 }
 
 WireCell::Point WireCellPID::PR3DCluster::adjust_rough_path(){
+  
   Point test_p;
 
   test_p.x = fine_tracking_path.at(0).x;

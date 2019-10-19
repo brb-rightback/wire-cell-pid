@@ -610,6 +610,8 @@ int main(int argc, char* argv[])
   T_match1->Branch("event_type",&event_type,"event_type/I");
   Double_t flash_time;
   T_match1->Branch("flash_time",&flash_time,"flash_time/D");
+  Double_t cluster_length = 0;
+  T_match1->Branch("cluster_length",&cluster_length,"cluster_length/D");
   
   for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
     flash_time = map_flash_info[it->first].second;
@@ -662,6 +664,11 @@ int main(int argc, char* argv[])
 	event_type |= 1UL << 5;
       if (fid->check_full_detector_dead())
 	event_type |= 1UL << 6;
+      cluster_length = 0;
+      std::vector<double>& dx = main_cluster->get_dx();
+      for (size_t k=0;k!=dx.size();k++){
+	cluster_length += dx.at(k)/units::cm;
+      }
     }
     
     // std::cout << it->first << " " << flash_time << " " << it->second << " " << main_cluster << std::endl;

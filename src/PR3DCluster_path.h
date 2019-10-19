@@ -287,7 +287,7 @@ std::pair<WireCell::WCPointCloud<double>::WCPoint,WireCell::WCPointCloud<double>
   }
   //  std::cout << temp_point_cloud << std::endl;
   WireCell::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
-  //  std::cout << cloud.pts.size() << std::endl;
+  // std::cout << cloud.pts.size() << " " << flag << std::endl;
   WCPointCloud<double>::WCPoint extreme_wcp[14];
   
   

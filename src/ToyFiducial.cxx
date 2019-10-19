@@ -189,6 +189,9 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps;
   
   // first round check
+  if (main_cluster->get_point_cloud_steiner()->get_cloud().pts.size()==0)
+    return false;
+
   {
     // get two extreme points ...
     wcps = main_cluster->get_two_boundary_wcps(2,true);
@@ -295,7 +298,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
 
   if (temp_set.size()==0){
     candidate_exit_wcps.clear();
-       // get two extreme points ...
+    // get two extreme points ...
     wcps = main_cluster->get_two_boundary_wcps(2);
     // figure out the end points ...
     std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps = main_cluster->get_extreme_wcps();
@@ -464,13 +467,22 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     if (flag_double_end) std::cout << "Forward check! " << std::endl;
     // regular crawling ...
     main_cluster->do_rough_path(first_wcp, last_wcp);
+    //std::cout << "haha" << std::endl;
     main_cluster->collect_charge_trajectory(ct_point_cloud); 
+    //std::cout << "haha" << std::endl;
     main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
+
+    if (main_cluster->get_fine_tracking_path().size()<=3) return false;
+    
+    //std::cout << "haha " << std::endl;
     Point mid_p = main_cluster->adjust_rough_path(); 
+    //std::cout << "haha" << std::endl;
     // fitting trajectory and dQ/dx...
     main_cluster->collect_charge_trajectory(ct_point_cloud); 
     main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
 
+   
+    
     // check both end points for TGM ...
     WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
     std::vector<double>& dQ = main_cluster->get_dQ();
