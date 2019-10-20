@@ -37,6 +37,8 @@ namespace WireCellPID{
 
     bool eval_stm(WireCellPID::PR3DCluster* main_cluster, int kink_num, double peak_range = 40*units::cm, double offset_x = 0*units::cm, double com_range = 35*units::cm);
 
+    bool detect_proton(WireCellPID::PR3DCluster* main_cluster, int kink_num);
+
     int find_first_kink(WireCellPID::PR3DCluster* main_cluster);
 
     bool check_full_detector_dead();

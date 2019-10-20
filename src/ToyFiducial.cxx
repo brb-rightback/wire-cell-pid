@@ -530,6 +530,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     
     
       bool flag_pass = false;
+
       if (left_L < 40*units::cm) {
 	if (flag_fix_end){
 	  flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
@@ -539,9 +540,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
 	    eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 35*units::cm);
 	}
 	
-	if (flag_pass)
-	  return true;
-	else{
+	if (!flag_pass){
 	  if (flag_fix_end){
 	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 15*units::cm) ||
 	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 15*units::cm);
@@ -553,9 +552,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
       }
       
       if (left_L < 20*units::cm){
-	if (flag_pass)
-	  return true;
-	else{
+	if (!flag_pass){
 	  if (flag_fix_end){
 	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
 	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
@@ -565,9 +562,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
 	  }
 	}
 	
-	if (flag_pass)
-	  return true;
-	else{
+	if (!flag_pass){
 	  if (flag_fix_end){
 	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm , 0., 15*units::cm) ||
 	      eval_stm(main_cluster, kink_num, 5*units::cm , 3.*units::cm, 15*units::cm);
@@ -576,6 +571,10 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
 	      eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 15*units::cm);
 	  }
 	}
+      }
+      
+      if (flag_pass) {
+	if (!detect_proton(main_cluster, kink_num)) return true;
       }
     }
   }
@@ -647,9 +646,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
 	    eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 35*units::cm);
 	}
 	
-	if (flag_pass)
-	  return true;
-	else{
+	if (!flag_pass){
 	  if (flag_fix_end){
 	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 15*units::cm) ||
 	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 15*units::cm);
@@ -661,9 +658,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
       }
       
       if (left_L < 20*units::cm){
-	if (flag_pass)
-	  return true;
-	else{
+	if (!flag_pass){
 	  if (flag_fix_end){
 	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
 	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
@@ -673,9 +668,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
 	  }
 	}
 	
-	if (flag_pass)
-	  return true;
-	else{
+	if (!flag_pass){
 	  if (flag_fix_end){
 	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm , 0., 15*units::cm) ||
 	      eval_stm(main_cluster, kink_num, 5*units::cm , 3.*units::cm, 15*units::cm);
@@ -684,6 +677,10 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
 	      eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 15*units::cm);
 	  }
 	}
+      }
+
+      if (flag_pass) {
+	if (!detect_proton(main_cluster, kink_num)) return true;
       }
     }
   }
@@ -913,6 +910,117 @@ int WireCellPID::ToyFiducial::find_first_kink(WireCellPID::PR3DCluster* main_clu
   
   
   return fine_tracking_path.size();
+}
+
+bool WireCellPID::ToyFiducial::detect_proton(WireCellPID::PR3DCluster* main_cluster,int kink_num){
+  // common part ..
+  WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
+  std::vector<double>& dQ = main_cluster->get_dQ();
+  std::vector<double>& dx = main_cluster->get_dx();
+  std::vector<double> L(pts.size(),0);
+  std::vector<double> dQ_dx(pts.size(),0);
+  double dis = 0;
+  L.at(0) = dis;
+  dQ_dx.at(0) = dQ.at(0)/(dx.at(0)/units::cm+1e-9);
+  for (size_t i=1;i!=pts.size();i++){
+    dis += sqrt(pow(pts.at(i).x-pts.at(i-1).x,2) + pow(pts.at(i).y-pts.at(i-1).y,2) + pow(pts.at(i).z - pts.at(i-1).z,2));
+    L.at(i) = dis;
+    dQ_dx.at(i) = dQ.at(i)/(dx.at(i)/units::cm+1e-9);
+  }
+  double end_L; 
+  double max_num; 
+  if (kink_num == pts.size()){
+    end_L = L.back();
+    max_num = L.size();
+  }else{
+    end_L = L.at(kink_num)-0.5*units::cm;
+    max_num = kink_num;
+  }
+  
+  // find the maximum bin ...
+  double max_bin = -1;
+  double max_sum = 0;
+  for (size_t i=0;i!=L.size();i++){
+    double sum = 0;
+    double nsum = 0;
+    double temp_max_bin = i;
+    double temp_max_val = dQ_dx.at(i);
+    if (L.at(i) < end_L + 0.5*units::cm && L.at(i) > end_L - 40*units::cm && i < max_num){
+      sum += dQ_dx.at(i); nsum ++;
+      if (i>=2){
+	sum += dQ_dx.at(i-2); nsum++;
+	if (dQ_dx.at(i-2) > temp_max_val && i-2 < max_num){
+	  temp_max_val = dQ_dx.at(i-2);
+	  temp_max_bin = i-2;
+	}
+      }
+      if (i>=1){
+	sum += dQ_dx.at(i-1); nsum++;
+	if (dQ_dx.at(i-1) > temp_max_val && i-1 < max_num){
+	  temp_max_val = dQ_dx.at(i-1);
+	  temp_max_bin = i-1;
+	}
+      }
+      if (i+1<L.size()){
+	sum += dQ_dx.at(i+1); nsum++;
+	if (dQ_dx.at(i+1) > temp_max_val && i+1 < max_num){
+	  temp_max_val = dQ_dx.at(i+1);
+	  temp_max_bin = i+1;
+	}
+      }
+      if (i+2<L.size()){
+	sum += dQ_dx.at(i+2); nsum++;
+	if (dQ_dx.at(i+2) > temp_max_val && i+2 < max_num){
+	  temp_max_val = dQ_dx.at(i+2);
+	  temp_max_bin = i+2;
+	}
+      }
+      sum /= nsum;
+      if (sum>max_sum){
+	max_sum = sum;
+	max_bin = temp_max_bin;
+      }
+    }
+  }
+  //  std::cout << max_bin << " " << max_sum << std::endl;
+  end_L = L.at(max_bin)+0.2*units::cm;
+  int ncount = 0;
+  std::vector<double> vec_x;
+  std::vector<double> vec_y;
+  for (size_t i=0;i!=L.size(); i++){
+    if (end_L - L.at(i) < 35*units::cm && end_L - L.at(i) > 3*units::cm){
+      vec_x.push_back(end_L-L.at(i));
+      vec_y.push_back(dQ_dx.at(i));
+      ncount ++;
+    }
+  }
+  
+  if (ncount >=5){
+    TH1F *h1 = new TH1F("h1","h1",ncount,0,ncount);
+    TH1F *h2 = new TH1F("h2","h2",ncount,0,ncount);
+    TH1F *h3 = new TH1F("h3","h3",ncount,0,ncount);
+    
+    for (size_t i=0;i!=ncount;i++){
+      // std::cout << i << " " << vec_y.at(i) << std::endl;
+      h1->SetBinContent(i+1,vec_y.at(i));
+      h2->SetBinContent(i+1,g_muon->Eval((vec_x.at(i))/units::cm));
+      h3->SetBinContent(i+1,50e3);
+    }
+    double ks1 = h2->KolmogorovTest(h1,"M");
+    double ratio1 = h2->GetSum()/(h1->GetSum()+1e-9);
+    double ks2 = h3->KolmogorovTest(h1,"M");
+    double ratio2 = h3->GetSum()/(h1->GetSum()+1e-9);
+    
+    delete h1;
+    delete h2;
+    delete h3;
+    
+    std::cout << "End proton detection: " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << " " << dQ_dx.at(max_bin)/50e3 << " " << dQ_dx.size() - max_bin << std::endl;
+    
+    if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > 0.03 && dQ_dx.at(max_bin)/50e3 > 2.5 && (dQ_dx.size() - max_bin <= 3 || ks2 < 0.05 && dQ_dx.size() - max_bin <= 12) ) return true;
+  }
+  
+  return false;
 }
 
 bool WireCellPID::ToyFiducial::eval_stm(WireCellPID::PR3DCluster* main_cluster,int kink_num,double peak_range, double offset_length, double com_range){
