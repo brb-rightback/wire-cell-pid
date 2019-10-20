@@ -521,6 +521,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
       
       if (left_L < 8*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3)< 1.5 ||
 	  left_L < 6*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.7 ||
+	  left_L < 5*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.8 ||
 	  left_L < 3*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.9){
 	left_L = 0;
 	kink_num = dQ.size();
