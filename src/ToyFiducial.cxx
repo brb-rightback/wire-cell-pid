@@ -406,7 +406,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   
   // fully contained, so not a STM
   if (candidate_exit_wcps.size()==0) {
-    std::cout << "Mid Point: " << std::endl;
+    std::cout << "Mid Point: A" << std::endl;
     return false;
   }
   
@@ -446,7 +446,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
 
       if (dir1.Angle(dir2) > 120/180.*3.1415926 && dis1 > 20*units::cm &&
       	  dis2 > 20*units::cm){
-	std::cout << "Mid Point: " << std::endl;
+	std::cout << "Mid Point: B" << std::endl;
 	return false;
       }else{
 	if (dis1 < dis2){
@@ -457,7 +457,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
       }
       
     }else{
-      std::cout << "Mid Point: " << std::endl;
+      std::cout << "Mid Point: C" << std::endl;
       return false;
     }
   }

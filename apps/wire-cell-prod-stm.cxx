@@ -708,8 +708,22 @@ int main(int argc, char* argv[])
 
       cluster_length = 0;
       std::vector<double>& dx = main_cluster->get_dx();
-      for (size_t k=0;k!=dx.size();k++){
-	cluster_length += dx.at(k)/units::cm;
+      {
+	if (dx.size()==0 && main_cluster->get_point_cloud_steiner()!=0){
+	  if (main_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
+	    std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = main_cluster->get_two_boundary_wcps(2); 
+	    main_cluster->dijkstra_shortest_paths(wcps.first,2); 
+	    main_cluster->cal_shortest_path(wcps.second,2);
+	  }
+	  if (main_cluster->get_path_wcps().size()>=2){
+	    main_cluster->collect_charge_trajectory(ct_point_cloud);
+	    main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+	  }
+	}
+	  
+	for (size_t k=0;k!=dx.size();k++){
+	  cluster_length += dx.at(k)/units::cm;
+	}
       }
     }
     
