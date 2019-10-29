@@ -111,8 +111,9 @@ int main(int argc, char* argv[])
   Trun->GetEntry(entry_no);
   double lowerwindow = 0;
   double upperwindow = 0;
-  if(triggerbits==2048) { lowerwindow = 3.0; upperwindow = 5.0; }// bnb  
-  if(triggerbits==512) { lowerwindow = 3.45; upperwindow = 5.45; } // extbnb
+
+  if((triggerbits>>11) & 1U) { lowerwindow = 3.0; upperwindow = 5.0; }// bnb  
+  if((triggerbits>>9) & 1U) { lowerwindow = 3.45; upperwindow = 5.45; } // extbnb
   
    // define singleton ... 
   TPCParams& mp = Singleton<TPCParams>::Instance();
@@ -652,6 +653,7 @@ int main(int argc, char* argv[])
   
   for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
     flash_time = map_flash_info[it->first].second;
+    //    std::cout << flash_time << " " << triggerbits << " " << lowerwindow << " " << upperwindow << std::endl;
     if (flag_in_time_only && (flash_time < lowerwindow || flash_time > upperwindow)) continue;
 
     event_type = map_flash_tpc_pair_type[std::make_pair(it->first, it->second)];
@@ -659,6 +661,8 @@ int main(int argc, char* argv[])
     int flag_tgm = (event_type >> 3) & 1U;
     int flag_low_energy = (event_type >> 4) & 1U;
     int flag_lm = (event_type >> 1) & 1U;
+
+    // std::cout << flag_tgm << " " << flag_low_energy << " " << flag_lm << std::endl;
     
     ncluster = it->second;
     flash_id = it->first;
