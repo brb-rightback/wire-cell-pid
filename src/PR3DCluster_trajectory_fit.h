@@ -1856,7 +1856,8 @@ void WireCellPID::PR3DCluster::organize_ps_path(WireCell::PointVector& pts, doub
       dis1 = sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2)+pow(p1.z-p2.z,2));
       if (dis1 > low_dis_limit) break;
     }
-    if (dis1!=0){
+    
+    if (dis1 > low_dis_limit){
       p1.x += (p1.x - p2.x)/dis1 * end_point_limit;
       p1.y += (p1.y - p2.y)/dis1 * end_point_limit;
       p1.z += (p1.z - p2.z)/dis1 * end_point_limit;
@@ -1867,9 +1868,14 @@ void WireCellPID::PR3DCluster::organize_ps_path(WireCell::PointVector& pts, doub
   // fill in the middle part
   for (size_t i=0;i!=ps_vec.size(); i++){
     Point p1 = ps_vec.at(i);
-    double dis = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));
+    double dis;
+    if (pts.size()!=0){
+      dis = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));
+    }else{
+      dis = sqrt(pow(p1.x-ps_vec.back().x,2)+pow(p1.y-ps_vec.back().y,2)+pow(p1.z-ps_vec.back().z,2));
+    }
 
-    // std::cout << i << " " << dis/units::cm << " " << low_dis_limit/units::cm << std::endl;
+    // std::cout << i << " " << p1 << " " << pts.back() << " " << dis/units::cm << " " << low_dis_limit/units::cm << std::endl;
     if (dis < low_dis_limit * 0.8 ){
       continue;
     }else if (dis < low_dis_limit * 1.6){
@@ -1909,7 +1915,9 @@ void WireCellPID::PR3DCluster::organize_ps_path(WireCell::PointVector& pts, doub
     if (dis1 >= 0.45*units::cm)
       pts.push_back(p1);
   }
-  
+
+  if (pts.size()==0)
+    pts = ps_vec;
 }
 
 WireCell::PointVector WireCellPID::PR3DCluster::organize_wcps_path(std::list<WCPointCloud<double>::WCPoint>& path_wcps_list,  double low_dis_limit, double end_point_limit){
