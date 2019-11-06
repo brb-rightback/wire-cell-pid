@@ -1916,7 +1916,7 @@ void WireCellPID::PR3DCluster::organize_ps_path(WireCell::PointVector& pts, doub
       pts.push_back(p1);
   }
 
-  if (pts.size()==0)
+  if (pts.size()<=1)
     pts = ps_vec;
 }
 

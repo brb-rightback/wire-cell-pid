@@ -33,7 +33,7 @@ namespace WireCellPID{
     
     bool check_signal_processing(WireCell::Point& p, TVector3& dir, WireCell::ToyCTPointCloud& ct_point_cloud, double step = 1.0*units::cm, double offset_x=0);
     
-    bool check_stm(WireCellPID::PR3DCluster* cluster, double offset_x, double flash_time, WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map);
+    bool check_stm(WireCellPID::PR3DCluster* cluster, double offset_x, double flash_time, WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, int& event_type);
 
     bool eval_stm(WireCellPID::PR3DCluster* main_cluster, int kink_num, double peak_range = 40*units::cm, double offset_x = 0*units::cm, double com_range = 35*units::cm);
 

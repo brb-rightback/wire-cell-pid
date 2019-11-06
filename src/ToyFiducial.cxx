@@ -171,7 +171,7 @@ bool WireCellPID::ToyFiducial::check_full_detector_dead(){
   
 }
 
-bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster, double offset_x, double flash_time, WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map){
+bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster, double offset_x, double flash_time, WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, int& event_type){
 
   //  check_full_detector_dead();
 
@@ -507,6 +507,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     
     if ((exit_L < 3*units::cm || left_L < 3*units::cm) && (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
       std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+      event_type |= 1UL << 3;
       return true;
     }
   
@@ -616,6 +617,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     
     if ((exit_L < 3*units::cm || left_L < 3*units::cm) && (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
       std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+      event_type |= 1UL << 3;
       return true;
     }
   
