@@ -4,6 +4,8 @@
 
 using namespace WireCell;
 
+#include "Cosmic_tagger.h"
+
 int pnpoly(std::vector<double>& vertx, std::vector<double>& verty, double testx, double testy)
 {
   int i, j, c = 0;
