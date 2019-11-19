@@ -700,6 +700,10 @@ int main(int argc, char* argv[])
       // 	  main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
       // 	}
       // }
+
+      // run the new supplemental cosmic tagger
+      std::tuple<bool, WireCellPID::PR3DCluster*, WireCell::Opflash*> cosmic_tagger_results = fid->cosmic_tagger(flashes, main_cluster, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, flag_data, false);
+      
       // if STM
       if (fid->check_stm(main_cluster, offset_x, flash_time, ct_point_cloud, global_wc_map, event_type))
 	event_type |= 1UL << 5;
