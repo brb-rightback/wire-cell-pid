@@ -180,11 +180,25 @@ int main(int argc, char* argv[])
   T_match->SetBranchAddress("tpc_cluster_id",&tpc_cluster_id); // parent cluster id
   T_match->SetBranchAddress("flash_id",&flash_id);  // flash id 
   T_match->SetBranchAddress("event_type",&event_type);
-
-  std::map<int, std::pair<int, double> > map_flash_info;
+  Double_t strength, pe_pred[32], pe_meas[32], pe_meas_err[32];
+  Bool_t flag_close_to_PMT, flag_at_x_boundary;
+  Double_t chi2, ks_dis, cluster_length;
+  Int_t ndf;
+  T_match->SetBranchAddress("strength",&strength);
+  T_match->SetBranchAddress("pe_pred",pe_pred);
+  T_match->SetBranchAddress("pe_meas",pe_meas);
+  T_match->SetBranchAddress("pe_meas_err",pe_meas_err);
+  T_match->SetBranchAddress("flag_close_to_PMT",&flag_close_to_PMT);
+  T_match->SetBranchAddress("flag_at_x_boundary",&flag_at_x_boundary);
+  T_match->SetBranchAddress("chi2",&chi2);
+  T_match->SetBranchAddress("ks_dis",&ks_dis);
+  T_match->SetBranchAddress("cluster_length",&cluster_length);
+  T_match->SetBranchAddress("ndf",&ndf);
+  
+  std::map<int, Opflash* > map_flash_info;
   std::map<int, int> map_flash_tpc_ids;
   std::map<int, int> map_tpc_flash_ids;
-  std::map<std::pair<int, int>, int> map_flash_tpc_pair_type;
+  std::map<std::pair<int, int>, std::tuple<int, double, double, int> > map_flash_tpc_pair_type;
   
   OpflashSelection flashes;
   for (int i=0;i!=T_flash->GetEntries();i++){
@@ -193,7 +207,7 @@ int main(int argc, char* argv[])
     Opflash *flash = new Opflash(type, flash_id, low_time, high_time, time, total_PE, *fired_channels, temp_PE, temp_PE_err, *l1_fired_time, *l1_fired_pe);
     flashes.push_back(flash);
     
-    map_flash_info[flash_id] = std::make_pair(type, time);
+    map_flash_info[flash_id] = flash;//std::make_pair(type, time);
   }
   
 
@@ -203,7 +217,7 @@ int main(int argc, char* argv[])
     if (flash_id==-1) continue;
     map_flash_tpc_ids[flash_id] = tpc_cluster_id;
     map_tpc_flash_ids[tpc_cluster_id] = flash_id;
-    map_flash_tpc_pair_type[std::make_pair(flash_id, tpc_cluster_id)] = event_type;
+    map_flash_tpc_pair_type[std::make_pair(flash_id, tpc_cluster_id)] = std::make_tuple(event_type, ks_dis, chi2, ndf);
   }
   
 
@@ -637,14 +651,14 @@ int main(int argc, char* argv[])
   T_match1->Branch("event_type",&event_type,"event_type/I");
   Double_t flash_time;
   T_match1->Branch("flash_time",&flash_time,"flash_time/D");
-  Double_t cluster_length = 0;
+  cluster_length = 0;
   T_match1->Branch("cluster_length",&cluster_length,"cluster_length/D");
   
   for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
-    flash_time = map_flash_info[it->first].second;
+    flash_time = map_flash_info[it->first]->get_time();
     if (flag_in_time_only && (flash_time < lowerwindow || flash_time > upperwindow)) continue;
 
-    event_type = map_flash_tpc_pair_type[std::make_pair(it->first, it->second)];
+    event_type = std::get<0>(map_flash_tpc_pair_type[std::make_pair(it->first, it->second)]);
 
     int flag_tgm = (event_type >> 3) & 1U;
     int flag_low_energy = (event_type >> 4) & 1U;
