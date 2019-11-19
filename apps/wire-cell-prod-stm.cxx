@@ -5,6 +5,7 @@
 #include "WireCellData/Singleton.h"
 #include "WireCellData/ToyCTPointCloud.h"
 #include "WireCellData/PhotonLibrary.h"
+#include "WireCellData/Opflash.h"
 
 #include "WireCellPID/ToyFiducial.h"
 
@@ -167,6 +168,22 @@ int main(int argc, char* argv[])
   T_flash->SetBranchAddress("time",&time);
   T_flash->SetBranchAddress("type",&type);
   T_flash->SetBranchAddress("flash_id",&flash_id);
+  Double_t low_time, high_time, total_PE;
+  Double_t temp_PE[32], temp_PE_err[32];
+  std::vector<int> *fired_channels = new std::vector<int>;
+  std::vector<double> *l1_fired_time = new std::vector<double>;
+  std::vector<double> *l1_fired_pe = new std::vector<double>;
+  T_flash->SetBranchAddress("low_time",&low_time);
+  T_flash->SetBranchAddress("high_time",&high_time);
+  T_flash->SetBranchAddress("total_PE",&total_PE);
+  T_flash->SetBranchAddress("PE",temp_PE);
+  T_flash->SetBranchAddress("PE_err",temp_PE_err);
+  T_flash->SetBranchAddress("fired_channels",&fired_channels);
+  T_flash->SetBranchAddress("l1_fired_time",&l1_fired_time);
+  T_flash->SetBranchAddress("l1_fired_pe",&l1_fired_pe);
+  
+  
+
   
   TTree *T_match = (TTree*)file->Get("T_match");
   T_match->SetBranchAddress("runNo",&temp_run_no);
@@ -183,12 +200,23 @@ int main(int argc, char* argv[])
   std::map<int, int> map_tpc_flash_ids;
   std::map<std::pair<int, int>, int> map_flash_tpc_pair_type;
   
+  OpflashSelection flashes;
   
   for (int i=0;i!=T_flash->GetEntries();i++){
     T_flash->GetEntry(i);
     if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
+    
+    Opflash *flash = new Opflash(type, flash_id, low_time, high_time, time, total_PE, *fired_channels, temp_PE, temp_PE_err, *l1_fired_time, *l1_fired_pe);
+    flashes.push_back(flash);
+
+    // test ...
+    // std::cout << flash->get_low_time() << " " << flash->get_l1_fired_time().size() << " " << flash->get_PE(3) << std::endl;
+    
     map_flash_info[flash_id] = std::make_pair(type, time);
   }
+
+
+  
   for (int i=0;i!=T_match->GetEntries();i++){
     T_match->GetEntry(i);
     if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
