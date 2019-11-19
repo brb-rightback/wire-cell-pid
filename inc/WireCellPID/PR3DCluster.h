@@ -65,13 +65,17 @@ namespace WireCellPID{
     WireCell::Vector get_center(){return center;};
     WireCell::Vector get_PCA_axis(int axis){return PCA_axis[axis];};
     double get_PCA_value(int axis){return PCA_values[axis];};
-
+    
+    
     //Hough Transformation ...
     std::pair<double,double> HoughTrans(WireCell::Point& p, double dis);
     TVector3 VHoughTrans(WireCell::Point& p, double dis);
     std::pair<double,double> HoughTrans(WireCell::Point& p, double dis, WireCell::ToyPointCloud *point_cloud1);
     TVector3 VHoughTrans(WireCell::Point& p, double dis, WireCell::ToyPointCloud *point_cloud1);
 
+    TVector3 calc_PCA_dir(WireCell::Point& p, double dis);
+    TVector3 calc_PCA_dir(WireCell::Point& p, WireCell::PointVector& pts);
+    
     // graph related ...
     void Create_graph(WireCell::ToyPointCloud* ref_point_cloud = 0);
     void Create_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCell::ToyPointCloud* ref_point_cloud = 0);

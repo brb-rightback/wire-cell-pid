@@ -31,16 +31,23 @@ namespace WireCellPID{
     
     void set_offset_t(double value){offset_t=value;};
     
-    
+    // helper functions ...
     bool inside_fiducial_volume(WireCell::Point& p, double offset_x=0);
     bool inside_dead_region(WireCell::Point& p);
     bool check_dead_volume(WireCell::Point& p, TVector3& dir, double step = 1.0*units::cm, double offset_x=0);
-    
     bool check_signal_processing(WireCell::Point& p, TVector3& dir, WireCell::ToyCTPointCloud& ct_point_cloud, double step = 1.0*units::cm, double offset_x=0);
 
+    // TGM tagger ...
+    bool check_neutrino_candidate(WireCellPID::PR3DCluster *main_cluster, WireCell::WCPointCloud<double>::WCPoint& wcp1, WireCell::WCPointCloud<double>::WCPoint& wcp2, double offset_x, WireCell::ToyCTPointCloud& ct_point_cloud, bool flag_2view_check = true);
+    bool check_tgm(WireCellPID::PR3DCluster* main_cluster,WireCell::Opflash* main_flash, double offset_x, WireCell::ToyCTPointCloud& ct_point_cloud);
+    
+    // fully contained tagger ...
+    bool check_fully_contained(WireCellPID::PR3DCluster* main_cluster, double offset_x, WireCell::ToyCTPointCloud& ct_point_cloud);
+    
+    // London's new tagger
     std::tuple<int, WireCellPID::PR3DCluster*, WireCell::Opflash*> cosmic_tagger(WireCell::OpflashSelection& flashes, WireCellPID::PR3DCluster* main_cluster, WireCell::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WireCell::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WireCell::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool flag_data, bool debug_tagger=false);
 
-    
+    // check STM code ...
     bool check_stm(WireCellPID::PR3DCluster* cluster, double offset_x, double flash_time, WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, int& event_type);
 
     bool eval_stm(WireCellPID::PR3DCluster* main_cluster, int kink_num, double peak_range = 40*units::cm, double offset_x = 0*units::cm, double com_range = 35*units::cm);
