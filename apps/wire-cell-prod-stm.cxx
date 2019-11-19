@@ -195,15 +195,15 @@ int main(int argc, char* argv[])
   T_match->SetBranchAddress("flash_id",&flash_id);  // flash id 
   T_match->SetBranchAddress("event_type",&event_type);
   Double_t strength, pe_pred[32], pe_meas[32], pe_meas_err[32];
-  Bool_t flag_close_to_PMT, flag_at_x_boundary;
+  //  Bool_t flag_close_to_PMT, flag_at_x_boundary;
   Double_t chi2, ks_dis, cluster_length;
   Int_t ndf;
   T_match->SetBranchAddress("strength",&strength);
   T_match->SetBranchAddress("pe_pred",pe_pred);
   T_match->SetBranchAddress("pe_meas",pe_meas);
   T_match->SetBranchAddress("pe_meas_err",pe_meas_err);
-  T_match->SetBranchAddress("flag_close_to_PMT",&flag_close_to_PMT);
-  T_match->SetBranchAddress("flag_at_x_boundary",&flag_at_x_boundary);
+  //T_match->SetBranchAddress("flag_close_to_PMT",&flag_close_to_PMT);
+  //T_match->SetBranchAddress("flag_at_x_boundary",&flag_at_x_boundary);
   T_match->SetBranchAddress("chi2",&chi2);
   T_match->SetBranchAddress("ks_dis",&ks_dis);
   T_match->SetBranchAddress("cluster_length",&cluster_length);
@@ -752,10 +752,23 @@ int main(int argc, char* argv[])
       // }
 
       // run the new supplemental cosmic tagger
-      std::tuple<bool, WireCellPID::PR3DCluster*, WireCell::Opflash*> cosmic_tagger_results = fid->cosmic_tagger(flashes, main_cluster, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, flag_data, false);
+      std::tuple<int, WireCellPID::PR3DCluster*, WireCell::Opflash*> cosmic_tagger_results = fid->cosmic_tagger(flashes, main_cluster, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, flag_data, false);
+
+      // TGM by supplemental tagger ...
+      if (std::get<0>(cosmic_tagger_results)==1) {
+	event_type |= 1UL << 3;
+	// STM candidate ...
+      }else if (std::get<0>(cosmic_tagger_results)==2){
+	double temp_flash_time = (std::get<2>(cosmic_tagger_results))->get_time();
+	double temp_offset_x = (temp_flash_time - time_offset)*2./nrebin*time_slice_width;
+	if (fid->check_stm(main_cluster, temp_offset_x, temp_flash_time, ct_point_cloud, global_wc_map, event_type))
+	  event_type |= 1UL << 5;
+      }
+      flag_tgm = (event_type >> 3) & 1U;
+      int flag_stm = (event_type >> 5) & 1U;
       
       // if STM
-      if (fid->check_stm(main_cluster, offset_x, flash_time, ct_point_cloud, global_wc_map, event_type))
+      if (flag_tgm==0 && flag_stm==0 && fid->check_stm(main_cluster, offset_x, flash_time, ct_point_cloud, global_wc_map, event_type))
 	event_type |= 1UL << 5;
       if (fid->check_full_detector_dead())
 	event_type |= 1UL << 6;
