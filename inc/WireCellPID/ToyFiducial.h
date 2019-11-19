@@ -7,6 +7,8 @@
 //#include "WireCellData/FlashTPCBundle.h"
 #include "WireCellData/ToyCTPointCloud.h"
 #include "WireCellData/LMBDT.h"
+#include "WireCellData/Opflash.h"
+#include "WireCellData/PhotonLibrary.h"
 
 #include "WireCellPID/PR3DCluster.h"
 
@@ -24,6 +26,9 @@ namespace WireCellPID{
 		double boundary_dis_cut=2*units::cm, double top=117*units::cm, double bottom=-116*units::cm, double upstream=0*units::cm, double downstream=1037*units::cm, double anode = 0*units::cm, double cathode=256*units::cm, int flag_data=1);
     ~ToyFiducial();
 
+  
+    
+    
     void set_offset_t(double value){offset_t=value;};
     
     
@@ -32,6 +37,9 @@ namespace WireCellPID{
     bool check_dead_volume(WireCell::Point& p, TVector3& dir, double step = 1.0*units::cm, double offset_x=0);
     
     bool check_signal_processing(WireCell::Point& p, TVector3& dir, WireCell::ToyCTPointCloud& ct_point_cloud, double step = 1.0*units::cm, double offset_x=0);
+
+    std::tuple<bool, WireCellPID::PR3DCluster*, WireCell::Opflash*> cosmic_tagger(WireCell::OpflashSelection& flashes, WireCellPID::PR3DCluster* main_cluster, WireCell::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WireCell::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WireCell::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool flag_data, bool debug_tagger=false);
+
     
     bool check_stm(WireCellPID::PR3DCluster* cluster, double offset_x, double flash_time, WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, int& event_type);
 
