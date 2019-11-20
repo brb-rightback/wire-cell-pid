@@ -1,7 +1,7 @@
-#include "WireCellPID/ExecMon.h"
+#include "WCPPID/ExecMon.h"
 #include <sstream>
 
-using namespace WireCellPID;
+using namespace WCPPID;
 
 ExecMon::ExecMon(const std::string& msg, TimeKeeper::ptime starting_time)
     : tk(msg, starting_time)

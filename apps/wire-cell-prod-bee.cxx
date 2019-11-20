@@ -1,23 +1,23 @@
-#include "WireCellSst/GeomDataSource.h"
+#include "WCPSst/GeomDataSource.h"
 
-#include "WireCellData/SlimMergeGeomCell.h"
-#include "WireCellData/TPCParams.h"
-#include "WireCellData/Singleton.h"
-#include "WireCellData/ToyCTPointCloud.h"
+#include "WCPData/SlimMergeGeomCell.h"
+#include "WCPData/TPCParams.h"
+#include "WCPData/Singleton.h"
+#include "WCPData/ToyCTPointCloud.h"
 
-#include "WireCellPID/ToyFiducial.h"
+#include "WCPPID/ToyFiducial.h"
 
-#include "WireCellPID/CalcPoints.h"
-#include "WireCellPID/PR3DCluster.h"
+#include "WCPPID/CalcPoints.h"
+#include "WCPPID/PR3DCluster.h"
 
-#include "WireCellPID/ExecMon.h"
-#include "WireCellPID/ImprovePR3DCluster.h"
+#include "WCPPID/ExecMon.h"
+#include "WCPPID/ImprovePR3DCluster.h"
 
 #include "TH1.h"
 #include "TFile.h"
 #include "TTree.h"
 
-using namespace WireCell;
+using namespace WCP;
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -43,10 +43,10 @@ int main(int argc, char* argv[])
   int flag_data = 1; // data
   if(datatier==1 || datatier==2) flag_data=0; // overlay, full mc
   
-  WireCellPID::ExecMon em("starting");
+  WCPPID::ExecMon em("starting");
   cout << em("load geometry") << endl;
   
-  WireCellSst::GeomDataSource gds(argv[1]);
+  WCPSst::GeomDataSource gds(argv[1]);
   std::vector<double> ex = gds.extent();
   cout << "Extent: "
        << " x:" << ex[0]/units::mm << " mm"
@@ -296,7 +296,7 @@ int main(int argc, char* argv[])
   TDC->SetBranchAddress("wire_index_v",&wire_index_v_vec);
   TDC->SetBranchAddress("wire_index_w",&wire_index_w_vec);
 
-  WireCellPID::ToyFiducial *fid = new WireCellPID::ToyFiducial(3,800,-first_u_dis/pitch_u, -first_v_dis/pitch_v, -first_w_dis/pitch_w,
+  WCPPID::ToyFiducial *fid = new WCPPID::ToyFiducial(3,800,-first_u_dis/pitch_u, -first_v_dis/pitch_v, -first_w_dis/pitch_w,
 								   1./time_slice_width, 1./pitch_u, 1./pitch_v, 1./pitch_w, // slope
 								   angle_u,angle_v,angle_w,// angle
 								   3*units::cm, 117*units::cm, -116*units::cm, 0*units::cm, 1037*units::cm, 0*units::cm, 256*units::cm, flag_data);
@@ -304,10 +304,10 @@ int main(int argc, char* argv[])
   // load cells ... 
   GeomCellSelection mcells;
   //  CellIndexMap map_mcell_cluster_id;
-  WireCellPID::PR3DClusterSelection live_clusters;
-  WireCellPID::PR3DCluster *cluster;
-  std::map<WireCellPID::PR3DCluster*, int> map_cluster_parent_id; // cluster to main cluster
-  std::map<int, std::vector<WireCellPID::PR3DCluster*> > map_parentid_clusters; // main cluster to clusters
+  WCPPID::PR3DClusterSelection live_clusters;
+  WCPPID::PR3DCluster *cluster;
+  std::map<WCPPID::PR3DCluster*, int> map_cluster_parent_id; // cluster to main cluster
+  std::map<int, std::vector<WCPPID::PR3DCluster*> > map_parentid_clusters; // main cluster to clusters
 
   int prev_cluster_id=-1;
   int ident = 0;
@@ -398,11 +398,11 @@ int main(int argc, char* argv[])
     mcells.push_back(mcell);
     
     if (cluster_id != prev_cluster_id){
-      cluster = new WireCellPID::PR3DCluster(cluster_id);
+      cluster = new WCPPID::PR3DCluster(cluster_id);
       map_cluster_parent_id[cluster] = parent_cluster_id->at(i);
       live_clusters.push_back(cluster);
       if (map_parentid_clusters.find(parent_cluster_id->at(i)) == map_parentid_clusters.end()){
-	std::vector<WireCellPID::PR3DCluster*> temp_clusters;
+	std::vector<WCPPID::PR3DCluster*> temp_clusters;
 	temp_clusters.push_back(cluster);
 	map_parentid_clusters[parent_cluster_id->at(i)] = temp_clusters;
       }else{
@@ -1118,7 +1118,7 @@ int main(int argc, char* argv[])
   // form a global map with the current map information
   std::map<int,std::map<const GeomWire*, SMGCSelection > > global_wc_map;
   for (size_t i=0; i!=live_clusters.size();i++){
-    WireCellPID::PR3DCluster *cluster = live_clusters.at(i);
+    WCPPID::PR3DCluster *cluster = live_clusters.at(i);
     SMGCSelection& mcells = cluster->get_mcells();
     for (auto it = mcells.begin(); it!= mcells.end(); it++){
       SlimMergeGeomCell *mcell = *it;
@@ -1174,7 +1174,7 @@ int main(int argc, char* argv[])
   
   // replace by the new sampling points ...
   for (size_t i=0; i!=live_clusters.size();i++){
-    WireCellPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
+    WCPPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
     live_clusters.at(i)->Create_point_cloud();
   }
   cout << em("Add X, Y, Z points") << std::endl;
@@ -1263,11 +1263,11 @@ int main(int argc, char* argv[])
   T_cluster->SetDirectory(file1);
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-    WireCellPID::PR3DCluster* new_cluster = *it;  
+    WCPPID::PR3DCluster* new_cluster = *it;  
     ncluster = map_cluster_parent_id[new_cluster]; 
     ToyPointCloud *pcloud = new_cluster->get_point_cloud();
     if (pcloud!=0){
-      WireCell::WCPointCloud<double>& cloud = pcloud->get_cloud();
+      WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
       for (size_t i=0;i!=cloud.pts.size();i++){
 	x = cloud.pts[i].x/units::cm;
 	y = cloud.pts[i].y/units::cm;
@@ -1303,7 +1303,7 @@ int main(int argc, char* argv[])
   t_bad->Branch("bad_y",bad_y,"bad_y[bad_npoints]/D");
   t_bad->Branch("bad_z",bad_z,"bad_z[bad_npoints]/D");
 
-  WireCell::SMGCSelection& dead_mcells = fid->get_Dead_mcells();
+  WCP::SMGCSelection& dead_mcells = fid->get_Dead_mcells();
   for (auto it = dead_mcells.begin(); it!=dead_mcells.end(); it++){
     const SlimMergeGeomCell *cell = (SlimMergeGeomCell*)(*it);
     PointVector ps = cell->boundary();

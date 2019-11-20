@@ -1,16 +1,16 @@
-#include "WireCellPID/CalcPoints.h"
+#include "WCPPID/CalcPoints.h"
 
-using namespace WireCell;
+using namespace WCP;
 
-void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCellPID::PR3DCluster* cluster, int nrebin, int frame_length, double unit_dis, bool disable_mix_dead_cell){
+void WCPPID::calc_sampling_points(WCP::GeomDataSource& gds, WCPPID::PR3DCluster* cluster, int nrebin, int frame_length, double unit_dis, bool disable_mix_dead_cell){
   SMGCSelection mcells = cluster->get_mcells();
   for (auto it = mcells.begin(); it!=mcells.end(); it++){
-    WireCellPID::calc_sampling_points(gds,*it, nrebin, frame_length, unit_dis, disable_mix_dead_cell);
+    WCPPID::calc_sampling_points(gds,*it, nrebin, frame_length, unit_dis, disable_mix_dead_cell);
   }
 }
 
 
-void WireCellPID::calc_sampling_points(WireCell::GeomDataSource& gds, WireCell::SlimMergeGeomCell* mcell, int nrebin, int frame_length, double unit_dis, bool disable_mix_dead_cell){
+void WCPPID::calc_sampling_points(WCP::GeomDataSource& gds, WCP::SlimMergeGeomCell* mcell, int nrebin, int frame_length, double unit_dis, bool disable_mix_dead_cell){
   GeomWireSelection wires_u = mcell->get_uwires();
   GeomWireSelection wires_v = mcell->get_vwires();
   GeomWireSelection wires_w = mcell->get_wwires();

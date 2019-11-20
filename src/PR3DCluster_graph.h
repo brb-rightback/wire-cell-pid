@@ -1,5 +1,5 @@
-void WireCellPID::PR3DCluster::Del_graph(){
-  if (graph!=(WireCellPID::MCUGraph*)0){
+void WCPPID::PR3DCluster::Del_graph(){
+  if (graph!=(WCPPID::MCUGraph*)0){
     delete graph;
     graph = 0;
     //    std::cout << "Del graph! " << cluster_id << std::endl;
@@ -7,7 +7,7 @@ void WireCellPID::PR3DCluster::Del_graph(){
 }
 
 
-void WireCellPID::PR3DCluster::remove_same_mcell_steiner_edges(int flag){
+void WCPPID::PR3DCluster::remove_same_mcell_steiner_edges(int flag){
 
   if (flag==1){
     //std::cout << num_edges(*graph) << std::endl;
@@ -25,13 +25,13 @@ void WireCellPID::PR3DCluster::remove_same_mcell_steiner_edges(int flag){
   }
 }
 
-void WireCellPID::PR3DCluster::establish_same_mcell_steiner_edges(WireCell::GeomDataSource& gds, bool disable_dead_mix_cell, int flag){
+void WCPPID::PR3DCluster::establish_same_mcell_steiner_edges(WCP::GeomDataSource& gds, bool disable_dead_mix_cell, int flag){
 
   if (flag==1){
     if (graph==(MCUGraph*)0)
       Create_graph();
     
-    WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+    WCP::WCPointCloud<double>& cloud = point_cloud->get_cloud();
     std::map<SlimMergeGeomCell*, std::set<int> > map_mcell_all_indices;
     
     //std::map<SlimMergeGeomCell*, std::set<int> > map_mcell_steiner_indices;
@@ -71,11 +71,11 @@ void WireCellPID::PR3DCluster::establish_same_mcell_steiner_edges(WireCell::Geom
 	  WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[index2];
 	  
 	  if (flag_index1 && flag_index2){
-	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))*0.8 ),*graph);
+	    auto edge = add_edge(index1,index2,WCPPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))*0.8 ),*graph);
 	    if (edge.second)
 	      same_mcell_steiner_edges.push_back(edge.first);
 	  }else if (flag_index1 || flag_index2){
-	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))*0.9 ),*graph);
+	    auto edge = add_edge(index1,index2,WCPPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))*0.9 ),*graph);
 	    if (edge.second)
 	      same_mcell_steiner_edges.push_back(edge.first);
 	  }
@@ -84,7 +84,7 @@ void WireCellPID::PR3DCluster::establish_same_mcell_steiner_edges(WireCell::Geom
       
     }
   }else if (flag==2){
-    WireCell::WCPointCloud<double>& cloud = point_cloud_steiner->get_cloud();
+    WCP::WCPointCloud<double>& cloud = point_cloud_steiner->get_cloud();
     std::map<SlimMergeGeomCell*, std::set<int> > map_mcell_all_indices;
         
     for (size_t i=0;i!=cloud.pts.size();i++){
@@ -112,11 +112,11 @@ void WireCellPID::PR3DCluster::establish_same_mcell_steiner_edges(WireCell::Geom
 	  WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[index2];
 	  
 	  if (flag_index1 && flag_index2){
-	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph_steiner);
+	    auto edge = add_edge(index1,index2,WCPPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph_steiner);
 	    if (edge.second)
 	      same_mcell_steiner_edges.push_back(edge.first);
 	  }else if (flag_index1 || flag_index2){
-	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph_steiner);
+	    auto edge = add_edge(index1,index2,WCPPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph_steiner);
 	    if (edge.second)
 	      same_mcell_steiner_edges.push_back(edge.first);
 	  }
@@ -127,11 +127,11 @@ void WireCellPID::PR3DCluster::establish_same_mcell_steiner_edges(WireCell::Geom
   
 }
 
-void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCell::ToyPointCloud* ref_point_cloud){
-  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
-  WireCell::WC2DPointCloud<double>& cloud_u = point_cloud->get_cloud_u();
-  WireCell::WC2DPointCloud<double>& cloud_v = point_cloud->get_cloud_v();
-  WireCell::WC2DPointCloud<double>& cloud_w = point_cloud->get_cloud_w();
+void WCPPID::PR3DCluster::Connect_graph(WCP::ToyCTPointCloud& ct_point_cloud, WCP::ToyPointCloud* ref_point_cloud){
+  WCP::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+  WCP::WC2DPointCloud<double>& cloud_u = point_cloud->get_cloud_u();
+  WCP::WC2DPointCloud<double>& cloud_v = point_cloud->get_cloud_v();
+  WCP::WC2DPointCloud<double>& cloud_w = point_cloud->get_cloud_w();
 
   // now form the connected components
   std::vector<int> component(num_vertices(*graph));
@@ -533,7 +533,7 @@ void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyCTPointCloud& ct_point
 }
 
 
-void WireCellPID::PR3DCluster::Create_graph(WireCell::ToyCTPointCloud& ct_point_cloud, WireCell::ToyPointCloud* ref_point_cloud){
+void WCPPID::PR3DCluster::Create_graph(WCP::ToyCTPointCloud& ct_point_cloud, WCP::ToyPointCloud* ref_point_cloud){
   if (graph!=(MCUGraph*)0)
     return;
 
@@ -555,10 +555,10 @@ void WireCellPID::PR3DCluster::Create_graph(WireCell::ToyCTPointCloud& ct_point_
 }
 
 
-void WireCellPID::PR3DCluster::Create_graph(WireCell::ToyPointCloud* ref_point_cloud){
+void WCPPID::PR3DCluster::Create_graph(WCP::ToyPointCloud* ref_point_cloud){
   
   
-  if (graph!=(WireCellPID::MCUGraph*)0)
+  if (graph!=(WCPPID::MCUGraph*)0)
     return;
   
   if (point_cloud==(ToyPointCloud*)0)
@@ -566,7 +566,7 @@ void WireCellPID::PR3DCluster::Create_graph(WireCell::ToyPointCloud* ref_point_c
   
   // create Graph ...
   const int N = point_cloud->get_num_points();
-  graph = new WireCellPID::MCUGraph(N);
+  graph = new WCPPID::MCUGraph(N);
 
   //  std::cout <<"Create Graph! " << cluster_id  << " " << N << std::endl; 
   
@@ -577,11 +577,11 @@ void WireCellPID::PR3DCluster::Create_graph(WireCell::ToyPointCloud* ref_point_c
 
 
 
-void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
+void WCPPID::PR3DCluster::Establish_close_connected_graph(){
  
 
   
-  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+  WCP::WCPointCloud<double>& cloud = point_cloud->get_cloud();
 
   //  bool flag_reduce_memory = true;
   const int max_num_edges = 12;
@@ -728,7 +728,7 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 	  if (wcp2.index != wcp1.index){
 	    int index2 = wcp2.index;
 	    // add edge ...
-	    auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph);
+	    auto edge = add_edge(index1,index2,WCPPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph);
 	    //	    std::cout << index1 << " " << index2 << " " << edge.second << std::endl;
 	    if (edge.second){
 	      num_edges ++;
@@ -766,7 +766,7 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 	/*       WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[temp_saved_indices_min[qx]]; */
 	/*       int index2 = wcp2.index; */
 	/*       // add edge ... */
-	/*       auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph); */
+	/*       auto edge = add_edge(index1,index2,WCPPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph); */
 	/*       if (edge.second){ */
 	/* 	num_edges ++; */
 	/*       } */
@@ -775,7 +775,7 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 	/*     /\*   WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[temp_saved_indices_max[qx]]; *\/ */
 	/*     /\*   int index2 = wcp2.index; *\/ */
 	/*     /\*   // add edge ... *\/ */
-	/*     /\*   auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph); *\/ */
+	/*     /\*   auto edge = add_edge(index1,index2,WCPPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph); *\/ */
 	/*     /\*   if (edge.second){ *\/ */
 	/*     /\* 	num_edges ++; *\/ */
 	/*     /\*   } *\/ */
@@ -965,7 +965,7 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 	  /*   WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4]; */
 	  /*   if (wcp2.index != wcp1.index){ */
 	  /*     int index2 = wcp2.index; */
-	  /*     auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph); */
+	  /*     auto edge = add_edge(index1,index2,WCPPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph); */
 	  /*     if (edge.second){ */
 	  /* 	num_edges ++; */
 	  /*     } */
@@ -993,7 +993,7 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 	/*       WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[temp_saved_indices[qx]]; */
 	/*       int index2 = wcp2.index; */
 	/*       // add edge ... */
-	/*       auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph); */
+	/*       auto edge = add_edge(index1,index2,WCPPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph); */
 	/*       if (edge.second){ */
 	/* 	num_edges ++; */
 	/*       } */
@@ -1104,7 +1104,7 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 	  /*   WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[*it4]; */
 	  /*   if (wcp2.index != wcp1.index){ */
 	  /*     int index2 = wcp2.index; */
-	  /*     auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph); */
+	  /*     auto edge = add_edge(index1,index2,WCPPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph); */
 	  /*     if (edge.second){ */
 	  /* 	num_edges ++; */
 	  /*     } */
@@ -1132,7 +1132,7 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 	/*       WCPointCloud<double>::WCPoint& wcp2 = cloud.pts[temp_saved_indices[qx]]; */
 	/*       int index2 = wcp2.index; */
 	/*       // add edge ... */
-	/*       auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph); */
+	/*       auto edge = add_edge(index1,index2,WCPPID::EdgeProp(sqrt(pow(wcp1.x-wcp2.x,2)+pow(wcp1.y-wcp2.y,2)+pow(wcp1.z-wcp2.z,2))),*graph); */
 	/*       if (edge.second){ */
 	/* 	num_edges ++; */
 	/*       } */
@@ -1151,7 +1151,7 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
     for (auto it5 = it4->second.begin(); it5!=it4->second.end(); it5++){
       int index2 = (*it5).second;
       double dis = (*it5).first;
-      auto edge = add_edge(index1,index2,WireCellPID::EdgeProp(dis),*graph);
+      auto edge = add_edge(index1,index2,WCPPID::EdgeProp(dis),*graph);
       if (edge.second){
 	//      (*graph)[edge.first].dist = dis;
 	num_edges ++;
@@ -1166,11 +1166,11 @@ void WireCellPID::PR3DCluster::Establish_close_connected_graph(){
 
 
 
-void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyPointCloud* ref_point_cloud){
-  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
-  WireCell::WC2DPointCloud<double>& cloud_u = point_cloud->get_cloud_u();
-  WireCell::WC2DPointCloud<double>& cloud_v = point_cloud->get_cloud_v();
-  WireCell::WC2DPointCloud<double>& cloud_w = point_cloud->get_cloud_w();
+void WCPPID::PR3DCluster::Connect_graph(WCP::ToyPointCloud* ref_point_cloud){
+  WCP::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+  WCP::WC2DPointCloud<double>& cloud_u = point_cloud->get_cloud_u();
+  WCP::WC2DPointCloud<double>& cloud_v = point_cloud->get_cloud_v();
+  WCP::WC2DPointCloud<double>& cloud_w = point_cloud->get_cloud_w();
 
   
   std::vector<int> component(num_vertices(*graph));
@@ -1266,7 +1266,7 @@ void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyPointCloud* ref_point_
       }
     
       for (size_t i=0;i!=possible_root_vertex.size();i++){
-	std::vector<boost::graph_traits < WireCellPID::MCUGraph >::vertex_descriptor> predecessors(num_vertices(temp_graph));
+	std::vector<boost::graph_traits < WCPPID::MCUGraph >::vertex_descriptor> predecessors(num_vertices(temp_graph));
 	
 	prim_minimum_spanning_tree( temp_graph , &predecessors[0], boost::root_vertex(possible_root_vertex.at(i)));
 	
@@ -1381,7 +1381,7 @@ void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyPointCloud* ref_point_
 	}
 	
 	for (size_t i=0;i!=possible_root_vertex.size();i++){
-	  std::vector<boost::graph_traits < WireCellPID::MCUGraph >::vertex_descriptor> predecessors(num_vertices(temp_graph));
+	  std::vector<boost::graph_traits < WCPPID::MCUGraph >::vertex_descriptor> predecessors(num_vertices(temp_graph));
 	  prim_minimum_spanning_tree( temp_graph , &predecessors[0], boost::root_vertex(possible_root_vertex.at(i)));
 	  for (size_t j=0;j!=predecessors.size();++j){
 	    if (predecessors[j]!=j){
@@ -1406,10 +1406,10 @@ void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyPointCloud* ref_point_
 	if (std::get<0>(index_index_dis_mst[j][k])>=0){
 	  
 	  if (std::get<2>(index_index_dis_mst[j][k])>5*units::cm){
-	    auto edge = add_edge(std::get<0>(index_index_dis_mst[j][k]),std::get<1>(index_index_dis_mst[j][k]),WireCellPID::EdgeProp(std::get<2>(index_index_dis_mst[j][k])),*graph);
+	    auto edge = add_edge(std::get<0>(index_index_dis_mst[j][k]),std::get<1>(index_index_dis_mst[j][k]),WCPPID::EdgeProp(std::get<2>(index_index_dis_mst[j][k])),*graph);
 	    // (*graph)[edge.first].dist = std::get<2>(index_index_dis_mst[j][k]);
 	  }else{
-	    auto edge = add_edge(std::get<0>(index_index_dis_mst[j][k]),std::get<1>(index_index_dis_mst[j][k]),WireCellPID::EdgeProp(std::get<2>(index_index_dis_mst[j][k])),*graph);
+	    auto edge = add_edge(std::get<0>(index_index_dis_mst[j][k]),std::get<1>(index_index_dis_mst[j][k]),WCPPID::EdgeProp(std::get<2>(index_index_dis_mst[j][k])),*graph);
 	    // (*graph)[edge.first].dist = std::get<2>(index_index_dis_mst[j][k]);
 	  }
 	  
@@ -1420,12 +1420,12 @@ void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyPointCloud* ref_point_
 	    //auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),*graph);
 	    //if (edge.second){
 	    if (std::get<2>(index_index_dis_dir1[j][k])>5*units::cm){
-	      auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),WireCellPID::EdgeProp(std::get<2>(index_index_dis_dir1[j][k])*1.2),*graph);
+	      auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),WCPPID::EdgeProp(std::get<2>(index_index_dis_dir1[j][k])*1.2),*graph);
 	       //(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir1[j][k])*1.2;
 		// }else if (std::get<2>(index_index_dis_dir1[j][k])>2*units::cm){
 		// 	(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir1[j][k])*1.1;
 	    }else{
-	      auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),WireCellPID::EdgeProp(std::get<2>(index_index_dis_dir1[j][k])),*graph);
+	      auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),WCPPID::EdgeProp(std::get<2>(index_index_dis_dir1[j][k])),*graph);
 	      //(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir1[j][k]);
 	    }
 	      // }
@@ -1434,12 +1434,12 @@ void WireCellPID::PR3DCluster::Connect_graph(WireCell::ToyPointCloud* ref_point_
 	    //auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]),*graph);
 	    // if (edge.second){
 	      if (std::get<2>(index_index_dis_dir2[j][k])>5*units::cm){
-		auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]),WireCellPID::EdgeProp(std::get<2>(index_index_dis_dir2[j][k])*1.2),*graph);
+		auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]),WCPPID::EdgeProp(std::get<2>(index_index_dis_dir2[j][k])*1.2),*graph);
 		//	(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir2[j][k])*1.2;
 		// }else if(std::get<2>(index_index_dis_dir2[j][k])>2*units::cm){
 		// 	(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir2[j][k])*1.1;
 	      }else{
-		auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]),WireCellPID::EdgeProp(std::get<2>(index_index_dis_dir2[j][k])),*graph);
+		auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]),WCPPID::EdgeProp(std::get<2>(index_index_dis_dir2[j][k])),*graph);
 		//		(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir2[j][k]);
 	      }
 	      // }

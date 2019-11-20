@@ -1,10 +1,10 @@
 #ifndef WIRECELLPID_EXECMON
 #define WIRECELLPID_EXECMON
 
-#include "WireCellPID/TimeKeeper.h"
-#include "WireCellPID/MemUsage.h"
+#include "WCPPID/TimeKeeper.h"
+#include "WCPPID/MemUsage.h"
 
-namespace WireCellPID {
+namespace WCPPID {
 
     /** A helper class combining a TimeKeeper and a MemUsage
      *

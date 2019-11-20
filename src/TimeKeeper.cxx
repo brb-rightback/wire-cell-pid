@@ -1,10 +1,10 @@
-#include "WireCellPID/TimeKeeper.h"
+#include "WCPPID/TimeKeeper.h"
 
 #include <sstream>
 #include <iostream>		// debugging
 
 using namespace std;
-using namespace WireCellPID;
+using namespace WCPPID;
 
 TimeKeeper::TimeKeeper(const std::string& msg, ptime starting_time)
 {

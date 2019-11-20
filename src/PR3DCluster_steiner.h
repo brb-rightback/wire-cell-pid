@@ -1,19 +1,19 @@
-#include "WireCellPaal/graph_metrics.h"
-#include "WireCellPaal/steiner_tree_greedy.h"
-#include "WireCellPID/ImprovePR3DCluster.h"
-#include "WireCell2dToy/WireCellHolder.h"
-#include "WireCellPID/CalcPoints.h"
+#include "WCPPaal/graph_metrics.h"
+#include "WCPPaal/steiner_tree_greedy.h"
+#include "WCPPID/ImprovePR3DCluster.h"
+#include "WCP2dToy/WCPHolder.h"
+#include "WCPPID/CalcPoints.h"
 
 
 
 
-void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& ct_point_cloud,WireCellSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis){
+void WCPPID::PR3DCluster::create_steiner_graph(WCP::ToyCTPointCloud& ct_point_cloud,WCPSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis){
 
   if (graph_steiner == (MCUGraph*)0){
-    WireCell2dToy::WireCellHolder *temp_holder = new WireCell2dToy::WireCellHolder();
-    WireCellPID::PR3DCluster *new_cluster = WireCellPID::Improve_PR3DCluster_2(this, ct_point_cloud, gds, temp_holder, nrebin, frame_length, unit_dis); 
+    WCP2dToy::WCPHolder *temp_holder = new WCP2dToy::WCPHolder();
+    WCPPID::PR3DCluster *new_cluster = WCPPID::Improve_PR3DCluster_2(this, ct_point_cloud, gds, temp_holder, nrebin, frame_length, unit_dis); 
     
-    WireCellPID::calc_sampling_points(gds,new_cluster,nrebin, frame_length, unit_dis,false);
+    WCPPID::calc_sampling_points(gds,new_cluster,nrebin, frame_length, unit_dis,false);
     
     new_cluster->Create_point_cloud(); 
     new_cluster->Create_graph(ct_point_cloud, point_cloud);
@@ -38,10 +38,10 @@ void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& c
     delete temp_holder;
     
     point_cloud_steiner_terminal = new ToyPointCloud();
-    WireCell::WCPointCloud<double>& cloud = point_cloud_steiner->get_cloud();
-    WireCell::WC2DPointCloud<double>& cloud_u = point_cloud_steiner->get_cloud_u();
-    WireCell::WC2DPointCloud<double>& cloud_v = point_cloud_steiner->get_cloud_v();
-    WireCell::WC2DPointCloud<double>& cloud_w = point_cloud_steiner->get_cloud_w();
+    WCP::WCPointCloud<double>& cloud = point_cloud_steiner->get_cloud();
+    WCP::WC2DPointCloud<double>& cloud_u = point_cloud_steiner->get_cloud_u();
+    WCP::WC2DPointCloud<double>& cloud_v = point_cloud_steiner->get_cloud_v();
+    WCP::WC2DPointCloud<double>& cloud_w = point_cloud_steiner->get_cloud_w();
     for (size_t i=0;i!=flag_steiner_terminal.size();i++){
       if (flag_steiner_terminal[i]){
 	point_cloud_steiner_terminal->AddPoint(cloud.pts[i],cloud_u.pts[i],cloud_v.pts[i],cloud_w.pts[i]);
@@ -55,7 +55,7 @@ void WireCellPID::PR3DCluster::create_steiner_graph(WireCell::ToyCTPointCloud& c
   
 }
 
-void WireCellPID::PR3DCluster::recover_steiner_graph(){
+void WCPPID::PR3DCluster::recover_steiner_graph(){
   // holder for more sophisticated algorithm later ...
   if (graph_steiner != (MCUGraph*)0){
     steiner_graph_terminal_indices.clear();
@@ -67,10 +67,10 @@ void WireCellPID::PR3DCluster::recover_steiner_graph(){
       }
     }
     const int N = point_cloud_steiner->get_num_points();
-    using Vertex = typename boost::graph_traits<WireCellPID::MCUGraph>::vertex_descriptor;
-    using Edge = typename boost::graph_traits<WireCellPID::MCUGraph>::edge_descriptor;
+    using Vertex = typename boost::graph_traits<WCPPID::MCUGraph>::vertex_descriptor;
+    using Edge = typename boost::graph_traits<WCPPID::MCUGraph>::edge_descriptor;
     using Base = typename boost::property<edge_base_t, Edge>;
-    using EdgeWeightMap = typename boost::property_map<WireCellPID::MCUGraph, boost::edge_weight_t>::type;
+    using EdgeWeightMap = typename boost::property_map<WCPPID::MCUGraph, boost::edge_weight_t>::type;
     using Weight = typename boost::property_traits<EdgeWeightMap>::value_type;
     using WeightProperty =
       typename boost::property<boost::edge_weight_t, Weight, Base>;
@@ -158,7 +158,7 @@ void WireCellPID::PR3DCluster::recover_steiner_graph(){
   }
 }
 
-WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::ToyPointCloud *point_cloud_steiner, std::vector<bool>& flag_steiner_terminal, WireCell::GeomDataSource& gds, WireCell::SMGCSelection& old_mcells, bool flag_path, bool disable_dead_mix_cell){
+WCPPID::MCUGraph* WCPPID::PR3DCluster::Create_steiner_tree(WCP::ToyPointCloud *point_cloud_steiner, std::vector<bool>& flag_steiner_terminal, WCP::GeomDataSource& gds, WCP::SMGCSelection& old_mcells, bool flag_path, bool disable_dead_mix_cell){
   Create_graph();
 
   // find all the steiner terminal indices ...
@@ -167,19 +167,19 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
   
   
   // form point cloud 
-  WireCell::ToyPointCloud temp_pcloud;
+  WCP::ToyPointCloud temp_pcloud;
   if (flag_path && path_wcps.size()>0){
    
-    WireCell::Point prev_p((*(path_wcps.begin())).x, (*(path_wcps.begin())).y, (*(path_wcps.begin())).z);
+    WCP::Point prev_p((*(path_wcps.begin())).x, (*(path_wcps.begin())).y, (*(path_wcps.begin())).z);
     std::tuple<int,int,int> prev_wire_index = std::make_tuple((*(path_wcps.begin())).index_u, (*(path_wcps.begin())).index_v, (*(path_wcps.begin())).index_w);
       
     for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
       if (temp_pcloud.get_num_points()==0){
-	WireCell::Point p((*it).x, (*it).y, (*it).z);
+	WCP::Point p((*it).x, (*it).y, (*it).z);
 	std::tuple<int, int, int> wire_index = std::make_tuple((*it).index_u, (*it).index_v, (*it).index_w);
 	temp_pcloud.AddPoint(p, wire_index ,0);
       }else{
-	WireCell::Point p((*it).x, (*it).y, (*it).z);
+	WCP::Point p((*it).x, (*it).y, (*it).z);
 	std::tuple<int, int, int> wire_index = std::make_tuple((*it).index_u, (*it).index_v, (*it).index_w);
 
 	float step_dis = 0.6*units::cm;
@@ -192,7 +192,7 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
 	}else{
 	  int num_steps = dis/step_dis;
 	  for (int qx = 0; qx!=num_steps;qx ++){
-	    WireCell::Point temp_p(prev_p.x + (p.x-prev_p.x)/num_steps*(qx+1),
+	    WCP::Point temp_p(prev_p.x + (p.x-prev_p.x)/num_steps*(qx+1),
 				 prev_p.y + (p.y-prev_p.y)/num_steps*(qx+1),
 				 prev_p.z + (p.z-prev_p.z)/num_steps*(qx+1)
 				 );
@@ -226,7 +226,7 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
     }
   }
   
-  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+  WCP::WCPointCloud<double>& cloud = point_cloud->get_cloud();
 
   std::set<int> indices_to_be_removal;
   
@@ -327,7 +327,7 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
       // examine the steiner terminals according to the path,
       
       // if within cerntain distance in projection, but far away in 3D, remove ...
-      WireCell::Point p(cloud.pts[*it].x, cloud.pts[*it].y, cloud.pts[*it].z);
+      WCP::Point p(cloud.pts[*it].x, cloud.pts[*it].y, cloud.pts[*it].z);
       double dis_3d = temp_pcloud.get_closest_dis(p);
       double dis_2du = (temp_pcloud.get_closest_2d_dis(p,0)).second;
       double dis_2dv = (temp_pcloud.get_closest_2d_dis(p,1)).second;
@@ -389,11 +389,11 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
   
   //Now try to manually write the Steiner Tree Greedy algorithm ...
 
-  using Vertex = typename boost::graph_traits<WireCellPID::MCUGraph>::vertex_descriptor;
-  using Edge = typename boost::graph_traits<WireCellPID::MCUGraph>::edge_descriptor;
+  using Vertex = typename boost::graph_traits<WCPPID::MCUGraph>::vertex_descriptor;
+  using Edge = typename boost::graph_traits<WCPPID::MCUGraph>::edge_descriptor;
   using Base = typename boost::property<edge_base_t, Edge>;
   // using EdgeWeightMap = typename boost::choose_const_pmap(boost::get_param(boost::no_named_parameters(), boost::edge_weight), *graph, boost::edge_weight);
-  using EdgeWeightMap = typename boost::property_map<WireCellPID::MCUGraph, boost::edge_weight_t>::type;
+  using EdgeWeightMap = typename boost::property_map<WCPPID::MCUGraph, boost::edge_weight_t>::type;
   using Weight = typename boost::property_traits<EdgeWeightMap>::value_type;
   using WeightProperty =
         typename boost::property<boost::edge_weight_t, Weight, Base>;
@@ -504,7 +504,7 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
   
   for (auto it = selected_terminal_indices.begin(); it!=selected_terminal_indices.end(); it++){
     int index = *it;
-    WireCell::SlimMergeGeomCell *mcell = 0;
+    WCP::SlimMergeGeomCell *mcell = 0;
     
     int time_slice = cloud.pts[index].mcell->GetTimeSlice();
     if (old_time_mcells_map.find(time_slice)!=old_time_mcells_map.end()){
@@ -592,7 +592,7 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
 
   
   /* auto index = get(boost::vertex_index, *graph); */
-  /* typedef boost::graph_traits<WireCellPID::MCUGraph>::edge_descriptor Edge;  */
+  /* typedef boost::graph_traits<WCPPID::MCUGraph>::edge_descriptor Edge;  */
   /* std::set<Edge> steinerEdges;  */
   /* std::vector<int> color(terminals.size()+nonterminals.size()); */
   /* { */
@@ -624,14 +624,14 @@ WireCellPID::MCUGraph* WireCellPID::PR3DCluster::Create_steiner_tree(WireCell::T
 
   
   // too slow ...
-  /* using GraphMT = paal::data_structures::graph_metric<WireCellPID::MCUGraph, float, paal::data_structures::graph_type::sparse_tag>; */
+  /* using GraphMT = paal::data_structures::graph_metric<WCPPID::MCUGraph, float, paal::data_structures::graph_type::sparse_tag>; */
   /* auto metric = GraphMT(*graph); */
   // solve it
   /* paal::ir::steiner_tree_iterative_rounding(metric, terminals, */
   /* 					    nonterminals, std::back_inserter(selected_nonterminals)); */
 }
 
-void WireCellPID::PR3DCluster::find_steiner_terminals(WireCell::GeomDataSource& gds, bool disable_dead_mix_cell){
+void WCPPID::PR3DCluster::find_steiner_terminals(WCP::GeomDataSource& gds, bool disable_dead_mix_cell){
   // reset ...
   steiner_terminal_indices.clear();
   
@@ -653,7 +653,7 @@ void WireCellPID::PR3DCluster::find_steiner_terminals(WireCell::GeomDataSource& 
 
 
 
-std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mcells, WireCell::GeomDataSource& gds, bool disable_dead_mix_cell, int nlevel){
+std::set<int> WCPPID::PR3DCluster::find_peak_point_indices(SMGCSelection mcells, WCP::GeomDataSource& gds, bool disable_dead_mix_cell, int nlevel){
   std::set<int> all_indices;
   for (auto it = mcells.begin(); it!=mcells.end(); it++){
     SlimMergeGeomCell *mcell = (*it);
@@ -661,7 +661,7 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
     all_indices.insert(indices.begin(), indices.end());
   }
   
-  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+  WCP::WCPointCloud<double>& cloud = point_cloud->get_cloud();
 
   // form another set with the actual points according to their charge
   std::map<int,double> map_index_charge;
@@ -872,7 +872,7 @@ std::set<int> WireCellPID::PR3DCluster::find_peak_point_indices(SMGCSelection mc
   return peak_indices;
 }
 
-std::pair<bool,double> WireCellPID::PR3DCluster::calc_charge_wcp(WireCell::WCPointCloud<double>::WCPoint& wcp, WireCell::GeomDataSource& gds, bool disable_dead_mix_cell, double charge_cut){
+std::pair<bool,double> WCPPID::PR3DCluster::calc_charge_wcp(WCP::WCPointCloud<double>::WCPoint& wcp, WCP::GeomDataSource& gds, bool disable_dead_mix_cell, double charge_cut){
   double charge = 0;
   double ncharge = 0;
   SlimMergeGeomCell *mcell = wcp.mcell;
@@ -953,9 +953,9 @@ std::pair<bool,double> WireCellPID::PR3DCluster::calc_charge_wcp(WireCell::WCPoi
 }
 
 
-void WireCellPID::PR3DCluster::form_cell_points_map(){
+void WCPPID::PR3DCluster::form_cell_points_map(){
   cell_point_indices_map.clear();
-  WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+  WCP::WCPointCloud<double>& cloud = point_cloud->get_cloud();
   
   for (auto it = mcells.begin(); it!=mcells.end(); it++){
     SlimMergeGeomCell *mcell = (*it);

@@ -1,26 +1,26 @@
-#include "WireCellSst/GeomDataSource.h"
+#include "WCPSst/GeomDataSource.h"
 
-#include "WireCellData/SlimMergeGeomCell.h"
-#include "WireCellData/TPCParams.h"
-#include "WireCellData/Singleton.h"
-#include "WireCellData/ToyCTPointCloud.h"
-#include "WireCellData/PhotonLibrary.h"
-#include "WireCellData/Opflash.h"
+#include "WCPData/SlimMergeGeomCell.h"
+#include "WCPData/TPCParams.h"
+#include "WCPData/Singleton.h"
+#include "WCPData/ToyCTPointCloud.h"
+#include "WCPData/PhotonLibrary.h"
+#include "WCPData/Opflash.h"
 
-#include "WireCellPID/ToyFiducial.h"
+#include "WCPPID/ToyFiducial.h"
 
 
-#include "WireCellPID/CalcPoints.h"
-#include "WireCellPID/PR3DCluster.h"
+#include "WCPPID/CalcPoints.h"
+#include "WCPPID/PR3DCluster.h"
 
-#include "WireCellPID/ExecMon.h"
-#include "WireCellPID/ImprovePR3DCluster.h"
+#include "WCPPID/ExecMon.h"
+#include "WCPPID/ImprovePR3DCluster.h"
 
 #include "TH1.h"
 #include "TFile.h"
 #include "TTree.h"
 
-using namespace WireCell;
+using namespace WCP;
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -58,10 +58,10 @@ int main(int argc, char* argv[])
   bool flag_match_data = true;
   if (datatier == 2) flag_match_data = false; // if MC we do not take into account the dead PMT
   
-  WireCellPID::ExecMon em("starting");
+  WCPPID::ExecMon em("starting");
   cout << em("load geometry") << endl;
   
-  WireCellSst::GeomDataSource gds(argv[1]);
+  WCPSst::GeomDataSource gds(argv[1]);
   std::vector<double> ex = gds.extent();
   cout << "Extent: "
        << " x:" << ex[0]/units::mm << " mm"
@@ -295,7 +295,7 @@ int main(int argc, char* argv[])
   TDC->SetBranchAddress("wire_index_v",&wire_index_v_vec);
   TDC->SetBranchAddress("wire_index_w",&wire_index_w_vec);
 
-  WireCellPID::ToyFiducial *fid = new WireCellPID::ToyFiducial(3,800,-first_u_dis/pitch_u, -first_v_dis/pitch_v, -first_w_dis/pitch_w,
+  WCPPID::ToyFiducial *fid = new WCPPID::ToyFiducial(3,800,-first_u_dis/pitch_u, -first_v_dis/pitch_v, -first_w_dis/pitch_w,
 								   1./time_slice_width, 1./pitch_u, 1./pitch_v, 1./pitch_w, // slope
 								   angle_u,angle_v,angle_w,// angle
 								   3*units::cm, 117*units::cm, -116*units::cm, 0*units::cm, 1037*units::cm, 0*units::cm, 256*units::cm, flag_data);
@@ -303,10 +303,10 @@ int main(int argc, char* argv[])
   // load cells ... 
   GeomCellSelection mcells;
   //  CellIndexMap map_mcell_cluster_id;
-  WireCellPID::PR3DClusterSelection live_clusters;
-  WireCellPID::PR3DCluster *cluster;
-  std::map<WireCellPID::PR3DCluster*, int> map_cluster_parent_id; // cluster to main cluster
-  std::map<int, std::vector<WireCellPID::PR3DCluster*> > map_parentid_clusters; // main cluster to clusters
+  WCPPID::PR3DClusterSelection live_clusters;
+  WCPPID::PR3DCluster *cluster;
+  std::map<WCPPID::PR3DCluster*, int> map_cluster_parent_id; // cluster to main cluster
+  std::map<int, std::vector<WCPPID::PR3DCluster*> > map_parentid_clusters; // main cluster to clusters
 
   int prev_cluster_id=-1;
   int ident = 0;
@@ -397,11 +397,11 @@ int main(int argc, char* argv[])
     mcells.push_back(mcell);
     
     if (cluster_id != prev_cluster_id){
-      cluster = new WireCellPID::PR3DCluster(cluster_id);
+      cluster = new WCPPID::PR3DCluster(cluster_id);
       map_cluster_parent_id[cluster] = parent_cluster_id->at(i);
       live_clusters.push_back(cluster);
       if (map_parentid_clusters.find(parent_cluster_id->at(i)) == map_parentid_clusters.end()){
-	std::vector<WireCellPID::PR3DCluster*> temp_clusters;
+	std::vector<WCPPID::PR3DCluster*> temp_clusters;
 	temp_clusters.push_back(cluster);
 	map_parentid_clusters[parent_cluster_id->at(i)] = temp_clusters;
       }else{
@@ -555,7 +555,7 @@ int main(int argc, char* argv[])
   // form a global map with the current map information
   std::map<int,std::map<const GeomWire*, SMGCSelection > > global_wc_map;
   for (size_t i=0; i!=live_clusters.size();i++){
-    WireCellPID::PR3DCluster *cluster = live_clusters.at(i);
+    WCPPID::PR3DCluster *cluster = live_clusters.at(i);
     SMGCSelection& mcells = cluster->get_mcells();
     for (auto it = mcells.begin(); it!= mcells.end(); it++){
       SlimMergeGeomCell *mcell = *it;
@@ -611,7 +611,7 @@ int main(int argc, char* argv[])
   
   // replace by the new sampling points ...
   for (size_t i=0; i!=live_clusters.size();i++){
-    WireCellPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
+    WCPPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
     live_clusters.at(i)->Create_point_cloud();
   }
   cout << em("Add X, Y, Z points") << std::endl;
@@ -641,7 +641,7 @@ int main(int argc, char* argv[])
   }
 
   // load photon library   
-  WireCell::Photon_Library pl(run_no,flag_match_data);
+  WCP::Photon_Library pl(run_no,flag_match_data);
   
   TTree *T_match1 = new TTree("T_match","T_match");
   T_match1->SetDirectory(file1);
@@ -668,8 +668,8 @@ int main(int argc, char* argv[])
     flash_id = it->first;
     
     double offset_x = (flash_time - time_offset)*2./nrebin*time_slice_width;
-    std::vector<WireCellPID::PR3DCluster*> temp_clusters = map_parentid_clusters[it->second];
-    WireCellPID::PR3DCluster* main_cluster = 0;
+    std::vector<WCPPID::PR3DCluster*> temp_clusters = map_parentid_clusters[it->second];
+    WCPPID::PR3DCluster* main_cluster = 0;
     for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
       if ((*it1)->get_cluster_id() == it->second){
 	main_cluster = *it1;
@@ -702,7 +702,7 @@ int main(int argc, char* argv[])
       // }
 
       // run the new supplemental cosmic tagger
-      std::tuple<int, WireCellPID::PR3DCluster*, WireCell::Opflash*> cosmic_tagger_results = fid->cosmic_tagger(flashes, main_cluster, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, flag_data, false);
+      std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> cosmic_tagger_results = fid->cosmic_tagger(flashes, main_cluster, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, flag_data, false);
        // TGM by supplemental tagger ...
       if (std::get<0>(cosmic_tagger_results)==1) {
 	event_type |= 1UL << 3;
@@ -754,11 +754,11 @@ int main(int argc, char* argv[])
     T_cluster->SetDirectory(file1);
     
     for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-      WireCellPID::PR3DCluster* new_cluster = *it;  
+      WCPPID::PR3DCluster* new_cluster = *it;  
       ncluster = map_cluster_parent_id[new_cluster]; 
       ToyPointCloud *pcloud = new_cluster->get_point_cloud();
       if (pcloud!=0){
-	WireCell::WCPointCloud<double>& cloud = pcloud->get_cloud();
+	WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
 	for (size_t i=0;i!=cloud.pts.size();i++){
 	  x = cloud.pts[i].x/units::cm;
 	  y = cloud.pts[i].y/units::cm;
@@ -835,7 +835,7 @@ int main(int argc, char* argv[])
     
     for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
       
-      WireCellPID::PR3DCluster* new_cluster = *it;
+      WCPPID::PR3DCluster* new_cluster = *it;
       ndf_save = new_cluster->get_cluster_id();
       charge_save = 0;
       ncharge_save = 0;
@@ -859,7 +859,7 @@ int main(int argc, char* argv[])
     //    cout << em("shortest path ...") << std::endl;
     
     for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-      WireCellPID::PR3DCluster* cluster = *it;
+      WCPPID::PR3DCluster* cluster = *it;
       
       ndf_save = cluster->get_cluster_id();
       // original
@@ -953,7 +953,7 @@ int main(int argc, char* argv[])
       std::vector<int> proj_charge_err;
       std::vector<int> proj_flag;
       for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-	WireCellPID::PR3DCluster *cluster = (*it1);
+	WCPPID::PR3DCluster *cluster = (*it1);
 	cluster->get_projection(proj_channel,proj_timeslice,proj_charge, proj_charge_err, proj_flag, global_wc_map);
       }
       proj_cluster_id->push_back(cluster_id);

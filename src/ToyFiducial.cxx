@@ -1,8 +1,8 @@
-#include "WireCellPID/ToyFiducial.h"
-#include "WireCellData/TPCParams.h"
-#include "WireCellData/Singleton.h"
+#include "WCPPID/ToyFiducial.h"
+#include "WCPData/TPCParams.h"
+#include "WCPData/Singleton.h"
 
-using namespace WireCell;
+using namespace WCP;
 
 #include "Cosmic_tagger.h"
 
@@ -18,7 +18,7 @@ int pnpoly(std::vector<double>& vertx, std::vector<double>& verty, double testx,
 }
 
 
-WireCellPID::ToyFiducial::ToyFiducial(int dead_region_ch_ext, double offset_t, double offset_u, double offset_v, double offset_w, double slope_t, double slope_u, double slope_v, double slope_w, double angle_u, double angle_v, double angle_w, double boundary_dis_cut, double top, double bottom, double upstream, double downstream, double anode, double cathode, int flag_data)
+WCPPID::ToyFiducial::ToyFiducial(int dead_region_ch_ext, double offset_t, double offset_u, double offset_v, double offset_w, double slope_t, double slope_u, double slope_v, double slope_w, double angle_u, double angle_v, double angle_w, double boundary_dis_cut, double top, double bottom, double upstream, double downstream, double anode, double cathode, int flag_data)
   : dead_region_ch_ext(dead_region_ch_ext)
   , offset_t(offset_t)
   , offset_u(offset_u)
@@ -130,7 +130,7 @@ WireCellPID::ToyFiducial::ToyFiducial(int dead_region_ch_ext, double offset_t, d
   // }
 }
 
-bool WireCellPID::ToyFiducial::check_full_detector_dead(){
+bool WCPPID::ToyFiducial::check_full_detector_dead(){
   std::set<int> dead_chs;
   for (auto it = mcell_time_map.begin(); it!=mcell_time_map.end(); it++){
     SlimMergeGeomCell *mcell = it->first;
@@ -173,7 +173,7 @@ bool WireCellPID::ToyFiducial::check_full_detector_dead(){
   
 }
 
-bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster, double offset_x, double flash_time, WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, int& event_type){
+bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, double offset_x, double flash_time, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, int& event_type){
 
   //  check_full_detector_dead();
 
@@ -284,8 +284,8 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     
     // protection against two end point situation
     if (temp_set.size()==2){
-      WireCell::Point tp1(wcps.first.x,wcps.first.y,wcps.first.z);
-      WireCell::Point tp2(wcps.second.x,wcps.second.y,wcps.second.z);
+      WCP::Point tp1(wcps.first.x,wcps.first.y,wcps.first.z);
+      WCP::Point tp2(wcps.second.x,wcps.second.y,wcps.second.z);
       
       temp_set.clear();
       
@@ -390,8 +390,8 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     
     // protection against two end point situation
     if (temp_set.size()==2){
-      WireCell::Point tp1(wcps.first.x,wcps.first.y,wcps.first.z);
-      WireCell::Point tp2(wcps.second.x,wcps.second.y,wcps.second.z);
+      WCP::Point tp1(wcps.first.x,wcps.first.y,wcps.first.z);
+      WCP::Point tp2(wcps.second.x,wcps.second.y,wcps.second.z);
       
       temp_set.clear();
       
@@ -486,7 +486,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
    
     
     // check both end points for TGM ...
-    WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
+    WCP::PointVector& pts = main_cluster->get_fine_tracking_path();
     std::vector<double>& dQ = main_cluster->get_dQ();
     std::vector<double>& dx = main_cluster->get_dx();
     
@@ -596,7 +596,7 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
     main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
 
     // check both end points for TGM ...
-    WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
+    WCP::PointVector& pts = main_cluster->get_fine_tracking_path();
     std::vector<double>& dQ = main_cluster->get_dQ();
     std::vector<double>& dx = main_cluster->get_dx();
     
@@ -699,8 +699,8 @@ bool WireCellPID::ToyFiducial::check_stm(WireCellPID::PR3DCluster* main_cluster,
   return false;
 }
 
-int WireCellPID::ToyFiducial::find_first_kink(WireCellPID::PR3DCluster* main_cluster){
-  WireCell::PointVector& fine_tracking_path = main_cluster->get_fine_tracking_path();
+int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
+  WCP::PointVector& fine_tracking_path = main_cluster->get_fine_tracking_path();
   std::vector<double>& dQ = main_cluster->get_dQ();
   std::vector<double>& dx = main_cluster->get_dx();
   std::vector<double>& pu = main_cluster->get_pu();
@@ -917,9 +917,9 @@ int WireCellPID::ToyFiducial::find_first_kink(WireCellPID::PR3DCluster* main_clu
   return fine_tracking_path.size();
 }
 
-bool WireCellPID::ToyFiducial::detect_proton(WireCellPID::PR3DCluster* main_cluster,int kink_num){
+bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int kink_num){
   // common part ..
-  WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
+  WCP::PointVector& pts = main_cluster->get_fine_tracking_path();
   std::vector<double>& dQ = main_cluster->get_dQ();
   std::vector<double>& dx = main_cluster->get_dx();
   std::vector<double> L(pts.size(),0);
@@ -1033,8 +1033,8 @@ bool WireCellPID::ToyFiducial::detect_proton(WireCellPID::PR3DCluster* main_clus
   return false;
 }
 
-bool WireCellPID::ToyFiducial::eval_stm(WireCellPID::PR3DCluster* main_cluster,int kink_num,double peak_range, double offset_length, double com_range){
-  WireCell::PointVector& pts = main_cluster->get_fine_tracking_path();
+bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_num,double peak_range, double offset_length, double com_range){
+  WCP::PointVector& pts = main_cluster->get_fine_tracking_path();
 
   std::vector<double>& dQ = main_cluster->get_dQ();
   std::vector<double>& dx = main_cluster->get_dx();
@@ -1158,7 +1158,7 @@ bool WireCellPID::ToyFiducial::eval_stm(WireCellPID::PR3DCluster* main_cluster,i
 
 
 
-WireCellPID::ToyFiducial::~ToyFiducial(){
+WCPPID::ToyFiducial::~ToyFiducial(){
   delete g_muon;
   delete g_pion;
   delete g_proton;
@@ -1168,7 +1168,7 @@ WireCellPID::ToyFiducial::~ToyFiducial(){
 		 
 }
 
-bool WireCellPID::ToyFiducial::check_signal_processing(WireCell::Point& p, TVector3& dir, WireCell::ToyCTPointCloud& ct_point_cloud, double step, double offset_x){
+bool WCPPID::ToyFiducial::check_signal_processing(WCP::Point& p, TVector3& dir, WCP::ToyCTPointCloud& ct_point_cloud, double step, double offset_x){
 
   if (dir.Mag()==0){
     return true;
@@ -1188,9 +1188,9 @@ bool WireCellPID::ToyFiducial::check_signal_processing(WireCell::Point& p, TVect
 
       //      std::cerr << temp_p.x/units::cm << " " << temp_p.y/units::cm << " " << temp_p.z/units::cm << " ";
       
-      WireCell::CTPointCloud<double> cloud_u = ct_point_cloud.get_closest_points(temp_p,1.2*units::cm,0);
-      WireCell::CTPointCloud<double> cloud_v = ct_point_cloud.get_closest_points(temp_p,1.2*units::cm,1);
-      WireCell::CTPointCloud<double> cloud_w = ct_point_cloud.get_closest_points(temp_p,1.2*units::cm,2);
+      WCP::CTPointCloud<double> cloud_u = ct_point_cloud.get_closest_points(temp_p,1.2*units::cm,0);
+      WCP::CTPointCloud<double> cloud_v = ct_point_cloud.get_closest_points(temp_p,1.2*units::cm,1);
+      WCP::CTPointCloud<double> cloud_w = ct_point_cloud.get_closest_points(temp_p,1.2*units::cm,2);
       
       //      std::cerr << cloud_u.pts.size() << " " << cloud_v.pts.size() << " " << cloud_w.pts.size() << std::endl;
 
@@ -1216,7 +1216,7 @@ bool WireCellPID::ToyFiducial::check_signal_processing(WireCell::Point& p, TVect
   return true;
 }
 
-bool WireCellPID::ToyFiducial::check_dead_volume(WireCell::Point& p, TVector3& dir, double step, double offset_x){
+bool WCPPID::ToyFiducial::check_dead_volume(WCP::Point& p, TVector3& dir, double step, double offset_x){
   if (!inside_fiducial_volume(p,offset_x)){
     return false;
   }else{
@@ -1255,7 +1255,7 @@ bool WireCellPID::ToyFiducial::check_dead_volume(WireCell::Point& p, TVector3& d
 }
 
 
-bool WireCellPID::ToyFiducial::inside_fiducial_volume(WireCell::Point& p, double offset_x){
+bool WCPPID::ToyFiducial::inside_fiducial_volume(WCP::Point& p, double offset_x){
 
   int c1 = pnpoly(boundary_xy_x, boundary_xy_y, p.x-offset_x, p.y);
   int c2 = pnpoly(boundary_xz_x, boundary_xz_z, p.x-offset_x, p.z);
@@ -1270,7 +1270,7 @@ bool WireCellPID::ToyFiducial::inside_fiducial_volume(WireCell::Point& p, double
   }
 }
 
-bool WireCellPID::ToyFiducial::inside_dead_region(WireCell::Point& p){
+bool WCPPID::ToyFiducial::inside_dead_region(WCP::Point& p){
   // convert the position into U, V, W, and T number ...
   int time_slice = p.x * slope_t + offset_t;
   double pos_u = cos(angle_u) * p.z - sin(angle_u) *p.y;
@@ -1332,7 +1332,7 @@ bool WireCellPID::ToyFiducial::inside_dead_region(WireCell::Point& p){
 }
 
 
-void WireCellPID::ToyFiducial::AddDeadRegion(WireCell::SlimMergeGeomCell* mcell, std::vector<int>& time_slices){
+void WCPPID::ToyFiducial::AddDeadRegion(WCP::SlimMergeGeomCell* mcell, std::vector<int>& time_slices){
 
   mcells.push_back(mcell);
   int start_time = time_slices.front() - dead_region_ch_ext ;

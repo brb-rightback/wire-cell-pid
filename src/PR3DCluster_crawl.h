@@ -1,6 +1,6 @@
 #include <algorithm>
 
-void WireCellPID::PR3DCluster::do_rough_path(WireCell::WCPointCloud<double>::WCPoint& first_wcp, WireCell::WCPointCloud<double>::WCPoint& last_wcp){
+void WCPPID::PR3DCluster::do_rough_path(WCP::WCPointCloud<double>::WCPoint& first_wcp, WCP::WCPointCloud<double>::WCPoint& last_wcp){
   path_wcps.clear();
   
   Point test_p;
@@ -19,7 +19,7 @@ void WireCellPID::PR3DCluster::do_rough_path(WireCell::WCPointCloud<double>::WCP
   cal_shortest_path(last_wcp,2);
 }
 
-WireCell::Point WireCellPID::PR3DCluster::adjust_rough_path(){
+WCP::Point WCPPID::PR3DCluster::adjust_rough_path(){
   
   Point test_p;
 
@@ -170,8 +170,8 @@ WireCell::Point WireCellPID::PR3DCluster::adjust_rough_path(){
     
     // initialization
     Point p(fine_tracking_path.at(save_i).x, fine_tracking_path.at(save_i).y, fine_tracking_path.at(save_i).z);
-    WireCell::WCPointCloud<double>::WCPoint curr_wcp = point_cloud_steiner->get_closest_wcpoint(p);
-    WireCell::WCPointCloud<double>::WCPoint next_wcp = curr_wcp;
+    WCP::WCPointCloud<double>::WCPoint curr_wcp = point_cloud_steiner->get_closest_wcpoint(p);
+    WCP::WCPointCloud<double>::WCPoint next_wcp = curr_wcp;
     
     Point prev_p(0,0,0);
     int num_p = 0;
@@ -233,12 +233,12 @@ WireCell::Point WireCellPID::PR3DCluster::adjust_rough_path(){
     test_p.x = fine_tracking_path.front().x;
     test_p.y = fine_tracking_path.front().y;
     test_p.z = fine_tracking_path.front().z;
-    WireCell::WCPointCloud<double>::WCPoint& first_wcp = point_cloud_steiner->get_closest_wcpoint(test_p);
+    WCP::WCPointCloud<double>::WCPoint& first_wcp = point_cloud_steiner->get_closest_wcpoint(test_p);
 
     test_p.x = fine_tracking_path.back().x;
     test_p.y = fine_tracking_path.back().y;
     test_p.z = fine_tracking_path.back().z;
-    WireCell::WCPointCloud<double>::WCPoint& last_wcp = point_cloud_steiner->get_closest_wcpoint(test_p);
+    WCP::WCPointCloud<double>::WCPoint& last_wcp = point_cloud_steiner->get_closest_wcpoint(test_p);
 
     test_p.x = curr_wcp.x;
     test_p.y = curr_wcp.y;
@@ -256,7 +256,7 @@ WireCell::Point WireCellPID::PR3DCluster::adjust_rough_path(){
       cal_shortest_path(curr_wcp,2);
 
 
-      std::list<WireCell::WCPointCloud<double>::WCPoint> temp_path_wcps = path_wcps;
+      std::list<WCP::WCPointCloud<double>::WCPoint> temp_path_wcps = path_wcps;
       dijkstra_shortest_paths(curr_wcp,2);
       cal_shortest_path(last_wcp,2);
       
@@ -301,7 +301,7 @@ WireCell::Point WireCellPID::PR3DCluster::adjust_rough_path(){
 }
 
 
-WireCell::Point WireCellPID::PR3DCluster::do_stm_crawl(WireCell::WCPointCloud<double>::WCPoint& first_wcp, WireCell::WCPointCloud<double>::WCPoint& last_wcp, int flag_end){
+WCP::Point WCPPID::PR3DCluster::do_stm_crawl(WCP::WCPointCloud<double>::WCPoint& first_wcp, WCP::WCPointCloud<double>::WCPoint& last_wcp, int flag_end){
   path_wcps.clear();
   
   Point test_p;
@@ -323,8 +323,8 @@ WireCell::Point WireCellPID::PR3DCluster::do_stm_crawl(WireCell::WCPointCloud<do
   float step_dis = 1*units::cm;
   
   // initialization
-  WireCell::WCPointCloud<double>::WCPoint curr_wcp = first_wcp;
-  WireCell::WCPointCloud<double>::WCPoint next_wcp = first_wcp;
+  WCP::WCPointCloud<double>::WCPoint curr_wcp = first_wcp;
+  WCP::WCPointCloud<double>::WCPoint next_wcp = first_wcp;
   Point p(first_wcp.x, first_wcp.y, first_wcp.z);
   TVector3 dir = VHoughTrans(p, 15*units::cm); // start direction
   
@@ -397,7 +397,7 @@ WireCell::Point WireCellPID::PR3DCluster::do_stm_crawl(WireCell::WCPointCloud<do
 
     
     if (flag_end == 1 ){
-      std::list<WireCell::WCPointCloud<double>::WCPoint> temp_path_wcps = path_wcps;
+      std::list<WCP::WCPointCloud<double>::WCPoint> temp_path_wcps = path_wcps;
       
       dijkstra_shortest_paths(curr_wcp,2);
       cal_shortest_path(last_wcp,2);

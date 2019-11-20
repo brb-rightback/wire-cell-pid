@@ -1,6 +1,6 @@
-#include "WireCellPID/PR3DCluster.h"
-#include "WireCellData/TPCParams.h"
-#include "WireCellData/Singleton.h"
+#include "WCPPID/PR3DCluster.h"
+#include "WCPData/TPCParams.h"
+#include "WCPData/Singleton.h"
 
 #include "TMatrixDEigen.h"
 #include "TVector3.h"
@@ -12,7 +12,7 @@
 
 #include <Eigen/IterativeLinearSolvers>
 
-using namespace WireCell;
+using namespace WCP;
 
 #include "PR3DCluster_graph.h"
 #include "PR3DCluster_steiner.h"
@@ -21,7 +21,7 @@ using namespace WireCell;
 #include "PR3DCluster_dQ_dx_fit.h"
 #include "PR3DCluster_crawl.h"
 
-void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double time, bool flag_dQ_dx_fit_reg){
+void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double time, bool flag_dQ_dx_fit_reg){
   fine_tracking_path.clear();
   dQ.clear();
   dx.clear();
@@ -154,7 +154,7 @@ void WireCellPID::PR3DCluster::do_tracking(WireCell::ToyCTPointCloud& ct_point_c
 }
 
 
-WireCellPID::PR3DCluster::PR3DCluster(int cluster_id)
+WCPPID::PR3DCluster::PR3DCluster(int cluster_id)
   : cluster_id(cluster_id)
   , flag_PCA(false)
 {
@@ -167,24 +167,24 @@ WireCellPID::PR3DCluster::PR3DCluster(int cluster_id)
   // flag_fine_tracking = false;
 }
 
-WireCellPID::PR3DCluster::~PR3DCluster(){
+WCPPID::PR3DCluster::~PR3DCluster(){
   if (point_cloud!=(ToyPointCloud*)0)
     delete point_cloud;
-  if (graph!=(WireCellPID::MCUGraph*)0)
+  if (graph!=(WCPPID::MCUGraph*)0)
     delete graph;
 
   if (point_cloud_steiner != (ToyPointCloud*)0)
     delete point_cloud_steiner;
   if (point_cloud_steiner_terminal !=(ToyPointCloud*)0)
     delete point_cloud_steiner_terminal;
-  if (graph_steiner!=(WireCellPID::MCUGraph*)0)
+  if (graph_steiner!=(WCPPID::MCUGraph*)0)
     delete graph_steiner;
 }
 
 
 
 
-void WireCellPID::PR3DCluster::AddCell(SlimMergeGeomCell* mcell, int time_slice){
+void WCPPID::PR3DCluster::AddCell(SlimMergeGeomCell* mcell, int time_slice){
   if (cell_times_set_map.find(mcell)==cell_times_set_map.end()){
     std::set<int> times;
     times.insert(time_slice);
@@ -209,13 +209,13 @@ void WireCellPID::PR3DCluster::AddCell(SlimMergeGeomCell* mcell, int time_slice)
   }
 }
 
-void WireCellPID::PR3DCluster::Del_point_cloud(){
+void WCPPID::PR3DCluster::Del_point_cloud(){
   if (point_cloud!=(ToyPointCloud*)0)
     delete point_cloud;
   point_cloud = 0;
 }
 
-void WireCellPID::PR3DCluster::Create_point_cloud(WireCell::ToyPointCloud *global_point_cloud){
+void WCPPID::PR3DCluster::Create_point_cloud(WCP::ToyPointCloud *global_point_cloud){
   if (point_cloud!=(ToyPointCloud*)0)
     return;
 
@@ -240,8 +240,8 @@ void WireCellPID::PR3DCluster::Create_point_cloud(WireCell::ToyPointCloud *globa
 
 }
 
-Point WireCellPID::PR3DCluster::calc_ave_pos(Point&p, int N){
-  std::map<WireCell::SlimMergeGeomCell*, Point> pts = point_cloud->get_closest_mcell(p,N);
+Point WCPPID::PR3DCluster::calc_ave_pos(Point&p, int N){
+  std::map<WCP::SlimMergeGeomCell*, Point> pts = point_cloud->get_closest_mcell(p,N);
   Point pt(0,0,0);
   double charge = 0;
   //std::cout << pts.size() << std::endl;
@@ -264,8 +264,8 @@ Point WireCellPID::PR3DCluster::calc_ave_pos(Point&p, int N){
   return pt;
 }
 
-Point WireCellPID::PR3DCluster::calc_ave_pos(Point& p, double dis){
-  std::map<WireCell::SlimMergeGeomCell*, Point> pts = point_cloud->get_closest_mcell(p,dis);
+Point WCPPID::PR3DCluster::calc_ave_pos(Point& p, double dis){
+  std::map<WCP::SlimMergeGeomCell*, Point> pts = point_cloud->get_closest_mcell(p,dis);
   Point pt(0,0,0);
   double charge = 0;
   //std::cout << pts.size() << std::endl;
@@ -289,13 +289,13 @@ Point WireCellPID::PR3DCluster::calc_ave_pos(Point& p, double dis){
     
 }
 
-int WireCellPID::PR3DCluster::get_num_points(Point& p_test, double dis){
+int WCPPID::PR3DCluster::get_num_points(Point& p_test, double dis){
   return point_cloud->get_closest_points(p_test, dis).size();
 }
 
 
 
-void WireCellPID::PR3DCluster::Calc_PCA(){
+void WCPPID::PR3DCluster::Calc_PCA(){
   if (flag_PCA) return;
   flag_PCA = true;
   
@@ -375,7 +375,7 @@ void WireCellPID::PR3DCluster::Calc_PCA(){
 }
 
 
-void WireCellPID::PR3DCluster::Calc_PCA(PointVector& points){
+void WCPPID::PR3DCluster::Calc_PCA(PointVector& points){
   
   center.x=0; center.y=0; center.z=0;
   int nsum = 0;
@@ -448,7 +448,7 @@ void WireCellPID::PR3DCluster::Calc_PCA(PointVector& points){
   }
 }
 
-TVector3 WireCellPID::PR3DCluster::calc_PCA_dir(Point&p, PointVector& ps){
+TVector3 WCPPID::PR3DCluster::calc_PCA_dir(Point&p, PointVector& ps){
   Point center1 = p;
   
   TMatrixD cov_matrix(3,3);
@@ -487,8 +487,8 @@ TVector3 WireCellPID::PR3DCluster::calc_PCA_dir(Point&p, PointVector& ps){
   return dir;
 }
 
-TVector3 WireCellPID::PR3DCluster::calc_PCA_dir(Point& p, double dis){
-  std::map<WireCell::SlimMergeGeomCell*, Point> pts = point_cloud->get_closest_mcell(p,dis);
+TVector3 WCPPID::PR3DCluster::calc_PCA_dir(Point& p, double dis){
+  std::map<WCP::SlimMergeGeomCell*, Point> pts = point_cloud->get_closest_mcell(p,dis);
   Point center1(0,0,0);
   // double charge=0;
   // for (auto it = pts.begin(); it!= pts.end(); it++){
@@ -550,7 +550,7 @@ TVector3 WireCellPID::PR3DCluster::calc_PCA_dir(Point& p, double dis){
 
 
 //Hough Transformation 
-TVector3 WireCellPID::PR3DCluster::VHoughTrans(Point&p, double dis, ToyPointCloud *point_cloud1){
+TVector3 WCPPID::PR3DCluster::VHoughTrans(Point&p, double dis, ToyPointCloud *point_cloud1){
   double theta, phi;
   std::pair<double,double> angles_1 = HoughTrans(p,dis, point_cloud1);
   theta = angles_1.first;
@@ -559,14 +559,14 @@ TVector3 WireCellPID::PR3DCluster::VHoughTrans(Point&p, double dis, ToyPointClou
   return temp;
 }
 
-std::pair<double,double> WireCellPID::PR3DCluster::HoughTrans(Point&p , double dis, ToyPointCloud *point_cloud1){
+std::pair<double,double> WCPPID::PR3DCluster::HoughTrans(Point&p , double dis, ToyPointCloud *point_cloud1){
   double theta, phi;
   TH2F *hough = new TH2F("","",180,0.,3.1415926,360,-3.1415926,3.1415926);
   double x0 = p.x;
   double y0 = p.y;
   double z0 = p.z;
   
-  std::vector<std::pair<WireCell::SlimMergeGeomCell*,Point>>pts = point_cloud1->get_closest_points(p,dis);
+  std::vector<std::pair<WCP::SlimMergeGeomCell*,Point>>pts = point_cloud1->get_closest_points(p,dis);
 
   // std::cout << "Num " <<  pts.size() << std::endl;
     
@@ -596,7 +596,7 @@ std::pair<double,double> WireCellPID::PR3DCluster::HoughTrans(Point&p , double d
   return std::make_pair(theta,phi);
 }
 
-TVector3 WireCellPID::PR3DCluster::VHoughTrans(Point&p, double dis){
+TVector3 WCPPID::PR3DCluster::VHoughTrans(Point&p, double dis){
   double theta, phi;
   std::pair<double,double> angles_1 = HoughTrans(p,dis);
   theta = angles_1.first;
@@ -605,14 +605,14 @@ TVector3 WireCellPID::PR3DCluster::VHoughTrans(Point&p, double dis){
   return temp;
 }
 
-std::pair<double,double> WireCellPID::PR3DCluster::HoughTrans(Point&p , double dis){
+std::pair<double,double> WCPPID::PR3DCluster::HoughTrans(Point&p , double dis){
   double theta, phi;
   TH2F *hough = new TH2F("","",180,0.,3.1415926,360,-3.1415926,3.1415926);
   double x0 = p.x;
   double y0 = p.y;
   double z0 = p.z;
   
-  std::vector<std::pair<WireCell::SlimMergeGeomCell*,Point>>pts = point_cloud->get_closest_points(p,dis);
+  std::vector<std::pair<WCP::SlimMergeGeomCell*,Point>>pts = point_cloud->get_closest_points(p,dis);
 
   // std::cout << "Num " <<  pts.size() << std::endl;
     
@@ -644,7 +644,7 @@ std::pair<double,double> WireCellPID::PR3DCluster::HoughTrans(Point&p , double d
 
 
 
-void WireCellPID::PR3DCluster::get_projection(std::vector<int>& proj_channel, std::vector<int>& proj_timeslice, std::vector<int>& proj_charge, std::vector<int>& proj_charge_err, std::vector<int>& proj_flag, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map){
+void WCPPID::PR3DCluster::get_projection(std::vector<int>& proj_channel, std::vector<int>& proj_timeslice, std::vector<int>& proj_charge, std::vector<int>& proj_charge_err, std::vector<int>& proj_flag, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map){
   // std::vector<int> proj_charge_err;
   
   std::set<SlimMergeGeomCell*> cluster_mcells_set;
@@ -892,7 +892,7 @@ void WireCellPID::PR3DCluster::get_projection(std::vector<int>& proj_channel, st
 
 
 
-void WireCellPID::PR3DCluster::collect_charge_trajectory(ToyCTPointCloud& ct_point_cloud, double dis_cut, double range_cut){
+void WCPPID::PR3DCluster::collect_charge_trajectory(ToyCTPointCloud& ct_point_cloud, double dis_cut, double range_cut){
   //clear up ...
   collected_charge_map.clear();
   
@@ -970,7 +970,7 @@ void WireCellPID::PR3DCluster::collect_charge_trajectory(ToyCTPointCloud& ct_poi
   // collect the nearby points, and compare with existing maps
   for (size_t i=0;i!=traj_pts.size();i++){
     //std::cout << i << " " << traj_pts.at(i).x/units::cm << " " << traj_pts.at(i).y/units::cm << " " << traj_pts.at(i).z/units::cm << " " << range_cut << std::endl;
-    WireCell::CTPointCloud<double> nearby_points = ct_point_cloud.get_closest_points(traj_pts.at(i),range_cut,0);
+    WCP::CTPointCloud<double> nearby_points = ct_point_cloud.get_closest_points(traj_pts.at(i),range_cut,0);
     
     //    std::cout << "0 " << nearby_points.pts.size() << std::endl;
     

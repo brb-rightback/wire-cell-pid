@@ -1,4 +1,4 @@
-void WireCellPID::PR3DCluster::fill_data_map_trajectory(std::vector<int> indices, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<std::pair<int,int>,  std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge){
+void WCPPID::PR3DCluster::fill_data_map_trajectory(std::vector<int> indices, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<std::pair<int,int>,  std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge){
   proj_data_u_map.clear();
   proj_data_v_map.clear();
   proj_data_w_map.clear();
@@ -36,7 +36,7 @@ void WireCellPID::PR3DCluster::fill_data_map_trajectory(std::vector<int> indices
   }
 }
 
-void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<std::pair<int,int>,std::set<int>>& map_2DU_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DV_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DW_3D_set,std::map<std::pair<int,int>, std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, int charge_div_method, double div_sigma){
+void WCPPID::PR3DCluster::trajectory_fit(WCP::PointVector& ps_vec, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<std::pair<int,int>,std::set<int>>& map_2DU_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DV_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DW_3D_set,std::map<std::pair<int,int>, std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, int charge_div_method, double div_sigma){
   
   TPCParams& mp = Singleton<TPCParams>::Instance();
   double pitch_u = mp.get_pitch_u();
@@ -310,7 +310,7 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
   pw.clear();
   pt.clear();
 
-  WireCell::PointVector temp_fine_tracking_path;
+  WCP::PointVector temp_fine_tracking_path;
 
   int skip_count = 0;
   
@@ -444,7 +444,7 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
   
 
   for (size_t i=0; i!=fine_tracking_path.size(); i++){
-    WireCell::Point p = fine_tracking_path.at(i);
+    WCP::Point p = fine_tracking_path.at(i);
     pu.push_back(offset_u + 0.5 + (slope_yu * p.y + slope_zu * p.z));
     pv.push_back(offset_v + 0.5 + (slope_yv * p.y + slope_zv * p.z)+2400);
     pw.push_back(offset_w + 0.5 + (slope_yw * p.y + slope_zw * p.z)+4800);
@@ -456,7 +456,7 @@ void WireCellPID::PR3DCluster::trajectory_fit(WireCell::PointVector& ps_vec, std
   
 }
 
-bool WireCellPID::PR3DCluster::skip_trajectory_point(WireCell::Point& p, int i, WireCell::PointVector& ps_vec, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<std::pair<int,int>, std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, WireCell::PointVector& fine_tracking_path,
+bool WCPPID::PR3DCluster::skip_trajectory_point(WCP::Point& p, int i, WCP::PointVector& ps_vec, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<std::pair<int,int>, std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, WCP::PointVector& fine_tracking_path,
 						       double offset_t, double slope_x, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw){
 						       
   
@@ -772,7 +772,7 @@ bool WireCellPID::PR3DCluster::skip_trajectory_point(WireCell::Point& p, int i, 
   return false;
 }
 
-std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vector<int>& temp_results, std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt,
+std::vector<float> WCPPID::PR3DCluster::examine_point_association(std::vector<int>& temp_results, std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt,
 								       std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge, bool flag_end_point, double charge_cut){
 
   std::set<int> temp_types_u;
@@ -1161,7 +1161,7 @@ std::vector<float> WireCellPID::PR3DCluster::examine_point_association(std::vect
   return results;
 }
 
-void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt, WireCell::ToyCTPointCloud& ct_point_cloud, double dis_cut, int nlevel, double time_cut ){
+void WCPPID::PR3DCluster::form_point_association(WCP::Point &p, std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt, WCP::ToyCTPointCloud& ct_point_cloud, double dis_cut, int nlevel, double time_cut ){
   // global information
   TPCParams& mp = Singleton<TPCParams>::Instance();
   double pitch_u = mp.get_pitch_u();
@@ -1183,10 +1183,10 @@ void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::s
   
   // original point cloud ...
   if (point_cloud!=0 && graph!=0){
-    WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+    WCP::WCPointCloud<double>& cloud = point_cloud->get_cloud();
     IndexMap index = get(boost::vertex_index,*graph);
     if (cloud.pts.size()>0){
-      WireCell::WCPointCloud<double>::WCPoint wcp = point_cloud->get_closest_wcpoint(p);
+      WCP::WCPointCloud<double>::WCPoint wcp = point_cloud->get_closest_wcpoint(p);
       double temp_dis = sqrt(pow(wcp.x-p.x,2)+pow(wcp.y-p.y,2)+pow(wcp.z-p.z,2));
       
       //std::cout << temp_dis/units::cm << " " << dis_cut/units::cm << std::endl;
@@ -1343,11 +1343,11 @@ void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::s
     
   // steiner tree point cloud ...
   if (point_cloud_steiner!=0 && graph_steiner!=0 ){
-    WireCell::WCPointCloud<double>& cloud = point_cloud_steiner->get_cloud();
+    WCP::WCPointCloud<double>& cloud = point_cloud_steiner->get_cloud();
     IndexMap index = get(boost::vertex_index,*graph_steiner);
 
     if (cloud.pts.size()>0){
-      WireCell::WCPointCloud<double>::WCPoint wcp = point_cloud_steiner->get_closest_wcpoint(p);
+      WCP::WCPointCloud<double>::WCPoint wcp = point_cloud_steiner->get_closest_wcpoint(p);
       double temp_dis = sqrt(pow(wcp.x-p.x,2)+pow(wcp.y-p.y,2)+pow(wcp.z-p.z,2));
       
       //      std::cout << temp_dis/units::cm << " " << dis_cut/units::cm << std::endl;
@@ -1373,7 +1373,7 @@ void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::s
 	  vertices_to_be_examined = vertices_saved_for_next;
 	}
 	
-	WireCell::Point temp_p(wcp.x, wcp.y, wcp.z);
+	WCP::Point temp_p(wcp.x, wcp.y, wcp.z);
 	std::vector<int> temp_results = ct_point_cloud.convert_3Dpoint_time_ch(temp_p);
 	// std::cout << cloud.pts[wcp.index].index_u << " "  << temp_results.at(0) << " " << temp_results.at(1) << std::endl;
 	//	if (wcp.mcell!=0)
@@ -1612,7 +1612,7 @@ void WireCellPID::PR3DCluster::form_point_association(WireCell::Point &p, std::s
 }
 
 
-void WireCellPID::PR3DCluster::form_map(WireCell::ToyCTPointCloud& ct_point_cloud, WireCell::PointVector& pts,
+void WCPPID::PR3DCluster::form_map(WCP::ToyCTPointCloud& ct_point_cloud, WCP::PointVector& pts,
 		  std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge,
 		  std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set,
 		  std::map<std::pair<int,int>,std::set<int>>& map_2DU_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DV_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DW_3D_set,
@@ -1627,7 +1627,7 @@ void WireCellPID::PR3DCluster::form_map(WireCell::ToyCTPointCloud& ct_point_clou
   map_2DW_3D_set.clear();
 
  
-  WireCell::PointVector saved_pts;
+  WCP::PointVector saved_pts;
   int count = 0;
   
   // distance ...
@@ -1714,7 +1714,7 @@ void WireCellPID::PR3DCluster::form_map(WireCell::ToyCTPointCloud& ct_point_clou
   pts = saved_pts;
  }
 
-void WireCellPID::PR3DCluster::prepare_data(WireCell::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge){
+void WCPPID::PR3DCluster::prepare_data(WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge){
   
   std::vector<int> proj_channel;
   std::vector<int> proj_timeslice;
@@ -1843,8 +1843,8 @@ void WireCellPID::PR3DCluster::prepare_data(WireCell::ToyCTPointCloud& ct_point_
   
 }
 
-void WireCellPID::PR3DCluster::organize_ps_path(WireCell::PointVector& pts, double low_dis_limit, double end_point_limit){
-  WireCell::PointVector ps_vec = pts;
+void WCPPID::PR3DCluster::organize_ps_path(WCP::PointVector& pts, double low_dis_limit, double end_point_limit){
+  WCP::PointVector ps_vec = pts;
   pts.clear();
   // fill in the beginning part
   {
@@ -1920,7 +1920,7 @@ void WireCellPID::PR3DCluster::organize_ps_path(WireCell::PointVector& pts, doub
     pts = ps_vec;
 }
 
-WireCell::PointVector WireCellPID::PR3DCluster::organize_wcps_path(std::list<WCPointCloud<double>::WCPoint>& path_wcps_list,  double low_dis_limit, double end_point_limit){
+WCP::PointVector WCPPID::PR3DCluster::organize_wcps_path(std::list<WCPointCloud<double>::WCPoint>& path_wcps_list,  double low_dis_limit, double end_point_limit){
 
   PointVector pts;
   

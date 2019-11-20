@@ -1,5 +1,5 @@
  
-std::tuple<int, WireCellPID::PR3DCluster*, WireCell::Opflash*> WireCellPID::ToyFiducial::cosmic_tagger(WireCell::OpflashSelection& flashes, WireCellPID::PR3DCluster* main_cluster, WireCell::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WireCell::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WireCell::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool flag_data, bool debug_tagger){
+std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::cosmic_tagger(WCP::OpflashSelection& flashes, WCPPID::PR3DCluster* main_cluster, WCP::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WCP::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WCP::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool flag_data, bool debug_tagger){
   // 0 for original match results
   // 1 for TGM ...
   // 2 for STM ...
@@ -27,9 +27,9 @@ std::tuple<int, WireCellPID::PR3DCluster*, WireCell::Opflash*> WireCellPID::ToyF
 
 
 //Enabled the fully contained check
-bool WireCellPID::ToyFiducial::check_fully_contained(WireCellPID::PR3DCluster* main_cluster, double offset_x, WireCell::ToyCTPointCloud& ct_point_cloud){
+bool WCPPID::ToyFiducial::check_fully_contained(WCPPID::PR3DCluster* main_cluster, double offset_x, WCP::ToyCTPointCloud& ct_point_cloud){
   
-  WireCellPID::PR3DCluster *main_cluster1 = main_cluster;
+  WCPPID::PR3DCluster *main_cluster1 = main_cluster;
   
 
   std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps = main_cluster1->get_extreme_wcps();
@@ -99,9 +99,9 @@ bool WireCellPID::ToyFiducial::check_fully_contained(WireCellPID::PR3DCluster* m
 
 // check TGM code ...
 
-bool WireCellPID::ToyFiducial::check_tgm(WireCellPID::PR3DCluster* main_cluster,Opflash* main_flash, double offset_x, WireCell::ToyCTPointCloud& ct_point_cloud){
+bool WCPPID::ToyFiducial::check_tgm(WCPPID::PR3DCluster* main_cluster,Opflash* main_flash, double offset_x, WCP::ToyCTPointCloud& ct_point_cloud){
 
-  WireCellPID::PR3DCluster *main_cluster1 = main_cluster; 
+  WCPPID::PR3DCluster *main_cluster1 = main_cluster; 
   std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps = main_cluster1->get_extreme_wcps();
 
 
@@ -445,7 +445,7 @@ bool WireCellPID::ToyFiducial::check_tgm(WireCellPID::PR3DCluster* main_cluster,
 
 
 
-bool WireCellPID::ToyFiducial::check_neutrino_candidate(WireCellPID::PR3DCluster *main_cluster,WCPointCloud<double>::WCPoint& wcp1 ,WCPointCloud<double>::WCPoint& wcp2, double offset_x, WireCell::ToyCTPointCloud& ct_point_cloud,bool flag_2view_check){
+bool WCPPID::ToyFiducial::check_neutrino_candidate(WCPPID::PR3DCluster *main_cluster,WCPointCloud<double>::WCPoint& wcp1 ,WCPointCloud<double>::WCPoint& wcp2, double offset_x, WCP::ToyCTPointCloud& ct_point_cloud,bool flag_2view_check){
   main_cluster->Create_graph(ct_point_cloud);
   
   main_cluster->dijkstra_shortest_paths(wcp1);
@@ -536,9 +536,9 @@ bool WireCellPID::ToyFiducial::check_neutrino_candidate(WireCellPID::PR3DCluster
     int num_bad = 0;
     
     for (int i=0;i!=path_wcps_vec1.size();i++){
-      WireCell::CTPointCloud<double> cloud_u = ct_point_cloud.get_closest_points(path_wcps_vec1.at(i),low_dis_limit*2,0);
-      WireCell::CTPointCloud<double> cloud_v = ct_point_cloud.get_closest_points(path_wcps_vec1.at(i),low_dis_limit*2,1);
-      WireCell::CTPointCloud<double> cloud_w = ct_point_cloud.get_closest_points(path_wcps_vec1.at(i),low_dis_limit*2,2);
+      WCP::CTPointCloud<double> cloud_u = ct_point_cloud.get_closest_points(path_wcps_vec1.at(i),low_dis_limit*2,0);
+      WCP::CTPointCloud<double> cloud_v = ct_point_cloud.get_closest_points(path_wcps_vec1.at(i),low_dis_limit*2,1);
+      WCP::CTPointCloud<double> cloud_w = ct_point_cloud.get_closest_points(path_wcps_vec1.at(i),low_dis_limit*2,2);
 
       bool flag_reset = false;
 

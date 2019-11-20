@@ -1,11 +1,11 @@
-#include "WireCellPID/MemUsage.h"
+#include "WCPPID/MemUsage.h"
 
 #include <unistd.h>
 #include <iostream>		// debugging
 #include <sstream>
 
 using namespace std;
-using namespace WireCellPID;
+using namespace WCPPID;
 
 static double memusage_linux_resident() {
     int tSize = 0, resident = 0, share = 0;
@@ -41,21 +41,21 @@ static double memusage_linux_size() {
 }
 
 
-double WireCellPID::memusage_resident() {
+double WCPPID::memusage_resident() {
 #ifdef __linux__
     return memusage_linux_resident();
 #endif
     return -1;
 }
 
-double WireCellPID::memusage_shared()
+double WCPPID::memusage_shared()
 {
 #ifdef __linux__
     return memusage_linux_shared();
 #endif
     return -1;
 }
-double WireCellPID::memusage_size()
+double WCPPID::memusage_size()
 {
 #ifdef __linux__
     return memusage_linux_size();

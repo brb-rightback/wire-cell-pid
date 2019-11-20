@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace WireCellPID {
+namespace WCPPID {
 
     /** A helper class to give some time keeping.
      *

@@ -1,6 +1,6 @@
 #include <Eigen/SVD>
 
-std::vector<std::pair<double, double> >  WireCellPID::PR3DCluster::cal_compact_matrix(Eigen::SparseMatrix<double>& MW, Eigen::SparseMatrix<double>& RWT, int n_2D_w, int n_3D_pos, double cut_pos)
+std::vector<std::pair<double, double> >  WCPPID::PR3DCluster::cal_compact_matrix(Eigen::SparseMatrix<double>& MW, Eigen::SparseMatrix<double>& RWT, int n_2D_w, int n_3D_pos, double cut_pos)
 // W plane ...
 {         
   // initial data ...
@@ -133,7 +133,7 @@ std::vector<std::pair<double, double> >  WireCellPID::PR3DCluster::cal_compact_m
   return results;
 }
 
-double WireCellPID::PR3DCluster::cal_gaus_integral_seg(int tbin, int wbin, std::vector<double>& t_centers, std::vector<double>& t_sigmas, std::vector<double>& w_centers, std::vector<double>& w_sigmas, std::vector<double>& weights, int flag, double nsigma){
+double WCPPID::PR3DCluster::cal_gaus_integral_seg(int tbin, int wbin, std::vector<double>& t_centers, std::vector<double>& t_sigmas, std::vector<double>& w_centers, std::vector<double>& w_sigmas, std::vector<double>& weights, int flag, double nsigma){
   double result = 0;
   double result1 = 0;
 
@@ -148,7 +148,7 @@ double WireCellPID::PR3DCluster::cal_gaus_integral_seg(int tbin, int wbin, std::
 }
 
 
-double WireCellPID::PR3DCluster::cal_gaus_integral(int tbin, int wbin, double t_center, double t_sigma, double w_center, double w_sigma, int flag, double nsigma){
+double WCPPID::PR3DCluster::cal_gaus_integral(int tbin, int wbin, double t_center, double t_sigma, double w_center, double w_sigma, int flag, double nsigma){
   // flag  = 0 no boundary effect, pure Gaussian, time or collection plane
   // flag  = 1 taking into account boundary effect for induction plane
   double result = 0;
@@ -253,7 +253,7 @@ double WireCellPID::PR3DCluster::cal_gaus_integral(int tbin, int wbin, double t_
 }
 
 
-void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,  std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, double flash_time,double dis_end_point_ext, bool flag_dQ_dx_fit_reg){
+void WCPPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,  std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, double flash_time,double dis_end_point_ext, bool flag_dQ_dx_fit_reg){
   if (fine_tracking_path.size()<=1) return;
   pu.clear();
   pv.clear();
@@ -805,7 +805,7 @@ void WireCellPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WireCell::G
   
 }
 
-void WireCellPID::PR3DCluster::update_data_dQ_dx_fit(std::map<int,std::map<const WireCell::GeomWire*, WireCell::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_wt_charge){
+void WCPPID::PR3DCluster::update_data_dQ_dx_fit(std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_wt_charge){
   
   std::set<SlimMergeGeomCell*> cluster_mcells_set;
   for (auto it = mcells.begin(); it!=mcells.end(); it++){

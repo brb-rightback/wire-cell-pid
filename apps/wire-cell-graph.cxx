@@ -1,21 +1,21 @@
-#include "WireCellSst/GeomDataSource.h"
+#include "WCPSst/GeomDataSource.h"
 
-#include "WireCellData/SlimMergeGeomCell.h"
-#include "WireCellData/TPCParams.h"
-#include "WireCellData/Singleton.h"
-#include "WireCellData/ToyCTPointCloud.h"
+#include "WCPData/SlimMergeGeomCell.h"
+#include "WCPData/TPCParams.h"
+#include "WCPData/Singleton.h"
+#include "WCPData/ToyCTPointCloud.h"
 
-#include "WireCellPID/CalcPoints.h"
-#include "WireCellPID/PR3DCluster.h"
+#include "WCPPID/CalcPoints.h"
+#include "WCPPID/PR3DCluster.h"
 
-#include "WireCellPID/ExecMon.h"
-#include "WireCellPID/ImprovePR3DCluster.h"
+#include "WCPPID/ExecMon.h"
+#include "WCPPID/ImprovePR3DCluster.h"
 
 #include "TH1.h"
 #include "TFile.h"
 #include "TTree.h"
 
-using namespace WireCell;
+using namespace WCP;
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -35,10 +35,10 @@ int main(int argc, char* argv[])
     }
   }
     
-  WireCellPID::ExecMon em("starting");
+  WCPPID::ExecMon em("starting");
   cout << em("load geometry") << endl;
   
-  WireCellSst::GeomDataSource gds(argv[1]);
+  WCPSst::GeomDataSource gds(argv[1]);
   std::vector<double> ex = gds.extent();
   cout << "Extent: "
        << " x:" << ex[0]/units::mm << " mm"
@@ -245,9 +245,9 @@ int main(int argc, char* argv[])
   // load cells ... 
   GeomCellSelection mcells;
   //  CellIndexMap map_mcell_cluster_id;
-  WireCellPID::PR3DClusterSelection live_clusters;
-  WireCellPID::PR3DCluster *cluster;
-  std::map<WireCellPID::PR3DCluster*, int> map_cluster_parent_id;
+  WCPPID::PR3DClusterSelection live_clusters;
+  WCPPID::PR3DCluster *cluster;
+  std::map<WCPPID::PR3DCluster*, int> map_cluster_parent_id;
   int prev_cluster_id=-1;
   int ident = 0;
   TC->GetEntry(0);
@@ -343,7 +343,7 @@ int main(int argc, char* argv[])
     //    map_mcell_cluster_id[mcell]=cluster_id;
 
     if (cluster_id != prev_cluster_id){
-      cluster = new WireCellPID::PR3DCluster(cluster_id);
+      cluster = new WCPPID::PR3DCluster(cluster_id);
       map_cluster_parent_id[cluster] = parent_cluster_id->at(i);
       live_clusters.push_back(cluster);
     }
@@ -444,7 +444,7 @@ int main(int argc, char* argv[])
   
   // replace by the new sampling points ...
   for (size_t i=0; i!=live_clusters.size();i++){
-    WireCellPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
+    WCPPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
     live_clusters.at(i)->Create_point_cloud();
   }
   cout << em("Add X, Y, Z points") << std::endl;
@@ -461,7 +461,7 @@ int main(int argc, char* argv[])
   ct_point_cloud.AddDeadChs(dead_u_index, dead_v_index, dead_w_index);
   ct_point_cloud.build_kdtree_index();
   
-  std::map<WireCellPID::PR3DCluster*, WireCellPID::PR3DCluster*> old_new_cluster_map;
+  std::map<WCPPID::PR3DCluster*, WCPPID::PR3DCluster*> old_new_cluster_map;
   
   //std::cout << saved_parent_tpc_cluster_ids.size() << std::endl;
   for (size_t i=0; i!=live_clusters.size();i++){
@@ -479,12 +479,12 @@ int main(int argc, char* argv[])
       live_clusters.at(i)->recover_steiner_graph();
     }
 
-    // WireCell2dToy::WireCellHolder *holder = new WireCell2dToy::WireCellHolder();
+    // WCP2dToy::WCPHolder *holder = new WCP2dToy::WCPHolder();
 
-    // //WireCellPID::PR3DCluster *temp_cluster = WireCellPID::Improve_PR3DCluster_1(live_clusters.at(i),ct_point_cloud, gds, holder);
-    // WireCellPID::PR3DCluster *temp_cluster = WireCellPID::Improve_PR3DCluster_2(live_clusters.at(i),ct_point_cloud, gds, holder, nrebin, frame_length, unit_dis);
+    // //WCPPID::PR3DCluster *temp_cluster = WCPPID::Improve_PR3DCluster_1(live_clusters.at(i),ct_point_cloud, gds, holder);
+    // WCPPID::PR3DCluster *temp_cluster = WCPPID::Improve_PR3DCluster_2(live_clusters.at(i),ct_point_cloud, gds, holder, nrebin, frame_length, unit_dis);
     
-    // WireCellPID::calc_sampling_points(gds,temp_cluster,nrebin, frame_length, unit_dis, false);
+    // WCPPID::calc_sampling_points(gds,temp_cluster,nrebin, frame_length, unit_dis, false);
     // temp_cluster->Create_point_cloud();
     // old_new_cluster_map[live_clusters.at(i)] = temp_cluster;
     
@@ -515,9 +515,9 @@ int main(int argc, char* argv[])
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     // if (old_new_cluster_map.find(*it)==old_new_cluster_map.end()) continue;
-    // WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
+    // WCPPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
 
-    WireCellPID::PR3DCluster* new_cluster = *it;  
+    WCPPID::PR3DCluster* new_cluster = *it;  
     ncluster = new_cluster->get_cluster_id();
     
     ToyPointCloud *pcloud = new_cluster->get_point_cloud();
@@ -525,7 +525,7 @@ int main(int argc, char* argv[])
     // ToyPointCloud *pcloud = new_cluster->get_point_cloud_steiner_terminal();
 
     if (pcloud!=0){
-      WireCell::WCPointCloud<double>& cloud = pcloud->get_cloud();
+      WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
       
       for (size_t i=0;i!=cloud.pts.size();i++){
 	x = cloud.pts[i].x/units::cm;
@@ -614,14 +614,14 @@ int main(int argc, char* argv[])
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     //     if (old_new_cluster_map.find(*it)==old_new_cluster_map.end()) continue;
-   //  WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
+   //  WCPPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
 //     //    new_cluster->establish_same_mcell_steiner_edges(gds, false);
 // std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps(1);
 //     new_cluster->dijkstra_shortest_paths(wcps.first,1); 
 //     new_cluster->cal_shortest_path(wcps.second,1);
 //     //new_cluster->remove_same_mcell_steiner_edges();
     
-    WireCellPID::PR3DCluster* new_cluster = *it;
+    WCPPID::PR3DCluster* new_cluster = *it;
     if (new_cluster->get_point_cloud_steiner()==0) continue;
     if (new_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
       std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps(2); 
@@ -656,8 +656,8 @@ int main(int argc, char* argv[])
     
     // // std::set<int> steiner_terminals = new_cluster->get_steiner_terminals();
     // std::set<int> steiner_terminals = new_cluster->get_selected_terminals();
-    // WireCell::ToyPointCloud* point_cloud = new_cluster->get_point_cloud();
-    // WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+    // WCP::ToyPointCloud* point_cloud = new_cluster->get_point_cloud();
+    // WCP::WCPointCloud<double>& cloud = point_cloud->get_cloud();
     
     // for (auto it1 = steiner_terminals.begin();it1!=steiner_terminals.end();it1++){
     //   x = cloud.pts[*it1].x/units::cm;
@@ -681,13 +681,13 @@ int main(int argc, char* argv[])
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
 
     // if (old_new_cluster_map.find(*it)==old_new_cluster_map.end()) continue;
-    // WireCellPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
+    // WCPPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
     // //std::set<int> steiner_terminals = new_cluster->get_selected_terminals();
     // new_cluster->find_steiner_terminals(gds,false);
     // std::set<int> steiner_terminals = new_cluster->get_steiner_terminals();
-    // WireCell::ToyPointCloud* point_cloud = new_cluster->get_point_cloud();
+    // WCP::ToyPointCloud* point_cloud = new_cluster->get_point_cloud();
     
-    WireCellPID::PR3DCluster* new_cluster = *it;
+    WCPPID::PR3DCluster* new_cluster = *it;
     //std::set<int> steiner_terminals = new_cluster->get_steiner_graph_terminals();
     std::set<int> steiner_terminals = new_cluster->get_steiner_graph_selected_terminals();
     
@@ -695,7 +695,7 @@ int main(int argc, char* argv[])
    
     if (point_cloud==0) continue;
     if (point_cloud->get_num_points()>0){
-      WireCell::WCPointCloud<double>& cloud = point_cloud->get_cloud();
+      WCP::WCPointCloud<double>& cloud = point_cloud->get_cloud();
 
       steiner_terminals.clear();
       for (size_t i = 0; i!=cloud.pts.size();i++){

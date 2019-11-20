@@ -9,7 +9,7 @@
 #include <string>
 
 
-namespace WireCellPID {
+namespace WCPPID {
 
     double memusage_resident();
     double memusage_shared();
