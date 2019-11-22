@@ -208,9 +208,9 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
   //  check_full_detector_dead();
 
   
-  bool flag_other_clusters = check_other_clusters(main_cluster, additional_clusters);
 
-  std::cout << flag_other_clusters << std::endl;
+
+  //std::cout << flag_other_clusters << std::endl;
   
   TVector3 drift_dir(1,0,0);
   // hard coded for U and V plane ... 
@@ -498,6 +498,8 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
       return false;
     }
   }
+
+  bool flag_other_clusters = check_other_clusters(main_cluster, additional_clusters);
   
   // forward check ...
   {

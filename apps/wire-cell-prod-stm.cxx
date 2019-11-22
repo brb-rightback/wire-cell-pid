@@ -688,7 +688,7 @@ int main(int argc, char* argv[])
   //}
 
   // load photon library   
-  WCP::Photon_Library pl(run_no,flag_match_data);
+
   
   TTree *T_match1 = new TTree("T_match","T_match");
   T_match1->SetDirectory(file1);
@@ -756,6 +756,7 @@ int main(int argc, char* argv[])
       // 	}
       // }
 
+      WCP::Photon_Library pl(run_no,flag_match_data);
       // run the new supplemental cosmic tagger
       std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> cosmic_tagger_results = fid->cosmic_tagger(flashes, main_cluster, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, flag_data, false);
 
