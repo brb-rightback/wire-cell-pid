@@ -173,7 +173,7 @@ bool WCPPID::ToyFiducial::check_full_detector_dead(){
   
 }
 
-bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, double offset_x, double flash_time, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, int& event_type){
+bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*>& additional_clusters, double offset_x, double flash_time, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, int& event_type){
 
   //  check_full_detector_dead();
 
@@ -1024,7 +1024,7 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
     
     if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > 0.03 && dQ_dx.at(max_bin)/50e3 > 2.5 && (dQ_dx.size() - max_bin <= 3 || ks2 < 0.05 && dQ_dx.size() - max_bin <= 12) ) {
 
-      if (dQ_dx.size()-max_bin<=1 &&  dQ_dx.at(max_bin)/50e3 < 3.0 && ks1 < 0.06) return false;
+      if (dQ_dx.size()-max_bin<=1 &&  (dQ_dx.at(max_bin)/50e3 < 3.0 && ks1 < 0.06 || ks1<0.035 && dQ_dx.at(max_bin)/50e3 < 4.0 )) return false;
 
       return true;
     }

@@ -726,6 +726,11 @@ int main(int argc, char* argv[])
 	break;
       }
     }
+    std::vector<WCPPID::PR3DCluster*> additional_clusters;
+    for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
+      if (*it1 != main_cluster)
+	additional_clusters.push_back(*it1);
+    }
 
     if (flag_tgm == 0 && flag_low_energy == 0 && flag_lm ==0){
       if (flag_main_cluster_only){
@@ -761,14 +766,14 @@ int main(int argc, char* argv[])
       }else if (std::get<0>(cosmic_tagger_results)==2){
 	double temp_flash_time = (std::get<2>(cosmic_tagger_results))->get_time();
 	double temp_offset_x = (temp_flash_time - time_offset)*2./nrebin*time_slice_width;
-	if (fid->check_stm(main_cluster, temp_offset_x, temp_flash_time, ct_point_cloud, global_wc_map, event_type))
+	if (fid->check_stm(main_cluster, additional_clusters, temp_offset_x, temp_flash_time, ct_point_cloud, global_wc_map, event_type))
 	  event_type |= 1UL << 5;
       }
       flag_tgm = (event_type >> 3) & 1U;
       int flag_stm = (event_type >> 5) & 1U;
       
       // if STM
-      if (flag_tgm==0 && flag_stm==0 && fid->check_stm(main_cluster, offset_x, flash_time, ct_point_cloud, global_wc_map, event_type))
+      if (flag_tgm==0 && flag_stm==0 && fid->check_stm(main_cluster, additional_clusters, offset_x, flash_time, ct_point_cloud, global_wc_map, event_type))
 	event_type |= 1UL << 5;
       if (fid->check_full_detector_dead())
 	event_type |= 1UL << 6;
