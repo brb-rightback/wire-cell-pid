@@ -694,7 +694,7 @@ int main(int argc, char* argv[])
 	}
       }
 
-      //      std::cout << temp_clusters.size() << " " << additional_clusters.size() << std::endl;
+      //std::cout << temp_clusters.size() << " " << additional_clusters.size() << std::endl;
       
       // // holder ...
       // if (main_cluster->get_point_cloud_steiner()!=0){

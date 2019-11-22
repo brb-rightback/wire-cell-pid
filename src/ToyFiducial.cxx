@@ -173,10 +173,45 @@ bool WCPPID::ToyFiducial::check_full_detector_dead(){
   
 }
 
+bool WCPPID::ToyFiducial::check_other_clusters(WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*>& clusters){
+  Int_t ncount = 0;
+  WCP::ToyPointCloud *main_pcloud = main_cluster->get_point_cloud();
+
+  Int_t number_clusters = 0;
+  Double_t total_length = 0;
+  
+  for (auto it = clusters.begin(); it!=clusters.end(); it++){
+    WCPPID::PR3DCluster *cluster = *it;
+    std::pair<WCP::WCPointCloud<double>::WCPoint,WCP::WCPointCloud<double>::WCPoint> wcps = cluster->get_two_boundary_wcps();
+    double coverage_x = wcps.first.x - wcps.second.x;
+    double length = sqrt(pow(wcps.first.x-wcps.second.x,2) + pow(wcps.first.y-wcps.second.y,2) + pow(wcps.first.z-wcps.second.z,2));
+    WCP::ToyPointCloud *pcloud = cluster->get_point_cloud();
+    std::tuple<int,int,double> results = main_pcloud->get_closest_points(pcloud);
+    // std::cout << "ABC: " << coverage_x/units::cm <<  " " << length/units::cm << " " << std::get<2>(results)/units::cm << std::endl;
+    //    if (coverage_x > 0.75*units::cm && length > 3*units::cm)
+    if (std::get<2>(results) < 25*units::cm && fabs(coverage_x)>0.75*units::cm && length > 5*units::cm){
+      number_clusters ++;
+      total_length += length;
+    }
+  }
+
+
+  
+  if (number_clusters >0 && (number_clusters/3. + total_length/(35*units::cm)/number_clusters) >=1)
+    return true;
+  
+  return false;
+}
+
 bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*>& additional_clusters, double offset_x, double flash_time, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, int& event_type){
 
   //  check_full_detector_dead();
 
+  
+  bool flag_other_clusters = check_other_clusters(main_cluster, additional_clusters);
+
+  std::cout << flag_other_clusters << std::endl;
+  
   TVector3 drift_dir(1,0,0);
   // hard coded for U and V plane ... 
   TVector3 U_dir(0,cos(60./180.*3.1415926),sin(60./180.*3.1415926));
@@ -482,8 +517,6 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
     // fitting trajectory and dQ/dx...
     main_cluster->collect_charge_trajectory(ct_point_cloud); 
     main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
-
-   
     
     // check both end points for TGM ...
     WCP::PointVector& pts = main_cluster->get_fine_tracking_path();
@@ -535,46 +568,53 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
     
       bool flag_pass = false;
 
-      if (left_L < 40*units::cm) {
-	if (flag_fix_end){
-	  flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
-	    eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
-	}else{
-	  flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 35*units::cm) ||
-	    eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 35*units::cm);
-	}
-	
-	if (!flag_pass){
-	  if (flag_fix_end){
-	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 15*units::cm) ||
-	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 15*units::cm);
-	  }else{
-	    flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 15*units::cm) ||
-	      eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 15*units::cm);
-	  }
-	}
-      }
-      
-      if (left_L < 20*units::cm){
-	if (!flag_pass){
+      if (!flag_other_clusters){
+	if (left_L < 40*units::cm) {
 	  if (flag_fix_end){
 	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
 	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
 	  }else{
-	    flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 35*units::cm) ||
-	      eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	    flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 35*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	  }
+	  
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 15*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	    }
 	  }
 	}
 	
-	if (!flag_pass){
-	  if (flag_fix_end){
-	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm , 0., 15*units::cm) ||
-	      eval_stm(main_cluster, kink_num, 5*units::cm , 3.*units::cm, 15*units::cm);
-	  }else{
-	    flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 15*units::cm) ||
-	      eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	if (left_L < 20*units::cm){
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 35*units::cm) ||
+		eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	    }
+	  }
+	  
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm , 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm , 3.*units::cm, 15*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	    }
 	  }
 	}
+      }else{
+	if (flag_fix_end)
+	  flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm, true);
+	else
+	  flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm, 0., 35*units::cm, true);
       }
       
       if (flag_pass) {
@@ -642,46 +682,53 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
     
     
       bool flag_pass = false;
-      if (left_L < 40*units::cm) {
-	if (flag_fix_end){
-	  flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
-	    eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
-	}else{
-	  flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 35*units::cm) ||
-	    eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 35*units::cm);
-	}
-	
-	if (!flag_pass){
-	  if (flag_fix_end){
-	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 15*units::cm) ||
-	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 15*units::cm);
-	  }else{
-	    flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 15*units::cm) ||
-	      eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 15*units::cm);
-	  }
-	}
-      }
-      
-      if (left_L < 20*units::cm){
-	if (!flag_pass){
+      if (!flag_other_clusters){
+	if (left_L < 40*units::cm) {
 	  if (flag_fix_end){
 	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
 	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
 	  }else{
-	    flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 35*units::cm) ||
-	      eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	    flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 35*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	  }
+	  
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 15*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	    }
 	  }
 	}
 	
-	if (!flag_pass){
-	  if (flag_fix_end){
-	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm , 0., 15*units::cm) ||
-	      eval_stm(main_cluster, kink_num, 5*units::cm , 3.*units::cm, 15*units::cm);
-	  }else{
-	    flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 15*units::cm) ||
-	      eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	if (left_L < 20*units::cm){
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 35*units::cm) ||
+		eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	    }
+	  }
+	  
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm , 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm , 3.*units::cm, 15*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	    }
 	  }
 	}
+      }else{
+	if (flag_fix_end)
+	  flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm, true);
+	else
+	  flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm, 0., 35*units::cm, true);
       }
 
       if (flag_pass) {
@@ -1033,7 +1080,7 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
   return false;
 }
 
-bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_num,double peak_range, double offset_length, double com_range){
+bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_num,  double peak_range, double offset_length, double com_range, bool flag_strong_check){
   WCP::PointVector& pts = main_cluster->get_fine_tracking_path();
 
   std::vector<double>& dQ = main_cluster->get_dQ();
@@ -1147,9 +1194,13 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
   if (ks1-ks2 >= 0.0) return false;
   if (sqrt(pow(ks2/0.06,2)+pow((ratio2-1)/0.06,2))< 1.4) return false;
 
-  if (ks1 - ks2 < -0.02 && (ks2 > 0.09 || ratio2 > 1.5)) return true;
-  if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0) return true;
- 
+  if (!flag_strong_check){
+    if (ks1 - ks2 < -0.02 && (ks2 > 0.09 || ratio2 > 1.5)) return true;
+    if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0) return true;
+  }else{
+    if (ks1 - ks2 < -0.02 && (ks2 > 0.09 || ratio2 > 1.5) && ks1 < 0.05 && fabs(ratio1-1)<0.1) return true;
+    if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0 && ks1 < 0.05 && fabs(ratio1-1)<0.1) return true;
+  }
 
   return false;
   
