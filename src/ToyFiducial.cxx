@@ -1212,12 +1212,14 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
   // return results;
 
   if (ks1-ks2 >= 0.0) return false;
-  if (sqrt(pow(ks2/0.06,2)+pow((ratio2-1)/0.06,2))< 1.4) return false;
+  if (sqrt(pow(ks2/0.06,2)+pow((ratio2-1)/0.06,2))< 1.4 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.02) return false;
 
   // if residual does not look like a michel electron
-  if (res_length > 10 * units::cm && ave_res_dQ_dx > 72500 ||
-      res_length > 5 * units::cm && ave_res_dQ_dx > 92500 ||
-      res_length > 5 * units::cm && ave_res_dQ_dx > 72500 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.05)
+  if (res_length > 16 * units::cm && ave_res_dQ_dx > 72500 || 
+      res_length > 10 * units::cm && ave_res_dQ_dx > 72500 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.05 ||
+      res_length > 10 * units::cm && ave_res_dQ_dx > 85000 ||
+      res_length > 6 * units::cm && ave_res_dQ_dx > 92500 ||
+      res_length > 6 * units::cm && ave_res_dQ_dx > 72500 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.05)
     return false;
   
   if (!flag_strong_check){
