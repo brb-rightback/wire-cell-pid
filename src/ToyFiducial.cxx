@@ -1157,14 +1157,32 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
   int ncount = 0;
   std::vector<double> vec_x;
   std::vector<double> vec_y;
+  std::vector<double> vec_res_x;
+  std::vector<double> vec_res_y;
   for (size_t i=0;i!=L.size(); i++){
     if (end_L - L.at(i) < com_range && end_L - L.at(i) > 0){
       vec_x.push_back(end_L-L.at(i));
       vec_y.push_back(dQ_dx.at(i));
       ncount ++;
+    }else if (L.at(i)>end_L){
+      vec_res_x.push_back(L.at(i)-end_L);
+      vec_res_y.push_back(dQ_dx.at(i));
     }
   }
 
+  double ave_res_dQ_dx = 0;
+  double res_length = 0;
+  
+  for (size_t i=0;i!=vec_res_y.size();i++){
+    ave_res_dQ_dx += vec_res_y.at(i);
+  }
+  if (vec_res_y.size()>0){
+    res_length = vec_res_x.back();
+    ave_res_dQ_dx /= 1.*vec_res_y.size();
+  }
+  
+  std::cout << "Test: " << res_length/units::cm << " " << ave_res_dQ_dx << std::endl;
+  
   TH1F *h1 = new TH1F("h1","h1",ncount,0,ncount);
   TH1F *h2 = new TH1F("h2","h2",ncount,0,ncount);
   TH1F *h3 = new TH1F("h3","h3",ncount,0,ncount);
@@ -1196,6 +1214,12 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
   if (ks1-ks2 >= 0.0) return false;
   if (sqrt(pow(ks2/0.06,2)+pow((ratio2-1)/0.06,2))< 1.4) return false;
 
+  // if residual does not look like a michel electron
+  if (res_length > 10 * units::cm && ave_res_dQ_dx > 72500 ||
+      res_length > 5 * units::cm && ave_res_dQ_dx > 92500 ||
+      res_length > 5 * units::cm && ave_res_dQ_dx > 72500 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.05)
+    return false;
+  
   if (!flag_strong_check){
     if (ks1 - ks2 < -0.02 && (ks2 > 0.09 || ratio2 > 1.5)) return true;
     if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0) return true;
