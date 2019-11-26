@@ -542,12 +542,12 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
     
      std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << " " << (exit_Q/(exit_L/units::cm+1e-9)/50e3) << std::endl;
 
-     //std::cout << pts.front() << " " << pts.back() << " " << pts.at(kink_num) << " " << (!inside_fiducial_volume(pts.front(),offset_x)) << " " << (!inside_fiducial_volume(pts.back(),offset_x)) << std::endl;
+     //     std::cout << pts.front() << " " << pts.back() << " " << (!inside_fiducial_volume(pts.front(),offset_x)) << " " << (!inside_fiducial_volume(pts.back(),offset_x)) << std::endl;
     if ( (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
       // std::cout << exit_L_TGM/units::cm << " " << left_L_TGM/units::cm << std::endl;
       bool flag_TGM_anode = false;
       
-      if (pts.back().x < 2*units::cm || pts.front().x < 2*units::cm){ // at Anode ...
+      if ((pts.back().x < 2*units::cm || pts.front().x < 2*units::cm) && kink_num >=0 && kink_num < pts.size()){ // at Anode ...
 	if (pts.at(kink_num).x < 6*units::cm){
 	  TVector3 v10(pts.back().x-pts.at(kink_num).x,pts.back().y-pts.at(kink_num).y,pts.back().z-pts.at(kink_num).z);
 	  TVector3 v20(pts.front().x-pts.at(kink_num).x,pts.front().y-pts.at(kink_num).y,pts.front().z-pts.at(kink_num).z);
@@ -561,6 +561,17 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
 	event_type |= 1UL << 3;
 	return true;
       }
+    }else if ((!inside_fiducial_volume(pts.front(),offset_x)) && left_L < 3*units::cm){
+      // check dead volume and SP ...
+      Point p1 = pts.back();
+      TVector3 dir = main_cluster->VHoughTrans(p1,30*units::cm);
+      dir *= (-1);
+      if (!check_dead_volume(p1,dir,1*units::cm,offset_x)){
+	std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+	event_type |= 1UL << 3;
+	return true;
+      }
+      //std::cout << "ABC: " << dir.X() << " " << dir.Y() << " " << dir.Z() << " " << check_dead_volume(p1,dir,1*units::cm,offset_x) << std::endl;
     }
   
     if (left_L > 40*units::cm || left_L > 7.5*units::cm && (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0){
@@ -677,7 +688,7 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
     if ( (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
       bool flag_TGM_anode = false;
       
-      if (pts.back().x < 2*units::cm || pts.front().x < 2*units::cm){ // at Anode ...
+      if ((pts.back().x < 2*units::cm || pts.front().x < 2*units::cm) && kink_num >=0 && kink_num < pts.size()){ // at Anode ...
 	if (pts.at(kink_num).x < 6*units::cm){
 	  TVector3 v10(pts.back().x-pts.at(kink_num).x,pts.back().y-pts.at(kink_num).y,pts.back().z-pts.at(kink_num).z);
 	  TVector3 v20(pts.front().x-pts.at(kink_num).x,pts.front().y-pts.at(kink_num).y,pts.front().z-pts.at(kink_num).z);
@@ -901,8 +912,11 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
 	
 	//	std::cout << "Test: " << angle3 << " " << sum_fQ << " " << sum_bQ << std::endl;
 	if (sum_fQ > 0.6 && sum_bQ > 0.6 || sum_fQ + sum_bQ > 1.4 && (sum_fQ > 0.8 || sum_bQ > 0.8) && v10.Mag() > 10*units::cm && v20.Mag() > 10*units::cm){
-	  std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << ave_angles.at(i) << " " << max_numbers.at(i) << " " << angle3 << " " << dQ.at(i)/dx.at(i)*units::cm/50e3 << " " << pu.at(i) << " " << pv.at(i) << " " << pw.at(i) << std::endl;
-	  return max_numbers.at(i);
+	  //std::cout << i << " " << max_numbers.at(i) << " " << dQ.size() << std::endl;
+	  if (i+2<dQ.size()){
+	    std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << ave_angles.at(i) << " " << max_numbers.at(i) << " " << angle3 << " " << dQ.at(i)/dx.at(i)*units::cm/50e3 << " " << pu.at(i) << " " << pv.at(i) << " " << pw.at(i) << std::endl;
+	    return max_numbers.at(i);
+	  }
 	}
       }
     }
@@ -985,8 +999,10 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
 	if (fabs(sum_fQ-sum_bQ) < 0.07*(sum_fQ+sum_bQ) && (flag_bad_u||flag_bad_v||flag_bad_w)) continue;
 	
 	if (sum_fQ > 0.6 && sum_bQ > 0.6 ){
-	  std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << ave_angles.at(i) << " " << max_numbers.at(i) << " " << angle3 << " " << dQ.at(i)/dx.at(i)*units::cm/50e3 << std::endl;
-	  return max_numbers.at(i);
+	  if (i+2<dQ.size()){
+	    std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << ave_angles.at(i) << " " << max_numbers.at(i) << " " << angle3 << " " << dQ.at(i)/dx.at(i)*units::cm/50e3 << std::endl;
+	    return max_numbers.at(i);
+	  }
 	}
       }
     }
@@ -1104,7 +1120,7 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
     
     if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > 0.03 && dQ_dx.at(max_bin)/50e3 > 2.5 && (dQ_dx.size() - max_bin <= 3 || ks2 < 0.05 && dQ_dx.size() - max_bin <= 12) ) {
 
-      if (dQ_dx.size()-max_bin<=1 &&  (dQ_dx.at(max_bin)/50e3 < 3.0 && ks1 < 0.06 || ks1<0.035 && dQ_dx.at(max_bin)/50e3 < 4.0 )) return false;
+      if (dQ_dx.size()-max_bin<=1 &&  (dQ_dx.at(max_bin)/50e3 < 3.0 && (ks1 < 0.06 || ks1<0.065 && ks2>0.04) || ks1<0.035 && dQ_dx.at(max_bin)/50e3 < 4.0 )) return false;
 
       return true;
     }
@@ -1212,7 +1228,7 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
     ave_res_dQ_dx /= 1.*vec_res_y.size();
   }
   
-  //  std::cout << "Test: " << res_length/units::cm << " " << ave_res_dQ_dx << std::endl;
+  //std::cout << "Test: " << res_length/units::cm << " " << ave_res_dQ_dx << std::endl;
   
   TH1F *h1 = new TH1F("h1","h1",ncount,0,ncount);
   TH1F *h2 = new TH1F("h2","h2",ncount,0,ncount);
@@ -1352,7 +1368,7 @@ bool WCPPID::ToyFiducial::check_dead_volume(WCP::Point& p, TVector3& dir, double
 	//	std::cout << temp_p.x/units::cm << " " << temp_p.y/units::cm << " " << temp_p.z/units::cm << std::endl;
       }
 
-      // std::cout << p.x/units::cm << " " << p.y/units::cm << " " << p.z/units::cm << " " << num_points << " " << num_points_dead << std::endl;
+      //      std::cout << p.x/units::cm << " " << p.y/units::cm << " " << p.z/units::cm << " " << num_points << " " << num_points_dead << std::endl;
       
       if (num_points_dead > 0.81*num_points){
 	return false;
