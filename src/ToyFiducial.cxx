@@ -826,7 +826,7 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
   }
     
   for (int i=0;i!=fine_tracking_path.size();i++){
-    // std::cout << i << " " << refl_angles.at(i) << " " <<sum_angles << " " << inside_fiducial_volume(fine_tracking_path.at(i)) << std::endl;
+    //std::cout << i << " " << refl_angles.at(i) << " " << ave_angles.at(i)  << " " << inside_fiducial_volume(fine_tracking_path.at(i)) << std::endl;
     if ((refl_angles.at(i) > 25 && ave_angles.at(i) > 12.5 ) && inside_fiducial_volume(fine_tracking_path.at(i))){
       TVector3 v10(fine_tracking_path.at(i).x - fine_tracking_path.front().x,
 		   fine_tracking_path.at(i).y - fine_tracking_path.front().y,
@@ -835,6 +835,9 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
 		   fine_tracking_path.back().y - fine_tracking_path.at(i).y,
 		   fine_tracking_path.back().z - fine_tracking_path.at(i).z);
       double angle3 = v10.Angle(v20)/3.1415926*180.;
+
+      // std::cout << angle3 << std::endl;
+      
       if (angle3 < 20 && ave_angles.at(i) < 20 || angle3 < 12.5 && inside_dead_region(fine_tracking_path.at(i)) || angle3 < 7.5 || i<=4) continue;
       if (angle3 > 30){
 
@@ -868,8 +871,8 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
 	sum_fQ /= (sum_fx/units::cm+1e-9)*50e3;
 	sum_bQ /= (sum_bx/units::cm+1e-9)*50e3;
 	
-	//std::cout << sum_fQ << " " << sum_bQ << std::endl;
-	if (sum_fQ > 0.6 && sum_bQ > 0.6){
+	std::cout << "Test: " << angle3 << " " << sum_fQ << " " << sum_bQ << std::endl;
+	if (sum_fQ > 0.6 && sum_bQ > 0.6 || sum_fQ + sum_bQ > 1.4 && (sum_fQ > 0.8 || sum_bQ > 0.8) && v10.Mag() > 10*units::cm && v20.Mag() > 10*units::cm){
 	  std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << ave_angles.at(i) << " " << max_numbers.at(i) << " " << angle3 << " " << dQ.at(i)/dx.at(i)*units::cm/50e3 << " " << pu.at(i) << " " << pv.at(i) << " " << pw.at(i) << std::endl;
 	  return max_numbers.at(i);
 	}
@@ -1181,7 +1184,7 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
     ave_res_dQ_dx /= 1.*vec_res_y.size();
   }
   
-  std::cout << "Test: " << res_length/units::cm << " " << ave_res_dQ_dx << std::endl;
+  //  std::cout << "Test: " << res_length/units::cm << " " << ave_res_dQ_dx << std::endl;
   
   TH1F *h1 = new TH1F("h1","h1",ncount,0,ncount);
   TH1F *h2 = new TH1F("h2","h2",ncount,0,ncount);
