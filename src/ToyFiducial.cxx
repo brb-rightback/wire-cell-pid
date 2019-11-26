@@ -527,9 +527,9 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
     
     int kink_num = find_first_kink(main_cluster);
     
-    double left_L = 0;
+    double left_L = 0; 
     double left_Q = 0;
-    double exit_L = 0;
+    double exit_L = 0; 
     double exit_Q = 0;
     for (size_t i=0;i!=kink_num;i++){
       exit_L += dx.at(i);
@@ -540,12 +540,27 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
       left_Q += dQ.at(i);
     }
     
-    std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << " " << (exit_Q/(exit_L/units::cm+1e-9)/50e3) << std::endl;
-    
-    if ((exit_L < 3*units::cm || left_L < 3*units::cm) && (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
-      std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
-      event_type |= 1UL << 3;
-      return true;
+     std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << " " << (exit_Q/(exit_L/units::cm+1e-9)/50e3) << std::endl;
+
+     //std::cout << pts.front() << " " << pts.back() << " " << pts.at(kink_num) << " " << (!inside_fiducial_volume(pts.front(),offset_x)) << " " << (!inside_fiducial_volume(pts.back(),offset_x)) << std::endl;
+    if ( (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
+      // std::cout << exit_L_TGM/units::cm << " " << left_L_TGM/units::cm << std::endl;
+      bool flag_TGM_anode = false;
+      
+      if (pts.back().x < 2*units::cm || pts.front().x < 2*units::cm){ // at Anode ...
+	if (pts.at(kink_num).x < 6*units::cm){
+	  TVector3 v10(pts.back().x-pts.at(kink_num).x,pts.back().y-pts.at(kink_num).y,pts.back().z-pts.at(kink_num).z);
+	  TVector3 v20(pts.front().x-pts.at(kink_num).x,pts.front().y-pts.at(kink_num).y,pts.front().z-pts.at(kink_num).z);
+	  if (fabs(v10.Angle(drift_dir)/3.1415926*180.-90)<12.5 && v10.Mag()>15*units::cm || fabs(v20.Angle(drift_dir)/3.1415926*180.-90)<12.5 && v20.Mag()>15*units::cm)
+	      flag_TGM_anode = true;
+	  //std::cout << v10.Angle(drift_dir)/3.1415926*180. << " " << v20.Angle(drift_dir)/3.1415926*180. << std::endl;
+	}
+      }
+      if ((exit_L < 3*units::cm || left_L < 3*units::cm || flag_TGM_anode)){
+	std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+	event_type |= 1UL << 3;
+	return true;
+      }
     }
   
     if (left_L > 40*units::cm || left_L > 7.5*units::cm && (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0){
@@ -659,10 +674,23 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
     
     std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << " " << (exit_Q/(exit_L/units::cm+1e-9)/50e3) << std::endl;
     
-    if ((exit_L < 3*units::cm || left_L < 3*units::cm) && (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
-      std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
-      event_type |= 1UL << 3;
-      return true;
+    if ( (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
+      bool flag_TGM_anode = false;
+      
+      if (pts.back().x < 2*units::cm || pts.front().x < 2*units::cm){ // at Anode ...
+	if (pts.at(kink_num).x < 6*units::cm){
+	  TVector3 v10(pts.back().x-pts.at(kink_num).x,pts.back().y-pts.at(kink_num).y,pts.back().z-pts.at(kink_num).z);
+	  TVector3 v20(pts.front().x-pts.at(kink_num).x,pts.front().y-pts.at(kink_num).y,pts.front().z-pts.at(kink_num).z);
+	  if (fabs(v10.Angle(drift_dir)/3.1415926*180.-90)<12.5 && v10.Mag()>15*units::cm || fabs(v20.Angle(drift_dir)/3.1415926*180.-90)<12.5 && v20.Mag()>15*units::cm)
+	      flag_TGM_anode = true;
+	  //std::cout << v10.Angle(drift_dir)/3.1415926*180. << " " << v20.Angle(drift_dir)/3.1415926*180. << std::endl;
+	}
+      }
+      if ((exit_L < 3*units::cm || left_L < 3*units::cm) || flag_TGM_anode){
+	std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+	event_type |= 1UL << 3;
+	return true;
+      }
     }
   
     if (left_L > 40*units::cm || left_L > 7.5*units::cm && (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0){
@@ -871,7 +899,7 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
 	sum_fQ /= (sum_fx/units::cm+1e-9)*50e3;
 	sum_bQ /= (sum_bx/units::cm+1e-9)*50e3;
 	
-	std::cout << "Test: " << angle3 << " " << sum_fQ << " " << sum_bQ << std::endl;
+	//	std::cout << "Test: " << angle3 << " " << sum_fQ << " " << sum_bQ << std::endl;
 	if (sum_fQ > 0.6 && sum_bQ > 0.6 || sum_fQ + sum_bQ > 1.4 && (sum_fQ > 0.8 || sum_bQ > 0.8) && v10.Mag() > 10*units::cm && v20.Mag() > 10*units::cm){
 	  std::cout << "Kink: " << i << " " << refl_angles.at(i) << " " << para_angles.at(i) << " " << ave_angles.at(i) << " " << max_numbers.at(i) << " " << angle3 << " " << dQ.at(i)/dx.at(i)*units::cm/50e3 << " " << pu.at(i) << " " << pv.at(i) << " " << pw.at(i) << std::endl;
 	  return max_numbers.at(i);
