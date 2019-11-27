@@ -198,7 +198,7 @@ namespace WCPPID{
 
     WCP::TrackInfoSelection& get_fit_tracks(){return fit_tracks;};
     void clear_fit_tracks();
-    void search_other_tracks(double search_range = 1.0*units::cm);
+    void search_other_tracks(WCP::ToyCTPointCloud& ct_point_cloud,double search_range = 1.5*units::cm, double scaling_2d = 0.8);
     
   protected:
     
