@@ -5,6 +5,7 @@
 #include "WCPData/ToyPointCloud.h"
 #include "WCPSst/GeomDataSource.h"
 #include "WCPData/ToyCTPointCloud.h"
+#include "WCPData/TrackInfo.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
@@ -251,6 +252,8 @@ namespace WCPPID{
     std::vector<double> pt;
     std::vector<double> reduced_chi2;
 
+    WCP::TrackInfoSelection fit_tracks;
+    
     std::map<std::pair<int,int>, std::tuple<double,double,double> > proj_data_u_map;
     std::map<std::pair<int,int>, std::tuple<double,double,double> > proj_data_v_map;
     std::map<std::pair<int,int>, std::tuple<double,double,double> > proj_data_w_map;

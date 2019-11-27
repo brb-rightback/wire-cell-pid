@@ -179,6 +179,10 @@ WCPPID::PR3DCluster::~PR3DCluster(){
     delete point_cloud_steiner_terminal;
   if (graph_steiner!=(WCPPID::MCUGraph*)0)
     delete graph_steiner;
+
+  for (auto it = fit_tracks.begin(); it!=fit_tracks.end(); it++){
+    delete *it;
+  }
 }
 
 
