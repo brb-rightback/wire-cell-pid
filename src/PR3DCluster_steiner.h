@@ -56,6 +56,8 @@ void WCPPID::PR3DCluster::create_steiner_graph(WCP::ToyCTPointCloud& ct_point_cl
 }
 
 void WCPPID::PR3DCluster::recover_steiner_graph(){
+
+  //std::cout << "haha " << graph_steiner << std::endl;
   // holder for more sophisticated algorithm later ...
   if (graph_steiner != (MCUGraph*)0){
     steiner_graph_terminal_indices.clear();

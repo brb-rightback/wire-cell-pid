@@ -686,11 +686,11 @@ int main(int argc, char* argv[])
     if (flag_tgm == 0 && flag_low_energy == 0 && flag_lm ==0){
       if (flag_main_cluster_only){
 	main_cluster->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-	main_cluster->recover_steiner_graph();
+	//	main_cluster->recover_steiner_graph();
       }else{
 	for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
 	  (*it1)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-	  (*it1)->recover_steiner_graph();
+	  //(*it1)->recover_steiner_graph();
 	}
       }
 

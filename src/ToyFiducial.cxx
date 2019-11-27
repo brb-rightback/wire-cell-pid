@@ -866,7 +866,7 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
     
   for (int i=0;i!=fine_tracking_path.size();i++){
     //std::cout << i << " " << refl_angles.at(i) << " " << ave_angles.at(i)  << " " << inside_fiducial_volume(fine_tracking_path.at(i)) << std::endl;
-    if ((refl_angles.at(i) > 25 && ave_angles.at(i) > 12.5 ) && inside_fiducial_volume(fine_tracking_path.at(i))){
+    if ((refl_angles.at(i) > 25.5 && ave_angles.at(i) > 12.5 ) && inside_fiducial_volume(fine_tracking_path.at(i))){
       TVector3 v10(fine_tracking_path.at(i).x - fine_tracking_path.front().x,
 		   fine_tracking_path.at(i).y - fine_tracking_path.front().y,
 		   fine_tracking_path.at(i).z - fine_tracking_path.front().z);
@@ -1085,21 +1085,31 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
   }
   //  std::cout << max_bin << " " << max_sum << std::endl;
   end_L = L.at(max_bin)+0.2*units::cm;
-  int ncount = 0;
-  std::vector<double> vec_x;
-  std::vector<double> vec_y;
+  int ncount = 0;//, ncount_p = 0;
+  std::vector<double> vec_x;//, vec_xp;
+  std::vector<double> vec_y;//, vec_yp;
+
   for (size_t i=0;i!=L.size(); i++){
     if (end_L - L.at(i) < 35*units::cm && end_L - L.at(i) > 3*units::cm){
       vec_x.push_back(end_L-L.at(i));
       vec_y.push_back(dQ_dx.at(i));
       ncount ++;
     }
+
+    // if (end_L - L.at(i) < 20*units::cm){
+    //   vec_xp.push_back(end_L-L.at(i));
+    //   vec_yp.push_back(dQ_dx.at(i));
+    //   ncount_p ++;
+    // }
   }
   
   if (ncount >=5){
     TH1F *h1 = new TH1F("h1","h1",ncount,0,ncount);
     TH1F *h2 = new TH1F("h2","h2",ncount,0,ncount);
     TH1F *h3 = new TH1F("h3","h3",ncount,0,ncount);
+
+    // TH1F *h4 = new TH1F("h4","h4",ncount_p,0,ncount_p);
+    // TH1F *h5 = new TH1F("h5","h5",ncount_p,0,ncount_p);
     
     for (size_t i=0;i!=ncount;i++){
       // std::cout << i << " " << vec_y.at(i) << std::endl;
@@ -1107,16 +1117,24 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
       h2->SetBinContent(i+1,g_muon->Eval((vec_x.at(i))/units::cm));
       h3->SetBinContent(i+1,50e3);
     }
+    // for (size_t i=0;i!=ncount_p;i++){
+    //   h4->SetBinContent(i+1,vec_yp.at(i));
+    //   h5->SetBinContent(i+1,g_muon->Eval((vec_xp.at(i))/units::cm));
+    // }
+    
     double ks1 = h2->KolmogorovTest(h1,"M");
     double ratio1 = h2->GetSum()/(h1->GetSum()+1e-9);
     double ks2 = h3->KolmogorovTest(h1,"M");
     double ratio2 = h3->GetSum()/(h1->GetSum()+1e-9);
-    
+    //double ks3 = h4->KolmogorovTest(h5,"M");
+    //double ratio3 = h4->GetSum()/(h5->GetSum()+1e-9);
     delete h1;
     delete h2;
     delete h3;
+    // delete h4;
+    // delete h5;
     
-    std::cout << "End proton detection: " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << " " << dQ_dx.at(max_bin)/50e3 << " " << dQ_dx.size() - max_bin << std::endl;
+    std::cout << "End proton detection: " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << " " << dQ_dx.at(max_bin)/50e3 << " " << dQ_dx.size() - max_bin << " " << std::endl;
     
     if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > 0.03 && dQ_dx.at(max_bin)/50e3 > 2.5 && (dQ_dx.size() - max_bin <= 3 || ks2 < 0.05 && dQ_dx.size() - max_bin <= 12) ) {
 
