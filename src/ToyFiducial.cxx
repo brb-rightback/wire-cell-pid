@@ -648,6 +648,9 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
       if (flag_pass) {
 	main_cluster->clear_fit_tracks();
 	main_cluster->search_other_tracks();
+
+	std::cout << main_cluster->get_fit_tracks().size() << std::endl;
+	
 	if (!detect_proton(main_cluster, kink_num)) return true;
       }
     }

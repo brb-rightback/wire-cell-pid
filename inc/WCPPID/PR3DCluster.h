@@ -198,7 +198,7 @@ namespace WCPPID{
 
     WCP::TrackInfoSelection& get_fit_tracks(){return fit_tracks;};
     void clear_fit_tracks();
-    void search_other_tracks();
+    void search_other_tracks(double search_range = 1.0*units::cm);
     
   protected:
     
