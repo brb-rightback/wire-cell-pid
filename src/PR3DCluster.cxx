@@ -20,6 +20,7 @@ using namespace WCP;
 #include "PR3DCluster_trajectory_fit.h"
 #include "PR3DCluster_dQ_dx_fit.h"
 #include "PR3DCluster_crawl.h"
+#include "PR3DCluster_pattern_recognition.h"
 
 void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double time, bool flag_dQ_dx_fit_reg){
   fine_tracking_path.clear();
@@ -167,6 +168,13 @@ WCPPID::PR3DCluster::PR3DCluster(int cluster_id)
   // flag_fine_tracking = false;
 }
 
+void WCPPID::PR3DCluster::clear_fit_tracks(){
+  for (auto it = fit_tracks.begin(); it!=fit_tracks.end(); it++){
+    delete *it;
+  }
+  fit_tracks.clear();
+}
+
 WCPPID::PR3DCluster::~PR3DCluster(){
   if (point_cloud!=(ToyPointCloud*)0)
     delete point_cloud;
@@ -180,9 +188,7 @@ WCPPID::PR3DCluster::~PR3DCluster(){
   if (graph_steiner!=(WCPPID::MCUGraph*)0)
     delete graph_steiner;
 
-  for (auto it = fit_tracks.begin(); it!=fit_tracks.end(); it++){
-    delete *it;
-  }
+  clear_fit_tracks();
 }
 
 

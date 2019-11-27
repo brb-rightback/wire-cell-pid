@@ -196,6 +196,9 @@ namespace WCPPID{
     
     WCP::Point do_stm_crawl(WCP::WCPointCloud<double>::WCPoint& first_wcp, WCP::WCPointCloud<double>::WCPoint& last_wcp, int flag_end = 1);
 
+    WCP::TrackInfoSelection& get_fit_tracks(){return fit_tracks;};
+    void clear_fit_tracks();
+    void search_other_tracks();
     
   protected:
     
