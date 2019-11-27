@@ -647,7 +647,7 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
       
       if (flag_pass) {
 	main_cluster->clear_fit_tracks();
-	main_cluster->search_other_tracks(ct_point_cloud);
+	main_cluster->search_other_tracks(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
 
 	std::cout << main_cluster->get_fit_tracks().size() << std::endl;
 	
@@ -779,7 +779,7 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
 
       if (flag_pass) {
 	main_cluster->clear_fit_tracks();
-	main_cluster->search_other_tracks(ct_point_cloud);
+	main_cluster->search_other_tracks(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
 	if (!detect_proton(main_cluster, kink_num)) return true;
       }
     }

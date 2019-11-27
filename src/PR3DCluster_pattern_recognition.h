@@ -1,5 +1,5 @@
 
-void WCPPID::PR3DCluster::search_other_tracks(WCP::ToyCTPointCloud& ct_point_cloud, double search_range, double scaling_2d){
+void WCPPID::PR3DCluster::search_other_tracks(WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double flash_time, double search_range, double scaling_2d){
   if (fit_tracks.size()==0 && fine_tracking_path.size() == 0) return;
     
   if (fit_tracks.size()==0){
@@ -178,6 +178,9 @@ void WCPPID::PR3DCluster::search_other_tracks(WCP::ToyCTPointCloud& ct_point_clo
     }
     int special_B = -1;
     double min_dis = 0;
+    
+    int number_not_faked = 0;
+    
     for (size_t j=0;j!=ncounts[i];j++){
       double dis = sqrt(pow(cloud.pts[sep_clusters[i].at(j)].x - cloud.pts[special_A].x,2)
 			+ pow(cloud.pts[sep_clusters[i].at(j)].y - cloud.pts[special_A].y,2)
@@ -188,38 +191,59 @@ void WCPPID::PR3DCluster::search_other_tracks(WCP::ToyCTPointCloud& ct_point_clo
       }
 
       // also judge whether this track is fake ...
-      
+      WCP::Point p(cloud.pts[sep_clusters[i].at(j)].x, cloud.pts[sep_clusters[i].at(j)].y, cloud.pts[sep_clusters[i].at(j)].z);
+      double min_dis_u = 1e9, min_dis_v = 1e9, min_dis_w = 1e9;
+      for (size_t k=0;k!=fit_tracks.size();k++){
+	std::tuple<double, double, double> closest_2d_dis = fit_tracks.at(k)->get_closest_2d_dis(p);
+	if (std::get<0>(closest_2d_dis) < min_dis_u) min_dis_u = std::get<0>(closest_2d_dis);
+	if (std::get<1>(closest_2d_dis) < min_dis_v) min_dis_v = std::get<1>(closest_2d_dis);
+	if (std::get<2>(closest_2d_dis) < min_dis_w) min_dis_w = std::get<2>(closest_2d_dis);
+      }
+      int flag_num = 0;
+      if (min_dis_u > scaling_2d * search_range   && (!ct_point_cloud.get_closest_dead_chs(p, 0))) flag_num ++;
+      if (min_dis_v > scaling_2d * search_range   && (!ct_point_cloud.get_closest_dead_chs(p, 1))) flag_num ++;
+      if (min_dis_w > scaling_2d * search_range   && (!ct_point_cloud.get_closest_dead_chs(p, 2))) flag_num ++;
+      // std::cout << flag_num << " " << min_dis_u/units::cm << " " << min_dis_v/units::cm << " " << min_dis_w/units::cm << std::endl;
+      if (flag_num>=2) number_not_faked ++;
     }
-
+    //    std::cout << number_not_faked << std::endl;
+    if (number_not_faked < 4 && number_not_faked < 0.15 * ncounts[i]) continue;
 
     
     std::cout << special_A << " " << special_B << " " << min_dis/units::cm << std::endl;
-    std::cout << i << " " << ncounts[i] << " " << flag_tagged[sep_clusters[i].front()] << " " << cloud.pts[sep_clusters[i].front()].x/units::cm << " " <<  cloud.pts[sep_clusters[i].front()].y/units::cm << " " <<  cloud.pts[sep_clusters[i].front()].z/units::cm << std::endl;
-
+    //std::cout << i << " " << ncounts[i] << " " << flag_tagged[sep_clusters[i].front()] << " " << cloud.pts[sep_clusters[i].front()].x/units::cm << " " <<  cloud.pts[sep_clusters[i].front()].y/units::cm << " " <<  cloud.pts[sep_clusters[i].front()].z/units::cm << std::endl;
     
     
     saved_clusters.push_back(i);
+    saved_cluster_points.at(i) = std::make_pair(special_A, special_B);
   }
   
   //    std::cout << num <<  " " << component.size() << " " << map_connection.size() << std::endl;
   // test
-  for (size_t k = 0;k!=ncounts[2];k++){
-    int i = sep_clusters[2].at(k);
-    Point p(cloud.pts[i].x, cloud.pts[i].y, cloud.pts[i].z);
-    double min_dis_u = 1e9, min_dis_v = 1e9, min_dis_w = 1e9, min_dis = 1e9;
-    for (size_t j=0;j!=fit_tracks.size();j++){
-      std::pair<double, WCP::Point> closest_dis_point = fit_tracks.at(j)->get_closest_point(p);
-      std::tuple<double, double, double> closest_2d_dis = fit_tracks.at(j)->get_closest_2d_dis(p);
-      if (closest_dis_point.first < min_dis){
-  	min_dis = closest_dis_point.first;
-      }
-      if (std::get<0>(closest_2d_dis) < min_dis_u) min_dis_u = std::get<0>(closest_2d_dis);
-      if (std::get<1>(closest_2d_dis) < min_dis_v) min_dis_v = std::get<1>(closest_2d_dis);
-      if (std::get<2>(closest_2d_dis) < min_dis_w) min_dis_w = std::get<2>(closest_2d_dis);
-    }
+  /* for (size_t k = 0;k!=ncounts[2];k++){ */
+  /*   int i = sep_clusters[2].at(k); */
+  /*   Point p(cloud.pts[i].x, cloud.pts[i].y, cloud.pts[i].z); */
+  /*   double min_dis_u = 1e9, min_dis_v = 1e9, min_dis_w = 1e9, min_dis = 1e9; */
+  /*   for (size_t j=0;j!=fit_tracks.size();j++){ */
+  /*     std::pair<double, WCP::Point> closest_dis_point = fit_tracks.at(j)->get_closest_point(p); */
+  /*     std::tuple<double, double, double> closest_2d_dis = fit_tracks.at(j)->get_closest_2d_dis(p); */
+  /*     if (closest_dis_point.first < min_dis){ */
+  /* 	min_dis = closest_dis_point.first; */
+  /*     } */
+  /*     if (std::get<0>(closest_2d_dis) < min_dis_u) min_dis_u = std::get<0>(closest_2d_dis); */
+  /*     if (std::get<1>(closest_2d_dis) < min_dis_v) min_dis_v = std::get<1>(closest_2d_dis); */
+  /*     if (std::get<2>(closest_2d_dis) < min_dis_w) min_dis_w = std::get<2>(closest_2d_dis); */
+  /*   } */
     
-    std::cout << i << " " << flag_tagged[i] << " " << min_dis/units::cm << " " << min_dis_u/units::cm << " " << min_dis_v/units::cm << " " << min_dis_w/units::cm << " " << ct_point_cloud.get_closest_dead_chs(p,0) << " " <<
-      ct_point_cloud.get_closest_dead_chs(p,1) << " " << ct_point_cloud.get_closest_dead_chs(p,2) << std::endl;
-  }
+  /*   std::cout << i << " " << flag_tagged[i] << " " << min_dis/units::cm << " " << min_dis_u/units::cm << " " << min_dis_v/units::cm << " " << min_dis_w/units::cm << " " << ct_point_cloud.get_closest_dead_chs(p,0) << " " << */
+  /*     ct_point_cloud.get_closest_dead_chs(p,1) << " " << ct_point_cloud.get_closest_dead_chs(p,2) << std::endl; */
+  /* } */
+
+
+  // fit the trajectory and dQ/dx ...
+  //  main_cluster->dijkstra_shortest_paths(wcps.first,2); 
+  //  main_cluster->cal_shortest_path(wcps.second,2);
+  //  main_cluster->collect_charge_trajectory(ct_point_cloud);
+  //  main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
 }
 
