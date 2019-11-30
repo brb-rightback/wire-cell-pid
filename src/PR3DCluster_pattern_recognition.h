@@ -241,9 +241,25 @@ void WCPPID::PR3DCluster::search_other_tracks(WCP::ToyCTPointCloud& ct_point_clo
 
 
   // fit the trajectory and dQ/dx ...
-  //  main_cluster->dijkstra_shortest_paths(wcps.first,2); 
-  //  main_cluster->cal_shortest_path(wcps.second,2);
-  //  main_cluster->collect_charge_trajectory(ct_point_cloud);
-  //  main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+  for (auto it = saved_clusters.begin(); it!= saved_clusters.end(); it++){
+    
+    dijkstra_shortest_paths(cloud.pts[(saved_cluster_points.at(*it)).first],2); 
+    cal_shortest_path(cloud.pts[(saved_cluster_points.at(*it)).second],2);
+    collect_charge_trajectory(ct_point_cloud);
+    do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+    WCP::TrackInfo *track = new WCP::TrackInfo(fine_tracking_path, dQ, dx, pu, pv, pw, pt, reduced_chi2);
+    fit_tracks.push_back(track);
+  }
+
+  // recover the first track ...
+  fine_tracking_path = fit_tracks.front()->get_tracking_path();
+  dQ = fit_tracks.front()->get_dQ();
+  dx = fit_tracks.front()->get_dx();
+  pu = fit_tracks.front()->get_pu();
+  pv = fit_tracks.front()->get_pv();
+  pw = fit_tracks.front()->get_pw();
+  pt = fit_tracks.front()->get_pt();
+  reduced_chi2 = fit_tracks.front()->get_reduced_chi2();
+  
 }
 

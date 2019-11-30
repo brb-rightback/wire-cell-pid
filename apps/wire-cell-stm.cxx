@@ -881,7 +881,8 @@ int main(int argc, char* argv[])
       std::vector<double>& tpw = cluster->get_pw();
       std::vector<double>& tpt = cluster->get_pt();
       std::vector<double>& Vreduced_chi2 = cluster->get_reduced_chi2();
-          
+
+           
       if (pts.size()!=dQ.size() || pts.size()==0) continue;
       
       for (size_t i=0; i!=pts.size(); i++){
