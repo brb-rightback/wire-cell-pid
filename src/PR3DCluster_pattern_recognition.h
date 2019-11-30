@@ -247,8 +247,11 @@ void WCPPID::PR3DCluster::search_other_tracks(WCP::ToyCTPointCloud& ct_point_clo
     cal_shortest_path(cloud.pts[(saved_cluster_points.at(*it)).second],2);
     collect_charge_trajectory(ct_point_cloud);
     do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
-    WCP::TrackInfo *track = new WCP::TrackInfo(fine_tracking_path, dQ, dx, pu, pv, pw, pt, reduced_chi2);
-    fit_tracks.push_back(track);
+    if (dQ.size() >1){
+      WCP::TrackInfo *track = new WCP::TrackInfo(fine_tracking_path, dQ, dx, pu, pv, pw, pt, reduced_chi2);
+      fit_tracks.push_back(track);
+      //   std::cout << track->get_track_length()/units::cm << " " << track->get_medium_dQ_dx()*units::cm << " " << track->get_track_length_threshold()/units::cm << std::endl;
+    }
   }
 
   // recover the first track ...
