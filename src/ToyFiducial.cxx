@@ -925,7 +925,7 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
     
   for (int i=0;i!=fine_tracking_path.size();i++){
     
-    //    std::cout << i << " " << refl_angles.at(i) << " " << ave_angles.at(i)  << " " << inside_fiducial_volume(fine_tracking_path.at(i)) <<  std::endl;
+    // std::cout << i << " " << refl_angles.at(i) << " " << ave_angles.at(i)  << " " << inside_fiducial_volume(fine_tracking_path.at(i)) <<  std::endl;
     // if ((refl_angles.at(i) > 25.5 && ave_angles.at(i) > 12.5 ) && inside_fiducial_volume(fine_tracking_path.at(i))){
      if ((refl_angles.at(i) > 20 && ave_angles.at(i) > 10 ) && inside_fiducial_volume(fine_tracking_path.at(i))){
       TVector3 v10(fine_tracking_path.at(i).x - fine_tracking_path.front().x,
@@ -935,13 +935,23 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
 		   fine_tracking_path.back().y - fine_tracking_path.at(i).y,
 		   fine_tracking_path.back().z - fine_tracking_path.at(i).z);
       double angle3 = v10.Angle(v20)/3.1415926*180.;
-
-      // std::cout << angle3 << " " << v10.Mag()/units::cm << " " << v20.Mag()/units::cm << std::endl;
+      double angle3p = angle3;
+      if (i+1 !=fine_tracking_path.size()){
+	TVector3 v11(fine_tracking_path.at(i+1).x - fine_tracking_path.front().x,
+		     fine_tracking_path.at(i+1).y - fine_tracking_path.front().y,
+		     fine_tracking_path.at(i+1).z - fine_tracking_path.front().z);
+	TVector3 v21(fine_tracking_path.back().x - fine_tracking_path.at(i+1).x,
+		     fine_tracking_path.back().y - fine_tracking_path.at(i+1).y,
+		     fine_tracking_path.back().z - fine_tracking_path.at(i+1).z);
+	angle3p = v11.Angle(v21)/3.1415926*180.;
+      }
+      
+      //   std::cout << angle3 << " " << angle3p << " " << v10.Mag()/units::cm << " " << v20.Mag()/units::cm << std::endl;
       
       if (angle3 < 20 && ave_angles.at(i) < 20 || angle3 < 12.5 && inside_dead_region(fine_tracking_path.at(i)) || angle3 < 7.5 || i<=4) continue;
 
       if (angle3 > 30 && (refl_angles.at(i) > 25.5 && ave_angles.at(i) > 12.5) ||
-	  angle3 > 40 && v10.Mag() > 5*units::cm && v20.Mag() > 5*units::cm){
+	  angle3 > 40 && angle3 > angle3p && v10.Mag() > 5*units::cm && v20.Mag() > 5*units::cm){
 	// shorted Y ...
 	if (pw.at(i) > 7135-5 && pw.at(i)< 7264+5){
 	  bool flag_bad = false;
@@ -1261,7 +1271,7 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
     double track_medium_dQ_dx = main_cluster->get_fit_tracks().front()->get_medium_dQ_dx()*units::cm/50000.;
     std::cout << "End proton detection1: " << track_medium_dQ_dx << " " << dQ_dx.at(max_bin)/50e3 << " " << ks3 << " " << ratio3 << std::endl;
     if (track_medium_dQ_dx < 1.0 && dQ_dx.at(max_bin)/50e3 > 3.5){
-      if ((ks3 > 0.06 && ratio3 > 1.1 || ks3 > 0.1 || ratio3 > 1.3)) return true;
+      if ((ks3 > 0.06 && ratio3 > 1.1 && ks1 > 0.045 || ks3 > 0.1 && ks2 < 0.19 || ratio3 > 1.3)) return true;
       if (ks2 < 0.045 && ks3 > 0.03 || dQ_dx.at(max_bin)/50e3 > 4.3 && ks3 > 0.03) return true;
     }else if (track_medium_dQ_dx < 1 && dQ_dx.at(max_bin)/50e3 > 3.0){
       //   if (ks3 > 0.3 && fabs(ratio3-1)>0.6 && ks1 > 0.05) return true;
@@ -1413,6 +1423,8 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
       res_length > 6 * units::cm && ave_res_dQ_dx > 92500 ||
       res_length > 6 * units::cm && ave_res_dQ_dx > 72500 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.05)
     return false;
+
+
   
   if (!flag_strong_check){
     if (ks1 - ks2 < -0.02 && (ks2 > 0.09 && fabs(ratio2-1) >0.1 || ratio2 > 1.5 || ks2 > 0.2)) return true;
