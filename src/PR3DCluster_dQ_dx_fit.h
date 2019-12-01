@@ -398,9 +398,15 @@ void WCPPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WCP::GeomWire*, 
       double length = sqrt(pow(fine_tracking_path.at(i+1).x-fine_tracking_path.at(i).x,2)
 			   +pow(fine_tracking_path.at(i+1).y-fine_tracking_path.at(i).y,2)
 			   +pow(fine_tracking_path.at(i+1).z-fine_tracking_path.at(i).z,2) );
-      prev_rec_pos.x = fine_tracking_path.at(i).x - (fine_tracking_path.at(i+1).x-fine_tracking_path.at(i).x)/length * dis_end_point_ext;
-      prev_rec_pos.y = fine_tracking_path.at(i).y - (fine_tracking_path.at(i+1).y-fine_tracking_path.at(i).y)/length * dis_end_point_ext;
-      prev_rec_pos.z = fine_tracking_path.at(i).z - (fine_tracking_path.at(i+1).z-fine_tracking_path.at(i).z)/length * dis_end_point_ext;
+      if (length ==0){
+	prev_rec_pos.x = fine_tracking_path.at(i).x;
+	prev_rec_pos.y = fine_tracking_path.at(i).y;
+	prev_rec_pos.z = fine_tracking_path.at(i).z;
+      }else{
+	prev_rec_pos.x = fine_tracking_path.at(i).x - (fine_tracking_path.at(i+1).x-fine_tracking_path.at(i).x)/length * dis_end_point_ext;
+	prev_rec_pos.y = fine_tracking_path.at(i).y - (fine_tracking_path.at(i+1).y-fine_tracking_path.at(i).y)/length * dis_end_point_ext;
+	prev_rec_pos.z = fine_tracking_path.at(i).z - (fine_tracking_path.at(i+1).z-fine_tracking_path.at(i).z)/length * dis_end_point_ext;
+      }
     }else if (i==n_3D_pos-1){
       prev_rec_pos.x = (fine_tracking_path.at(i).x+fine_tracking_path.at(i-1).x)/2.;
       prev_rec_pos.y = (fine_tracking_path.at(i).y+fine_tracking_path.at(i-1).y)/2.;
@@ -408,9 +414,15 @@ void WCPPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WCP::GeomWire*, 
       double length = sqrt(pow(fine_tracking_path.at(i-1).x-fine_tracking_path.at(i).x,2)
 			   +pow(fine_tracking_path.at(i-1).y-fine_tracking_path.at(i).y,2)
 			   +pow(fine_tracking_path.at(i-1).z-fine_tracking_path.at(i).z,2) );
-      next_rec_pos.x = fine_tracking_path.at(i).x - (fine_tracking_path.at(i-1).x-fine_tracking_path.at(i).x)/length * dis_end_point_ext;
-      next_rec_pos.y = fine_tracking_path.at(i).y - (fine_tracking_path.at(i-1).y-fine_tracking_path.at(i).y)/length * dis_end_point_ext;
-      next_rec_pos.z = fine_tracking_path.at(i).z - (fine_tracking_path.at(i-1).z-fine_tracking_path.at(i).z)/length * dis_end_point_ext;
+      if (length ==0){
+	next_rec_pos.x = fine_tracking_path.at(i).x;
+	next_rec_pos.y = fine_tracking_path.at(i).y;
+	next_rec_pos.z = fine_tracking_path.at(i).z;
+      }else{
+	next_rec_pos.x = fine_tracking_path.at(i).x - (fine_tracking_path.at(i-1).x-fine_tracking_path.at(i).x)/length * dis_end_point_ext;
+	next_rec_pos.y = fine_tracking_path.at(i).y - (fine_tracking_path.at(i-1).y-fine_tracking_path.at(i).y)/length * dis_end_point_ext;
+	next_rec_pos.z = fine_tracking_path.at(i).z - (fine_tracking_path.at(i-1).z-fine_tracking_path.at(i).z)/length * dis_end_point_ext;
+      }
       
     }else{
       prev_rec_pos.x = (fine_tracking_path.at(i).x+fine_tracking_path.at(i-1).x)/2.;
@@ -426,6 +438,8 @@ void WCPPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WCP::GeomWire*, 
     /* curr_rec_pos.x = (curr_rec_pos.x + 0.6*units::cm)/1.098 * 1.101 - 1 * 0.1101*units::cm ; */
     /* prev_rec_pos.x = (prev_rec_pos.x + 0.6*units::cm)/1.098 * 1.101 - 1 * 0.1101*units::cm ; */
     /* next_rec_pos.x = (next_rec_pos.x + 0.6*units::cm)/1.098 * 1.101 - 1 * 0.1101*units::cm ; */
+
+    //    std::cout << curr_rec_pos << " " << prev_rec_pos << " " << next_rec_pos << std::endl;
     
     dx.push_back(sqrt(pow(curr_rec_pos.x-prev_rec_pos.x,2)+pow(curr_rec_pos.y-prev_rec_pos.y,2)+pow(curr_rec_pos.z-prev_rec_pos.z,2))
 		 +sqrt(pow(curr_rec_pos.x-next_rec_pos.x,2)+pow(curr_rec_pos.y-next_rec_pos.y,2)+pow(curr_rec_pos.z-next_rec_pos.z,2)));

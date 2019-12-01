@@ -181,23 +181,32 @@ bool WCPPID::ToyFiducial::check_other_tracks(WCPPID::PR3DCluster* main_cluster, 
   
   TVector3 drift_dir(1,0,0);
   for (size_t i=1; i!=tracks.size();i++){
-    std::cout << tracks.at(i)->get_track_length()/units::cm << " " << tracks.at(i)->get_medium_dQ_dx()*units::cm/50000. << " " << tracks.at(i)->get_track_length_threshold()/units::cm << " " << inside_fiducial_volume(tracks.at(i)->get_tracking_path().front(),offset_x) << " " << tracks.at(i)->get_tracking_path().front() << " " << tracks.at(i)->get_tracking_path().back() << std::endl;
+    double track_length1 = tracks.at(i)->get_track_length()/units::cm;
+    double track_medium_dQ_dx = tracks.at(i)->get_medium_dQ_dx()*units::cm/50000.;
+    double track_length_threshold = tracks.at(i)->get_track_length_threshold()/units::cm ; 
     TVector3 dir1(tracks.at(i)->get_tracking_path().front().x - tracks.at(i)->get_tracking_path().back().x,
 		  tracks.at(i)->get_tracking_path().front().y - tracks.at(i)->get_tracking_path().back().y,
 		  tracks.at(i)->get_tracking_path().front().z - tracks.at(i)->get_tracking_path().back().z);
 
-    if (tracks.at(i)->get_track_length() > 5*units::cm && tracks.at(i)->get_medium_dQ_dx()*units::cm/50000. > 0.4) {
+    std::cout << track_length1 << " " << track_medium_dQ_dx << " " << track_length_threshold << " " << inside_fiducial_volume(tracks.at(i)->get_tracking_path().front(),offset_x) << " " << tracks.at(i)->get_tracking_path().front() << " " << tracks.at(i)->get_tracking_path().back() << std::endl;
+    
+    // std::cout << dir1.Mag()/units::cm << " " << tracks.at(i)->get_track_length(2)/units::cm << std::endl;
+    
+    if (track_length1 > 5 && track_medium_dQ_dx > 0.4) {
       ntracks ++;
     }
     
     if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<7.5 ) continue;
+
+    if (track_length1 > 5 && track_medium_dQ_dx > 0.9 && dir1.Mag()/tracks.at(i)->get_track_length(2)>0.99)
+      return true;
     
-    if (tracks.at(i)->get_medium_dQ_dx()*units::cm > 75000 && tracks.at(i)->get_track_length()>3*units::cm ||
-	tracks.at(i)->get_track_length_threshold() > 5*units::cm){
-      if (tracks.at(i)->get_track_length() < 5*units::cm && tracks.at(i)->get_medium_dQ_dx()*units::cm < 100000) continue;
-      else if (tracks.at(i)->get_track_length() < 25*units::cm && tracks.at(i)->get_medium_dQ_dx()*units::cm < 50000) continue;
-      else if (tracks.at(i)->get_track_length() < 10*units::cm && tracks.at(i)->get_medium_dQ_dx()*units::cm < 85000) continue;
-      else if (tracks.at(i)->get_track_length() < 3.5*units::cm && tracks.at(i)->get_medium_dQ_dx()*units::cm < 110000) continue;
+    if (track_medium_dQ_dx > 1.5 &&track_length1>3 ||
+	track_length_threshold > 5){
+      if (track_length1 < 5 && track_medium_dQ_dx < 2) continue;
+      else if (track_length1 < 25 && track_medium_dQ_dx < 1) continue;
+      else if (track_length1 < 10  && track_medium_dQ_dx < 85/50.) continue;
+      else if (track_length1 < 3.5 && track_medium_dQ_dx < 110/50.) continue;
       else return true;
     }
   }
@@ -915,8 +924,10 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
   }
     
   for (int i=0;i!=fine_tracking_path.size();i++){
-    //std::cout << i << " " << refl_angles.at(i) << " " << ave_angles.at(i)  << " " << inside_fiducial_volume(fine_tracking_path.at(i)) << std::endl;
-    if ((refl_angles.at(i) > 25.5 && ave_angles.at(i) > 12.5 ) && inside_fiducial_volume(fine_tracking_path.at(i))){
+    
+    //    std::cout << i << " " << refl_angles.at(i) << " " << ave_angles.at(i)  << " " << inside_fiducial_volume(fine_tracking_path.at(i)) <<  std::endl;
+    // if ((refl_angles.at(i) > 25.5 && ave_angles.at(i) > 12.5 ) && inside_fiducial_volume(fine_tracking_path.at(i))){
+     if ((refl_angles.at(i) > 20 && ave_angles.at(i) > 10 ) && inside_fiducial_volume(fine_tracking_path.at(i))){
       TVector3 v10(fine_tracking_path.at(i).x - fine_tracking_path.front().x,
 		   fine_tracking_path.at(i).y - fine_tracking_path.front().y,
 		   fine_tracking_path.at(i).z - fine_tracking_path.front().z);
@@ -925,13 +936,14 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
 		   fine_tracking_path.back().z - fine_tracking_path.at(i).z);
       double angle3 = v10.Angle(v20)/3.1415926*180.;
 
-      // std::cout << angle3 << std::endl;
+      // std::cout << angle3 << " " << v10.Mag()/units::cm << " " << v20.Mag()/units::cm << std::endl;
       
       if (angle3 < 20 && ave_angles.at(i) < 20 || angle3 < 12.5 && inside_dead_region(fine_tracking_path.at(i)) || angle3 < 7.5 || i<=4) continue;
-      if (angle3 > 30){
 
+      if (angle3 > 30 && (refl_angles.at(i) > 25.5 && ave_angles.at(i) > 12.5) ||
+	  angle3 > 40 && v10.Mag() > 5*units::cm && v20.Mag() > 5*units::cm){
 	// shorted Y ...
-	if (pw.at(i) > 7135 && pw.at(i)< 7264){
+	if (pw.at(i) > 7135-5 && pw.at(i)< 7264+5){
 	  bool flag_bad = false;
 	  for (int k=-1;k!=2;k++){
 	    auto it1 = ch_mcell_set_map.find(std::round(pv.at(i)+k));
@@ -940,7 +952,8 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
 	      break;
 	    }
 	  }
-	  if (flag_bad) continue;
+	  if (flag_bad && pw.at(i) > 7135 &&  pw.at(i) < 7264) continue;
+	  else if (refl_angles.at(i) < 27 || ave_angles.at(i) < 15) continue;
 	}
 	
 	double sum_fQ = 0;
@@ -960,7 +973,7 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
 	sum_fQ /= (sum_fx/units::cm+1e-9)*50e3;
 	sum_bQ /= (sum_bx/units::cm+1e-9)*50e3;
 	
-	//	std::cout << "Test: " << angle3 << " " << sum_fQ << " " << sum_bQ << std::endl;
+	//std::cout << "Test: " << angle3 << " " << sum_fQ << " " << sum_bQ << std::endl;
 	if (sum_fQ > 0.6 && sum_bQ > 0.6 || sum_fQ + sum_bQ > 1.4 && (sum_fQ > 0.8 || sum_bQ > 0.8) && v10.Mag() > 10*units::cm && v20.Mag() > 10*units::cm){
 	  //std::cout << i << " " << max_numbers.at(i) << " " << dQ.size() << std::endl;
 	  if (i+2<dQ.size()){
@@ -969,6 +982,8 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
 	  }
 	}
       }
+
+      
     }
   }
 
@@ -1086,17 +1101,34 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
     double dis = sqrt(pow(end_p.x - main_cluster->get_fit_tracks().at(i)->get_tracking_path().front().x,2) +
 		      pow(end_p.y - main_cluster->get_fit_tracks().at(i)->get_tracking_path().front().y,2) +
 		      pow(end_p.z - main_cluster->get_fit_tracks().at(i)->get_tracking_path().front().z,2) );
+    
     // protection against Michel electron
     if (dis < 1*units::cm && main_cluster->get_fit_tracks().at(i)->get_track_length()>4*units::cm && main_cluster->get_fit_tracks().at(i)->get_medium_dQ_dx()*units::cm/50000 > 0.5 )
       return false;
+
+    
+    
     if (dis > 10*units::cm && main_cluster->get_fit_tracks().at(i)->get_track_length() > 4*units::cm){
       TVector3 p2(main_cluster->get_fit_tracks().at(i)->get_tracking_path().back().x - main_cluster->get_fit_tracks().at(i)->get_tracking_path().front().x,
 		  main_cluster->get_fit_tracks().at(i)->get_tracking_path().back().y - main_cluster->get_fit_tracks().at(i)->get_tracking_path().front().y,
 		  main_cluster->get_fit_tracks().at(i)->get_tracking_path().back().z - main_cluster->get_fit_tracks().at(i)->get_tracking_path().front().z);
-      //std::cout <<  << std::endl;
+      std::pair<double, WCP::Point> tp1 = main_cluster->get_fit_tracks().at(0)->get_closest_point(main_cluster->get_fit_tracks().at(i)->get_tracking_path().back());
+      std::pair<double, WCP::Point> tp2 = main_cluster->get_fit_tracks().at(0)->get_closest_point(main_cluster->get_fit_tracks().at(i)->get_tracking_path().front());
+      TVector3 p3;
+      if (pow(end_p.x - tp1.second.x,2) + pow(end_p.y - tp1.second.y,2) + pow(end_p.z - tp1.second.z,2) < pow(end_p.x - tp2.second.x,2) + pow(end_p.y - tp2.second.y,2) + pow(end_p.z - tp2.second.z,2)){
+	p3.SetXYZ(tp2.second.x-tp1.second.x,tp2.second.y-tp1.second.y,tp2.second.z-tp1.second.z);
+      }else{
+	p3.SetXYZ(tp1.second.x-tp2.second.x,tp1.second.y-tp2.second.y,tp1.second.z-tp2.second.z);
+      }
+
+      
+      //  
       // judge direction, hack code ...
-      if (p2.Angle(p1)/3.1415926*180. < 20 && main_cluster->get_fit_tracks().at(i)->get_medium_dQ_dx()*units::cm/50000 > 0.8) return true;
-		  //      std::cout << dis/units::cm << " " << main_cluster->get_fit_tracks().at(i)->get_track_length()/units::cm << std::endl;
+      if ((p2.Angle(p1)/3.1415926*180. < 20 || p3.Angle(p1)/3.1415926*180. < 15 && p3.Mag() > 4*units::cm && p2.Angle(p1)/3.1415926*180. < 35)&& main_cluster->get_fit_tracks().at(i)->get_medium_dQ_dx()*units::cm/50000 > 0.8) {
+	std::cout << "Delta Ray Dir: " << p2.Angle(p1)/3.1415926*180. << " " << p3.Angle(p1)/3.1415926*180. << " " << p3.Mag()/units::cm << " " << dis/units::cm << " " << main_cluster->get_fit_tracks().at(i)->get_track_length()/units::cm << std::endl;
+	return true;
+      }
+		  //      std::cout <<  << std::endl;
     }
   }
   
@@ -1371,7 +1403,7 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
     return false;
   
   if (!flag_strong_check){
-    if (ks1 - ks2 < -0.02 && (ks2 > 0.09 || ratio2 > 1.5)) return true;
+    if (ks1 - ks2 < -0.02 && (ks2 > 0.09 && fabs(ratio2-1) >0.1 || ratio2 > 1.5 || ks2 > 0.2)) return true;
     if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0) return true;
   }else{
     if (ks1 - ks2 < -0.02 && (ks2 > 0.09 || ratio2 > 1.5) && ks1 < 0.05 && fabs(ratio1-1)<0.1) return true;
