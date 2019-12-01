@@ -1200,9 +1200,9 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
   }
   //  std::cout << max_bin << " " << max_sum << std::endl;
   end_L = L.at(max_bin)+0.2*units::cm;
-  int ncount = 0;//, ncount_p = 0;
-  std::vector<double> vec_x;//, vec_xp;
-  std::vector<double> vec_y;//, vec_yp;
+  int ncount = 0, ncount_p = 0;
+  std::vector<double> vec_x, vec_xp;
+  std::vector<double> vec_y, vec_yp;
 
   for (size_t i=0;i!=L.size(); i++){
     if (end_L - L.at(i) < 35*units::cm && end_L - L.at(i) > 3*units::cm){
@@ -1211,11 +1211,11 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
       ncount ++;
     }
 
-    // if (end_L - L.at(i) < 20*units::cm){
-    //   vec_xp.push_back(end_L-L.at(i));
-    //   vec_yp.push_back(dQ_dx.at(i));
-    //   ncount_p ++;
-    // }
+    if (end_L - L.at(i) < 20*units::cm){
+      vec_xp.push_back(end_L-L.at(i));
+      vec_yp.push_back(dQ_dx.at(i));
+      ncount_p ++;
+    }
   }
   
   if (ncount >=5){
@@ -1223,8 +1223,8 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
     TH1F *h2 = new TH1F("h2","h2",ncount,0,ncount);
     TH1F *h3 = new TH1F("h3","h3",ncount,0,ncount);
 
-    // TH1F *h4 = new TH1F("h4","h4",ncount_p,0,ncount_p);
-    // TH1F *h5 = new TH1F("h5","h5",ncount_p,0,ncount_p);
+    TH1F *h4 = new TH1F("h4","h4",ncount_p,0,ncount_p);
+    TH1F *h5 = new TH1F("h5","h5",ncount_p,0,ncount_p);
     
     for (size_t i=0;i!=ncount;i++){
       // std::cout << i << " " << vec_y.at(i) << std::endl;
@@ -1232,31 +1232,43 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
       h2->SetBinContent(i+1,g_muon->Eval((vec_x.at(i))/units::cm));
       h3->SetBinContent(i+1,50e3);
     }
-    // for (size_t i=0;i!=ncount_p;i++){
-    //   h4->SetBinContent(i+1,vec_yp.at(i));
-    //   h5->SetBinContent(i+1,g_muon->Eval((vec_xp.at(i))/units::cm));
-    // }
+    for (size_t i=0;i!=ncount_p;i++){
+      h4->SetBinContent(i+1,vec_yp.at(i));
+      h5->SetBinContent(i+1,g_muon->Eval((vec_xp.at(i))/units::cm));
+    }
     
     double ks1 = h2->KolmogorovTest(h1,"M");
     double ratio1 = h2->GetSum()/(h1->GetSum()+1e-9);
     double ks2 = h3->KolmogorovTest(h1,"M");
     double ratio2 = h3->GetSum()/(h1->GetSum()+1e-9);
-    //double ks3 = h4->KolmogorovTest(h5,"M");
-    //double ratio3 = h4->GetSum()/(h5->GetSum()+1e-9);
+    double ks3 = h4->KolmogorovTest(h5,"M");
+    double ratio3 = h4->GetSum()/(h5->GetSum()+1e-9);
     delete h1;
     delete h2;
     delete h3;
-    // delete h4;
-    // delete h5;
+    delete h4;
+    delete h5;
     
     std::cout << "End proton detection: " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << " " << dQ_dx.at(max_bin)/50e3 << " " << dQ_dx.size() - max_bin << " " << std::endl;
-    
-    if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > 0.03 && dQ_dx.at(max_bin)/50e3 > 2.5 && (dQ_dx.size() - max_bin <= 3 || ks2 < 0.05 && dQ_dx.size() - max_bin <= 12) ) {
 
-      if (dQ_dx.size()-max_bin<=1 &&  (dQ_dx.at(max_bin)/50e3 < 3.0 && (ks1 < 0.06 || ks1<0.065 && ks2>0.04) || ks1<0.035 && dQ_dx.at(max_bin)/50e3 < 4.0 )) return false;
-
-      return true;
+    if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > 0.02 && dQ_dx.at(max_bin)/50e3 > 2.3 && (dQ_dx.size() - max_bin <= 3 || ks2 < 0.05 && dQ_dx.size() - max_bin <= 12) ) {
+      if (dQ_dx.size()-max_bin<=1 && dQ_dx.at(max_bin)/50e3 > 2.5 && ks2 < 0.035 && fabs(ratio2-1)<0.1 ) return true;
+      if (dQ_dx.size()-max_bin<=1 &&  (dQ_dx.at(max_bin)/50e3 < 3.0 && (ks1 < 0.06 && (ks2 > 0.03  ) || ks1<0.065 && ks2>0.04) || ks1<0.035 && dQ_dx.at(max_bin)/50e3 < 4.0 )) return false;
+      if (ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > 0.027)
+	return true;
     }
+    // looks like a proton with very high dQ_dx
+    double track_medium_dQ_dx = main_cluster->get_fit_tracks().front()->get_medium_dQ_dx()*units::cm/50000.;
+    std::cout << "End proton detection1: " << track_medium_dQ_dx << " " << dQ_dx.at(max_bin)/50e3 << " " << ks3 << " " << ratio3 << std::endl;
+    if (track_medium_dQ_dx < 1.0 && dQ_dx.at(max_bin)/50e3 > 3.5){
+      if ((ks3 > 0.06 && ratio3 > 1.1 || ks3 > 0.1 || ratio3 > 1.3)) return true;
+      if (ks2 < 0.045 && ks3 > 0.03 || dQ_dx.at(max_bin)/50e3 > 4.3 && ks3 > 0.03) return true;
+    }else if (track_medium_dQ_dx < 1 && dQ_dx.at(max_bin)/50e3 > 3.0){
+      //   if (ks3 > 0.3 && fabs(ratio3-1)>0.6 && ks1 > 0.05) return true;
+      if (ks3 > 0.12  && ks1 > 0.03) return true;
+    }
+      
+    //    
   }
   
   return false;
