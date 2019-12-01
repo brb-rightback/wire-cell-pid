@@ -206,16 +206,16 @@ void WCPPID::PR3DCluster::search_other_tracks(WCP::ToyCTPointCloud& ct_point_clo
       if (min_dis_v > scaling_2d * search_range   && (!ct_point_cloud.get_closest_dead_chs(p, 1))) flag_num ++;
       if (min_dis_w > scaling_2d * search_range   && (!ct_point_cloud.get_closest_dead_chs(p, 2))) flag_num ++;
 
-      // std::cout << flag_num << " " << min_dis_u/units::cm << " " << min_dis_v/units::cm << " " << min_dis_w/units::cm << std::endl;
+      //std::cout << flag_num << " " << min_dis_u/units::cm << " " << min_dis_v/units::cm << " " << min_dis_w/units::cm << std::endl;
       if (min_dis_u > max_dis_u && (!ct_point_cloud.get_closest_dead_chs(p, 0))) max_dis_u = min_dis_u;
       if (min_dis_v > max_dis_v && (!ct_point_cloud.get_closest_dead_chs(p, 1))) max_dis_v = min_dis_v;
       if (min_dis_w > max_dis_w && (!ct_point_cloud.get_closest_dead_chs(p, 2))) max_dis_w = min_dis_w;
       if (flag_num>=2) number_not_faked ++;
     }
-    //    std::cout << number_not_faked << " " << ncounts[i] <<std::endl;
+    //std::cout << number_not_faked << " " << ncounts[i] <<std::endl;
     if (number_not_faked < 4 && (number_not_faked < 0.15 * ncounts[i] || number_not_faked ==1)) continue;
     //std::cout << max_dis_u/units::cm << " " << max_dis_v/units::cm << " " << max_dis_w/units::cm << std::endl;
-    if (! (( max_dis_u/units::cm > 4 || max_dis_v/units::cm > 4 || max_dis_w/units::cm > 4 ) && max_dis_u + max_dis_v + max_dis_w > 7*units::cm) ) continue;
+    if (! (( max_dis_u/units::cm > 4 || max_dis_v/units::cm > 4 || max_dis_w/units::cm > 4 ) && max_dis_u + max_dis_v + max_dis_w > 7*units::cm || number_not_faked > 4 && number_not_faked >= 0.75*ncounts[i] ) ) continue;
     
     
     //std::cout << special_A << " " << special_B << " " << min_dis/units::cm << std::endl;

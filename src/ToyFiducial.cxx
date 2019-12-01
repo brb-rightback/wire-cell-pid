@@ -1062,10 +1062,43 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
 }
 
 bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int kink_num){
+
+ 
+  
   // common part ..
   WCP::PointVector& pts = main_cluster->get_fine_tracking_path();
   std::vector<double>& dQ = main_cluster->get_dQ();
   std::vector<double>& dx = main_cluster->get_dx();
+
+  // std::cout << main_cluster->get_fit_tracks().size() << std::endl;
+  Point end_p;
+  if (kink_num == pts.size()){
+    end_p = pts.back();
+  }else{
+    end_p = pts.at(kink_num);
+  }
+  TVector3 p1(pts.front().x - pts.back().x,
+	      pts.front().y - pts.back().y,
+	      pts.front().z - pts.back().z);
+  for (size_t i=1;i<main_cluster->get_fit_tracks().size();i++){
+    double dis = sqrt(pow(end_p.x - main_cluster->get_fit_tracks().at(i)->get_tracking_path().front().x,2) +
+		      pow(end_p.y - main_cluster->get_fit_tracks().at(i)->get_tracking_path().front().y,2) +
+		      pow(end_p.z - main_cluster->get_fit_tracks().at(i)->get_tracking_path().front().z,2) );
+    // protection against Michel electron
+    if (dis < 1*units::cm && main_cluster->get_fit_tracks().at(i)->get_track_length()>4*units::cm && main_cluster->get_fit_tracks().at(i)->get_medium_dQ_dx()*units::cm/50000 > 0.5 )
+      return false;
+    if (dis > 10*units::cm && main_cluster->get_fit_tracks().at(i)->get_track_length() > 4*units::cm){
+      TVector3 p2(main_cluster->get_fit_tracks().at(i)->get_tracking_path().back().x - main_cluster->get_fit_tracks().at(i)->get_tracking_path().front().x,
+		  main_cluster->get_fit_tracks().at(i)->get_tracking_path().back().y - main_cluster->get_fit_tracks().at(i)->get_tracking_path().front().y,
+		  main_cluster->get_fit_tracks().at(i)->get_tracking_path().back().z - main_cluster->get_fit_tracks().at(i)->get_tracking_path().front().z);
+      //std::cout <<  << std::endl;
+      // judge direction, hack code ...
+      if (p2.Angle(p1)/3.1415926*180. < 20 && main_cluster->get_fit_tracks().at(i)->get_medium_dQ_dx()*units::cm/50000 > 0.8) return true;
+		  //      std::cout << dis/units::cm << " " << main_cluster->get_fit_tracks().at(i)->get_track_length()/units::cm << std::endl;
+    }
+  }
+  
+  
   std::vector<double> L(pts.size(),0);
   std::vector<double> dQ_dx(pts.size(),0);
   double dis = 0;
