@@ -195,7 +195,9 @@ bool WCPPID::ToyFiducial::check_other_tracks(WCPPID::PR3DCluster* main_cluster, 
     if (tracks.at(i)->get_medium_dQ_dx()*units::cm > 75000 && tracks.at(i)->get_track_length()>3*units::cm ||
 	tracks.at(i)->get_track_length_threshold() > 5*units::cm){
       if (tracks.at(i)->get_track_length() < 5*units::cm && tracks.at(i)->get_medium_dQ_dx()*units::cm < 100000) continue;
+      else if (tracks.at(i)->get_track_length() < 25*units::cm && tracks.at(i)->get_medium_dQ_dx()*units::cm < 50000) continue;
       else if (tracks.at(i)->get_track_length() < 10*units::cm && tracks.at(i)->get_medium_dQ_dx()*units::cm < 85000) continue;
+      else if (tracks.at(i)->get_track_length() < 3.5*units::cm && tracks.at(i)->get_medium_dQ_dx()*units::cm < 110000) continue;
       else return true;
     }
   }
