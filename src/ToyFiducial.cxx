@@ -173,14 +173,34 @@ bool WCPPID::ToyFiducial::check_full_detector_dead(){
   
 }
 
-bool WCPPID::ToyFiducial::check_other_tracks(WCPPID::PR3DCluster* main_cluster){
+bool WCPPID::ToyFiducial::check_other_tracks(WCPPID::PR3DCluster* main_cluster, double offset_x){
   WCP::TrackInfoSelection& tracks = main_cluster->get_fit_tracks();
   if (tracks.size()<=1) return false;
+  int ntracks = 0;
+  double total_track_length = 0;
+  
+  TVector3 drift_dir(1,0,0);
   for (size_t i=1; i!=tracks.size();i++){
-    if (tracks.at(i)->get_medium_dQ_dx()*units::cm > 75000 ||
-	tracks.at(i)->get_track_length_threshold() > 5*units::cm)
-      return true;
+    std::cout << tracks.at(i)->get_track_length()/units::cm << " " << tracks.at(i)->get_medium_dQ_dx()*units::cm/50000. << " " << tracks.at(i)->get_track_length_threshold()/units::cm << " " << inside_fiducial_volume(tracks.at(i)->get_tracking_path().front(),offset_x) << " " << tracks.at(i)->get_tracking_path().front() << " " << tracks.at(i)->get_tracking_path().back() << std::endl;
+    TVector3 dir1(tracks.at(i)->get_tracking_path().front().x - tracks.at(i)->get_tracking_path().back().x,
+		  tracks.at(i)->get_tracking_path().front().y - tracks.at(i)->get_tracking_path().back().y,
+		  tracks.at(i)->get_tracking_path().front().z - tracks.at(i)->get_tracking_path().back().z);
+
+    if (tracks.at(i)->get_track_length() > 5*units::cm && tracks.at(i)->get_medium_dQ_dx()*units::cm/50000. > 0.4) {
+      ntracks ++;
+    }
+    
+    if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<7.5 ) continue;
+    
+    if (tracks.at(i)->get_medium_dQ_dx()*units::cm > 75000 && tracks.at(i)->get_track_length()>3*units::cm ||
+	tracks.at(i)->get_track_length_threshold() > 5*units::cm){
+      if (tracks.at(i)->get_track_length() < 5*units::cm && tracks.at(i)->get_medium_dQ_dx()*units::cm < 100000) continue;
+      else if (tracks.at(i)->get_track_length() < 10*units::cm && tracks.at(i)->get_medium_dQ_dx()*units::cm < 85000) continue;
+      else return true;
+    }
   }
+  
+  if (ntracks >=3) return true;
   return false;
 }
 
@@ -660,7 +680,7 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
 	main_cluster->clear_fit_tracks();
 	main_cluster->search_other_tracks(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
 
-	if (check_other_tracks(main_cluster)){
+	if (check_other_tracks(main_cluster, offset_x)){
 	  std::cout << "Mid Point Tracks" << std::endl;
 	  return false;
 	}
@@ -796,7 +816,7 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
       if (flag_pass) {
 	main_cluster->clear_fit_tracks();
 	main_cluster->search_other_tracks(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
-	if (check_other_tracks(main_cluster)){
+	if (check_other_tracks(main_cluster, offset_x)){
 	  std::cout << "Mid Point Tracks" << std::endl;
 	  return false;
 	}

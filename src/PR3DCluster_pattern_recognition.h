@@ -180,7 +180,8 @@ void WCPPID::PR3DCluster::search_other_tracks(WCP::ToyCTPointCloud& ct_point_clo
     double min_dis = 0;
     
     int number_not_faked = 0;
-    
+
+    double max_dis_u = 0, max_dis_v = 0, max_dis_w = 0;
     for (size_t j=0;j!=ncounts[i];j++){
       double dis = sqrt(pow(cloud.pts[sep_clusters[i].at(j)].x - cloud.pts[special_A].x,2)
 			+ pow(cloud.pts[sep_clusters[i].at(j)].y - cloud.pts[special_A].y,2)
@@ -193,6 +194,7 @@ void WCPPID::PR3DCluster::search_other_tracks(WCP::ToyCTPointCloud& ct_point_clo
       // also judge whether this track is fake ...
       WCP::Point p(cloud.pts[sep_clusters[i].at(j)].x, cloud.pts[sep_clusters[i].at(j)].y, cloud.pts[sep_clusters[i].at(j)].z);
       double min_dis_u = 1e9, min_dis_v = 1e9, min_dis_w = 1e9;
+      
       for (size_t k=0;k!=fit_tracks.size();k++){
 	std::tuple<double, double, double> closest_2d_dis = fit_tracks.at(k)->get_closest_2d_dis(p);
 	if (std::get<0>(closest_2d_dis) < min_dis_u) min_dis_u = std::get<0>(closest_2d_dis);
@@ -203,16 +205,21 @@ void WCPPID::PR3DCluster::search_other_tracks(WCP::ToyCTPointCloud& ct_point_clo
       if (min_dis_u > scaling_2d * search_range   && (!ct_point_cloud.get_closest_dead_chs(p, 0))) flag_num ++;
       if (min_dis_v > scaling_2d * search_range   && (!ct_point_cloud.get_closest_dead_chs(p, 1))) flag_num ++;
       if (min_dis_w > scaling_2d * search_range   && (!ct_point_cloud.get_closest_dead_chs(p, 2))) flag_num ++;
+
       // std::cout << flag_num << " " << min_dis_u/units::cm << " " << min_dis_v/units::cm << " " << min_dis_w/units::cm << std::endl;
+      if (min_dis_u > max_dis_u && (!ct_point_cloud.get_closest_dead_chs(p, 0))) max_dis_u = min_dis_u;
+      if (min_dis_v > max_dis_v && (!ct_point_cloud.get_closest_dead_chs(p, 1))) max_dis_v = min_dis_v;
+      if (min_dis_w > max_dis_w && (!ct_point_cloud.get_closest_dead_chs(p, 2))) max_dis_w = min_dis_w;
       if (flag_num>=2) number_not_faked ++;
     }
-    //    std::cout << number_not_faked << std::endl;
-    if (number_not_faked < 4 && number_not_faked < 0.15 * ncounts[i]) continue;
-
+    //    std::cout << number_not_faked << " " << ncounts[i] <<std::endl;
+    if (number_not_faked < 4 && (number_not_faked < 0.15 * ncounts[i] || number_not_faked ==1)) continue;
+    //std::cout << max_dis_u/units::cm << " " << max_dis_v/units::cm << " " << max_dis_w/units::cm << std::endl;
+    if (! (( max_dis_u/units::cm > 4 || max_dis_v/units::cm > 4 || max_dis_w/units::cm > 4 ) && max_dis_u + max_dis_v + max_dis_w > 7*units::cm) ) continue;
     
-    std::cout << special_A << " " << special_B << " " << min_dis/units::cm << std::endl;
+    
+    //std::cout << special_A << " " << special_B << " " << min_dis/units::cm << std::endl;
     //std::cout << i << " " << ncounts[i] << " " << flag_tagged[sep_clusters[i].front()] << " " << cloud.pts[sep_clusters[i].front()].x/units::cm << " " <<  cloud.pts[sep_clusters[i].front()].y/units::cm << " " <<  cloud.pts[sep_clusters[i].front()].z/units::cm << std::endl;
-    
     
     saved_clusters.push_back(i);
     saved_cluster_points.at(i) = std::make_pair(special_A, special_B);

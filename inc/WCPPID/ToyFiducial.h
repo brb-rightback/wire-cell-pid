@@ -51,7 +51,7 @@ namespace WCPPID{
     bool check_stm(WCPPID::PR3DCluster* cluster, std::vector<WCPPID::PR3DCluster*>& additional_clusters, double offset_x, double flash_time, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, int& event_type);
 
     bool eval_stm(WCPPID::PR3DCluster* main_cluster, int kink_num, double peak_range = 40*units::cm, double offset_x = 0*units::cm, double com_range = 35*units::cm, bool flag_strong_check = false);
-    bool check_other_tracks(WCPPID::PR3DCluster* main_cluster);
+    bool check_other_tracks(WCPPID::PR3DCluster* main_cluster, double offset_x);
     bool check_other_clusters(WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*>& additional_clusters);
 
     bool detect_proton(WCPPID::PR3DCluster* main_cluster, int kink_num);
