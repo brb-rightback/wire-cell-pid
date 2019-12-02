@@ -541,6 +541,7 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
     }
   }
 
+ 
   bool flag_other_clusters = check_other_clusters(main_cluster, additional_clusters);
   
   // forward check ...
@@ -548,11 +549,11 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
     if (flag_double_end) std::cout << "Forward check! " << std::endl;
     // regular crawling ...
     main_cluster->do_rough_path(first_wcp, last_wcp);
-    //std::cout << "haha" << std::endl;
+    // std::cout << "haha" << std::endl;
     main_cluster->collect_charge_trajectory(ct_point_cloud); 
     //std::cout << "haha" << std::endl;
     main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
-
+    //std::cout << "test" << std::endl; 
     if (main_cluster->get_fine_tracking_path().size()<=3) return false;
     
     //std::cout << "haha " << std::endl;
@@ -561,7 +562,8 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
     // fitting trajectory and dQ/dx...
     main_cluster->collect_charge_trajectory(ct_point_cloud); 
     main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
-    
+
+    //    std::cout << "test" << std::endl; 
     // check both end points for TGM ...
     WCP::PointVector& pts = main_cluster->get_fine_tracking_path();
     std::vector<double>& dQ = main_cluster->get_dQ();

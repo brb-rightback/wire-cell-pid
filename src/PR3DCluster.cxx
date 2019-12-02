@@ -37,7 +37,7 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
   bool flag_1st_tracking = true;
   bool flag_2nd_tracking = true;
   bool flag_dQ_dx = true;
-  
+ 
    // prepare the data for the fit, do not contain everything ...
   // form from the cluster ...
   std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_ut_charge;
@@ -45,12 +45,14 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
   std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_wt_charge;
   prepare_data(ct_point_cloud, global_wc_map, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
 
+ 
+
   // first round of organizing the path from the path_wcps (shortest path)
   double low_dis_limit = 1.2*units::cm;
   double end_point_limit = 0.6*units::cm;
   //std::cout << path_wcps.size() << std::endl;
   PointVector pts = organize_wcps_path(path_wcps,low_dis_limit, end_point_limit); 
-  //  std::cout << pts.size() << std::endl;
+  if (pts.size()<=1) return;
   
   // for (size_t i=0;i+1!=pts.size();i++){
   //   std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
