@@ -188,7 +188,7 @@ bool WCPPID::ToyFiducial::check_other_tracks(WCPPID::PR3DCluster* main_cluster, 
 		  tracks.at(i)->get_tracking_path().front().y - tracks.at(i)->get_tracking_path().back().y,
 		  tracks.at(i)->get_tracking_path().front().z - tracks.at(i)->get_tracking_path().back().z);
 
-    std::cout << track_length1 << " " << track_medium_dQ_dx << " " << track_length_threshold << " " << inside_fiducial_volume(tracks.at(i)->get_tracking_path().front(),offset_x) << " " << tracks.at(i)->get_tracking_path().front() << " " << tracks.at(i)->get_tracking_path().back() << std::endl;
+    std::cout << track_length1 << " " << track_medium_dQ_dx << " " << track_length_threshold << " " << inside_fiducial_volume(tracks.at(i)->get_tracking_path().front(),offset_x) << " " << tracks.at(i)->get_tracking_path().front() << " " << tracks.at(i)->get_tracking_path().back() << " " << dir1.Mag()/tracks.at(i)->get_track_length(2) << std::endl;
     
     // std::cout << dir1.Mag()/units::cm << " " << tracks.at(i)->get_track_length(2)/units::cm << std::endl;
     
@@ -201,8 +201,8 @@ bool WCPPID::ToyFiducial::check_other_tracks(WCPPID::PR3DCluster* main_cluster, 
     if (track_length1 > 5 && track_medium_dQ_dx > 0.9 && dir1.Mag()/tracks.at(i)->get_track_length(2)>0.99)
       return true;
     
-    if (track_medium_dQ_dx > 1.5 &&track_length1>3 ||
-	track_length_threshold > 5){
+    if (track_medium_dQ_dx > 1.5 && track_length1>3 ||
+	track_length_threshold > 5 && (track_length_threshold > 0.6 * track_length1 || track_length1 > 20)){
       if (track_length1 < 5 && track_medium_dQ_dx < 2) continue;
       else if (track_length1 < 25 && track_medium_dQ_dx < 1) continue;
       else if (track_length1 < 10  && track_medium_dQ_dx < 85/50.) continue;
@@ -433,7 +433,8 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
 	    candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
 	  }
 	}
-	
+
+	//	std::cout << fabs((3.1415926/2.-dir.Angle(dir_main))/3.1415926*180.) << " " << check_dead_volume(p1,dir,1*units::cm,offset_x) << std::endl;
 	if (!flag_save){
 	  if (fabs((3.1415926/2.-dir.Angle(dir_main))/3.1415926*180.)>60 ){
 	    if (!check_dead_volume(p1,dir,1*units::cm,offset_x)){
@@ -927,9 +928,8 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
     
   for (int i=0;i!=fine_tracking_path.size();i++){
     
-    // std::cout << i << " " << refl_angles.at(i) << " " << ave_angles.at(i)  << " " << inside_fiducial_volume(fine_tracking_path.at(i)) <<  std::endl;
-    // if ((refl_angles.at(i) > 25.5 && ave_angles.at(i) > 12.5 ) && inside_fiducial_volume(fine_tracking_path.at(i))){
-     if ((refl_angles.at(i) > 20 && ave_angles.at(i) > 10 ) && inside_fiducial_volume(fine_tracking_path.at(i))){
+    //    std::cout << i << " " << refl_angles.at(i) << " " << ave_angles.at(i)  << " " << inside_fiducial_volume(fine_tracking_path.at(i)) <<  " " << fine_tracking_path.at(i) << std::endl;
+    if ((refl_angles.at(i) > 20 && ave_angles.at(i) > 10 ) && inside_fiducial_volume(fine_tracking_path.at(i))  ){
       TVector3 v10(fine_tracking_path.at(i).x - fine_tracking_path.front().x,
 		   fine_tracking_path.at(i).y - fine_tracking_path.front().y,
 		   fine_tracking_path.at(i).z - fine_tracking_path.front().z);
@@ -1001,7 +1001,7 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
 
   for (int i=0;i!=fine_tracking_path.size();i++){
     // std::cout << i << " " << refl_angles.at(i) << " " <<sum_angles << " " << inside_fiducial_volume(fine_tracking_path.at(i)) << std::endl;
-    if ((refl_angles.at(i) > 20 && ave_angles.at(i) > 15 ) && inside_fiducial_volume(fine_tracking_path.at(i))){
+    if ((refl_angles.at(i) > 20 && ave_angles.at(i) > 15 ) && inside_fiducial_volume(fine_tracking_path.at(i)) ){
       TVector3 v10(fine_tracking_path.at(i).x - fine_tracking_path.front().x,
   		   fine_tracking_path.at(i).y - fine_tracking_path.front().y,
   		   fine_tracking_path.at(i).z - fine_tracking_path.front().z);
@@ -1261,7 +1261,7 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
     delete h4;
     delete h5;
     
-    std::cout << "End proton detection: " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << " " << dQ_dx.at(max_bin)/50e3 << " " << dQ_dx.size() - max_bin << " " << std::endl;
+    std::cout << "End proton detection: " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << ks3 << " " << ratio3 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << " " << dQ_dx.at(max_bin)/50e3 << " " << dQ_dx.size() - max_bin << " " << std::endl;
 
     if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > 0.02 && dQ_dx.at(max_bin)/50e3 > 2.3 && (dQ_dx.size() - max_bin <= 3 || ks2 < 0.05 && dQ_dx.size() - max_bin <= 12) ) {
       if (dQ_dx.size()-max_bin<=1 && dQ_dx.at(max_bin)/50e3 > 2.5 && ks2 < 0.035 && fabs(ratio2-1)<0.1 ) return true;
