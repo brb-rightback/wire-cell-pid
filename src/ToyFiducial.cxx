@@ -239,8 +239,10 @@ bool WCPPID::ToyFiducial::check_other_clusters(WCPPID::PR3DCluster* main_cluster
 
 
   
-  if (number_clusters >0 && (number_clusters/3. + total_length/(35*units::cm)/number_clusters) >=1)
+  if (number_clusters >0 && (number_clusters/3. + total_length/(35*units::cm)/number_clusters) >=1){
+    std::cout << "Other clusters: " << number_clusters << " " << (number_clusters/3. + total_length/(35*units::cm)/number_clusters) << std::endl;
     return true;
+  }
   
   return false;
 }
@@ -293,7 +295,9 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
       bool flag_save = false;
       // check all the points ... 
       for (size_t j=0;j!=out_vec_wcps.at(i).size();j++){
+
 	Point p1(out_vec_wcps.at(i).at(j).x,out_vec_wcps.at(i).at(j).y,out_vec_wcps.at(i).at(j).z);
+	//std::cout << p1 << " " << inside_fiducial_volume(p1,offset_x) << std::endl;
 	if (!inside_fiducial_volume(p1,offset_x)){
 	  candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
 	  flag_save = true;
@@ -544,6 +548,7 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
 
  
   bool flag_other_clusters = check_other_clusters(main_cluster, additional_clusters);
+  //  std::cout << "haha " << flag_other_clusters << std::endl;
   
   // forward check ...
   {
@@ -641,6 +646,8 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
      
       bool flag_pass = false;
 
+      // std::cout << flag_other_clusters << std::endl;
+      
       if (!flag_other_clusters){
 	if (left_L < 40*units::cm) {
 	  if (flag_fix_end){
@@ -1412,7 +1419,7 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
   delete h2;
   delete h3;
 
-  std::cout << "KS value: " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << std::endl;
+  std::cout << "KS value: " << flag_strong_check << " " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << " " << res_length /units::cm << " " << ave_res_dQ_dx/50000 << std::endl;
   
   // std::vector<double> results;
   // results.push_back(ks1);
@@ -1432,7 +1439,7 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
       res_length > 6 * units::cm && ave_res_dQ_dx > 72500 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.05)
     return false;
 
-
+  //std::cout <<"haha" << " " << flag_strong_check << std::endl;
   
   if (!flag_strong_check){
     if (ks1 - ks2 < -0.02 && (ks2 > 0.09 && fabs(ratio2-1) >0.1 || ratio2 > 1.5 || ks2 > 0.2)) return true;
@@ -1440,6 +1447,8 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
   }else{
     if (ks1 - ks2 < -0.02 && (ks2 > 0.09 || ratio2 > 1.5) && ks1 < 0.05 && fabs(ratio1-1)<0.1) return true;
     if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0 && ks1 < 0.05 && fabs(ratio1-1)<0.1) return true;
+    //if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.01 && ks1 < 0.06 && fabs(ratio1-1)<0.1) return true;
+    //    if (ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.03 && ks1 < 0.04 && ks2 > 0.05) return true;
   }
 
   return false;
