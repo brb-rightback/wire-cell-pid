@@ -638,7 +638,7 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
 	flag_fix_end = false;
       }
     
-    
+     
       bool flag_pass = false;
 
       if (!flag_other_clusters){
@@ -1300,6 +1300,7 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
     dis += sqrt(pow(pts.at(i).x-pts.at(i-1).x,2) + pow(pts.at(i).y-pts.at(i-1).y,2) + pow(pts.at(i).z - pts.at(i-1).z,2));
     L.at(i) = dis;
     dQ_dx.at(i) = dQ.at(i)/(dx.at(i)/units::cm+1e-9);
+    // std::cout << dQ_dx.at(i) << std::endl;
   }
   //std::cout << L.size() << " " << dQ.size() << " " << dx.size() << std::endl;
   double end_L; 
@@ -1319,6 +1320,7 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
     double nsum = 0;
     double temp_max_bin = i;
     double temp_max_val = dQ_dx.at(i);
+    //std::cout << L.at(i) << " " << end_L  << " " << peak_range << " " << i << " " <<max_num << " " << dQ_dx.at(i) << std::endl;
     if (L.at(i) < end_L + 0.5*units::cm && L.at(i) > end_L - peak_range && i < max_num){
       sum += dQ_dx.at(i); nsum ++;
       if (i>=2){
@@ -1350,13 +1352,17 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
 	}
       }
       sum /= nsum;
+      //std::cout << nsum << " " << sum << " " << std::endl;
       if (sum>max_sum){
 	max_sum = sum;
 	max_bin = temp_max_bin;
       }
     }
   }
-  //std::cout << max_bin << " " << max_sum << std::endl;
+  if (max_bin==-1)
+    max_bin = max_num;
+  
+  // std::cout << max_bin << " " << max_sum << std::endl;
   end_L = L.at(max_bin)+0.2*units::cm;
   int ncount = 0;
   std::vector<double> vec_x;
