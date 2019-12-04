@@ -200,6 +200,8 @@ bool WCPPID::ToyFiducial::check_other_tracks(WCPPID::PR3DCluster* main_cluster, 
 
     if (track_length1 > 5 && track_medium_dQ_dx > 0.9 && dir1.Mag()/tracks.at(i)->get_track_length(2)>0.99)
       return true;
+
+    if (track_medium_dQ_dx > 1.5 && track_length1 > 8 && dir1.Mag()/tracks.at(i)->get_track_length(2) < 0.9) continue;
     
     if (track_medium_dQ_dx > 1.5 && track_length1>3 ||
 	track_length_threshold > 5 && (track_length_threshold > 0.6 * track_length1 || track_length1 > 20)){
@@ -1276,15 +1278,18 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
       if (ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > 0.027)
 	return true;
     }
-    // looks like a proton with very high dQ_dx
-    double track_medium_dQ_dx = main_cluster->get_fit_tracks().front()->get_medium_dQ_dx()*units::cm/50000.;
-    std::cout << "End proton detection1: " << track_medium_dQ_dx << " " << dQ_dx.at(max_bin)/50e3 << " " << ks3 << " " << ratio3 << std::endl;
-    if (track_medium_dQ_dx < 1.0 && dQ_dx.at(max_bin)/50e3 > 3.5){
-      if ((ks3 > 0.06 && ratio3 > 1.1 && ks1 > 0.045 || ks3 > 0.1 && ks2 < 0.19 || ratio3 > 1.3)) return true;
-      if (ks2 < 0.045 && ks3 > 0.03 || dQ_dx.at(max_bin)/50e3 > 4.3 && ks3 > 0.03) return true;
-    }else if (track_medium_dQ_dx < 1 && dQ_dx.at(max_bin)/50e3 > 3.0){
-      //   if (ks3 > 0.3 && fabs(ratio3-1)>0.6 && ks1 > 0.05) return true;
-      if (ks3 > 0.12  && ks1 > 0.03) return true;
+
+    if (dQ_dx.size() - max_bin <=12){ 
+      // looks like a proton with very high dQ_dx
+      double track_medium_dQ_dx = main_cluster->get_fit_tracks().front()->get_medium_dQ_dx()*units::cm/50000.;
+      std::cout << "End proton detection1: " << track_medium_dQ_dx << " " << dQ_dx.at(max_bin)/50e3 << " " << ks3 << " " << ratio3 << std::endl;
+      if (track_medium_dQ_dx < 1.0 && dQ_dx.at(max_bin)/50e3 > 3.5){
+	if ((ks3 > 0.06 && ratio3 > 1.1 && ks1 > 0.045 || ks3 > 0.1 && ks2 < 0.19 || ratio3 > 1.3)) return true;
+	if (ks2 < 0.045 && ks3 > 0.03 || dQ_dx.at(max_bin)/50e3 > 4.3 && ks3 > 0.03) return true;
+      }else if (track_medium_dQ_dx < 1 && dQ_dx.at(max_bin)/50e3 > 3.0){
+	//   if (ks3 > 0.3 && fabs(ratio3-1)>0.6 && ks1 > 0.05) return true;
+	if (ks3 > 0.12  && ks1 > 0.03) return true;
+      }
     }
       
     //    
@@ -1431,6 +1436,8 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
   if (ks1-ks2 >= 0.0) return false;
   if (sqrt(pow(ks2/0.06,2)+pow((ratio2-1)/0.06,2))< 1.4 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.02) return false;
 
+  
+  
   // if residual does not look like a michel electron
   if (res_length > 16 * units::cm && ave_res_dQ_dx > 72500 || 
       res_length > 10 * units::cm && ave_res_dQ_dx > 72500 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.05 ||
@@ -1439,7 +1446,7 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
       res_length > 6 * units::cm && ave_res_dQ_dx > 72500 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.05)
     return false;
 
-  //std::cout <<"haha" << " " << flag_strong_check << std::endl;
+  
   
   if (!flag_strong_check){
     if (ks1 - ks2 < -0.02 && (ks2 > 0.09 && fabs(ratio2-1) >0.1 || ratio2 > 1.5 || ks2 > 0.2)) return true;
@@ -1447,8 +1454,8 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
   }else{
     if (ks1 - ks2 < -0.02 && (ks2 > 0.09 || ratio2 > 1.5) && ks1 < 0.05 && fabs(ratio1-1)<0.1) return true;
     if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0 && ks1 < 0.05 && fabs(ratio1-1)<0.1) return true;
-    //if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.01 && ks1 < 0.06 && fabs(ratio1-1)<0.1) return true;
-    //    if (ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.03 && ks1 < 0.04 && ks2 > 0.05) return true;
+    
+    if (ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.03 && ks1 < 0.04 && ks2 > 0.05) return true;
   }
 
   return false;
