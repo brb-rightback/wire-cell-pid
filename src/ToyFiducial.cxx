@@ -195,7 +195,7 @@ bool WCPPID::ToyFiducial::check_other_tracks(WCPPID::PR3DCluster* main_cluster, 
     if (track_length1 > 5 && track_medium_dQ_dx > 0.4) {
       ntracks ++;
     }
-    
+    // std::cout << fabs(dir1.Angle(drift_dir)/3.1415926*180.-90) << std::endl;
     if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<7.5 ) continue;
 
     if (track_length1 > 5 && track_medium_dQ_dx > 0.9 && dir1.Mag()/tracks.at(i)->get_track_length(2)>0.99)
@@ -937,7 +937,7 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
     
   for (int i=0;i!=fine_tracking_path.size();i++){
     
-    //    std::cout << i << " " << refl_angles.at(i) << " " << ave_angles.at(i)  << " " << inside_fiducial_volume(fine_tracking_path.at(i)) <<  " " << fine_tracking_path.at(i) << std::endl;
+    // std::cout << i << " " << refl_angles.at(i) << " " << ave_angles.at(i)  << " " << inside_fiducial_volume(fine_tracking_path.at(i)) <<  " " << fine_tracking_path.at(i) << std::endl;
     if ((refl_angles.at(i) > 20 && ave_angles.at(i) > 10 ) && inside_fiducial_volume(fine_tracking_path.at(i))  ){
       TVector3 v10(fine_tracking_path.at(i).x - fine_tracking_path.front().x,
 		   fine_tracking_path.at(i).y - fine_tracking_path.front().y,
@@ -957,7 +957,7 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
 	angle3p = v11.Angle(v21)/3.1415926*180.;
       }
       
-      //   std::cout << angle3 << " " << angle3p << " " << v10.Mag()/units::cm << " " << v20.Mag()/units::cm << std::endl;
+      // std::cout << angle3 << " " << angle3p << " " << v10.Mag()/units::cm << " " << v20.Mag()/units::cm << std::endl;
       
       if (angle3 < 20 && ave_angles.at(i) < 20 || angle3 < 12.5 && inside_dead_region(fine_tracking_path.at(i)) || angle3 < 7.5 || i<=4) continue;
 
