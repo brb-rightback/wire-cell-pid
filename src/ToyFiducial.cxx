@@ -1455,7 +1455,7 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
     if (ks1 - ks2 < -0.02 && (ks2 > 0.09 || ratio2 > 1.5) && ks1 < 0.05 && fabs(ratio1-1)<0.1) return true;
     if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0 && ks1 < 0.05 && fabs(ratio1-1)<0.1) return true;
     if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.03 && ks1 < 0.03 && fabs(ratio1-1)<0.15) return true;
-    
+    if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.05 && ks1 < 0.04 && fabs(ratio1-1)<0.15) return true;    
     if (ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.03 && ks1 < 0.04 && ks2 > 0.05 && ratio1 < 1 && ratio2 < 1) return true;
   }
 
