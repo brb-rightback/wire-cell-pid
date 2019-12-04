@@ -1279,7 +1279,7 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
 	return true;
     }
 
-    if (dQ_dx.size() - max_bin <=12){ 
+    //    if (dQ_dx.size() - max_bin <=12){ 
       // looks like a proton with very high dQ_dx
       double track_medium_dQ_dx = main_cluster->get_fit_tracks().front()->get_medium_dQ_dx()*units::cm/50000.;
       std::cout << "End proton detection1: " << track_medium_dQ_dx << " " << dQ_dx.at(max_bin)/50e3 << " " << ks3 << " " << ratio3 << std::endl;
@@ -1290,7 +1290,7 @@ bool WCPPID::ToyFiducial::detect_proton(WCPPID::PR3DCluster* main_cluster,int ki
 	//   if (ks3 > 0.3 && fabs(ratio3-1)>0.6 && ks1 > 0.05) return true;
 	if (ks3 > 0.12  && ks1 > 0.03) return true;
       }
-    }
+      //}
       
     //    
   }
@@ -1454,8 +1454,9 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
   }else{
     if (ks1 - ks2 < -0.02 && (ks2 > 0.09 || ratio2 > 1.5) && ks1 < 0.05 && fabs(ratio1-1)<0.1) return true;
     if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0 && ks1 < 0.05 && fabs(ratio1-1)<0.1) return true;
+    if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.03 && ks1 < 0.03 && fabs(ratio1-1)<0.15) return true;
     
-    if (ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.03 && ks1 < 0.04 && ks2 > 0.05) return true;
+    if (ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.03 && ks1 < 0.04 && ks2 > 0.05 && ratio1 < 1 && ratio2 < 1) return true;
   }
 
   return false;
