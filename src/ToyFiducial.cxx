@@ -195,16 +195,26 @@ bool WCPPID::ToyFiducial::check_other_tracks(WCPPID::PR3DCluster* main_cluster, 
     if (track_length1 > 5 && track_medium_dQ_dx > 0.4) {
       ntracks ++;
     }
-    // std::cout << fabs(dir1.Angle(drift_dir)/3.1415926*180.-90) << std::endl;
+    if (track_length1 > 40 && track_medium_dQ_dx > 0.8) return true;
+    
+    //std::cout << fabs(dir1.Angle(drift_dir)/3.1415926*180.-90) << std::endl;
     if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<7.5 ) continue;
 
-    if (track_length1 > 5 && track_medium_dQ_dx > 0.9 && dir1.Mag()/tracks.at(i)->get_track_length(2)>0.99)
+    //    if ((track_length1 > 5 && track_medium_dQ_dx > 0.9 ||
+    //	 track_length1 > 12 && track_medium_dQ_dx > 0.8 ||
+    //	 track_length1 > 20 && track_medium_dQ_dx > 0.7)
+    if (track_length1 > 5 && track_medium_dQ_dx>0.7 &&
+	((track_medium_dQ_dx-0.7)/0.1 > (19-track_length1)/7.)
+	&& dir1.Mag()/tracks.at(i)->get_track_length(2)>0.99 ||
+	track_length1 > 4 && track_medium_dQ_dx > 1.5 &&  dir1.Mag()/tracks.at(i)->get_track_length(2)>0.975)
       return true;
 
     if (track_medium_dQ_dx > 1.5 && track_length1 > 8 && dir1.Mag()/tracks.at(i)->get_track_length(2) < 0.9) continue;
     
     if (track_medium_dQ_dx > 1.5 && track_length1>3 ||
-	track_length_threshold > 5 && (track_length_threshold > 0.6 * track_length1 || track_length1 > 20)){
+	track_medium_dQ_dx > 2.5 && track_length1>2.5 ||
+	track_length_threshold > 5 && (track_length_threshold > 0.6 * track_length1 || track_length1 > 20)
+	){
       if (track_length1 < 5 && track_medium_dQ_dx < 2) continue;
       else if (track_length1 < 25 && track_medium_dQ_dx < 1) continue;
       else if (track_length1 < 10  && track_medium_dQ_dx < 85/50.) continue;
@@ -594,7 +604,7 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
     
      std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << " " << (exit_Q/(exit_L/units::cm+1e-9)/50e3) << std::endl;
 
-     //     std::cout << pts.front() << " " << pts.back() << " " << (!inside_fiducial_volume(pts.front(),offset_x)) << " " << (!inside_fiducial_volume(pts.back(),offset_x)) << std::endl;
+     //std::cout << pts.front() << " " << pts.back() << " " << (!inside_fiducial_volume(pts.front(),offset_x)) << " " << (!inside_fiducial_volume(pts.back(),offset_x)) << std::endl;
     if ( (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
       // std::cout << exit_L_TGM/units::cm << " " << left_L_TGM/units::cm << std::endl;
       bool flag_TGM_anode = false;
@@ -619,9 +629,11 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
       TVector3 dir = main_cluster->VHoughTrans(p1,30*units::cm);
       dir *= (-1);
       if (!check_dead_volume(p1,dir,1*units::cm,offset_x)){
-	std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
-	event_type |= 1UL << 3;
-	return true;
+	if (exit_L < 3*units::cm || left_L < 3*units::cm){
+	  std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+	  event_type |= 1UL << 3;
+	  return true;
+	}
       }
       //std::cout << "ABC: " << dir.X() << " " << dir.Y() << " " << dir.Z() << " " << check_dead_volume(p1,dir,1*units::cm,offset_x) << std::endl;
     }
@@ -937,7 +949,7 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
     
   for (int i=0;i!=fine_tracking_path.size();i++){
     
-    // std::cout << i << " " << refl_angles.at(i) << " " << ave_angles.at(i)  << " " << inside_fiducial_volume(fine_tracking_path.at(i)) <<  " " << fine_tracking_path.at(i) << std::endl;
+    //std::cout << i << " " << refl_angles.at(i) << " " << ave_angles.at(i)  << " " << inside_fiducial_volume(fine_tracking_path.at(i)) <<  " " << fine_tracking_path.at(i) << std::endl;
     if ((refl_angles.at(i) > 20 && ave_angles.at(i) > 10 ) && inside_fiducial_volume(fine_tracking_path.at(i))  ){
       TVector3 v10(fine_tracking_path.at(i).x - fine_tracking_path.front().x,
 		   fine_tracking_path.at(i).y - fine_tracking_path.front().y,
@@ -957,7 +969,7 @@ int WCPPID::ToyFiducial::find_first_kink(WCPPID::PR3DCluster* main_cluster){
 	angle3p = v11.Angle(v21)/3.1415926*180.;
       }
       
-      // std::cout << angle3 << " " << angle3p << " " << v10.Mag()/units::cm << " " << v20.Mag()/units::cm << std::endl;
+      //std::cout << angle3 << " " << angle3p << " " << v10.Mag()/units::cm << " " << v20.Mag()/units::cm << std::endl;
       
       if (angle3 < 20 && ave_angles.at(i) < 20 || angle3 < 12.5 && inside_dead_region(fine_tracking_path.at(i)) || angle3 < 7.5 || i<=4) continue;
 
@@ -1394,16 +1406,25 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
 
   double ave_res_dQ_dx = 0;
   double res_length = 0;
-  
   for (size_t i=0;i!=vec_res_y.size();i++){
     ave_res_dQ_dx += vec_res_y.at(i);
   }
+  
   if (vec_res_y.size()>0){
     res_length = vec_res_x.back();
     ave_res_dQ_dx /= 1.*vec_res_y.size();
   }
+
+  double res_length1 = 0, res_dis1 = 0;
+  if (max_bin  + 3 < L.size()){
+    res_length1 = L.back() - L.at(max_bin+3);
+    res_dis1 = sqrt(pow(pts.back().x-pts.at(max_bin+3).x,2) +
+		   pow(pts.back().y-pts.at(max_bin+3).y,2) +
+		   pow(pts.back().z-pts.at(max_bin+3).z,2)
+		   );
+  }
   
-  //std::cout << "Test: " << res_length/units::cm << " " << ave_res_dQ_dx << std::endl;
+  //std::cout << "Test: " << res_length/units::cm << " " << ave_res_dQ_dx << " " << res_length1/units::cm << " " << res_dis1/units::cm << std::endl;
   
   TH1F *h1 = new TH1F("h1","h1",ncount,0,ncount);
   TH1F *h2 = new TH1F("h2","h2",ncount,0,ncount);
@@ -1424,7 +1445,7 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
   delete h2;
   delete h3;
 
-  std::cout << "KS value: " << flag_strong_check << " " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << " " << res_length /units::cm << " " << ave_res_dQ_dx/50000 << std::endl;
+  std::cout << "KS value: " << flag_strong_check << " " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << " "  << res_dis1/(res_length1+1e-9) << " " << res_length /units::cm << " " << ave_res_dQ_dx/50000. << std::endl;
   
   // std::vector<double> results;
   // results.push_back(ks1);
@@ -1437,13 +1458,20 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
   if (sqrt(pow(ks2/0.06,2)+pow((ratio2-1)/0.06,2))< 1.4 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.02) return false;
 
   
+  if ((res_length > 8*units::cm && ave_res_dQ_dx/50000. > 0.9 && res_length1 > 5*units::cm ||
+       res_length1 > 1.5*units::cm && ave_res_dQ_dx/50000. > 2.3)&& res_dis1/(res_length1+1e-9) > 0.99 )
+    return false;
   
   // if residual does not look like a michel electron
-  if (res_length > 16 * units::cm && ave_res_dQ_dx > 72500 || 
+  if (res_length > 20 * units::cm && ave_res_dQ_dx/50000. > 1.2 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.02 ||
+      res_length > 16 * units::cm && ave_res_dQ_dx > 72500 || 
       res_length > 10 * units::cm && ave_res_dQ_dx > 72500 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.05 ||
       res_length > 10 * units::cm && ave_res_dQ_dx > 85000 ||
       res_length > 6 * units::cm && ave_res_dQ_dx > 92500 ||
-      res_length > 6 * units::cm && ave_res_dQ_dx > 72500 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.05)
+      res_length > 6 * units::cm && ave_res_dQ_dx > 72500 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.05 ||
+      res_length > 4 * units::cm && ave_res_dQ_dx/50000. > 1.4 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > 0.02 ||
+      res_length > 2*units::cm && ave_res_dQ_dx/50000. > 4.5
+      )
     return false;
 
   
