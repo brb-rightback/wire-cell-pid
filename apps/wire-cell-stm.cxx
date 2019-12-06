@@ -114,8 +114,8 @@ int main(int argc, char* argv[])
   double upperwindow = 0;
   // if((triggerbits>>11) & 1U) { lowerwindow = 3.0; upperwindow = 5.0; }// bnb  
   // if((triggerbits>>9) & 1U) { lowerwindow = 3.45; upperwindow = 5.45; } // extbnb
-  if((triggerbits>>11) & 1U) { lowerwindow = 3.1625; upperwindow = 4.96875;} // bnb  
-  if((triggerbits>>9) & 1U) { lowerwindow = 3.5375; upperwindow = 5.34375; } // extbnb 
+  if((triggerbits>>11) & 1U) { lowerwindow=3.1875; upperwindow=4.96876;} // bnb  
+  if((triggerbits>>9) & 1U) { lowerwindow=3.5625; upperwindow=5.34376; } // extbnb 
   
    // define singleton ... 
   TPCParams& mp = Singleton<TPCParams>::Instance();
