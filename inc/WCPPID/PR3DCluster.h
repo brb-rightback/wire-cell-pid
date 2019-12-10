@@ -45,6 +45,7 @@ namespace WCPPID{
     int get_num_mcells(){return mcells.size();};
     int get_num_points(){return point_cloud->get_num_points(); };
     int get_num_time_slices(){return time_cells_set_map.size();};
+    std::map<int,WCP::SMGCSet>& get_time_cells_set_map(){return time_cells_set_map;};
     WCP::SMGCSelection& get_mcells(){return mcells;};
 
     // Point cloud related ...

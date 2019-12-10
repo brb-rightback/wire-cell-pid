@@ -32,7 +32,7 @@ namespace WCPPID{
     void set_offset_t(double value){offset_t=value;};
     
     // helper functions ...
-    bool inside_fiducial_volume(WCP::Point& p, double offset_x=0);
+    bool inside_fiducial_volume(WCP::Point& p, double offset_x=0, std::vector<double>* tolerance_vec=NULL);
     bool inside_dead_region(WCP::Point& p);
     bool check_dead_volume(WCP::Point& p, TVector3& dir, double step = 1.0*units::cm, double offset_x=0);
     bool check_signal_processing(WCP::Point& p, TVector3& dir, WCP::ToyCTPointCloud& ct_point_cloud, double step = 1.0*units::cm, double offset_x=0);
@@ -45,7 +45,35 @@ namespace WCPPID{
     bool check_fully_contained(WCPPID::PR3DCluster* main_cluster, double offset_x, WCP::ToyCTPointCloud& ct_point_cloud);
     
     // London's new tagger
-    std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> cosmic_tagger(WCP::OpflashSelection& flashes, WCPPID::PR3DCluster* main_cluster, WCP::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WCP::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WCP::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool flag_data, bool debug_tagger=false);
+    std::vector<double> get_boundary_SCB_xy_x(WCP::Point& p){
+      int index_z = floor(p.z/units::m);
+      if(index_z<0){index_z=0;} else if(index_z>9){index_z=9;}
+      return boundary_SCB_xy_x_array[index_z];
+    }
+    std::vector<double> get_boundary_SCB_xy_y(WCP::Point& p){
+      int index_z = floor(p.z/units::m);
+      if(index_z<0){index_z=0;} else if(index_z>9){index_z=9;}
+      return boundary_SCB_xy_y_array[index_z];
+    }
+    std::vector<double> get_boundary_SCB_xz_x(WCP::Point& p){
+      int index_y = floor((p.y/units::cm+116)/24);
+      if(index_y<0){index_y=0;} else if(index_y>9){index_y=9;}
+      return boundary_SCB_xz_x_array[index_y];
+    }
+    std::vector<double> get_boundary_SCB_xz_z(WCP::Point& p){
+      int index_y = floor((p.y/units::cm+116)/24);
+      if(index_y<0){index_y=0;} else if(index_y>9){index_y=9;}
+      return boundary_SCB_xz_z_array[index_y];
+    }
+    bool inside_x_region(std::vector<std::vector<WCP::WCPointCloud<double>::WCPoint>> extreme_points, double offset_x, double x_low, double x_high);
+
+    int convert_xyz_voxel_id(WCP::Point &p);
+
+    int check_boundary(std::vector<std::vector<WCP::WCPointCloud<double>::WCPoint>> extreme_points, double offset_x, std::vector<double>* tol_vec);
+
+    std::vector<double> calculate_pred_pe(int run_no, double offset_x, WCP::Photon_Library *pl, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* flash, bool flag_data);
+
+    std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> cosmic_tagger(WCP::OpflashSelection& flashes, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WCP::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WCP::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool flag_data, bool debug_tagger=false);
 
     // check STM code ...
     bool check_stm(WCPPID::PR3DCluster* cluster, std::vector<WCPPID::PR3DCluster*>& additional_clusters, double offset_x, double flash_time, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, int& event_type);
@@ -90,6 +118,13 @@ namespace WCPPID{
 
     std::vector<double> boundary_xy_x, boundary_xy_y;
     std::vector<double> boundary_xz_x, boundary_xz_z;
+    std::vector<double> boundary_SCB_xy_x, boundary_SCB_xy_y;
+    std::vector<double> boundary_SCB_xz_x, boundary_SCB_xz_z;
+
+    std::vector<std::vector<double>> boundary_xy_x_array, boundary_xy_y_array;
+    std::vector<std::vector<double>> boundary_xz_x_array, boundary_xz_z_array;
+    std::vector<std::vector<double>> boundary_SCB_xy_x_array, boundary_SCB_xy_y_array;
+    std::vector<std::vector<double>> boundary_SCB_xz_x_array, boundary_SCB_xz_z_array;
     
     // dead regions ... 
     WCP::SMGCSelection mcells;

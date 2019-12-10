@@ -26,7 +26,7 @@ using namespace std;
 int main(int argc, char* argv[])
 {
   if (argc < 3) {
-    cerr << "usage: wire-cell-uboone /path/to/ChannelWireGeometry.txt /path/to/matching.root -t[0,1? in time flash only] -c[0,1? main cluster only] -o[0,1? debug output]" << endl;
+    cerr << "usage: wire-cell-uboone /path/to/ChannelWireGeometry.txt /path/to/matching.root -t[0,1? in time flash only] -c[0,1? main cluster only] -d[0,1,2? datatier] -o[0,1? debug output]" << endl;
     return 1;
   }
   TH1::AddDirectory(kFALSE);
@@ -714,7 +714,7 @@ int main(int argc, char* argv[])
       WCP::Photon_Library pl(run_no,flag_match_data);
       
       // run the new supplemental cosmic tagger
-      std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> cosmic_tagger_results = fid->cosmic_tagger(flashes, main_cluster, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, flag_data, false);
+      std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> cosmic_tagger_results = fid->cosmic_tagger(flashes, main_cluster, additional_clusters, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, flag_data, false);
        // TGM by supplemental tagger ...
       if (std::get<0>(cosmic_tagger_results)==1) {
 	event_type |= 1UL << 3;

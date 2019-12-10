@@ -17,7 +17,6 @@ int pnpoly(std::vector<double>& vertx, std::vector<double>& verty, double testx,
   return c;
 }
 
-
 WCPPID::ToyFiducial::ToyFiducial(int dead_region_ch_ext, double offset_t, double offset_u, double offset_v, double offset_w, double slope_t, double slope_u, double slope_v, double slope_w, double angle_u, double angle_v, double angle_w, double boundary_dis_cut, double top, double bottom, double upstream, double downstream, double anode, double cathode, int flag_data)
   : dead_region_ch_ext(dead_region_ch_ext)
   , offset_t(offset_t)
@@ -128,6 +127,82 @@ WCPPID::ToyFiducial::ToyFiducial(int dead_region_ch_ext, double offset_t, double
   // for (size_t i=0;i!=boundary_xz_x.size();i++){
   //   std::cout << boundary_xz_x.at(i)/units::cm << " XZ " << boundary_xz_z.at(i)/units::cm << std::endl;
   // }
+
+  double YX_TOP_y1_array     = 116*units::cm;
+  double YX_TOP_x1_array[10] = {150.00, 132.56, 122.86, 119.46, 114.22, 110.90, 115.85, 113.48, 126.36, 144.21};
+  double YX_TOP_y2_array[10] = {110.00, 108.14, 106.77, 105.30, 103.40, 102.18, 101.76, 102.27, 102.75, 105.10};
+//  double YX_TOP_x1_array[10] = {100.00, 100.00, 100.00, 100.00, 100.00, 100.00, 100.00, 100.00, 100.00, 100.00};
+//  double YX_TOP_y2_array[10] = {102.00, 102.00, 102.00, 102.00, 102.00, 102.00, 102.00, 102.00, 102.00, 102.00};
+  double YX_TOP_x2_array = 256*units::cm;
+    
+  double YX_BOT_y1_array     = -115*units::cm;
+  double YX_BOT_x1_array[10] = {115.71, 98.05, 92.42, 91.14, 92.25, 85.38, 78.19, 74.46, 78.86, 108.90};
+  double YX_BOT_y2_array[10] = {-101.72, -99.46, -99.51, -100.43, -99.55, -98.56, -98.00, -98.30, -99.32, -104.20};
+//  double YX_BOT_x1_array[10] = {80.00,  80.00,  80.00,  80.00,  80.00,  80.00,  80.00,  80.00,  80.00,  80.00};
+//  double YX_BOT_y2_array[10] = {-99.00, -99.00, -99.00, -99.00, -99.00, -99.00, -99.00, -99.00, -99.00, -99.00};
+  double YX_BOT_x2_array = 256*units::cm;
+
+  double ZX_Up_z1_array = 0*units::cm;
+  double ZX_Up_x1_array = 120*units::cm;
+  double ZX_Up_z2_array = 11*units::cm;
+  double ZX_Up_x2_array = 256*units::cm;
+    
+  double ZX_Dw_z1_array     = 1037*units::cm;
+  double ZX_Dw_x1_array[10] = {120.00, 115.24, 108.50, 110.67, 120.90, 126.43, 140.51, 157.15, 120.00, 120.00};
+  double ZX_Dw_z2_array[10] = {1029.00, 1029.12, 1027.21, 1026.01, 1024.91, 1025.27, 1025.32, 1027.61, 1026.00, 1026.00};
+//  double ZX_Dw_x1_array[10] = {120.00,  120.00,  120.00,  120.00,  120.00,  120.00,  120.00,  120.00,  120.00,  120.00};
+//  double ZX_Dw_z2_array[10] = {1026.00, 1026.00, 1026.00, 1026.00, 1026.00, 1026.00, 1026.00, 1026.00, 1026.00, 1026.00};
+  double ZX_Dw_x2_array     = 256*units::cm;
+
+  for(int idx=0; idx<=9; idx++) {
+    YX_BOT_x1_array[idx] *= units::cm;
+    YX_BOT_y2_array[idx] *= units::cm;
+
+    YX_TOP_x1_array[idx] *= units::cm;
+    YX_TOP_y2_array[idx] *= units::cm;
+
+    ZX_Dw_x1_array[idx] *= units::cm;
+    ZX_Dw_z2_array[idx] *= units::cm;
+  }
+    boundary_xy_x_array.clear();						boundary_xy_y_array.clear();
+    boundary_xz_x_array.clear();						boundary_xz_z_array.clear();
+    boundary_SCB_xy_x_array.clear();						boundary_SCB_xy_y_array.clear();
+    boundary_SCB_xz_x_array.clear();						boundary_SCB_xz_z_array.clear();
+
+  for(int idx=0; idx<=9; idx++) {
+    boundary_xy_x_array.push_back({0,0,0,0,0,0});				boundary_xy_y_array.push_back({0,0,0,0,0,0});
+    boundary_xz_x_array.push_back({0,0,0,0,0,0});				boundary_xz_z_array.push_back({0,0,0,0,0,0});
+    boundary_SCB_xy_x_array.push_back({0,0,0,0,0,0});				boundary_SCB_xy_y_array.push_back({0,0,0,0,0,0});
+    boundary_SCB_xz_x_array.push_back({0,0,0,0,0,0});				boundary_SCB_xz_z_array.push_back({0,0,0,0,0,0});
+
+    boundary_xy_x_array[idx][0] = m_anode              + boundary_dis_cut;	boundary_xy_y_array[idx][0] = m_bottom             + boundary_dis_cut;
+    boundary_xy_x_array[idx][1] = YX_BOT_x1_array[idx] - boundary_dis_cut;	boundary_xy_y_array[idx][1] = YX_BOT_y1_array      + boundary_dis_cut;
+    boundary_xy_x_array[idx][2] = YX_BOT_x2_array      - boundary_dis_cut;	boundary_xy_y_array[idx][2] = YX_BOT_y2_array[idx] + boundary_dis_cut;
+    boundary_xy_x_array[idx][3] = YX_TOP_x2_array      - boundary_dis_cut;	boundary_xy_y_array[idx][3] = YX_TOP_y2_array[idx] - boundary_dis_cut;
+    boundary_xy_x_array[idx][4] = YX_TOP_x1_array[idx] - boundary_dis_cut;	boundary_xy_y_array[idx][4] = YX_TOP_y1_array      - boundary_dis_cut;
+    boundary_xy_x_array[idx][5] = m_anode              + boundary_dis_cut;	boundary_xy_y_array[idx][5] = m_top                - boundary_dis_cut;
+
+    boundary_xz_x_array[idx][0] = m_anode             + boundary_dis_cut;	boundary_xz_z_array[idx][0] = m_upstream          + boundary_dis_cut+1*units::cm;
+    boundary_xz_x_array[idx][1] = ZX_Up_x1_array      - boundary_dis_cut;	boundary_xz_z_array[idx][1] = ZX_Up_z1_array      + boundary_dis_cut+1*units::cm;
+    boundary_xz_x_array[idx][2] = ZX_Up_x2_array      - boundary_dis_cut;	boundary_xz_z_array[idx][2] = ZX_Up_z2_array      + boundary_dis_cut+1*units::cm;
+    boundary_xz_x_array[idx][3] = ZX_Dw_x2_array      - boundary_dis_cut;	boundary_xz_z_array[idx][3] = ZX_Dw_z2_array[idx] - boundary_dis_cut-1*units::cm;
+    boundary_xz_x_array[idx][4] = ZX_Dw_x1_array[idx] - boundary_dis_cut;	boundary_xz_z_array[idx][4] = ZX_Dw_z1_array      - boundary_dis_cut-1*units::cm;
+    boundary_xz_x_array[idx][5] = m_anode             + boundary_dis_cut;	boundary_xz_z_array[idx][5] = m_downstream        - boundary_dis_cut-1*units::cm;
+
+    boundary_SCB_xy_x_array[idx][0] = m_anode             ;			boundary_SCB_xy_y_array[idx][0] = m_bottom            ;
+    boundary_SCB_xy_x_array[idx][1] = YX_BOT_x1_array[idx];			boundary_SCB_xy_y_array[idx][1] = YX_BOT_y1_array     ;
+    boundary_SCB_xy_x_array[idx][2] = YX_BOT_x2_array     ;			boundary_SCB_xy_y_array[idx][2] = YX_BOT_y2_array[idx];
+    boundary_SCB_xy_x_array[idx][3] = YX_TOP_x2_array     ;			boundary_SCB_xy_y_array[idx][3] = YX_TOP_y2_array[idx];
+    boundary_SCB_xy_x_array[idx][4] = YX_TOP_x1_array[idx];			boundary_SCB_xy_y_array[idx][4] = YX_TOP_y1_array     ;
+    boundary_SCB_xy_x_array[idx][5] = m_anode             ;			boundary_SCB_xy_y_array[idx][5] = m_top               ;
+
+    boundary_SCB_xz_x_array[idx][0] = m_anode            ;			boundary_SCB_xz_z_array[idx][0] = m_upstream          +1*units::cm;
+    boundary_SCB_xz_x_array[idx][1] = ZX_Up_x1_array     ;			boundary_SCB_xz_z_array[idx][1] = ZX_Up_z1_array      +1*units::cm;
+    boundary_SCB_xz_x_array[idx][2] = ZX_Up_x2_array     ;			boundary_SCB_xz_z_array[idx][2] = ZX_Up_z2_array      +1*units::cm;
+    boundary_SCB_xz_x_array[idx][3] = ZX_Dw_x2_array     ;			boundary_SCB_xz_z_array[idx][3] = ZX_Dw_z2_array[idx] -1*units::cm;
+    boundary_SCB_xz_x_array[idx][4] = ZX_Dw_x1_array[idx];			boundary_SCB_xz_z_array[idx][4] = ZX_Dw_z1_array      -1*units::cm;
+    boundary_SCB_xz_x_array[idx][5] = m_anode            ;			boundary_SCB_xz_z_array[idx][5] = m_downstream        -1*units::cm;
+  }
 }
 
 bool WCPPID::ToyFiducial::check_full_detector_dead(){
@@ -1591,11 +1666,60 @@ bool WCPPID::ToyFiducial::check_dead_volume(WCP::Point& p, TVector3& dir, double
 }
 
 
-bool WCPPID::ToyFiducial::inside_fiducial_volume(WCP::Point& p, double offset_x){
+bool WCPPID::ToyFiducial::inside_fiducial_volume(WCP::Point& p, double offset_x, std::vector<double>* tolerance_vec){
 
-  int c1 = pnpoly(boundary_xy_x, boundary_xy_y, p.x-offset_x, p.y);
-  int c2 = pnpoly(boundary_xz_x, boundary_xz_z, p.x-offset_x, p.z);
+	int c1=0;
+	int c2=0;
+	int index_y = floor((p.y/units::cm+116)/24);
+	int index_z = floor(p.z/units::m);
+	if(index_y<0){index_y=0;} else if(index_y>9){index_y=9;}
+	if(index_z<0){index_z=0;} else if(index_z>9){index_z=9;}
+	if(tolerance_vec==NULL){
+//		c1 = pnpoly(boundary_xy_x_array[index_z], boundary_xy_y_array[index_z], p.x-offset_x, p.y);
+//		c2 = pnpoly(boundary_xz_x_array[index_y], boundary_xz_z_array[index_y], p.x-offset_x, p.z);
+		c1 = pnpoly(boundary_xy_x, boundary_xy_y, p.x-offset_x, p.y);
+		c2 = pnpoly(boundary_xz_x, boundary_xz_z, p.x-offset_x, p.z);
+	} else{
+		double tx_ano = tolerance_vec->at(0);
+		double tx_cat = tolerance_vec->at(1);
+		double ty_bot = tolerance_vec->at(2);
+		double ty_top = tolerance_vec->at(3);
+		double tz =     tolerance_vec->at(4);
 
+		//Adjust boundaries for tolerance, defined so that positive tolerance increases volume.
+		boundary_SCB_xy_x_array[index_z][0] -= tx_ano;	boundary_SCB_xy_y_array[index_z][0] -= ty_bot;
+
+								boundary_SCB_xy_y_array[index_z][1] -= ty_bot;
+		boundary_SCB_xy_x_array[index_z][2] += tx_cat;	boundary_SCB_xy_y_array[index_z][2] -= ty_bot;
+		boundary_SCB_xy_x_array[index_z][3] += tx_cat;	boundary_SCB_xy_y_array[index_z][3] += ty_top;
+								boundary_SCB_xy_y_array[index_z][4] += ty_top;
+		boundary_SCB_xy_x_array[index_z][5] -= tx_ano;	boundary_SCB_xy_y_array[index_z][5] += ty_top;
+		
+		boundary_SCB_xz_x_array[index_y][0] -= tx_ano;	boundary_SCB_xz_z_array[index_y][0] -= tz;
+								boundary_SCB_xz_z_array[index_y][1] -= tz;
+		boundary_SCB_xz_x_array[index_y][2] += tx_cat;	boundary_SCB_xz_z_array[index_y][2] -= tz;
+		boundary_SCB_xz_x_array[index_y][3] += tx_cat;	boundary_SCB_xz_z_array[index_y][3] += tz;
+								boundary_SCB_xz_z_array[index_y][4] += tz;
+		boundary_SCB_xz_x_array[index_y][5] -= tx_ano;	boundary_SCB_xz_z_array[index_y][5] += tz;		
+
+		c1 = pnpoly(boundary_SCB_xy_x_array[index_z], boundary_SCB_xy_y_array[index_z], p.x-offset_x, p.y);
+		c2 = pnpoly(boundary_SCB_xz_x_array[index_y], boundary_SCB_xz_z_array[index_y], p.x-offset_x, p.z);
+
+		//Revert tolerance shift
+		boundary_SCB_xy_x_array[index_z][0] += tx_ano;	boundary_SCB_xy_y_array[index_z][0] += ty_bot;
+								boundary_SCB_xy_y_array[index_z][1] += ty_bot;
+		boundary_SCB_xy_x_array[index_z][2] -= tx_cat;	boundary_SCB_xy_y_array[index_z][2] += ty_bot;
+		boundary_SCB_xy_x_array[index_z][3] -= tx_cat;	boundary_SCB_xy_y_array[index_z][3] -= ty_top;
+								boundary_SCB_xy_y_array[index_z][4] -= ty_top;
+		boundary_SCB_xy_x_array[index_z][5] += tx_ano;	boundary_SCB_xy_y_array[index_z][5] -= ty_top;
+		
+		boundary_SCB_xz_x_array[index_y][0] += tx_ano;	boundary_SCB_xz_z_array[index_y][0] += tz;
+								boundary_SCB_xz_z_array[index_y][1] += tz;
+		boundary_SCB_xz_x_array[index_y][2] -= tx_cat;	boundary_SCB_xz_z_array[index_y][2] += tz;
+		boundary_SCB_xz_x_array[index_y][3] -= tx_cat;	boundary_SCB_xz_z_array[index_y][3] -= tz;
+								boundary_SCB_xz_z_array[index_y][4] -= tz;
+		boundary_SCB_xz_x_array[index_y][5] += tx_ano;	boundary_SCB_xz_z_array[index_y][5] -= tz;
+	}
   //  std::cout << (p.x-offset_x)/units::cm << " " << p.y/units::cm << " " << p.z/units::cm << std::endl;
   //std::cout << c1 << " " << c2 << std::endl;
   
