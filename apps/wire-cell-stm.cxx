@@ -716,7 +716,9 @@ int main(int argc, char* argv[])
 
       // if STM
       bool tag_stm = fid->check_stm(main_cluster, additional_clusters, offset_x, flash_time, ct_point_cloud, global_wc_map, event_type);
+      int flag_stm = 0;
 
+      /*
       //debugging
       bool pass_pre_glm_cuts = (!flag_low_energy && !flag_lm && !flag_tgm && !tag_stm);
 
@@ -738,16 +740,17 @@ int main(int argc, char* argv[])
       flag_tgm = (event_type >> 3) & 1U;
       int flag_stm = (event_type >> 5) & 1U;
 
-	//debugging glm tagger
-	if(pass_pre_glm_cuts){
-		if(flag_tgm){
-			fid->write_debug(run_no,subrun_no,event_no,tag_glm);
-		} else if(flag_stm){
-			fid->write_debug(run_no,subrun_no,event_no,tag_glm);
-		} else{
-			fid->write_debug(run_no,subrun_no,event_no,0);
-		}
+      //debugging glm tagger
+      if(pass_pre_glm_cuts){
+	if(flag_tgm){
+	  fid->write_debug(run_no,subrun_no,event_no,tag_glm);
+	} else if(flag_stm){
+	  fid->write_debug(run_no,subrun_no,event_no,tag_glm);
+	} else{
+	  fid->write_debug(run_no,subrun_no,event_no,0);
 	}
+      }
+      */
 
       if (flag_tgm==0 && flag_stm==0 && tag_stm)
 	event_type |= 1UL << 5;

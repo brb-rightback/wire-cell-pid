@@ -57,8 +57,7 @@ int main(int argc, char* argv[])
     }
   }
 
-  int flag_data = 1; // data
-  if(datatier==1 || datatier==2) flag_data=0; // overlay, full mc
+  int flag_data = 1; // data, overlay, full MC
   bool flag_match_data = true;
   if (datatier == 2) flag_match_data = false; // if MC we do not take into account the dead PMT
 
@@ -821,7 +820,7 @@ int main(int argc, char* argv[])
 	if( user_tgm==0 && user_stm==0 ) {
 	  WCP::Photon_Library pl(run_no,flag_match_data);
 
-	  std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> M2_cosmic_tagger_results = fid->M2_cosmic_tagger(flashes, main_cluster, additional_clusters, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, flag_data, global_wc_map, false);
+	  std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> M2_cosmic_tagger_results = fid->M2_cosmic_tagger(flashes, main_cluster, additional_clusters, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, flag_match_data, global_wc_map, false);
 	  
 	  int m2_type = std::get<0>(M2_cosmic_tagger_results);
 	  if( m2_type==1 || m2_type==2 ) {
