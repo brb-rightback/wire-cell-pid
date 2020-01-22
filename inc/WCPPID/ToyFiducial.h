@@ -69,14 +69,17 @@ namespace WCPPID{
 
     int convert_xyz_voxel_id(WCP::Point &p);
 
-    int check_boundary(std::vector<std::vector<WCP::WCPointCloud<double>::WCPoint>> extreme_points, double offset_x, std::vector<double>* tol_vec);
+    int check_boundary(std::vector<std::vector<WCP::WCPointCloud<double>::WCPoint>> extreme_points, double offset_x, std::vector<double>* tol_vec=NULL);
 
-    std::vector<double> calculate_pred_pe(int run_no, double offset_x, WCP::Photon_Library *pl, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* flash, bool flag_data);
+    std::vector<double> calculate_pred_pe(int run_no, double offset_x, WCP::Photon_Library *pl, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* flash, bool flag_match_data);
 
-    std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> cosmic_tagger(WCP::OpflashSelection& flashes, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WCP::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WCP::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool flag_data, bool debug_tagger=false);
+    void write_debug(int run_no, int subrun_no, int event_no, int tag_type = 0);
+
+    std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> glm_tagger(WCP::OpflashSelection& flashes, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WCP::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WCP::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool fully_contained, bool flag_match_data, bool debug_tagger=false);
 
     // check STM code ...
     bool check_stm(WCPPID::PR3DCluster* cluster, std::vector<WCPPID::PR3DCluster*>& additional_clusters, double offset_x, double flash_time, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, int& event_type);
+    bool check_stm_only(WCPPID::PR3DCluster* cluster, std::vector<WCPPID::PR3DCluster*>& additional_clusters, double offset_x, double flash_time, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, int& event_type);
 
     bool eval_stm(WCPPID::PR3DCluster* main_cluster, int kink_num, double peak_range = 40*units::cm, double offset_x = 0*units::cm, double com_range = 35*units::cm, bool flag_strong_check = false);
     bool check_other_tracks(WCPPID::PR3DCluster* main_cluster, double offset_x);
@@ -92,9 +95,37 @@ namespace WCPPID{
 
     WCP::SMGCSelection& get_Dead_mcells(){return mcells;};
 
+    ///////////////////////////////////////////////////// M2
+
+    bool inside1_outside0_SCB(WCP::Point& p, double offset_x, double tolerence_x, double tolerence_y, double tolerence_z);
+
+    std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> M2_cosmic_tagger(WCP::OpflashSelection& flashes, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WCP::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WCP::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool flag_data, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, bool debug_tagger=false);
+    
+    double M2_offset_YX_x(WCP::Point& p);
+
+    bool M2_distance_cut(WCPPID::PR3DCluster* main_cluster, double user_offset_dist, double user_offset_frac);
+
+    bool M2_check_tgm(WCPPID::PR3DCluster* main_cluster, double offset_x, WCP::ToyCTPointCloud& ct_point_cloud);
+
+    bool M2_check_stm(WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*>& additional_clusters, double offset_x, double flash_time, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map);
+
+
     
     
   protected:
+
+    //////////////////////////////////////// M2
+    
+    double SCB_YX_TOP_x1_array[11], SCB_YX_TOP_y1_array[11];
+    double SCB_YX_TOP_x2_array[11], SCB_YX_TOP_y2_array[11];
+    double SCB_YX_BOT_x2_array[11], SCB_YX_BOT_y2_array[11];
+    double SCB_YX_BOT_x1_array[11], SCB_YX_BOT_y1_array[11];
+
+    double SCB_ZX_TOP_x1_array[11], SCB_ZX_TOP_z1_array[11];
+    double SCB_ZX_TOP_x2_array[11], SCB_ZX_TOP_z2_array[11];
+    double SCB_ZX_BOT_x2_array[11], SCB_ZX_BOT_z2_array[11];
+    double SCB_ZX_BOT_x1_array[11], SCB_ZX_BOT_z1_array[11];
+
     // boundary
     double m_top; // top distance
     double m_bottom; // bottom distance

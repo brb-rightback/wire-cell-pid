@@ -34,6 +34,8 @@ int main(int argc, char* argv[])
   bool flag_main_cluster_only = true; // default to run only on the main cluster
   bool flag_debug_output = true; // output
   int datatier = 0; // data=0, overlay=1, full mc=2
+
+  int flag_glm = 0;// 0: no glm, 1: m1_glm, 2:m2_glm, 3:m1m2_glm
   
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
@@ -49,6 +51,9 @@ int main(int argc, char* argv[])
     case 'o':
       flag_debug_output = atoi(&argv[i][2]);
       break;
+    case 'g':
+      flag_glm = atoi(&argv[i][2]);
+      break;
     }
   }
 
@@ -57,9 +62,10 @@ int main(int argc, char* argv[])
   bool flag_match_data = true;
   if (datatier == 2) flag_match_data = false; // if MC we do not take into account the dead PMT
 
-  
   WCPPID::ExecMon em("starting");
   cout << em("load geometry") << endl;
+  
+  cout<<" ---> xpcheck glm (0: no glm, 1: m1_glm, 2:m2_glm, 3:m1m2_glm): "<<flag_glm<<endl;
   
   WCPSst::GeomDataSource gds(argv[1]);
   std::vector<double> ex = gds.extent();
@@ -756,28 +762,89 @@ int main(int argc, char* argv[])
       // 	}
       // }
 
-      WCP::Photon_Library pl(run_no,flag_match_data);
-      // run the new supplemental cosmic tagger
-      std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> cosmic_tagger_results = fid->cosmic_tagger(flashes, main_cluster, additional_clusters, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, flag_data, false);
-
-      // TGM by supplemental tagger ...
-      if (std::get<0>(cosmic_tagger_results)==1) {
-	event_type |= 1UL << 3;
-	// STM candidate ...
-      }else if (std::get<0>(cosmic_tagger_results)==2){
-	double temp_flash_time = (std::get<2>(cosmic_tagger_results))->get_time();
-	double temp_offset_x = (temp_flash_time - time_offset)*2./nrebin*time_slice_width;
-	if (fid->check_stm(main_cluster, additional_clusters, temp_offset_x, temp_flash_time, ct_point_cloud, global_wc_map, event_type))
-	  event_type |= 1UL << 5;
-      }
-      flag_tgm = (event_type >> 3) & 1U;
-      int flag_stm = (event_type >> 5) & 1U;
-      
       // if STM
-      if (flag_tgm==0 && flag_stm==0 && fid->check_stm(main_cluster, additional_clusters, offset_x, flash_time, ct_point_cloud, global_wc_map, event_type))
+      bool tag_stm = fid->check_stm(main_cluster, additional_clusters, offset_x, flash_time, ct_point_cloud, global_wc_map, event_type);
+      int flag_stm = 0;
+
+      if( flag_glm==1 || flag_glm==3 ) {
+	cout<<" ---> xpcheck run GLM-1"<<endl;
+
+	//debugging
+	bool pass_pre_glm_cuts = (!flag_low_energy && !flag_lm && !flag_tgm && !tag_stm);
+
+	WCP::Photon_Library pl(run_no,flag_match_data);
+	// run the geometric light mismatch tagger
+	bool fully_contained = (event_type >> 2) & 1U;
+	std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> glm_tagger_results = fid->glm_tagger(flashes, main_cluster, additional_clusters, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, fully_contained, flag_match_data, false);
+	int tag_glm = std::get<0>(glm_tagger_results);
+
+	// TGM by supplemental tagger ...
+	if (tag_glm>=2) {
+	  event_type |= 1UL << 3;
+	  // STM candidate ...
+	}else if (tag_glm==1){
+	  double temp_flash_time = (std::get<2>(glm_tagger_results))->get_time();
+	  double temp_offset_x = (temp_flash_time - time_offset)*2./nrebin*time_slice_width;
+	  if (fid->check_stm_only(main_cluster, additional_clusters, temp_offset_x, temp_flash_time, ct_point_cloud, global_wc_map, event_type))
+	    event_type |= 1UL << 5;
+	}
+	flag_tgm = (event_type >> 3) & 1U;
+	flag_stm = (event_type >> 5) & 1U;
+
+	//debugging glm tagger
+	// if(pass_pre_glm_cuts){
+	//   if(flag_tgm){
+	//     fid->write_debug(run_no,subrun_no,event_no,tag_glm);
+	//   } else if(flag_stm){
+	//     fid->write_debug(run_no,subrun_no,event_no,tag_glm);
+	//   } else{
+	//     fid->write_debug(run_no,subrun_no,event_no,0);
+	//   }
+	// }
+
+      }
+
+      // if(!tag_stm){        
+      // }
+      if (flag_tgm==0 && flag_stm==0 && tag_stm)
 	event_type |= 1UL << 5;
       if (fid->check_full_detector_dead())
 	event_type |= 1UL << 6;
+
+
+
+      /// M2
+      if( flag_glm==2 || flag_glm==3 ) {
+	int user_tgm = (event_type >> 3) & 1U;
+	int user_stm = (event_type >> 5) & 1U;
+
+	if( user_tgm==0 && user_stm==0 ) {
+	  WCP::Photon_Library pl(run_no,flag_match_data);
+
+	  std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> M2_cosmic_tagger_results = fid->M2_cosmic_tagger(flashes, main_cluster, additional_clusters, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, flag_data, global_wc_map, false);
+	  
+	  int m2_type = std::get<0>(M2_cosmic_tagger_results);
+	  if( m2_type==1 || m2_type==2 ) {
+	    event_type |= 1UL << 3;
+	  }
+	  if( m2_type==3 ) {
+	    event_type |= 1UL << 5;
+	  }
+
+	}
+
+	cout<<" ---> xpcheck run GLM-2"<<endl;
+      }
+
+      // xpuser
+      int user_tgm = (event_type >> 3) & 1U;
+      int user_stm = (event_type >> 5) & 1U;
+      //user_tgm = 1;
+      if( user_tgm || user_stm ) {
+	cout<<" xpresult "<<user_tgm<<"\t"<<user_stm<<endl;
+      }
+
+      // xpuser
 
       cluster_length = 0;
       std::vector<double>& dx = main_cluster->get_dx();
@@ -799,6 +866,8 @@ int main(int argc, char* argv[])
 	}
       }
     }
+
+    
     
     // std::cout << it->first << " " << flash_time << " " << it->second << " " << main_cluster << std::endl;
     T_match1->Fill();

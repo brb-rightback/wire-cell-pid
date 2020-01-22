@@ -30,11 +30,12 @@ int main(int argc, char* argv[])
     return 1;
   }
   TH1::AddDirectory(kFALSE);
-  
+
   bool flag_in_time_only = true; // default to not run all code
   bool flag_main_cluster_only = true; // default to run only on the main cluster
   bool flag_debug_output = true; // output
   int datatier = 0; // data=0, overlay=1, full mc=2
+
   
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
@@ -260,6 +261,7 @@ int main(int argc, char* argv[])
   TC->SetBranchAddress("vq",&vq_vec);
   TC->SetBranchAddress("wq",&wq_vec);
   TC->SetBranchAddress("udq",&udq_vec);
+
   TC->SetBranchAddress("vdq",&vdq_vec);
   TC->SetBranchAddress("wdq",&wdq_vec);
   TC->SetBranchAddress("nwire_u",&nwire_u_vec);
@@ -711,26 +713,43 @@ int main(int argc, char* argv[])
       // 	  main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
       // 	}
       // }
+
+      // if STM
+      bool tag_stm = fid->check_stm(main_cluster, additional_clusters, offset_x, flash_time, ct_point_cloud, global_wc_map, event_type);
+
+      //debugging
+      bool pass_pre_glm_cuts = (!flag_low_energy && !flag_lm && !flag_tgm && !tag_stm);
+
       WCP::Photon_Library pl(run_no,flag_match_data);
-      
-      // run the new supplemental cosmic tagger
-      std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> cosmic_tagger_results = fid->cosmic_tagger(flashes, main_cluster, additional_clusters, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, flag_data, false);
+      // run the geometric light mismatch tagger
+      bool fully_contained = (event_type >> 2) & 1U;
+      std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> glm_tagger_results = fid->glm_tagger(flashes, main_cluster, additional_clusters, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, fully_contained, flag_match_data, false);
+      int tag_glm = std::get<0>(glm_tagger_results);
        // TGM by supplemental tagger ...
-      if (std::get<0>(cosmic_tagger_results)==1) {
+      if (tag_glm>=2) {
 	event_type |= 1UL << 3;
 	// STM candidate ...
-      }else if (std::get<0>(cosmic_tagger_results)==2){
-	double temp_flash_time = (std::get<2>(cosmic_tagger_results))->get_time();
+      }else if (tag_glm==1){
+	double temp_flash_time = (std::get<2>(glm_tagger_results))->get_time();
 	double temp_offset_x = (temp_flash_time - time_offset)*2./nrebin*time_slice_width;
 	if (fid->check_stm(main_cluster, additional_clusters, temp_offset_x, temp_flash_time, ct_point_cloud, global_wc_map, event_type))
 	  event_type |= 1UL << 5;
       }
       flag_tgm = (event_type >> 3) & 1U;
       int flag_stm = (event_type >> 5) & 1U;
-      
-      
-      // if STM
-      if (flag_tgm==0 && flag_stm==0 && fid->check_stm(main_cluster, additional_clusters, offset_x, flash_time, ct_point_cloud, global_wc_map, event_type))
+
+	//debugging glm tagger
+	if(pass_pre_glm_cuts){
+		if(flag_tgm){
+			fid->write_debug(run_no,subrun_no,event_no,tag_glm);
+		} else if(flag_stm){
+			fid->write_debug(run_no,subrun_no,event_no,tag_glm);
+		} else{
+			fid->write_debug(run_no,subrun_no,event_no,0);
+		}
+	}
+
+      if (flag_tgm==0 && flag_stm==0 && tag_stm)
 	event_type |= 1UL << 5;
       if (fid->check_full_detector_dead())
 	event_type |= 1UL << 6;

@@ -4,8 +4,6 @@
 
 using namespace WCP;
 
-#include "Cosmic_tagger.h"
-
 int pnpoly(std::vector<double>& vertx, std::vector<double>& verty, double testx, double testy)
 {
   int i, j, c = 0;
@@ -16,6 +14,20 @@ int pnpoly(std::vector<double>& vertx, std::vector<double>& verty, double testx,
   }
   return c;
 }
+
+#include "TVector3.h"
+#include "Cosmic_tagger.h"
+
+// int pnpoly(std::vector<double>& vertx, std::vector<double>& verty, double testx, double testy)
+// {
+//   int i, j, c = 0;
+//   for (i = 0, j = int(vertx.size())-1; i < int(vertx.size()); j = i++) {
+//     if ( ((verty[i]>testy) != (verty[j]>testy)) &&
+// 	 (testx < (vertx[j]-vertx[i]) * (testy-verty[i]) / (verty[j]-verty[i]) + vertx[i]) )
+//       c = !c;
+//   }
+//   return c;
+// }
 
 WCPPID::ToyFiducial::ToyFiducial(int dead_region_ch_ext, double offset_t, double offset_u, double offset_v, double offset_w, double slope_t, double slope_u, double slope_v, double slope_w, double angle_u, double angle_v, double angle_w, double boundary_dis_cut, double top, double bottom, double upstream, double downstream, double anode, double cathode, int flag_data)
   : dead_region_ch_ext(dead_region_ch_ext)
@@ -203,6 +215,62 @@ WCPPID::ToyFiducial::ToyFiducial(int dead_region_ch_ext, double offset_t, double
     boundary_SCB_xz_x_array[idx][4] = ZX_Dw_x1_array[idx];			boundary_SCB_xz_z_array[idx][4] = ZX_Dw_z1_array      -1*units::cm;
     boundary_SCB_xz_x_array[idx][5] = m_anode            ;			boundary_SCB_xz_z_array[idx][5] = m_downstream        -1*units::cm;
   }
+
+
+  ////////////////////////////////////////////// M2
+ 
+  double user_YX_TOP_y1_array     = 116*units::cm;
+  double user_YX_TOP_x1_array[11] = {0, 150.00, 132.56, 122.86, 119.46, 114.22, 110.90, 115.85, 113.48, 126.36, 144.21};
+  double user_YX_TOP_y2_array[11] = {0, 110.00, 108.14, 106.77, 105.30, 103.40, 102.18, 101.76, 102.27, 102.75, 105.10};
+  double user_YX_TOP_x2_array = 256*units::cm;
+    
+  double user_YX_BOT_y1_array     = -115*units::cm;
+  double user_YX_BOT_x1_array[11] = {0, 115.71, 98.05, 92.42, 91.14, 92.25, 85.38, 78.19, 74.46, 78.86, 108.90};
+  double user_YX_BOT_y2_array[11] = {0, -101.72, -99.46, -99.51, -100.43, -99.55, -98.56, -98.00, -98.30, -99.32, -104.20};
+  double user_YX_BOT_x2_array = 256*units::cm;
+
+  double user_ZX_TOP_z1_array = 0*units::cm;
+  double user_ZX_TOP_x1_array = 120*units::cm;
+  double user_ZX_TOP_z2_array = 11*units::cm;
+  double user_ZX_TOP_x2_array = 256*units::cm;
+    
+  double user_ZX_BOT_z1_array     = 1037*units::cm;
+  double user_ZX_BOT_x1_array[11] = {0, 120.00, 115.24, 108.50, 110.67, 120.90, 126.43, 140.51, 157.15, 120.00, 120.00};
+  double user_ZX_BOT_z2_array[11] = {0, 1029.00, 1029.12, 1027.21, 1026.01, 1024.91, 1025.27, 1025.32, 1027.61, 1026.00, 1026.00};
+  double user_ZX_BOT_x2_array     = 256*units::cm;
+
+  for(int idx=1; idx<=10; idx++) {
+    user_YX_BOT_x1_array[idx] *= units::cm;
+    user_YX_BOT_y2_array[idx] *= units::cm;
+
+    user_YX_TOP_x1_array[idx] *= units::cm;
+    user_YX_TOP_y2_array[idx] *= units::cm;
+
+    user_ZX_BOT_x1_array[idx] *= units::cm;
+    user_ZX_BOT_z2_array[idx] *= units::cm;
+
+    ///
+    SCB_YX_TOP_x1_array[idx] = user_YX_TOP_x1_array[idx];
+    SCB_YX_TOP_y1_array[idx] = user_YX_TOP_y1_array;
+    SCB_YX_TOP_x2_array[idx] = user_YX_TOP_x2_array;
+    SCB_YX_TOP_y2_array[idx] = user_YX_TOP_y2_array[idx];
+
+    SCB_YX_BOT_x2_array[idx] = user_YX_BOT_x2_array;
+    SCB_YX_BOT_y2_array[idx] = user_YX_BOT_y2_array[idx];
+    SCB_YX_BOT_x1_array[idx] = user_YX_BOT_x1_array[idx];
+    SCB_YX_BOT_y1_array[idx] = user_YX_BOT_y1_array;
+
+    SCB_ZX_TOP_x1_array[idx] = user_ZX_TOP_x1_array;
+    SCB_ZX_TOP_z1_array[idx] = user_ZX_TOP_z1_array;
+    SCB_ZX_TOP_x2_array[idx] = user_ZX_TOP_x2_array;
+    SCB_ZX_TOP_z2_array[idx] = user_ZX_TOP_z2_array;
+
+    SCB_ZX_BOT_x2_array[idx] = user_ZX_BOT_x2_array;
+    SCB_ZX_BOT_z2_array[idx] = user_ZX_BOT_z2_array[idx];
+    SCB_ZX_BOT_x1_array[idx] = user_ZX_BOT_x1_array[idx];
+    SCB_ZX_BOT_z1_array[idx] = user_ZX_BOT_z1_array;
+  }
+
 }
 
 bool WCPPID::ToyFiducial::check_full_detector_dead(){
@@ -1666,6 +1734,7 @@ bool WCPPID::ToyFiducial::check_dead_volume(WCP::Point& p, TVector3& dir, double
 }
 
 
+//Note, this is actually treated as inside_SCB_boundary if tolerance_vec is supplied
 bool WCPPID::ToyFiducial::inside_fiducial_volume(WCP::Point& p, double offset_x, std::vector<double>* tolerance_vec){
 
 	int c1=0;

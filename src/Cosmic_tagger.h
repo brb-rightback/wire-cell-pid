@@ -1,8 +1,8 @@
  
-std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::cosmic_tagger(WCP::OpflashSelection& flashes, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WCP::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WCP::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool flag_data, bool debug_tagger){
+std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::glm_tagger(WCP::OpflashSelection& flashes, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WCP::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WCP::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool fully_contained, bool flag_match_data, bool debug_tagger){
 
 
-//	std::cout << "starting cosmic tagger ================================================================================" << std::endl;
+	std::cout << "starting glm tagger ================================================================" << std::endl;
 
 	// 0 for original match results
 	// 1 for TGM ...
@@ -22,16 +22,50 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::cosmic
 	double main_offset_x = (main_flash->get_time() - time_offset)*2./nrebin*time_slice_width;
 
 	//set tolerances
-	double bundle_ks_stm_tol =     0.08;					//This is the tolerance below which a flash is considered a very good match and should not be considered
-	double bundle_ks_tgm_tol =     0.00;					//TGM-with-flash is pure already, no need to screen by KS
-	double bundle_ks_tgm_nof_tol = 0.08;
-	double stm_flash_tol = 3.0*units::m;
-	double tgm_flash_tol = 3.0*units::m;
-	double stm_pe_frac_tol = 2.0;
-	double tgm_pe_frac_tol = 2.0;
-	std::vector<double> stm_tol_vec =     {0.0, 1.0, 1.0, 1.5, 1.0};	//x_ano, x_cat, ybot, ytop, z
-	std::vector<double> tgm_tol_vec =     {2.0, 3.0, 3.0, 3.0, 3.0};
-	std::vector<double> tgm_nof_tol_vec = {1.0, 1.5, 1.5, 1.5, 1.5};
+	double chi2_stm_tol = 1;
+	double chi2_tgm_tol = 3;
+	double bundle_ks_stm_tol =     0.04;					//This is the tolerance below which a flash is considered a very good match and should not be considered
+	double bundle_ks_tgm_tol =     0.03;
+	double bundle_ks_tgm_nof_tol = 0.03;
+	double stm_flash_tol = 1.2*units::m;
+	double tgm_flash_tol = 1.6*units::m;
+	double stm_pe_frac_tol = 1.3;
+	double tgm_pe_frac_tol = 1.5;
+	std::vector<double> stm_tol_vec =     {0.0, 2.0, 2.0, 2.5, 2.0};	//x_ano, x_cat, ybot, ytop, z
+	std::vector<double> tgm_tol_vec =     {2.2, 2.8, 2.8, 2.8, 2.8};
+	std::vector<double> tgm_nof_tol_vec = {0.8, 1.2, 1.2, 1.2, 1.2};
+
+/*
+	if(!fully_contained){
+		chi2_stm_tol = 1;
+		chi2_tgm_tol = 1;
+		bundle_ks_stm_tol =     0.04;
+		bundle_ks_tgm_tol =     0.06;
+		bundle_ks_tgm_nof_tol = 0.06;
+		stm_flash_tol = 1.2*units::m;
+		tgm_flash_tol = 1.2*units::m;
+		stm_pe_frac_tol = 1.3;
+		tgm_pe_frac_tol = 1.3;
+		stm_tol_vec =     {0.0, 1.5, 1.5, 2.0, 1.5};
+		tgm_tol_vec =     {1.6, 2.0, 2.0, 2.0, 2.0};
+		tgm_nof_tol_vec = {0.6, 0.9, 0.9, 0.9, 0.9};
+	}
+*/
+	if(!fully_contained){
+		chi2_stm_tol = 1;
+		chi2_tgm_tol = 1;
+		bundle_ks_stm_tol =     0.04;
+		bundle_ks_tgm_tol =     0.05;
+		bundle_ks_tgm_nof_tol = 0.05;
+		stm_flash_tol = 1.0*units::m;
+		tgm_flash_tol = 1.0*units::m;
+		stm_pe_frac_tol = 1.3;
+		tgm_pe_frac_tol = 1.3;
+		stm_tol_vec =     {0.0, 1.5, 1.5, 2.0, 1.5};
+		tgm_tol_vec =     {2.0, 2.5, 2.5, 2.5, 2.5};
+		tgm_nof_tol_vec = {0.6, 0.9, 0.9, 0.9, 0.9};
+	}
+
 	for(int i=0;i<5;i++){
 		stm_tol_vec[i] *= units::cm;
 		tgm_tol_vec[i] *= units::cm;
@@ -48,7 +82,7 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::cosmic
 	std::vector<Opflash*> candidate_flash_list;
 	std::vector<double> candidate_offset_x_list;
 
-	//Check whether the track is at least 15 cm long
+	//Check whether the track is at least 10 cm long
 	Point p0(extreme_points[0][0].x,extreme_points[0][0].y,extreme_points[0][0].z);
 	Point p1(extreme_points[1][0].x,extreme_points[1][0].y,extreme_points[1][0].z);
 	double distance = sqrt(pow(p0.x-p1.x,2)+pow(p0.y-p1.y,2)+pow(p0.z-p1.z,2));
@@ -69,17 +103,22 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::cosmic
 
 			//Flash PE Prediction
 			bool flag_good_bundle;
-//			std::vector<double>& pred_pmt_light = main_bundle->get_pred_pmt_light();
-//			WireCell2dToy::calculate_pred_pe(run_no, time_offset, nrebin, time_slice_width, pl, new_bundle, &pred_pmt_light, &additional_clusters, &other_clusters, &more_clusters, flag_good_bundle, flag_data);
-			std::vector<double> pred_pmt_light = calculate_pred_pe(run_no, offset_x, pl, main_cluster, additional_clusters, flash, flag_data);
+			std::vector<double> pred_pmt_light = calculate_pred_pe(run_no, offset_x, pl, main_cluster, additional_clusters, flash, flag_match_data);
 
 			//Compute the PE centroids for the flash PE and predicted PE
 			double pred_pe_tot = 0;
 			double flash_pe_tot = 0;
 			double pred_pe_z_centroid = 0;
 			double flash_pe_z_centroid = 0;
+			double newf_chi2 = 0;
+			int    newf_ndf = 0;
 			for(int i=0;i<int(pred_pmt_light.size());i++){
 				double flash_pe = flash->get_PE(i);
+				double flash_pe_err = flash->get_PE_err(i);
+				if(flash_pe_err != 0 && (flash_pe != 0 || pred_pmt_light[i] != 0)){
+					newf_chi2 += pow((flash_pe-pred_pmt_light[i])/flash_pe_err,2);
+					newf_ndf++;
+				}
 				flash_pe_tot += flash_pe;
 				pred_pe_tot += pred_pmt_light[i];
 				flash_pe_z_centroid += flash_pe*opDet_xyz_map[i][2]*units::cm;
@@ -94,14 +133,36 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::cosmic
 			int boundary_num_tgm = 0;
 			int boundary_num_stm = 0;
 			int boundary_num = 0;
+			bool cathode_side, reasonable_pe, nearby_flash, better_chi2;
+			double ks_frac, chi2_frac;
+
 			//TGM-with-flash case
-			if(bundle_ks > bundle_ks_tgm_tol && flash_pe_tot < pred_pe_tot*tgm_pe_frac_tol && flash_pe_z_centroid > pred_pe_z_centroid-tgm_flash_tol && flash_pe_z_centroid < pred_pe_z_centroid+tgm_flash_tol){
-				boundary_num_tgm = check_boundary(extreme_points, offset_x, &tgm_tol_vec);
+			ks_frac = bundle_ks / bundle_ks_tgm_tol;
+			chi2_frac = (newf_chi2/newf_ndf)/(bundle_chi2/bundle_ndf);
+			better_chi2 = chi2_frac < chi2_tgm_tol;
+			reasonable_pe = flash_pe_tot < pred_pe_tot*tgm_pe_frac_tol;
+			nearby_flash = flash_pe_z_centroid > pred_pe_z_centroid-tgm_flash_tol && flash_pe_z_centroid < pred_pe_z_centroid+tgm_flash_tol;
+			if(better_chi2 && reasonable_pe && nearby_flash){
+				if(ks_frac > 2){for(int i=0;i<5;i++){tgm_tol_vec[i] *= 1.3;}}
+				if(ks_frac > 1){
+					boundary_num_tgm = check_boundary(extreme_points, offset_x, &tgm_tol_vec);
+				}
 			}
+
 			//STM-with-flash case
-			if(inside_x_region(extreme_points,offset_x,128-stm_tol_vec[0],256+stm_tol_vec[1]) && bundle_ks > bundle_ks_stm_tol && flash_pe_tot < pred_pe_tot*stm_pe_frac_tol && flash_pe_z_centroid > pred_pe_z_centroid-stm_flash_tol && flash_pe_z_centroid < pred_pe_z_centroid+stm_flash_tol){
-				boundary_num_stm = check_boundary(extreme_points, offset_x, &stm_tol_vec);
+			cathode_side = inside_x_region(extreme_points,offset_x,128-stm_tol_vec[0],256+stm_tol_vec[1]);
+			ks_frac = bundle_ks / bundle_ks_stm_tol;
+			better_chi2 = chi2_frac < chi2_stm_tol;
+			reasonable_pe = flash_pe_tot < pred_pe_tot*stm_pe_frac_tol;
+			nearby_flash = flash_pe_z_centroid > pred_pe_z_centroid-stm_flash_tol && flash_pe_z_centroid < pred_pe_z_centroid+stm_flash_tol;
+			if(better_chi2 && cathode_side && reasonable_pe && nearby_flash){
+				if(ks_frac > 3){for(int i=0;i<5;i++){stm_tol_vec[i] *= 1.3;}}
+				if(ks_frac > 2){for(int i=0;i<5;i++){stm_tol_vec[i] *= 1.3;}}
+				if(ks_frac > 1){
+					boundary_num_stm = check_boundary(extreme_points, offset_x, &stm_tol_vec);
+				}
 			}
+
 			//TGM gets priority over STM
 			if(boundary_num_tgm==2)					{boundary_num =  2;}
 			else if(boundary_num_stm==1)				{boundary_num =  1;}
@@ -109,7 +170,7 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::cosmic
 
 			//Store a STM / TGM tag if appropriate
 			bool tgm = check_tgm(main_cluster,flash,offset_x,ct_point_cloud);
-			if(boundary_num==1 || boundary_num==2){
+			if(boundary_num==1 || boundary_num==2 && tgm){
 				n_boundary_list.push_back(boundary_num);
 				candidate_flash_list.push_back(flash);
 			}
@@ -117,12 +178,14 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::cosmic
 
 		//Check whether a TGM w/o flash hypothesis works
 		//Skip if the existing neutrino match is very good
-		if(bundle_ks > bundle_ks_tgm_nof_tol){
+		double ks_frac = bundle_ks / bundle_ks_tgm_nof_tol;
+		if(ks_frac > 2){for(int i=0;i<5;i++){tgm_nof_tol_vec[i] *= 1.3;}}
+		if(ks_frac > 1){
 			double offset_x = (main_flash->get_time() - time_offset)*2./nrebin*time_slice_width;
 			double tx     = tgm_nof_tol_vec[0];
-			double ty_bot = tgm_nof_tol_vec[1];
-			double ty_top = tgm_nof_tol_vec[2];
-			double tz     = tgm_nof_tol_vec[3];
+			double ty_bot = tgm_nof_tol_vec[2];
+			double ty_top = tgm_nof_tol_vec[3];
+			double tz     = tgm_nof_tol_vec[4];
 			double max_offset =       1000000*units::cm;		//The max offset allowed in the +x direction.  The starting value is meant to be immediately overriden.
 			double max_intersection = 1000000*units::cm;
 			double min_intersection = 1000000*units::cm;
@@ -256,7 +319,8 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::cosmic
 		else if(n_boundary_list[n_match]==1 && tag_type != 2 && tag_type != 3)		{tag_type = 1; new_flash = candidate_flash_list[n_match];}
 	}
 
-	//debug_tagger = true;
+/*
+	debug_tagger = false;
 	//Write to file for debugging purposes
 	if(debug_tagger){
 		for(int n_match = 0; n_match<int(n_boundary_list.size());n_match++){
@@ -266,26 +330,32 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::cosmic
 				std::cout << "match type = " << n_boundary_list[n_match] << std::endl;
 			}
 		}
-		srand(time(NULL));
-		int random_number = std::rand();
-		std::ofstream debug_file;
-		std::string path = "/uboone/data/users/lcoopert/cosmic_tagger/data";
-//		debug_file.open(path+"/temp_numu_cc_all/numu_cc_tagger_results_"+std::to_string(random_number)+".txt", std::ios_base::app);
-//		debug_file.open(path+"/temp_extbnb_all/extbnb_tagger_results_"+std::to_string(random_number)+".txt", std::ios_base::app);
-
-//		debug_file.open(path+"/temp_extbnb_test/extbnb_tagger_results_stm_"    +std::to_string(random_number)+".txt", std::ios_base::app);
-//		debug_file.open(path+"/temp_extbnb_test/extbnb_tagger_results_tgm_"    +std::to_string(random_number)+".txt", std::ios_base::app);
-//		debug_file.open(path+"/temp_extbnb_test/extbnb_tagger_results_tgm_nof_"+std::to_string(random_number)+".txt", std::ios_base::app);
-
-		debug_file << run_no << " " << subrun_no << " " << event_no << " " << tag_type << std::endl;
-		debug_file.close();
-		//std::cout << "run subrun event: " << run_no << " " << subrun_no << " " << event_no << ", tag_type = " << tag_type << std::endl;
+		std::cout << run_no << " " << subrun_no << " " << event_no << " tag_type = " << tag_type << std::endl;
+		write_debug(run_no,subrun_no,event_no,tag_type);
 	}
-
-//	std::cout << run_no << " " << subrun_no << " " << event_no << " tag_type = " << tag_type << std::endl;
-//	std::cout << "ending cosmic tagger ================================================================================" << std::endl;
-
+*/
+	std::cout << run_no << " " << subrun_no << " " << event_no << " tag_type = " << tag_type << ", ks = " << bundle_ks << std::endl;
+	std::cout << "ending glm tagger ==================================================================" << std::endl;
 	return std::make_tuple(tag_type, main_cluster, new_flash);
+}
+
+//Write to file with this function
+void WCPPID::ToyFiducial::write_debug(int run_no, int subrun_no, int event_no, int tag_type){
+
+	srand(time(NULL));
+	int random_number = std::rand();
+	std::ofstream debug_file;
+	std::string path = "/uboone/data/users/lcoopert/cosmic_tagger/data";
+	debug_file.open(path+"/temp_numu_cc_all/numu_cc_tagger_results_"+std::to_string(random_number)+".txt", std::ios_base::app);
+//	debug_file.open(path+"/temp_extbnb_all/extbnb_tagger_results_"+std::to_string(random_number)+".txt", std::ios_base::app);
+
+//	debug_file.open(path+"/temp_extbnb_test/extbnb_tagger_results_stm_"    +std::to_string(random_number)+".txt", std::ios_base::app);
+//	debug_file.open(path+"/temp_extbnb_test/extbnb_tagger_results_tgm_"    +std::to_string(random_number)+".txt", std::ios_base::app);
+//	debug_file.open(path+"/temp_extbnb_test/extbnb_tagger_results_tgm_nof_"+std::to_string(random_number)+".txt", std::ios_base::app);
+
+	debug_file << run_no << " " << subrun_no << " " << event_no << " " << tag_type << std::endl;
+	debug_file.close();
+
 }
 
 //Helper function that tells whether a set of extreme points is inside an x_bound
@@ -299,7 +369,7 @@ bool WCPPID::ToyFiducial::inside_x_region(std::vector<std::vector<WCP::WCPointCl
 }
 
 //Helper function that creates a vector of predicted PMT responses
-std::vector<double> WCPPID::ToyFiducial::calculate_pred_pe(int run_no, double offset_x, WCP::Photon_Library *pl, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* flash, bool flag_data){
+std::vector<double> WCPPID::ToyFiducial::calculate_pred_pe(int run_no, double offset_x, WCP::Photon_Library *pl, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* flash, bool flag_match_data){
 
 	std::vector<double> pred_pmt_light(32,0);
 	double rel_light_yield_err = pl->rel_light_yield_err;
@@ -485,7 +555,7 @@ std::vector<double> WCPPID::ToyFiducial::calculate_pred_pe(int run_no, double of
 	  for (int i=0;i!=32;i++){
 	    norm_factor[i] = 1;
 	  }
-	  if (flag_data){
+	  if (flag_match_data){
 	    if (run_no >= 12809)
 	      norm_factor[17] = 0;
 	  }
@@ -543,12 +613,16 @@ int WCPPID::ToyFiducial::check_boundary(std::vector<std::vector<WCPointCloud<dou
 		for(int ii=0;ii<int(extreme_points[i].size());ii++){
 			WCP::Point p(extreme_points[i][ii].x,extreme_points[i][ii].y,extreme_points[i][ii].z);
 			//Check whether the point is inside the extended fiducial volume
-			std::vector<double> neg_tol_vec = {-1*tol_vec->at(0),-1*tol_vec->at(1),-1*tol_vec->at(2),-1*tol_vec->at(3), -1*tol_vec->at(4)};
+			std::vector<double>* neg_tol_vec = NULL;
+			if(tol_vec!=NULL){
+				std::vector<double> temp_neg_tol_vec = {-1*tol_vec->at(0),-1*tol_vec->at(1),-1*tol_vec->at(2),-1*tol_vec->at(3), -1*tol_vec->at(4)};
+				neg_tol_vec = &temp_neg_tol_vec;
+			}
 			if(!inside_fiducial_volume(p,offset_x,tol_vec)){
 				return -1;
 			//Now that the point is known to be within the extended fiducial volume, check whether it is near any TGM boundaries, but only if it is near a PCA endpoint
 			} else {
-				if(!inside_fiducial_volume(p,offset_x,&neg_tol_vec)){
+				if(!inside_fiducial_volume(p,offset_x,neg_tol_vec)){
 					if(i==0){front_flag = true;}
 					if(i==1){back_flag = true;}
 				}
@@ -630,6 +704,619 @@ bool WCPPID::ToyFiducial::check_fully_contained(WCPPID::PR3DCluster* main_cluste
 
   
   return true;
+}
+
+
+//edited version of check_stm that ignores tgms
+bool WCPPID::ToyFiducial::check_stm_only(WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*>& additional_clusters, double offset_x, double flash_time, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, int& event_type){
+
+  //  check_full_detector_dead();
+
+  
+
+
+  //std::cout << flag_other_clusters << std::endl;
+  
+  TVector3 drift_dir(1,0,0);
+  // hard coded for U and V plane ... 
+  TVector3 U_dir(0,cos(60./180.*3.1415926),sin(60./180.*3.1415926));
+  TVector3 V_dir(0,cos(60./180.*3.1415926),-sin(60./180.*3.1415926));
+  TVector3 W_dir(0,1,0);
+
+  Vector main_dir = main_cluster->get_PCA_axis(0);
+  TVector3 dir_main(main_dir.x,main_dir.y,main_dir.z);
+  
+  std::vector<WCPointCloud<double>::WCPoint> candidate_exit_wcps;
+  std::set<int> temp_set;
+  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps;
+  
+  // first round check
+  if (main_cluster->get_point_cloud_steiner()->get_cloud().pts.size()==0)
+    return false;
+
+  {
+    // get two extreme points ...
+    wcps = main_cluster->get_two_boundary_wcps(2,true);
+    // figure out the end points ...
+    std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps = main_cluster->get_extreme_wcps();
+    
+    {
+      std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
+      temp_wcps.push_back(wcps.first);
+      out_vec_wcps.push_back(temp_wcps);
+    }
+    {
+      std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
+      temp_wcps.push_back(wcps.second);
+      out_vec_wcps.push_back(temp_wcps);
+    }
+    
+    // boundary check
+    for (size_t i=0;i!=out_vec_wcps.size();i++){
+      bool flag_save = false;
+      // check all the points ... 
+      for (size_t j=0;j!=out_vec_wcps.at(i).size();j++){
+
+	Point p1(out_vec_wcps.at(i).at(j).x,out_vec_wcps.at(i).at(j).y,out_vec_wcps.at(i).at(j).z);
+	//std::cout << p1 << " " << inside_fiducial_volume(p1,offset_x) << std::endl;
+	if (!inside_fiducial_volume(p1,offset_x)){
+	  candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	  flag_save = true;
+	  break;
+	}
+      }
+      
+      if (!flag_save){
+	// check direction
+	Point p1(out_vec_wcps.at(i).at(0).x,out_vec_wcps.at(i).at(0).y,out_vec_wcps.at(i).at(0).z);
+	TVector3 dir = main_cluster->VHoughTrans(p1,30*units::cm);
+	dir *= (-1);
+	
+	// check U and V and W
+	TVector3 dir_1(0,dir.Y(),dir.Z());
+	double angle1 = dir_1.Angle(U_dir);
+	TVector3 tempV1(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle1),0);
+	double angle1_1 = tempV1.Angle(drift_dir)/3.1415926*180.;
+	
+	double angle2 = dir_1.Angle(V_dir);
+	TVector3 tempV2(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle2),0);
+	double angle2_1 = tempV2.Angle(drift_dir)/3.1415926*180.;
+	
+	double angle3 = dir_1.Angle(W_dir);
+	TVector3 tempV3(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle3),0);
+	double angle3_1 = tempV3.Angle(drift_dir)/3.1415926*180.;
+	
+	
+	if ( (angle1_1 < 10 || angle2_1 < 10 || angle3_1 < 5)){
+	  if (!check_signal_processing(p1,dir,ct_point_cloud,1*units::cm,offset_x)){
+	    flag_save = true;
+	    candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	  }
+	}
+	
+	if (!flag_save){
+	  if (fabs((3.1415926/2.-dir.Angle(dir_main))/3.1415926*180.)>60 ){
+	    if (!check_dead_volume(p1,dir,1*units::cm,offset_x)){
+	      flag_save = true;
+	      candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	    }
+	  }
+	}
+      }
+    }
+    
+    //std::cout << wcps.first.x << " " <<wcps.first.y << " " << wcps.first.z << std::endl;
+    //std::cout << wcps.second.x << " " <<wcps.second.y << " " << wcps.second.z << std::endl;
+    
+    for (size_t i=0; i!=candidate_exit_wcps.size(); i++){
+      double dis1 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.first.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.first.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.first.z,2));
+      double dis2 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.second.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.second.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.second.z,2));
+      
+      //      std::cout << candidate_exit_wcps.at(i).x << " " << candidate_exit_wcps.at(i).y << " " << candidate_exit_wcps.at(i).z << " " << dis1 << " " << dis2 << std::endl;
+      
+      // essentially one of the extreme points ...
+      if (dis1 < dis2){
+	if (dis1 < 1.0*units::cm)  temp_set.insert(0);
+      }else{
+	if (dis2 < 1.0*units::cm)  temp_set.insert(1);
+      }
+    }
+
+    //    std::cout << temp_set.size() << " " << candidate_exit_wcps.size() << std::endl;
+    
+    // protection against two end point situation
+    if (temp_set.size()==2){
+      WCP::Point tp1(wcps.first.x,wcps.first.y,wcps.first.z);
+      WCP::Point tp2(wcps.second.x,wcps.second.y,wcps.second.z);
+      
+      temp_set.clear();
+      
+      if ((!inside_fiducial_volume(tp1,offset_x))) temp_set.insert(0);
+      if ((!inside_fiducial_volume(tp2,offset_x))) temp_set.insert(1);
+      if (temp_set.size()==0){
+	temp_set.insert(0);
+	temp_set.insert(1);
+      }
+    }
+  }
+
+  if (temp_set.size()==0){
+    candidate_exit_wcps.clear();
+    // get two extreme points ...
+    wcps = main_cluster->get_two_boundary_wcps(2);
+    // figure out the end points ...
+    std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps = main_cluster->get_extreme_wcps();
+    
+    {
+      std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
+      temp_wcps.push_back(wcps.first);
+      out_vec_wcps.push_back(temp_wcps);
+    }
+    {
+      std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
+      temp_wcps.push_back(wcps.second);
+      out_vec_wcps.push_back(temp_wcps);
+    }
+    
+    // boundary check
+    for (size_t i=0;i!=out_vec_wcps.size();i++){
+      bool flag_save = false;
+      // check all the points ... 
+      for (size_t j=0;j!=out_vec_wcps.at(i).size();j++){
+	Point p1(out_vec_wcps.at(i).at(j).x,out_vec_wcps.at(i).at(j).y,out_vec_wcps.at(i).at(j).z);
+	if (!inside_fiducial_volume(p1,offset_x)){
+	  candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	  flag_save = true;
+	  break;
+	}
+      }
+      
+      if (!flag_save){
+	// check direction
+	Point p1(out_vec_wcps.at(i).at(0).x,out_vec_wcps.at(i).at(0).y,out_vec_wcps.at(i).at(0).z);
+	TVector3 dir = main_cluster->VHoughTrans(p1,30*units::cm);
+	dir *= (-1);
+	
+	// check U and V and W
+	TVector3 dir_1(0,dir.Y(),dir.Z());
+	double angle1 = dir_1.Angle(U_dir);
+	TVector3 tempV1(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle1),0);
+	double angle1_1 = tempV1.Angle(drift_dir)/3.1415926*180.;
+	
+	double angle2 = dir_1.Angle(V_dir);
+	TVector3 tempV2(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle2),0);
+	double angle2_1 = tempV2.Angle(drift_dir)/3.1415926*180.;
+	
+	double angle3 = dir_1.Angle(W_dir);
+	TVector3 tempV3(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle3),0);
+	double angle3_1 = tempV3.Angle(drift_dir)/3.1415926*180.;
+	
+	
+	if ( (angle1_1 < 10 || angle2_1 < 10 || angle3_1 < 5)){
+	  if (!check_signal_processing(p1,dir,ct_point_cloud,1*units::cm,offset_x)){
+	    flag_save = true;
+	    candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	  }
+	}
+
+	//	std::cout << fabs((3.1415926/2.-dir.Angle(dir_main))/3.1415926*180.) << " " << check_dead_volume(p1,dir,1*units::cm,offset_x) << std::endl;
+	if (!flag_save){
+	  if (fabs((3.1415926/2.-dir.Angle(dir_main))/3.1415926*180.)>60 ){
+	    if (!check_dead_volume(p1,dir,1*units::cm,offset_x)){
+	      flag_save = true;
+	      candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	    }
+	  }
+	}
+      }
+    }
+    
+    //std::cout << wcps.first.x << " " <<wcps.first.y << " " << wcps.first.z << std::endl;
+    //std::cout << wcps.second.x << " " <<wcps.second.y << " " << wcps.second.z << std::endl;
+    
+    for (size_t i=0; i!=candidate_exit_wcps.size(); i++){
+      double dis1 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.first.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.first.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.first.z,2));
+      double dis2 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.second.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.second.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.second.z,2));
+      
+      //std::cout << candidate_exit_wcps.at(i).x << " " << candidate_exit_wcps.at(i).y << " " << candidate_exit_wcps.at(i).z << " " << dis1 << " " << dis2 << std::endl;
+      
+      // essentially one of the extreme points ...
+      if (dis1 < dis2){
+	if (dis1 < 1.0*units::cm)  temp_set.insert(0);
+      }else{
+	if (dis2 < 1.0*units::cm)  temp_set.insert(1);
+      }
+    }
+
+    //std::cout << temp_set.size() << " " << candidate_exit_wcps.size() << std::endl;
+    
+    
+    // protection against two end point situation
+    if (temp_set.size()==2){
+      WCP::Point tp1(wcps.first.x,wcps.first.y,wcps.first.z);
+      WCP::Point tp2(wcps.second.x,wcps.second.y,wcps.second.z);
+      
+      temp_set.clear();
+      
+      if ((!inside_fiducial_volume(tp1,offset_x))) temp_set.insert(0);
+      if ((!inside_fiducial_volume(tp2,offset_x))) temp_set.insert(1);
+      if (temp_set.size()==0){
+	temp_set.insert(0);
+	temp_set.insert(1);
+      }
+    }
+  }
+  
+
+  
+  // fully contained, so not a STM
+  if (candidate_exit_wcps.size()==0) {
+    std::cout << "Mid Point: A" << std::endl;
+    return false;
+  }
+  
+  std::cout << "end_point: " << temp_set.size() << " " << candidate_exit_wcps.size() << std::endl;
+
+  // It is possible that we have two points out of fiducial
+  // Michel electron is outside the boundary ...
+
+  
+  
+  // Crawl backward according to the graph ??? ...
+  WCPointCloud<double>::WCPoint first_wcp;
+  WCPointCloud<double>::WCPoint last_wcp;
+  bool flag_double_end = false;
+
+  if (temp_set.size()!=0){
+    if (*temp_set.begin()==0){
+      first_wcp = wcps.first;
+      last_wcp = wcps.second;
+    }else{
+      first_wcp = wcps.second;
+      last_wcp = wcps.first;
+    }
+    if (temp_set.size()==2) flag_double_end = true;
+    
+  }else{
+    if (candidate_exit_wcps.size()==1){
+      first_wcp = candidate_exit_wcps.at(0);
+      TVector3 dir1(wcps.first.x - candidate_exit_wcps.at(0).x,
+		    wcps.first.y - candidate_exit_wcps.at(0).y,
+		    wcps.first.z - candidate_exit_wcps.at(0).z);
+      TVector3 dir2(wcps.second.x - candidate_exit_wcps.at(0).x,
+		    wcps.second.y - candidate_exit_wcps.at(0).y,
+		    wcps.second.z - candidate_exit_wcps.at(0).z);
+      double dis1 = dir1.Mag();
+      double dis2 = dir2.Mag();
+
+      if (dir1.Angle(dir2) > 120/180.*3.1415926 && dis1 > 20*units::cm &&
+      	  dis2 > 20*units::cm){
+	std::cout << "Mid Point: B" << std::endl;
+	return false;
+      }else{
+	if (dis1 < dis2){
+	  last_wcp = wcps.second;	   
+	}else{
+	  last_wcp = wcps.first; 
+	}
+      }
+      
+    }else{
+      std::cout << "Mid Point: C" << std::endl;
+      return false;
+    }
+  }
+
+ 
+  bool flag_other_clusters = check_other_clusters(main_cluster, additional_clusters);
+  //  std::cout << "haha " << flag_other_clusters << std::endl;
+  
+  // forward check ...
+  {
+    if (flag_double_end) std::cout << "Forward check! " << std::endl;
+    // regular crawling ...
+    main_cluster->do_rough_path(first_wcp, last_wcp);
+    // std::cout << "haha" << std::endl;
+    main_cluster->collect_charge_trajectory(ct_point_cloud); 
+    //std::cout << "haha" << std::endl;
+    main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
+    //std::cout << "test" << std::endl; 
+    if (main_cluster->get_fine_tracking_path().size()<=3) return false;
+    
+    //std::cout << "haha " << std::endl;
+    Point mid_p = main_cluster->adjust_rough_path(); 
+    //std::cout << "haha" << std::endl;
+    // fitting trajectory and dQ/dx...
+    main_cluster->collect_charge_trajectory(ct_point_cloud); 
+    main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+
+    //    std::cout << "test" << std::endl; 
+    // check both end points for TGM ...
+    WCP::PointVector& pts = main_cluster->get_fine_tracking_path();
+    std::vector<double>& dQ = main_cluster->get_dQ();
+    std::vector<double>& dx = main_cluster->get_dx();
+    
+    int kink_num = find_first_kink(main_cluster);
+    
+    double left_L = 0; 
+    double left_Q = 0;
+    double exit_L = 0; 
+    double exit_Q = 0;
+    for (size_t i=0;i!=kink_num;i++){
+      exit_L += dx.at(i);
+      exit_Q += dQ.at(i);
+    }
+    for (size_t i = kink_num; i!=dx.size(); i++){
+      left_L += dx.at(i);
+      left_Q += dQ.at(i);
+    }
+    
+     std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << " " << (exit_Q/(exit_L/units::cm+1e-9)/50e3) << std::endl;
+
+     //std::cout << pts.front() << " " << pts.back() << " " << (!inside_fiducial_volume(pts.front(),offset_x)) << " " << (!inside_fiducial_volume(pts.back(),offset_x)) << std::endl;
+    if ( (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
+      // std::cout << exit_L_TGM/units::cm << " " << left_L_TGM/units::cm << std::endl;
+      bool flag_TGM_anode = false;
+      
+      if ((pts.back().x < 2*units::cm || pts.front().x < 2*units::cm) && kink_num >=0 && kink_num < pts.size()){ // at Anode ...
+	if (pts.at(kink_num).x < 6*units::cm){
+	  TVector3 v10(pts.back().x-pts.at(kink_num).x,pts.back().y-pts.at(kink_num).y,pts.back().z-pts.at(kink_num).z);
+	  TVector3 v20(pts.front().x-pts.at(kink_num).x,pts.front().y-pts.at(kink_num).y,pts.front().z-pts.at(kink_num).z);
+	  if (fabs(v10.Angle(drift_dir)/3.1415926*180.-90)<12.5 && v10.Mag()>15*units::cm || fabs(v20.Angle(drift_dir)/3.1415926*180.-90)<12.5 && v20.Mag()>15*units::cm)
+	      flag_TGM_anode = true;
+	  //std::cout << v10.Angle(drift_dir)/3.1415926*180. << " " << v20.Angle(drift_dir)/3.1415926*180. << std::endl;
+	}
+      }
+      if ((exit_L < 3*units::cm || left_L < 3*units::cm || flag_TGM_anode)){
+	std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+//	event_type |= 1UL << 3;
+//	return true;
+      }
+    }else if ((!inside_fiducial_volume(pts.front(),offset_x)) && left_L < 3*units::cm){
+      // check dead volume and SP ...
+      Point p1 = pts.back();
+      TVector3 dir = main_cluster->VHoughTrans(p1,30*units::cm);
+      dir *= (-1);
+      if (!check_dead_volume(p1,dir,1*units::cm,offset_x)){
+	if (exit_L < 3*units::cm || left_L < 3*units::cm){
+	  std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+//	  event_type |= 1UL << 3;
+//	  return true;
+	}
+      }
+      //std::cout << "ABC: " << dir.X() << " " << dir.Y() << " " << dir.Z() << " " << check_dead_volume(p1,dir,1*units::cm,offset_x) << std::endl;
+    }
+  
+    if (left_L > 40*units::cm || left_L > 7.5*units::cm && (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0){
+      if (!flag_double_end){
+	std::cout << "Mid Point A " << inside_dead_region(mid_p) << " " << mid_p << " " << left_L  << " " << (left_Q/(left_L/units::cm+1e-9)/50e3) << std::endl;
+	return false;
+      }
+    }else{
+      bool flag_fix_end = false;
+      if (exit_L < 35*units::cm || (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0&& left_L > 2*units::cm) flag_fix_end = true;
+      
+      if (left_L < 8*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3)< 1.5 ||
+	  left_L < 6*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.7 ||
+	  left_L < 5*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.8 ||
+	  left_L < 3*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.9){
+	left_L = 0;
+	kink_num = dQ.size();
+	exit_L = 40*units::cm;
+	flag_fix_end = false;
+      }
+    
+     
+      bool flag_pass = false;
+
+      // std::cout << flag_other_clusters << std::endl;
+      
+      if (!flag_other_clusters){
+	if (left_L < 40*units::cm) {
+	  if (flag_fix_end){
+	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
+	  }else{
+	    flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 35*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	  }
+	  
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 15*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	    }
+	  }
+	}
+	
+	if (left_L < 20*units::cm){
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 35*units::cm) ||
+		eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	    }
+	  }
+	  
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm , 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm , 3.*units::cm, 15*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	    }
+	  }
+	}
+      }else{
+	if (flag_fix_end)
+	  flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm, true);
+	else
+	  flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm, 0., 35*units::cm, true);
+      }
+      
+      if (flag_pass) {
+	main_cluster->clear_fit_tracks();
+	main_cluster->search_other_tracks(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+
+	if (check_other_tracks(main_cluster, offset_x)){
+	  std::cout << "Mid Point Tracks" << std::endl;
+	  return false;
+	}
+	
+	//	std::cout << main_cluster->get_fit_tracks().size() << std::endl;
+	
+	if (!detect_proton(main_cluster, kink_num)) return true;
+      }
+    }
+  }
+  
+  // backward check ...
+  if (flag_double_end){
+    std::cout << "Backward check! " << std::endl;
+    // regular crawling ...
+    main_cluster->do_rough_path( last_wcp, first_wcp);
+    main_cluster->collect_charge_trajectory(ct_point_cloud); 
+    main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
+    Point mid_p = main_cluster->adjust_rough_path(); 
+    // fitting trajectory and dQ/dx...
+    main_cluster->collect_charge_trajectory(ct_point_cloud); 
+    main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+
+    // check both end points for TGM ...
+    WCP::PointVector& pts = main_cluster->get_fine_tracking_path();
+    std::vector<double>& dQ = main_cluster->get_dQ();
+    std::vector<double>& dx = main_cluster->get_dx();
+    
+    int kink_num = find_first_kink(main_cluster);
+    
+    double left_L = 0;
+    double left_Q = 0;
+    double exit_L = 0;
+    double exit_Q = 0;
+    for (size_t i=0;i!=kink_num;i++){
+      exit_L += dx.at(i);
+      exit_Q += dQ.at(i);
+    }
+    for (size_t i = kink_num; i!=dx.size(); i++){
+      left_L += dx.at(i);
+      left_Q += dQ.at(i);
+    }
+    
+    std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << " " << (exit_Q/(exit_L/units::cm+1e-9)/50e3) << std::endl;
+    
+    if ( (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
+      bool flag_TGM_anode = false;
+      
+      if ((pts.back().x < 2*units::cm || pts.front().x < 2*units::cm) && kink_num >=0 && kink_num < pts.size()){ // at Anode ...
+	if (pts.at(kink_num).x < 6*units::cm){
+	  TVector3 v10(pts.back().x-pts.at(kink_num).x,pts.back().y-pts.at(kink_num).y,pts.back().z-pts.at(kink_num).z);
+	  TVector3 v20(pts.front().x-pts.at(kink_num).x,pts.front().y-pts.at(kink_num).y,pts.front().z-pts.at(kink_num).z);
+	  if (fabs(v10.Angle(drift_dir)/3.1415926*180.-90)<12.5 && v10.Mag()>15*units::cm || fabs(v20.Angle(drift_dir)/3.1415926*180.-90)<12.5 && v20.Mag()>15*units::cm)
+	      flag_TGM_anode = true;
+	  //std::cout << v10.Angle(drift_dir)/3.1415926*180. << " " << v20.Angle(drift_dir)/3.1415926*180. << std::endl;
+	}
+      }
+      if ((exit_L < 3*units::cm || left_L < 3*units::cm) || flag_TGM_anode){
+	std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+//	event_type |= 1UL << 3;
+//	return true;
+      }
+    }
+  
+    if (left_L > 40*units::cm || left_L > 7.5*units::cm && (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0){
+      std::cout << "Mid Point A " << inside_dead_region(mid_p) << " " << mid_p << " " << left_L  << " " << (left_Q/(left_L/units::cm+1e-9)/50e3) << std::endl;
+      return false;
+    }else{
+      bool flag_fix_end = false;
+      if (exit_L < 35*units::cm || (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0 && left_L > 2*units::cm) flag_fix_end = true;
+      
+      if (left_L < 8*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3)< 1.5 ||
+	  left_L < 6*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.7 ||
+	  left_L < 3*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.9){
+	left_L = 0;
+	kink_num = dQ.size();
+	exit_L = 40*units::cm;
+	flag_fix_end = false;
+      }
+
+    
+    
+      bool flag_pass = false;
+      if (!flag_other_clusters){
+	if (left_L < 40*units::cm) {
+	  if (flag_fix_end){
+	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
+	  }else{
+	    flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 35*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	  }
+	  
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 15*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	    }
+	  }
+	}
+	
+	if (left_L < 20*units::cm){
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 35*units::cm) ||
+		eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	    }
+	  }
+	  
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm , 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm , 3.*units::cm, 15*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	    }
+	  }
+	}
+      }else{
+	if (flag_fix_end)
+	  flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm, true);
+	else
+	  flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm, 0., 35*units::cm, true);
+      }
+
+      if (flag_pass) {
+	main_cluster->clear_fit_tracks();
+	main_cluster->search_other_tracks(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+	if (check_other_tracks(main_cluster, offset_x)){
+	  std::cout << "Mid Point Tracks" << std::endl;
+	  return false;
+	}
+	
+	if (!detect_proton(main_cluster, kink_num)) return true;
+      }
+    }
+  }
+  
+  // check 5512-209-10491
+  // if (inside_dead_region(mid_p)) return true;
+  //  
+
+  // end check ...
+  std::cout << "Mid Point " << std::endl;  
+  return false;
 }
 
 
@@ -1288,3 +1975,1601 @@ bool WCPPID::ToyFiducial::check_neutrino_candidate(WCPPID::PR3DCluster *main_clu
   
   return false;
 }
+
+
+
+//////////////////////////////////////////////////// M2
+//////////////////////////////////////////////////// M2
+
+bool WCPPID::ToyFiducial::M2_distance_cut(WCPPID::PR3DCluster* main_cluster, double user_offset_dist, double user_offset_frac)
+{
+  bool result = false;
+
+  //TVector3 vp0(p0.x/units::cm, p0.y/units::cm, p0.z/units::cm);
+  //TVector3 vp1(p1.x/units::cm, p1.y/units::cm, p1.z/units::cm);
+  //TVector3 vDir = vp1 - vp0;
+  //vDir = 1./vDir.Mag() * vDir;
+  
+  //Vector main_dir = main_cluster->get_PCA_axis(0);
+  //TVector3 vDir(main_dir.x,main_dir.y,main_dir.z);
+  //int n_total = 0;
+  //int n_offset = 0;
+  
+  return result;
+}
+
+
+
+double WCPPID::ToyFiducial::M2_offset_YX_x(WCP::Point& p)
+{
+  double result = 0;
+    
+  double eff_x = p.x;
+  double eff_y = p.y;
+  double eff_z = p.z;
+
+  /////////////////////////
+
+  int index_z = 100;
+
+  if( eff_z/units::cm<0 ) {
+    index_z = 1;
+  }
+  else if( eff_z/units::cm<=1037 ) {
+    index_z = (int)(eff_z/units::cm/100)+1;
+    if( index_z>10 ) index_z = 10;
+  }
+  else {
+    index_z = 10;
+  }
+
+  /*
+    ---------\   TOP-1
+              \
+               \ TOP-2
+               |
+               |
+               |
+               |
+               | BOT-2
+               /
+              /
+    ---------/   BOT-1
+  */
+
+  //std::cout<<" xp test p "<<eff_x/units::cm<<" "<<eff_y/units::cm<<" "<<eff_z/units::cm<<std::endl;
+  //std::cout<<" xp test   "<<SCB_YX_BOT_y2_array[index_z]<<" "<<SCB_YX_TOP_y2_array[index_z]<<" "<<index_z<<std::endl;
+
+  if( eff_y/units::cm < SCB_YX_BOT_y2_array[index_z]/units::cm ) {
+    double y1 = SCB_YX_BOT_y1_array[index_z];
+    double x1 = SCB_YX_BOT_x1_array[index_z];
+    double y2 = SCB_YX_BOT_y2_array[index_z];
+    double x2 = SCB_YX_BOT_x2_array[index_z];
+    double xx = (x2-x1)/(y2-y1) * (eff_y-y2) + x2;
+    result = eff_x - xx;
+    //std::cout<<" xp BOT "<<eff_x<<" "<<xx<<std::endl;
+  }
+  else if( eff_y/units::cm < SCB_YX_TOP_y2_array[index_z]/units::cm ) {
+    double xx = SCB_YX_TOP_x2_array[index_z];
+    result = eff_x - xx;
+    //std::cout<<" xp MID "<<eff_x<<" "<<xx<<std::endl;
+  }
+  else {
+    double y1 = SCB_YX_TOP_y1_array[index_z];
+    double x1 = SCB_YX_TOP_x1_array[index_z];
+    double y2 = SCB_YX_TOP_y2_array[index_z];
+    double x2 = SCB_YX_TOP_x2_array[index_z];
+    double xx = (x2-x1)/(y2-y1) * (eff_y-y2) + x2;
+    result = eff_x - xx;
+    //std::cout<<" xp TOP "<<eff_x<<" "<<xx<<std::endl;
+  }
+
+  return result;
+}
+
+
+
+bool WCPPID::ToyFiducial::inside1_outside0_SCB(WCP::Point& p, double offset_x, double tolerence_x, double tolerence_y, double tolerence_z)
+{
+  bool result = false;
+
+  std::vector<double> user_SCB_YX_x_array[11], user_SCB_YX_y_array[11];
+  std::vector<double> user_SCB_ZX_x_array[11], user_SCB_ZX_z_array[11];
+  double space_xx = tolerence_x * units::cm;
+  double space_yy = tolerence_x * units::cm;
+  double space_zz = tolerence_x * units::cm;
+  
+  for(int idx=1; idx<=10; idx++) {
+    user_SCB_YX_x_array[idx].clear();                                        user_SCB_YX_y_array[idx].clear();
+    user_SCB_YX_x_array[idx].push_back(m_anode                  + space_xx); user_SCB_YX_y_array[idx].push_back(m_bottom                 + space_yy);
+    user_SCB_YX_x_array[idx].push_back(SCB_YX_BOT_x1_array[idx] - space_xx); user_SCB_YX_y_array[idx].push_back(SCB_YX_BOT_y1_array[idx] + space_yy);
+    user_SCB_YX_x_array[idx].push_back(SCB_YX_BOT_x2_array[idx] - space_xx); user_SCB_YX_y_array[idx].push_back(SCB_YX_BOT_y2_array[idx] + space_yy);
+    user_SCB_YX_x_array[idx].push_back(SCB_YX_TOP_x2_array[idx] - space_xx); user_SCB_YX_y_array[idx].push_back(SCB_YX_TOP_y2_array[idx] - space_yy);
+    user_SCB_YX_x_array[idx].push_back(SCB_YX_TOP_x1_array[idx] - space_xx); user_SCB_YX_y_array[idx].push_back(SCB_YX_TOP_y1_array[idx] - space_yy);
+    user_SCB_YX_x_array[idx].push_back(m_anode                  + space_xx); user_SCB_YX_y_array[idx].push_back(m_top                    - space_yy);
+
+    user_SCB_ZX_x_array[idx].clear();                                        user_SCB_ZX_z_array[idx].clear();
+    user_SCB_ZX_x_array[idx].push_back(m_anode                  + space_xx); user_SCB_ZX_z_array[idx].push_back(m_upstream               + space_zz);
+    user_SCB_ZX_x_array[idx].push_back(SCB_ZX_TOP_x1_array[idx] - space_xx); user_SCB_ZX_z_array[idx].push_back(SCB_ZX_TOP_z1_array[idx] + space_zz);
+    user_SCB_ZX_x_array[idx].push_back(SCB_ZX_TOP_x2_array[idx] - space_xx); user_SCB_ZX_z_array[idx].push_back(SCB_ZX_TOP_z2_array[idx] + space_zz);
+    user_SCB_ZX_x_array[idx].push_back(SCB_ZX_BOT_x2_array[idx] - space_xx); user_SCB_ZX_z_array[idx].push_back(SCB_ZX_BOT_z2_array[idx] - space_zz);
+    user_SCB_ZX_x_array[idx].push_back(SCB_ZX_BOT_x1_array[idx] - space_xx); user_SCB_ZX_z_array[idx].push_back(SCB_ZX_BOT_z1_array[idx] - space_zz);
+    user_SCB_ZX_x_array[idx].push_back(m_anode                  + space_xx); user_SCB_ZX_z_array[idx].push_back(m_downstream             - space_zz);   
+  }
+  
+  
+  double eff_x = p.x-offset_x;
+  double eff_y = p.y;
+  double eff_z = p.z;
+
+  //std::cout<<" xp eff_x "<<eff_x<<std::endl;
+
+  bool flag_YX = false;
+  bool flag_ZX = false;
+
+  /////////////////////////
+  if( eff_z/units::cm<0 ) {
+    int index_z = 1;
+    flag_YX = pnpoly(user_SCB_YX_x_array[index_z], user_SCB_YX_y_array[index_z], eff_x, eff_y);
+  }
+  else if( eff_z/units::cm<=1037 ) {
+    int index_z = (int)(eff_z/units::cm/100)+1;
+    if( index_z>10 ) index_z = 10;
+    flag_YX = pnpoly(user_SCB_YX_x_array[index_z], user_SCB_YX_y_array[index_z], eff_x, eff_y);
+  }
+  else {
+    int index_z = 10;
+    flag_YX = pnpoly(user_SCB_YX_x_array[index_z], user_SCB_YX_y_array[index_z], eff_x, eff_y);
+  }
+  
+  ////////////////////////////
+  if( eff_y/units::cm<-116 ) {
+    int index_z = 1;
+    flag_ZX = pnpoly(user_SCB_ZX_x_array[index_z], user_SCB_ZX_z_array[index_z], eff_x, eff_z);
+  }
+  else if( eff_y/units::cm<=117 ) {
+    int index_y = (int)(eff_y/units::cm+116)/24 + 1;
+    flag_ZX = pnpoly(user_SCB_ZX_x_array[index_y], user_SCB_ZX_z_array[index_y], eff_x, eff_z);
+  }
+  else {
+    int index_z = 10;
+    flag_ZX = pnpoly(user_SCB_ZX_x_array[index_z], user_SCB_ZX_z_array[index_z], eff_x, eff_z);
+  }
+  
+  ////////////////////////////
+  
+  if( flag_YX && flag_ZX ) result = true;
+
+  return result;
+}
+
+
+std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::M2_cosmic_tagger(WCP::OpflashSelection& flashes, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WCP::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WCP::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool flag_data, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, bool debug_tagger)
+{
+  std::cout<<std::endl<<" ---------> Hello M2"<<std::endl<<std::endl;
+  //std::cout<<" M2: main_flash->get_time() "<<main_flash->get_time()<<std::endl;
+
+  int flag_M2 = 0;// 0 pass, 1 tgm with flash, 2 tgm wo flash, 3 stm candidates
+
+  WCP::Opflash* new_flash = main_flash;
+    
+  /// debug  
+
+  double meas_posZ_center = 0;
+  int num_meas_posZ = 0;
+  double pmt_posZ_center = 0;
+
+  {
+    ToyPointCloud *pcloud = main_cluster->get_point_cloud();
+    if (pcloud!=0){
+      WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
+      for (size_t i=0;i!=cloud.pts.size();i++){
+	double x = cloud.pts[i].x/units::cm;
+	double y = cloud.pts[i].y/units::cm;
+	double z = cloud.pts[i].z/units::cm;
+
+	num_meas_posZ++;
+	meas_posZ_center += z;
+      }
+    }
+    meas_posZ_center = meas_posZ_center/num_meas_posZ;
+
+    std::cout<<TString::Format(" ccheck %6d %6d %6d, Zcenter %8.4f", run_no, subrun_no, event_no, meas_posZ_center)<<std::endl;
+  }
+  ///
+
+  double pmt_posZ_cm_left2right[21] = {0,
+				       51.37,  85.61, 125.57, 172.66, 
+				       241.15, 283.96, 325.35, 371.01,
+				       448.07, 496.58, 535.11, 579.35,
+				       660.69, 704.92, 746.31, 789.12,
+				       859.04, 904.70, 941.80, 981.76};
+  
+  // pmt map, DocDB-7555
+  double pmt_posZ_cm_array[33] = {0};
+
+  pmt_posZ_cm_array[1] = pmt_posZ_cm_left2right[2];
+  pmt_posZ_cm_array[2] = pmt_posZ_cm_left2right[3];
+  pmt_posZ_cm_array[3] = pmt_posZ_cm_left2right[1];
+  pmt_posZ_cm_array[4] = pmt_posZ_cm_left2right[4];
+  pmt_posZ_cm_array[5] = pmt_posZ_cm_left2right[1];
+  pmt_posZ_cm_array[6] = pmt_posZ_cm_left2right[2];
+  pmt_posZ_cm_array[7] = pmt_posZ_cm_left2right[3];
+  
+  pmt_posZ_cm_array[8]  = pmt_posZ_cm_left2right[6];
+  pmt_posZ_cm_array[9]  = pmt_posZ_cm_left2right[7];
+  pmt_posZ_cm_array[10] = pmt_posZ_cm_left2right[5];
+  pmt_posZ_cm_array[11] = pmt_posZ_cm_left2right[8];
+  pmt_posZ_cm_array[12] = pmt_posZ_cm_left2right[6];
+  pmt_posZ_cm_array[13] = pmt_posZ_cm_left2right[7];
+
+  pmt_posZ_cm_array[14] = pmt_posZ_cm_left2right[10];
+  pmt_posZ_cm_array[15] = pmt_posZ_cm_left2right[11];
+  pmt_posZ_cm_array[16] = pmt_posZ_cm_left2right[9];
+  pmt_posZ_cm_array[17] = pmt_posZ_cm_left2right[12];
+  pmt_posZ_cm_array[18] = pmt_posZ_cm_left2right[10];
+  pmt_posZ_cm_array[19] = pmt_posZ_cm_left2right[11];
+
+  pmt_posZ_cm_array[20] = pmt_posZ_cm_left2right[14];
+  pmt_posZ_cm_array[21] = pmt_posZ_cm_left2right[15];
+  pmt_posZ_cm_array[22] = pmt_posZ_cm_left2right[13];
+  pmt_posZ_cm_array[23] = pmt_posZ_cm_left2right[16];
+  pmt_posZ_cm_array[24] = pmt_posZ_cm_left2right[14];
+  pmt_posZ_cm_array[25] = pmt_posZ_cm_left2right[15];
+
+  pmt_posZ_cm_array[26] = pmt_posZ_cm_left2right[18];
+  pmt_posZ_cm_array[27] = pmt_posZ_cm_left2right[19];
+  pmt_posZ_cm_array[28] = pmt_posZ_cm_left2right[20];
+  pmt_posZ_cm_array[29] = pmt_posZ_cm_left2right[17];
+  pmt_posZ_cm_array[30] = pmt_posZ_cm_left2right[20];
+  pmt_posZ_cm_array[31] = pmt_posZ_cm_left2right[18];
+  pmt_posZ_cm_array[32] = pmt_posZ_cm_left2right[19];
+  
+
+
+  //Take in flash and cluster info
+  std::vector<std::vector<WCPointCloud<double>::WCPoint>> extreme_points = main_cluster->get_extreme_wcps();
+  double time_slice_width = nrebin * unit_dis * 0.5 * units::mm;
+  double main_offset_x = (main_flash->get_time() - time_offset)*2./nrebin*time_slice_width;
+
+  //Check whether the track is at least 10 cm long
+  Point p0(extreme_points[0][0].x,extreme_points[0][0].y,extreme_points[0][0].z);
+  Point p1(extreme_points[1][0].x,extreme_points[1][0].y,extreme_points[1][0].z);
+
+  //std::cout<<" xpdebug "<<p0.x/units::cm<<" "<<p0.y/units::cm<<" "<<p0.z/units::cm<<" "<<1<<std::endl;
+  //std::cout<<" xpdebug "<<p1.x/units::cm<<" "<<p1.y/units::cm<<" "<<p1.z/units::cm<<" "<<1<<std::endl;
+
+
+  Double_t cos_pe_low[32]={11,11,11,11,10,
+                           7,8,8,10,7,
+                           11,11,11,11,10,
+                           9,11,11,7,9,
+                           11,10,11,11,11,
+                           11,11,10,11,11,
+                           9,10};
+  Double_t cos_pe_mid[32]={34,32,28,35,22,
+                           23,22,24,33,30,
+                           35,35,33,36,33,
+                           33,36,33,19,27,
+                           32,23,42,32,33,
+                           34,34,24,33,35,
+                           25,32};
+
+
+  double distance = sqrt(pow(p0.x-p1.x,2)+pow(p0.y-p1.y,2)+pow(p0.z-p1.z,2));
+  if(distance > 10*units::cm){
+    //iterate over all the flashes to check each flash for STM/TGM conditions
+    
+    double bundle_ks = std::get<1>(bundle_info);
+    double bundle_chi2 = std::get<2>(bundle_info);
+    int bundle_ndf = std::get<3>(bundle_info);
+    std::cout<<"xpks "<<bundle_ks<<"\t"<<bundle_chi2<<"\t"<<bundle_ndf<<std::endl;
+
+    double diff_pe_meas_pred_origin = 0;
+    double origin_meas_pe_total = 0;
+    double origin_pred_pe_total = 0;
+    for (auto it = flashes.begin(); it!= flashes.end(); it++){
+      Opflash *flash = (*it);
+      double offset_x = (flash->get_time() - time_offset)*2./nrebin*time_slice_width;
+      double flash_time = flash->get_time();
+
+      if(flash->get_time() == main_flash->get_time()){	
+
+	std::vector<double> pred_pmt_light = calculate_pred_pe(run_no, offset_x, pl, main_cluster, additional_clusters, flash, flag_data);	
+	for(int i=0; i<int(pred_pmt_light.size()); i++){
+	  double flash_pe = flash->get_PE(i);
+	  double pred_pe = pred_pmt_light[i];
+	  diff_pe_meas_pred_origin += fabs( flash_pe - pred_pe );
+	  origin_meas_pe_total += flash_pe;
+	  origin_pred_pe_total += pred_pe;	  
+	  //std::cout<<" origin ---> "<<i<<"\t"<<flash_pe<<"\t"<<pred_pmt_light[i]<<"\t"<<diff_pe_meas_pred_origin<<std::endl;
+
+	  //std::cout<<TString::Format(" ddcheck %6d %6d %6d pmt %2d pe %8.2f",
+	  //			     run_no, subrun_no, event_no, i+1, flash_pe
+	  //			     )<<std::endl;
+
+	  pmt_posZ_center += pmt_posZ_cm_array[i+1] * flash_pe;
+	}
+	
+	pmt_posZ_center = pmt_posZ_center/origin_meas_pe_total;
+	pmt_posZ_center = 1037 - pmt_posZ_center;
+
+	std::cout<<TString::Format(" ddcheck %6d %6d %6d, Zcenter %8.4f %8.4f", 
+				   run_no, subrun_no, event_no, meas_posZ_center, pmt_posZ_center)<<std::endl;
+	
+	////////////////////////////////////////////////////////////////////////////////
+
+	TH1D *h1_meas = new TH1D("h1_meas", "h1_meas", 32, 0, 32);
+	TH1D *h1_pred = new TH1D("h1_pred", "h1_pred", 32, 0, 32);
+    
+	double chi2_user = 0;
+	int ndf_user = 0;
+
+	for(int i=0; i<int(pred_pmt_light.size()); i++){
+	  double flash_pe = flash->get_PE(i);
+	  double pred_pe = pred_pmt_light[i];
+	  double pe_err = flash->get_PE_err(i);
+
+	  int j = i;
+	  if( (pred_pe < cos_pe_low[j] || (pred_pe < cos_pe_mid[j]*1.1 && flash_pe==0 ) ) && flash->get_type()==1 ) {
+	    pred_pe = 0;
+	  }	    
+	    
+	  h1_meas->SetBinContent(i+1, flash_pe);
+	  h1_pred->SetBinContent(i+1, pred_pe);
+	  //std::cout<<" ---> "<<i+1<<"\t"<<flash_pe<<"\t"<<pred_pe<<std::endl;
+
+	  ///
+	  chi2_user += pow(pred_pe - flash_pe,2)/pow(pe_err,2);
+	  if( pred_pe==0 && flash_pe==0 ) {
+	  }
+	  else {
+	    ndf_user++;
+	  }
+
+	}
+
+	double temp_ks_dis = 1;
+	if( h1_pred->GetSum()!=0 ) {
+	  temp_ks_dis = h1_meas->KolmogorovTest(h1_pred,"M");
+	}
+	  
+	std::cout<<" checkxp original ks "<<temp_ks_dis<<"\t"<<"chi "<<chi2_user<<"\t"<<ndf_user<<"\t ndf "<<bundle_ndf<<"\t"<<ndf_user<<std::endl;
+	  
+	delete h1_meas;
+	delete h1_pred;
+
+	break;
+      }// if(flash->get_time() == main_flash->get_time())
+
+    }
+    
+
+    ///////////////// tgm with flash
+    /////////////////
+
+    TH1D *h1_meas = new TH1D("h1_meas", "h1_meas", 32, 0, 32);
+    TH1D *h1_pred = new TH1D("h1_pred", "h1_pred", 32, 0, 32);
+    
+    for (auto it = flashes.begin(); it!= flashes.end(); it++){
+      Opflash *flash = (*it);
+      double offset_x = (flash->get_time() - time_offset)*2./nrebin*time_slice_width;
+      double flash_time = flash->get_time();
+
+      //Skip the already matched flash
+      if(flash->get_time() == main_flash->get_time()){
+	continue;
+      }
+
+      double PE_ratio_cut = 0.8;
+      double dist2anode_cut = 2*units::cm;
+      double original_PE_KS_cut = 0.05;// GE 0.1 --> not well matched between meas and pred
+
+      if( bundle_ks < original_PE_KS_cut ) {// check original ks: current ks is good
+	break;
+      }
+
+      h1_meas->Reset();
+      h1_pred->Reset();
+
+      double tolerence_x = 2;// cm
+      double tolerence_y = 2;// cm
+      double tolerence_z = 2;// cm
+
+      bool flag_small_SCB_p0 = false;
+      bool flag_large_SCB_p0 = false;
+      bool flag_small_SCB_p1 = false;
+      bool flag_large_SCB_p1 = false;
+
+      flag_small_SCB_p0 = inside1_outside0_SCB(p0, offset_x, tolerence_x, tolerence_y, tolerence_z);
+      flag_large_SCB_p0 = inside1_outside0_SCB(p0, offset_x, tolerence_x*(-1), tolerence_y*(-1), tolerence_z*(-1));
+      flag_small_SCB_p1 = inside1_outside0_SCB(p1, offset_x, tolerence_x, tolerence_y, tolerence_z);
+      flag_large_SCB_p1 = inside1_outside0_SCB(p1, offset_x, tolerence_x*(-1), tolerence_y*(-1), tolerence_z*(-1));
+      
+
+      if( flag_small_SCB_p0==false && flag_small_SCB_p1==false && flag_large_SCB_p0==true && flag_large_SCB_p1==true ) {// check boundary
+		
+	////
+	bool flag_NotNear_anode = true;
+	if( (p0.x-offset_x)<dist2anode_cut || (p1.x-offset_x)<dist2anode_cut ) flag_NotNear_anode = false;
+	
+	if( flag_NotNear_anode ) {
+
+	  double chi2_user = 0;
+	  int ndf_user = 0;
+
+	  std::vector<double> pred_pmt_light = calculate_pred_pe(run_no, offset_x, pl, main_cluster, additional_clusters, flash, flag_data);	
+	  for(int i=0; i<int(pred_pmt_light.size()); i++){
+	    double flash_pe = flash->get_PE(i);
+	    double pred_pe = pred_pmt_light[i];
+	    double pe_err = flash->get_PE_err(i);
+
+	    int j = i;
+	    if( (pred_pe < cos_pe_low[j] || (pred_pe < cos_pe_mid[j]*1.1 && flash_pe==0 ) ) && flash->get_type()==1 ) {
+	      pred_pe = 0;
+	    }	    
+	    
+	    h1_meas->SetBinContent(i+1, flash_pe);
+	    h1_pred->SetBinContent(i+1, pred_pe);
+	    //std::cout<<" ---> "<<i+1<<"\t"<<flash_pe<<"\t"<<pred_pe<<std::endl;
+
+	    ///
+	    chi2_user += pow(pred_pe - flash_pe,2)/pow(pe_err,2);
+	    if( pred_pe==0 && flash_pe==0 ) {
+	    }
+	    else {
+	      ndf_user++;
+	    }
+	    
+	  }
+
+	  double temp_ks_dis = 1;
+	  if( h1_pred->GetSum()!=0 ) {
+	    temp_ks_dis = h1_meas->KolmogorovTest(h1_pred,"M");
+	  }
+
+	  std::cout<<TString::Format(" checkxp pass: bounary + original_ks + not near anode, ks org/new %6.4f %6.4f, chi2 org/new %8.2f %8.2f, ndf %2d %2d, %7d %7d %7d", 
+				     bundle_ks, temp_ks_dis,
+				     bundle_chi2, chi2_user,
+				     bundle_ndf, ndf_user, 
+				     run_no, subrun_no, event_no
+				     )<<std::endl;
+	  
+	  if( chi2_user < bundle_chi2 ) {
+
+	    
+	    
+	    
+	    bool flag_check_tgm = check_tgm(main_cluster,flash,offset_x,ct_point_cloud);
+	    
+	    if( flag_check_tgm ) {
+	      new_flash = flash;
+	      
+	      int flag_M2_middle = 1;
+	      flag_M2 = 1;
+	      std::cout<<" M2 "<<flag_M2_middle<<"\t"<<flag_M2<<"\t"<<run_no<<"\t"<<subrun_no<<"\t"<<event_no
+		       <<" tgm wi flash, "<<std::endl;
+	      
+	      std::cout<<TString::Format(" xxcheck original chi2/ndf %8.3f %2d, new %8.3f %2d, run %6d %6d %6d", 
+					 bundle_chi2, bundle_ndf, 
+					 chi2_user, ndf_user,
+					 run_no, subrun_no, event_no
+					 )<<std::endl;
+
+	      break;
+	    }// tgm_tagger
+	    
+	  }// chi2_current < chi2_original
+
+	}// Near anode
+	
+      }// check boundary
+
+    }// loop flash
+
+    delete h1_meas;
+    delete h1_pred;
+
+    ///////////////// tgm without flash
+    /////////////////
+
+    if( flag_M2==0 ) {
+      double tolerence_x = 2;// cm
+      double tolerence_y = 2;// cm
+      double tolerence_z = 2;// cm
+      
+      double original_PE_KS_cut = 0.1;// GE 0.1 --> not well matched between meas and pred
+
+      if( bundle_ks>=original_PE_KS_cut ) {// original ks is not good
+
+	if( flag_M2==0 ) {// case1
+	  bool flag_small_SCB_p0 = false;
+	  bool flag_large_SCB_p0 = false;
+	  bool flag_small_SCB_p1 = false;
+	  bool flag_large_SCB_p1 = false;
+	
+	  double user_offset = M2_offset_YX_x( p0 );
+		
+	  flag_small_SCB_p0 = inside1_outside0_SCB(p0, user_offset, tolerence_x, tolerence_y, tolerence_z);
+	  flag_large_SCB_p0 = inside1_outside0_SCB(p0, user_offset, tolerence_x*(-1), tolerence_y*(-1), tolerence_z*(-1));
+	  flag_small_SCB_p1 = inside1_outside0_SCB(p1, user_offset, tolerence_x, tolerence_y, tolerence_z);
+	  flag_large_SCB_p1 = inside1_outside0_SCB(p1, user_offset, tolerence_x*(-1), tolerence_y*(-1), tolerence_z*(-1));
+	
+	  if( flag_small_SCB_p0==false && flag_small_SCB_p1==false && flag_large_SCB_p0==true && flag_large_SCB_p1==true ) {// check boundary
+
+	    bool flag_tgm_tagger = M2_check_tgm( main_cluster, user_offset, ct_point_cloud );
+
+	    if( flag_tgm_tagger ) {
+
+	      bool flag_AllExtreeamP_inside = true;
+	    
+	      ToyPointCloud *pcloud = main_cluster->get_point_cloud();
+	      if (pcloud!=0){
+		WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
+		for (size_t i=0;i!=cloud.pts.size();i++){
+		  double x = cloud.pts[i].x;
+		  double y = cloud.pts[i].y;
+		  double z = cloud.pts[i].z;
+		  Point pobj(x,y,z);
+		  if( inside1_outside0_SCB(pobj, user_offset, tolerence_x*(-1), tolerence_y*(-1), tolerence_z*(-1))==false ) {
+		    flag_AllExtreeamP_inside = false;
+		    break;
+		  }
+		}
+	      }
+	     
+	      if( flag_AllExtreeamP_inside ) {
+
+		int flag_M2_middle = 2;
+		flag_M2 = 2;
+		new_flash = NULL;
+
+		std::cout<<" M2 "<<flag_M2_middle<<"\t"<<flag_M2<<"\t"<<run_no<<"\t"<<subrun_no<<"\t"<<event_no<<"\t"
+			 <<" case1, "
+			 <<std::endl;
+
+	      }// flag_AllExtreeamP_inside
+	    }// tgm tagger
+	  }// check boundary
+	}// case1
+
+
+	if( flag_M2==0 ) {// case2
+	  bool flag_small_SCB_p0 = false;
+	  bool flag_large_SCB_p0 = false;
+	  bool flag_small_SCB_p1 = false;
+	  bool flag_large_SCB_p1 = false;
+	
+	  double user_offset = M2_offset_YX_x( p1 );
+		
+	  flag_small_SCB_p0 = inside1_outside0_SCB(p0, user_offset, tolerence_x, tolerence_y, tolerence_z);
+	  flag_large_SCB_p0 = inside1_outside0_SCB(p0, user_offset, tolerence_x*(-1), tolerence_y*(-1), tolerence_z*(-1));
+	  flag_small_SCB_p1 = inside1_outside0_SCB(p1, user_offset, tolerence_x, tolerence_y, tolerence_z);
+	  flag_large_SCB_p1 = inside1_outside0_SCB(p1, user_offset, tolerence_x*(-1), tolerence_y*(-1), tolerence_z*(-1));
+	
+	  if( flag_small_SCB_p0==false && flag_small_SCB_p1==false && flag_large_SCB_p0==true && flag_large_SCB_p1==true ) {// check boundary
+
+	    bool flag_tgm_tagger = M2_check_tgm( main_cluster, user_offset, ct_point_cloud );
+
+	    if( flag_tgm_tagger ) {
+
+	      bool flag_AllExtreeamP_inside = true;
+	    
+	      ToyPointCloud *pcloud = main_cluster->get_point_cloud();
+	      if (pcloud!=0){
+		WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
+		for (size_t i=0;i!=cloud.pts.size();i++){
+		  double x = cloud.pts[i].x;
+		  double y = cloud.pts[i].y;
+		  double z = cloud.pts[i].z;
+		  Point pobj(x,y,z);
+		  if( inside1_outside0_SCB(pobj, user_offset, tolerence_x*(-1), tolerence_y*(-1), tolerence_z*(-1))==false ) {
+		    flag_AllExtreeamP_inside = false;
+		    break;
+		  }
+		}
+	      }
+	     
+	      if( flag_AllExtreeamP_inside ) {
+
+		int flag_M2_middle = 2;
+		flag_M2 = 2;
+		new_flash = NULL;
+
+		std::cout<<" M2 "<<flag_M2_middle<<"\t"<<flag_M2<<"\t"<<run_no<<"\t"<<subrun_no<<"\t"<<event_no<<"\t"
+			 <<" case2, "
+			 <<std::endl;
+
+	      }// flag_AllExtreeamP_inside
+	    }// tgm tagger
+	  }// check boundary
+	}// case2
+
+      }// original ks is not good
+
+    }
+
+    ///////////////// stm candidates
+    /////////////////
+
+    if( flag_M2==0 ) {
+      
+      double tolerence_x = 2;// cm
+      double tolerence_y = 2;// cm
+      double tolerence_z = 2;// cm
+      	  
+      double dist2anode_cut = 2*units::cm;
+      double original_PE_KS_cut = 0.05;// GE 0.1 --> not well matched between meas and pred
+
+      for (auto it = flashes.begin(); it!= flashes.end(); it++){
+	Opflash *flash = (*it);
+	double offset_x = (flash->get_time() - time_offset)*2./nrebin*time_slice_width;
+	double flash_time = flash->get_time();
+
+	//Skip the already matched flash
+	if(flash->get_time() == main_flash->get_time()){
+	  continue;
+	}
+
+	if( bundle_ks < original_PE_KS_cut ) {// check original ks: original ks is good
+	  break;
+	}
+
+	///////////////////
+
+	bool flag_NotNear_anode = true;
+	if( (p0.x-offset_x)<dist2anode_cut || (p1.x-offset_x)<dist2anode_cut ) flag_NotNear_anode = false;
+
+	if( flag_NotNear_anode ) {
+	
+	  double chi2_user = 0;
+	  int ndf_user = 0;
+
+	  double pmt_posZ_center = 0;
+	  double total_meas_pe = 0;
+
+	  std::vector<double> pred_pmt_light = calculate_pred_pe(run_no, offset_x, pl, main_cluster, additional_clusters, flash, flag_data);	
+	  for(int i=0; i<int(pred_pmt_light.size()); i++){
+	    double flash_pe = flash->get_PE(i);
+	    double pred_pe = pred_pmt_light[i];
+	    double pe_err = flash->get_PE_err(i);
+
+	    int j = i;
+	    if( (pred_pe < cos_pe_low[j] || (pred_pe < cos_pe_mid[j]*1.1 && flash_pe==0 ) ) && flash->get_type()==1 ) {
+	      pred_pe = 0;
+	    }	    
+
+	    ///
+	    chi2_user += pow(pred_pe - flash_pe,2)/pow(pe_err,2);
+	    if( pred_pe==0 && flash_pe==0 ) {
+	    }
+	    else {
+	      ndf_user++;
+	    }
+	    
+	    pmt_posZ_center += pmt_posZ_cm_array[i+1] * flash_pe;
+	    total_meas_pe += flash_pe;
+	    
+	  }// loop pmt
+
+	  pmt_posZ_center = pmt_posZ_center/total_meas_pe;
+	  pmt_posZ_center = 1037 - pmt_posZ_center;
+
+	  if( chi2_user < bundle_chi2 && fabs(pmt_posZ_center-meas_posZ_center)<100 ) {
+	  
+	    for(int i=0; i<=1; i++) {
+	      for(int j=0; j<=0; j++) {
+
+		bool flag_small_SCB_p0 = false;
+		bool flag_large_SCB_p0 = false;
+		bool flag_small_SCB_p1 = false;
+		bool flag_large_SCB_p1 = false;
+	    
+		Point pobj(extreme_points[i][j].x,extreme_points[i][j].y,extreme_points[i][j].z);	  
+	    
+		flag_small_SCB_p0 = inside1_outside0_SCB(pobj, offset_x, tolerence_x, tolerence_y, tolerence_z);
+		flag_large_SCB_p0 = inside1_outside0_SCB(pobj, offset_x, tolerence_x*(-1), tolerence_y*(-1), tolerence_z*(-1));
+	    
+		if( flag_small_SCB_p0==false && flag_large_SCB_p0==true ) {
+		  
+		  bool flag_AllExtreeamP_inside = true;
+		  
+		  ToyPointCloud *pcloud = main_cluster->get_point_cloud();
+		  if (pcloud!=0){
+		    WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
+		    for (size_t i=0;i!=cloud.pts.size();i++){
+		      double x = cloud.pts[i].x;
+		      double y = cloud.pts[i].y;
+		      double z = cloud.pts[i].z;
+		      Point pobj(x,y,z);
+		      if( inside1_outside0_SCB(pobj, offset_x, tolerence_x*(-1), tolerence_y*(-1), tolerence_z*(-1))==false ) {
+			flag_AllExtreeamP_inside = false;
+			break;
+		      }
+		    }
+		  }
+
+		  if( flag_AllExtreeamP_inside ) {
+		    bool flag_user_stm =  M2_check_stm(main_cluster, additional_clusters, offset_x, flash_time, ct_point_cloud, global_wc_map);
+		  
+		    if( flag_user_stm ) {
+		      int flag_M2_middle = 3;
+		      flag_M2 = 3;
+		      new_flash = flash;
+		  
+		      std::cout<<" M2 "<<flag_M2_middle<<"\t"<<flag_M2<<"\t"<<run_no<<"\t"<<subrun_no<<"\t"<<event_no <<"\t stmxp3 "
+			       <<TString::Format(" ks %6.4f", bundle_ks )
+			       <<std::endl;		  
+		      if( flag_M2!=0 ) break;
+		    }// stm tagger
+		  }// flag_AllExtreeamP_inside
+		}// check boundary
+	      }// loop j
+	      if( flag_M2!=0 ) break;
+	    }// loop i
+	  }// new chi2 < original chi2
+	}// flag_NotNear_anode
+	if( flag_M2!=0 ) break;
+      }// loop flash
+    }// if( flag_M2==0 )
+
+
+
+  }// if(distance > 10*units::cm)
+
+
+  int tag_type = flag_M2;// 0-normal, 1-tgm wi flash, 2-tgm wo flash, 3-stm wi flash
+
+  return std::make_tuple(tag_type, main_cluster, new_flash);
+}
+
+
+bool WCPPID::ToyFiducial::M2_check_tgm(WCPPID::PR3DCluster* main_cluster, double offset_x, WCP::ToyCTPointCloud& ct_point_cloud) {
+
+  WCPPID::PR3DCluster *main_cluster1 = main_cluster; 
+  std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps = main_cluster1->get_extreme_wcps();
+
+
+  TVector3 drift_dir(1,0,0);
+  // hard coded for U and V plane ... 
+  TVector3 U_dir(0,cos(60./180.*3.1415926),sin(60./180.*3.1415926));
+  TVector3 V_dir(0,cos(60./180.*3.1415926),-sin(60./180.*3.1415926));
+  TVector3 W_dir(0,1,0);
+
+  double length_limit = sqrt(pow(out_vec_wcps.at(0).at(0).x-out_vec_wcps.at(1).at(0).x,2)+
+			     pow(out_vec_wcps.at(0).at(0).y-out_vec_wcps.at(1).at(0).y,2)+
+			     pow(out_vec_wcps.at(0).at(0).z-out_vec_wcps.at(1).at(0).z,2));
+  
+  // std::cout << "Flash: " << flash->get_flash_id() << std::endl;
+
+  // take a look at the first point ...
+  for (size_t i=0;i!=out_vec_wcps.size();i++){
+    bool flag_p1_inside = true;
+    int p1_index = -1;
+    for (size_t j=0;j!=out_vec_wcps.at(i).size();j++){
+      Point p1(out_vec_wcps.at(i).at(j).x,out_vec_wcps.at(i).at(j).y,out_vec_wcps.at(i).at(j).z);
+      flag_p1_inside = flag_p1_inside && inside_fiducial_volume(p1,offset_x);
+      if (!flag_p1_inside){
+	p1_index = j;
+	break;
+      }
+    }
+    
+    
+    // loop through the remaining groups and check ...
+    for (size_t k=i+1;k!=out_vec_wcps.size();k++){
+      bool flag_p2_inside = true;
+      int p2_index = -1;
+      for(size_t j=0;j!=out_vec_wcps.at(k).size();j++){
+	Point p2(out_vec_wcps.at(k).at(j).x,out_vec_wcps.at(k).at(j).y,out_vec_wcps.at(k).at(j).z);
+	flag_p2_inside = flag_p2_inside && inside_fiducial_volume(p2,offset_x);
+	if (!flag_p2_inside){
+	  p2_index = j;
+	  break;
+	}
+      }
+ 
+      if ((!flag_p1_inside) && (!flag_p2_inside)){
+
+	// check two points in between
+	bool flag_check = false;
+	for (int kk=0;kk!=3;kk++){
+	  Point p3(out_vec_wcps.at(i).at(p1_index).x+ (out_vec_wcps.at(k).at(p2_index).x - out_vec_wcps.at(i).at(p1_index).x)/4.*(kk+1),
+		   out_vec_wcps.at(i).at(p1_index).y+ (out_vec_wcps.at(k).at(p2_index).y - out_vec_wcps.at(i).at(p1_index).y)/4.*(kk+1),
+		   out_vec_wcps.at(i).at(p1_index).z+ (out_vec_wcps.at(k).at(p2_index).z - out_vec_wcps.at(i).at(p1_index).z)/4.*(kk+1));
+	  flag_check = flag_check || inside_fiducial_volume(p3,offset_x);
+	}
+	
+	// if (main_cluster->get_cluster_id()==10)
+	//   std::cout << flag_check << " " << out_vec_wcps.size() << std::endl;
+	
+	if (flag_check){
+	  if (1){
+		    
+	    double temp_length = sqrt(pow(out_vec_wcps.at(i).at(p1_index).x-out_vec_wcps.at(k).at(p2_index).x,2)+
+				      pow(out_vec_wcps.at(i).at(p1_index).y-out_vec_wcps.at(k).at(p2_index).y,2)+
+				      pow(out_vec_wcps.at(i).at(p1_index).z-out_vec_wcps.at(k).at(p2_index).z,2));
+
+	    //std::cout << temp_length/units::cm << " " << length_limit/units::cm << std::endl;
+
+	    if (i==0&&k==1){
+	      if ( (!check_neutrino_candidate(main_cluster1,out_vec_wcps.at(i).at(p1_index),out_vec_wcps.at(k).at(p2_index),offset_x,ct_point_cloud,true)) &&
+		   temp_length > 0.45*length_limit)
+		return true;
+	    }else{
+	      if ( (!check_neutrino_candidate(main_cluster1,out_vec_wcps.at(i).at(p1_index),out_vec_wcps.at(k).at(p2_index),offset_x,ct_point_cloud)) &&
+		   temp_length > 0.45*length_limit)
+		return true;
+	    }
+	    
+	  }else{
+	    return true; // through going muon ...
+	  }
+	}else{
+	  
+	  if (out_vec_wcps.size()==2){
+	    return true;
+	  }else{
+	    // if (!check_neutrino_candidate(main_cluster1,out_vec_wcps.at(i).at(p1_index),out_vec_wcps.at(k).at(p2_index),offset_x))
+	    //   return true;
+
+	    bool flag_check_again = false;
+	    for (int kkk = 0;kkk!=out_vec_wcps.size(); kkk++){
+	      if (kkk==i || kkk==k) continue;
+	      for (int kk=0;kk!=4;kk++){
+	    	Point p3(out_vec_wcps.at(i).at(p1_index).x+ (out_vec_wcps.at(kkk).at(0).x - out_vec_wcps.at(i).at(p1_index).x)/4.*(kk+1),
+	    		 out_vec_wcps.at(i).at(p1_index).y+ (out_vec_wcps.at(kkk).at(0).y - out_vec_wcps.at(i).at(p1_index).y)/4.*(kk+1),
+	    		 out_vec_wcps.at(i).at(p1_index).z+ (out_vec_wcps.at(kkk).at(0).z - out_vec_wcps.at(i).at(p1_index).z)/4.*(kk+1));
+	    	flag_check_again = flag_check_again || inside_fiducial_volume(p3,offset_x);
+	      }
+	      
+	      for (int kk=0;kk!=3;kk++){
+	    	Point p3(out_vec_wcps.at(kkk).at(0).x+ (out_vec_wcps.at(k).at(p2_index).x - out_vec_wcps.at(i).at(0).x)/4.*(kk+1),
+	    		 out_vec_wcps.at(kkk).at(0).y+ (out_vec_wcps.at(k).at(p2_index).y - out_vec_wcps.at(i).at(0).y)/4.*(kk+1),
+	    		 out_vec_wcps.at(kkk).at(0).z+ (out_vec_wcps.at(k).at(p2_index).z - out_vec_wcps.at(i).at(0).z)/4.*(kk+1));
+	    	flag_check_again = flag_check_again || inside_fiducial_volume(p3,offset_x);
+	      }
+	    }
+	    if (!flag_check_again){
+	      //find the longest one ...
+	      double temp_length = sqrt(pow(out_vec_wcps.at(i).at(p1_index).x-out_vec_wcps.at(k).at(p2_index).x,2)+
+					pow(out_vec_wcps.at(i).at(p1_index).y-out_vec_wcps.at(k).at(p2_index).y,2)+
+					pow(out_vec_wcps.at(i).at(p1_index).z-out_vec_wcps.at(k).at(p2_index).z,2));
+	      
+	      if (i==0&&k==1){
+		if ( (!check_neutrino_candidate(main_cluster1,out_vec_wcps.at(i).at(p1_index),out_vec_wcps.at(k).at(p2_index),offset_x,ct_point_cloud,true)) && temp_length > 0.45*length_limit)
+		  return true;
+	      }else{
+		if ( (!check_neutrino_candidate(main_cluster1,out_vec_wcps.at(i).at(p1_index),out_vec_wcps.at(k).at(p2_index),offset_x,ct_point_cloud)) && temp_length > 0.45*length_limit)
+		  return true;
+	      }
+	    }	    
+	  }
+	}
+      }else{
+	Vector main_dir = main_cluster->get_PCA_axis(0);
+	TVector3 dir_main(main_dir.x,main_dir.y,main_dir.z);
+	TVector3 dir_test(out_vec_wcps.at(i).at(0).x-out_vec_wcps.at(k).at(0).x,
+			  out_vec_wcps.at(i).at(0).y-out_vec_wcps.at(k).at(0).y,
+			  out_vec_wcps.at(i).at(0).z-out_vec_wcps.at(k).at(0).z);
+
+	//	std::cout << main_cluster->get_cluster_id() << " " << fabs((3.1415926/2.-dir_test.Angle(dir_main))/3.1415926*180.) << std::endl;
+
+	// std::cout << main_cluster->get_cluster_id() << " " << (out_vec_wcps.at(i).at(0).x-offset_x)/units::cm << " " << out_vec_wcps.at(i).at(0).y/units::cm << " " << out_vec_wcps.at(i).at(0).z/units::cm << " " ;
+	// std::cout << (out_vec_wcps.at(k).at(0).x-offset_x)/units::cm << " " << out_vec_wcps.at(k).at(0).y/units::cm << " " << out_vec_wcps.at(k).at(0).z/units::cm << " " <<  flag_p1_inside << " " << flag_p2_inside << " " << out_vec_wcps.size() << std::endl;
+	
+	if (fabs((3.1415926/2.-dir_test.Angle(dir_main))/3.1415926*180.)>75 || i==0 && k==1){
+	  // check dead region ...
+	  bool flag_p1_inside_p = flag_p1_inside;
+	  if (flag_p1_inside_p){
+	    Point p1(out_vec_wcps.at(i).at(0).x,out_vec_wcps.at(i).at(0).y,out_vec_wcps.at(i).at(0).z);
+	    TVector3 dir = main_cluster->VHoughTrans(p1,30*units::cm);
+	    dir *= (-1);
+
+	    if (dir.Angle(dir_test) > 3.1415926*2./3.) continue;
+	    
+	    //	    std::cout << p1.x/units::cm << " " << p1.y/units::cm << " " << p1.z/units::cm << " " << dir.X() << " " << dir.Y() << dir.Z() << std::endl;
+
+	    // check U and V and W
+	    TVector3 dir_1(0,dir.Y(),dir.Z());
+	    double angle1 = dir_1.Angle(U_dir);
+	    TVector3 tempV1(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle1),0);
+	    double angle1_1 = tempV1.Angle(drift_dir)/3.1415926*180.;
+
+	    double angle2 = dir_1.Angle(V_dir);
+	    TVector3 tempV2(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle2),0);
+	    double angle2_1 = tempV2.Angle(drift_dir)/3.1415926*180.;
+
+	    double angle3 = dir_1.Angle(W_dir);
+	    TVector3 tempV3(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle3),0);
+	    double angle3_1 = tempV3.Angle(drift_dir)/3.1415926*180.;
+
+	    // not added for now, need to check to add this one in when more events are available ...
+	    // XQ, 7/11/2018
+	    double angle4 = fabs(3.1415926/2.-dir.Angle(drift_dir))/3.1415926*180.;
+
+
+	    //std::cout << "A: " << p1.x/units::cm << " " << p1.y/units::cm << " " << p1.z/units::cm << " " << angle1_1 << " " << angle2_1 << " " << angle3_1 << std::endl;
+
+	    if ( (angle1_1 < 10 || angle2_1 < 10 || angle3_1 < 5)){
+	      flag_p1_inside_p = flag_p1_inside_p && check_signal_processing(p1,dir,ct_point_cloud,1*units::cm,offset_x);
+	    }
+	    
+	    if (fabs((3.1415926/2.-dir.Angle(dir_main))/3.1415926*180.)>60 )
+	      flag_p1_inside_p= flag_p1_inside_p && check_dead_volume(p1,dir,1*units::cm,offset_x);
+	  }
+	  
+	  bool flag_p2_inside_p = flag_p2_inside;
+	  if (flag_p2_inside_p){
+	    Point p2(out_vec_wcps.at(k).at(0).x,out_vec_wcps.at(k).at(0).y,out_vec_wcps.at(k).at(0).z);
+	    TVector3 dir = main_cluster->VHoughTrans(p2,30*units::cm);
+	    dir *= (-1);
+
+	    if (dir.Angle(dir_test) < 3.1415926/3.) continue;
+	    
+	    //	    std::cout << p2.x/units::cm << " " << p2.y/units::cm << " " << p2.z/units::cm << " " << dir.X() << " " << dir.Y() << dir.Z() << std::endl;
+	    TVector3 dir_1(0,dir.Y(),dir.Z());
+	    double angle1 = dir_1.Angle(U_dir);
+	    TVector3 tempV1(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle1),0);
+	    double angle1_1 = tempV1.Angle(drift_dir)/3.1415926*180.;
+
+	    double angle2 = dir_1.Angle(V_dir);
+	    TVector3 tempV2(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle2),0);
+	    double angle2_1 = tempV2.Angle(drift_dir)/3.1415926*180.;
+
+	    double angle3 = dir_1.Angle(W_dir);
+	    TVector3 tempV3(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle3),0);
+	    double angle3_1 = tempV3.Angle(drift_dir)/3.1415926*180.;
+
+	    //	    std::cout << "B: " << p2.x/units::cm << " " << p2.y/units::cm << " " << p2.z/units::cm << " " <<  angle1_1 << " " << angle2_1 << " " << angle3_1 << std::endl;
+
+	    if ( (angle1_1 < 10 || angle2_1 < 10 || angle3_1 < 5)){
+	      flag_p2_inside_p = flag_p2_inside_p && check_signal_processing(p2,dir,ct_point_cloud,1*units::cm,offset_x);
+	    }
+	    
+	    if (fabs((3.1415926/2.-dir.Angle(dir_main))/3.1415926*180.)>60 )
+	      flag_p2_inside_p=flag_p2_inside_p && check_dead_volume(p2,dir,1*units::cm,offset_x);
+	  }
+	  
+	  if ((!flag_p1_inside_p) && (!flag_p2_inside_p)){
+	    if (1){
+	      double temp_length = sqrt(pow(out_vec_wcps.at(i).at(0).x-out_vec_wcps.at(k).at(0).x,2)+
+					pow(out_vec_wcps.at(i).at(0).y-out_vec_wcps.at(k).at(0).y,2)+
+					pow(out_vec_wcps.at(i).at(0).z-out_vec_wcps.at(k).at(0).z,2));
+	      if (i==0&&k==1){
+		if ((!check_neutrino_candidate(main_cluster1,out_vec_wcps.at(i).at(0),out_vec_wcps.at(k).at(0),offset_x,ct_point_cloud,true)) &&
+		    temp_length > 0.45*length_limit
+		    )
+		  return true;
+	      }else{
+		if ((!check_neutrino_candidate(main_cluster1,out_vec_wcps.at(i).at(0),out_vec_wcps.at(k).at(0),offset_x,ct_point_cloud)) &&
+		    temp_length > 0.45*length_limit
+		    )
+		  return true;
+	      }
+	    }else{
+	      return true;
+	    }
+	  }
+
+	}
+      }
+    }
+  }
+  
+
+  return false;
+
+}
+
+
+
+
+
+bool WCPPID::ToyFiducial::M2_check_stm(WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*>& additional_clusters, double offset_x, double flash_time, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map){
+
+  //  check_full_detector_dead();
+  //std::cout << flag_other_clusters << std::endl;
+  
+  TVector3 drift_dir(1,0,0);
+  // hard coded for U and V plane ... 
+  TVector3 U_dir(0,cos(60./180.*3.1415926),sin(60./180.*3.1415926));
+  TVector3 V_dir(0,cos(60./180.*3.1415926),-sin(60./180.*3.1415926));
+  TVector3 W_dir(0,1,0);
+
+  Vector main_dir = main_cluster->get_PCA_axis(0);
+  TVector3 dir_main(main_dir.x,main_dir.y,main_dir.z);
+  
+  std::vector<WCPointCloud<double>::WCPoint> candidate_exit_wcps;
+  std::set<int> temp_set;
+  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps;
+  
+  // first round check
+  if (main_cluster->get_point_cloud_steiner()->get_cloud().pts.size()==0)
+    return false;
+
+  {
+    // get two extreme points ...
+    wcps = main_cluster->get_two_boundary_wcps(2,true);
+    // figure out the end points ...
+    std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps = main_cluster->get_extreme_wcps();
+    
+    {
+      std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
+      temp_wcps.push_back(wcps.first);
+      out_vec_wcps.push_back(temp_wcps);
+    }
+    {
+      std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
+      temp_wcps.push_back(wcps.second);
+      out_vec_wcps.push_back(temp_wcps);
+    }
+    
+    // boundary check
+    for (size_t i=0;i!=out_vec_wcps.size();i++){
+      bool flag_save = false;
+      // check all the points ... 
+      for (size_t j=0;j!=out_vec_wcps.at(i).size();j++){
+
+	Point p1(out_vec_wcps.at(i).at(j).x,out_vec_wcps.at(i).at(j).y,out_vec_wcps.at(i).at(j).z);
+	//std::cout << p1 << " " << inside_fiducial_volume(p1,offset_x) << std::endl;
+	if (!inside_fiducial_volume(p1,offset_x)){
+	  candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	  flag_save = true;
+	  break;
+	}
+      }
+      
+      if (!flag_save){
+	// check direction
+	Point p1(out_vec_wcps.at(i).at(0).x,out_vec_wcps.at(i).at(0).y,out_vec_wcps.at(i).at(0).z);
+	TVector3 dir = main_cluster->VHoughTrans(p1,30*units::cm);
+	dir *= (-1);
+	
+	// check U and V and W
+	TVector3 dir_1(0,dir.Y(),dir.Z());
+	double angle1 = dir_1.Angle(U_dir);
+	TVector3 tempV1(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle1),0);
+	double angle1_1 = tempV1.Angle(drift_dir)/3.1415926*180.;
+	
+	double angle2 = dir_1.Angle(V_dir);
+	TVector3 tempV2(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle2),0);
+	double angle2_1 = tempV2.Angle(drift_dir)/3.1415926*180.;
+	
+	double angle3 = dir_1.Angle(W_dir);
+	TVector3 tempV3(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle3),0);
+	double angle3_1 = tempV3.Angle(drift_dir)/3.1415926*180.;
+	
+	
+	if ( (angle1_1 < 10 || angle2_1 < 10 || angle3_1 < 5)){
+	  if (!check_signal_processing(p1,dir,ct_point_cloud,1*units::cm,offset_x)){
+	    flag_save = true;
+	    candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	  }
+	}
+	
+	if (!flag_save){
+	  if (fabs((3.1415926/2.-dir.Angle(dir_main))/3.1415926*180.)>60 ){
+	    if (!check_dead_volume(p1,dir,1*units::cm,offset_x)){
+	      flag_save = true;
+	      candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	    }
+	  }
+	}
+      }
+    }
+    
+    //std::cout << wcps.first.x << " " <<wcps.first.y << " " << wcps.first.z << std::endl;
+    //std::cout << wcps.second.x << " " <<wcps.second.y << " " << wcps.second.z << std::endl;
+    
+    for (size_t i=0; i!=candidate_exit_wcps.size(); i++){
+      double dis1 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.first.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.first.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.first.z,2));
+      double dis2 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.second.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.second.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.second.z,2));
+      
+      //      std::cout << candidate_exit_wcps.at(i).x << " " << candidate_exit_wcps.at(i).y << " " << candidate_exit_wcps.at(i).z << " " << dis1 << " " << dis2 << std::endl;
+      
+      // essentially one of the extreme points ...
+      if (dis1 < dis2){
+	if (dis1 < 1.0*units::cm)  temp_set.insert(0);
+      }else{
+	if (dis2 < 1.0*units::cm)  temp_set.insert(1);
+      }
+    }
+
+    //    std::cout << temp_set.size() << " " << candidate_exit_wcps.size() << std::endl;
+    
+    // protection against two end point situation
+    if (temp_set.size()==2){
+      WCP::Point tp1(wcps.first.x,wcps.first.y,wcps.first.z);
+      WCP::Point tp2(wcps.second.x,wcps.second.y,wcps.second.z);
+      
+      temp_set.clear();
+      
+      if ((!inside_fiducial_volume(tp1,offset_x))) temp_set.insert(0);
+      if ((!inside_fiducial_volume(tp2,offset_x))) temp_set.insert(1);
+      if (temp_set.size()==0){
+	temp_set.insert(0);
+	temp_set.insert(1);
+      }
+    }
+  }
+
+  if (temp_set.size()==0){
+    candidate_exit_wcps.clear();
+    // get two extreme points ...
+    wcps = main_cluster->get_two_boundary_wcps(2);
+    // figure out the end points ...
+    std::vector<std::vector<WCPointCloud<double>::WCPoint>> out_vec_wcps = main_cluster->get_extreme_wcps();
+    
+    {
+      std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
+      temp_wcps.push_back(wcps.first);
+      out_vec_wcps.push_back(temp_wcps);
+    }
+    {
+      std::vector<WCPointCloud<double>::WCPoint> temp_wcps;
+      temp_wcps.push_back(wcps.second);
+      out_vec_wcps.push_back(temp_wcps);
+    }
+    
+    // boundary check
+    for (size_t i=0;i!=out_vec_wcps.size();i++){
+      bool flag_save = false;
+      // check all the points ... 
+      for (size_t j=0;j!=out_vec_wcps.at(i).size();j++){
+	Point p1(out_vec_wcps.at(i).at(j).x,out_vec_wcps.at(i).at(j).y,out_vec_wcps.at(i).at(j).z);
+	if (!inside_fiducial_volume(p1,offset_x)){
+	  candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	  flag_save = true;
+	  break;
+	}
+      }
+      
+      if (!flag_save){
+	// check direction
+	Point p1(out_vec_wcps.at(i).at(0).x,out_vec_wcps.at(i).at(0).y,out_vec_wcps.at(i).at(0).z);
+	TVector3 dir = main_cluster->VHoughTrans(p1,30*units::cm);
+	dir *= (-1);
+	
+	// check U and V and W
+	TVector3 dir_1(0,dir.Y(),dir.Z());
+	double angle1 = dir_1.Angle(U_dir);
+	TVector3 tempV1(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle1),0);
+	double angle1_1 = tempV1.Angle(drift_dir)/3.1415926*180.;
+	
+	double angle2 = dir_1.Angle(V_dir);
+	TVector3 tempV2(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle2),0);
+	double angle2_1 = tempV2.Angle(drift_dir)/3.1415926*180.;
+	
+	double angle3 = dir_1.Angle(W_dir);
+	TVector3 tempV3(fabs(dir.X()), sqrt(dir.Y()*dir.Y()+dir.Z()*dir.Z())*sin(angle3),0);
+	double angle3_1 = tempV3.Angle(drift_dir)/3.1415926*180.;
+	
+	
+	if ( (angle1_1 < 10 || angle2_1 < 10 || angle3_1 < 5)){
+	  if (!check_signal_processing(p1,dir,ct_point_cloud,1*units::cm,offset_x)){
+	    flag_save = true;
+	    candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	  }
+	}
+
+	//	std::cout << fabs((3.1415926/2.-dir.Angle(dir_main))/3.1415926*180.) << " " << check_dead_volume(p1,dir,1*units::cm,offset_x) << std::endl;
+	if (!flag_save){
+	  if (fabs((3.1415926/2.-dir.Angle(dir_main))/3.1415926*180.)>60 ){
+	    if (!check_dead_volume(p1,dir,1*units::cm,offset_x)){
+	      flag_save = true;
+	      candidate_exit_wcps.push_back(out_vec_wcps.at(i).at(0));
+	    }
+	  }
+	}
+      }
+    }
+    
+    //std::cout << wcps.first.x << " " <<wcps.first.y << " " << wcps.first.z << std::endl;
+    //std::cout << wcps.second.x << " " <<wcps.second.y << " " << wcps.second.z << std::endl;
+    
+    for (size_t i=0; i!=candidate_exit_wcps.size(); i++){
+      double dis1 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.first.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.first.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.first.z,2));
+      double dis2 = sqrt(pow(candidate_exit_wcps.at(i).x - wcps.second.x,2) + pow(candidate_exit_wcps.at(i).y - wcps.second.y,2) + pow(candidate_exit_wcps.at(i).z - wcps.second.z,2));
+      
+      //std::cout << candidate_exit_wcps.at(i).x << " " << candidate_exit_wcps.at(i).y << " " << candidate_exit_wcps.at(i).z << " " << dis1 << " " << dis2 << std::endl;
+      
+      // essentially one of the extreme points ...
+      if (dis1 < dis2){
+	if (dis1 < 1.0*units::cm)  temp_set.insert(0);
+      }else{
+	if (dis2 < 1.0*units::cm)  temp_set.insert(1);
+      }
+    }
+
+    //std::cout << temp_set.size() << " " << candidate_exit_wcps.size() << std::endl;
+    
+    
+    // protection against two end point situation
+    if (temp_set.size()==2){
+      WCP::Point tp1(wcps.first.x,wcps.first.y,wcps.first.z);
+      WCP::Point tp2(wcps.second.x,wcps.second.y,wcps.second.z);
+      
+      temp_set.clear();
+      
+      if ((!inside_fiducial_volume(tp1,offset_x))) temp_set.insert(0);
+      if ((!inside_fiducial_volume(tp2,offset_x))) temp_set.insert(1);
+      if (temp_set.size()==0){
+	temp_set.insert(0);
+	temp_set.insert(1);
+      }
+    }
+  }
+  
+
+  
+  // fully contained, so not a STM
+  if (candidate_exit_wcps.size()==0) {
+    std::cout << "Mid Point: A" << std::endl;
+    return false;
+  }
+  
+  std::cout << "end_point: " << temp_set.size() << " " << candidate_exit_wcps.size() << std::endl;
+
+  // It is possible that we have two points out of fiducial
+  // Michel electron is outside the boundary ...
+
+  
+  
+  // Crawl backward according to the graph ??? ...
+  WCPointCloud<double>::WCPoint first_wcp;
+  WCPointCloud<double>::WCPoint last_wcp;
+  bool flag_double_end = false;
+
+  if (temp_set.size()!=0){
+    if (*temp_set.begin()==0){
+      first_wcp = wcps.first;
+      last_wcp = wcps.second;
+    }else{
+      first_wcp = wcps.second;
+      last_wcp = wcps.first;
+    }
+    if (temp_set.size()==2) flag_double_end = true;
+    
+  }else{
+    if (candidate_exit_wcps.size()==1){
+      first_wcp = candidate_exit_wcps.at(0);
+      TVector3 dir1(wcps.first.x - candidate_exit_wcps.at(0).x,
+		    wcps.first.y - candidate_exit_wcps.at(0).y,
+		    wcps.first.z - candidate_exit_wcps.at(0).z);
+      TVector3 dir2(wcps.second.x - candidate_exit_wcps.at(0).x,
+		    wcps.second.y - candidate_exit_wcps.at(0).y,
+		    wcps.second.z - candidate_exit_wcps.at(0).z);
+      double dis1 = dir1.Mag();
+      double dis2 = dir2.Mag();
+
+      if (dir1.Angle(dir2) > 120/180.*3.1415926 && dis1 > 20*units::cm &&
+      	  dis2 > 20*units::cm){
+	std::cout << "Mid Point: B" << std::endl;
+	return false;
+      }else{
+	if (dis1 < dis2){
+	  last_wcp = wcps.second;	   
+	}else{
+	  last_wcp = wcps.first; 
+	}
+      }
+      
+    }else{
+      std::cout << "Mid Point: C" << std::endl;
+      return false;
+    }
+  }
+
+ 
+  bool flag_other_clusters = check_other_clusters(main_cluster, additional_clusters);
+  //  std::cout << "haha " << flag_other_clusters << std::endl;
+  
+  // forward check ...
+  {
+    if (flag_double_end) std::cout << "Forward check! " << std::endl;
+    // regular crawling ...
+    main_cluster->do_rough_path(first_wcp, last_wcp);
+    // std::cout << "haha" << std::endl;
+    main_cluster->collect_charge_trajectory(ct_point_cloud); 
+    //std::cout << "haha" << std::endl;
+    main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
+    //std::cout << "test" << std::endl; 
+    if (main_cluster->get_fine_tracking_path().size()<=3) return false;
+    
+    //std::cout << "haha " << std::endl;
+    Point mid_p = main_cluster->adjust_rough_path(); 
+    //std::cout << "haha" << std::endl;
+    // fitting trajectory and dQ/dx...
+    main_cluster->collect_charge_trajectory(ct_point_cloud); 
+    main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+
+    //    std::cout << "test" << std::endl; 
+    // check both end points for TGM ...
+    WCP::PointVector& pts = main_cluster->get_fine_tracking_path();
+    std::vector<double>& dQ = main_cluster->get_dQ();
+    std::vector<double>& dx = main_cluster->get_dx();
+    
+    int kink_num = find_first_kink(main_cluster);
+    
+    double left_L = 0; 
+    double left_Q = 0;
+    double exit_L = 0; 
+    double exit_Q = 0;
+    for (size_t i=0;i!=kink_num;i++){
+      exit_L += dx.at(i);
+      exit_Q += dQ.at(i);
+    }
+    for (size_t i = kink_num; i!=dx.size(); i++){
+      left_L += dx.at(i);
+      left_Q += dQ.at(i);
+    }
+    
+    std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << " " << (exit_Q/(exit_L/units::cm+1e-9)/50e3) << std::endl;
+
+    //std::cout << pts.front() << " " << pts.back() << " " << (!inside_fiducial_volume(pts.front(),offset_x)) << " " << (!inside_fiducial_volume(pts.back(),offset_x)) << std::endl;
+    if ( (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
+      // std::cout << exit_L_TGM/units::cm << " " << left_L_TGM/units::cm << std::endl;
+      bool flag_TGM_anode = false;
+      
+      if ((pts.back().x < 2*units::cm || pts.front().x < 2*units::cm) && kink_num >=0 && kink_num < pts.size()){ // at Anode ...
+	if (pts.at(kink_num).x < 6*units::cm){
+	  TVector3 v10(pts.back().x-pts.at(kink_num).x,pts.back().y-pts.at(kink_num).y,pts.back().z-pts.at(kink_num).z);
+	  TVector3 v20(pts.front().x-pts.at(kink_num).x,pts.front().y-pts.at(kink_num).y,pts.front().z-pts.at(kink_num).z);
+	  if (fabs(v10.Angle(drift_dir)/3.1415926*180.-90)<12.5 && v10.Mag()>15*units::cm || fabs(v20.Angle(drift_dir)/3.1415926*180.-90)<12.5 && v20.Mag()>15*units::cm)
+	    flag_TGM_anode = true;
+	  //std::cout << v10.Angle(drift_dir)/3.1415926*180. << " " << v20.Angle(drift_dir)/3.1415926*180. << std::endl;
+	}
+      }
+      if ((exit_L < 3*units::cm || left_L < 3*units::cm || flag_TGM_anode)){
+	std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+	//event_type |= 1UL << 3;
+	return false;
+      }
+    }else if ((!inside_fiducial_volume(pts.front(),offset_x)) && left_L < 3*units::cm){
+      // check dead volume and SP ...
+      Point p1 = pts.back();
+      TVector3 dir = main_cluster->VHoughTrans(p1,30*units::cm);
+      dir *= (-1);
+      if (!check_dead_volume(p1,dir,1*units::cm,offset_x)){
+	if (exit_L < 3*units::cm || left_L < 3*units::cm){
+	  std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+	  //event_type |= 1UL << 3;
+	  return false;
+	}
+      }
+      //std::cout << "ABC: " << dir.X() << " " << dir.Y() << " " << dir.Z() << " " << check_dead_volume(p1,dir,1*units::cm,offset_x) << std::endl;
+    }
+  
+    if (left_L > 40*units::cm || left_L > 7.5*units::cm && (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0){
+      if (!flag_double_end){
+	std::cout << "Mid Point A " << inside_dead_region(mid_p) << " " << mid_p << " " << left_L  << " " << (left_Q/(left_L/units::cm+1e-9)/50e3) << std::endl;
+	return false;
+      }
+    }else{
+      bool flag_fix_end = false;
+      if (exit_L < 35*units::cm || (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0&& left_L > 2*units::cm) flag_fix_end = true;
+      
+      if (left_L < 8*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3)< 1.5 ||
+	  left_L < 6*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.7 ||
+	  left_L < 5*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.8 ||
+	  left_L < 3*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.9){
+	left_L = 0;
+	kink_num = dQ.size();
+	exit_L = 40*units::cm;
+	flag_fix_end = false;
+      }
+    
+     
+      bool flag_pass = false;
+
+      // std::cout << flag_other_clusters << std::endl;
+      
+      if (!flag_other_clusters){
+	if (left_L < 40*units::cm) {
+	  if (flag_fix_end){
+	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
+	  }else{
+	    flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 35*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	  }
+	  
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 15*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	    }
+	  }
+	}
+	
+	if (left_L < 20*units::cm){
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 35*units::cm) ||
+		eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	    }
+	  }
+	  
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm , 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm , 3.*units::cm, 15*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	    }
+	  }
+	}
+      }else{
+	if (flag_fix_end)
+	  flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm, true);
+	else
+	  flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm, 0., 35*units::cm, true);
+      }
+      
+      if (flag_pass) {
+	main_cluster->clear_fit_tracks();
+	main_cluster->search_other_tracks(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+
+	if (check_other_tracks(main_cluster, offset_x)){
+	  std::cout << "Mid Point Tracks" << std::endl;
+	  return false;
+	}
+	
+	//	std::cout << main_cluster->get_fit_tracks().size() << std::endl;
+	
+	if (!detect_proton(main_cluster, kink_num)) return true;
+      }
+    }
+  }
+  
+  // backward check ...
+  if (flag_double_end){
+    std::cout << "Backward check! " << std::endl;
+    // regular crawling ...
+    main_cluster->do_rough_path( last_wcp, first_wcp);
+    main_cluster->collect_charge_trajectory(ct_point_cloud); 
+    main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
+    Point mid_p = main_cluster->adjust_rough_path(); 
+    // fitting trajectory and dQ/dx...
+    main_cluster->collect_charge_trajectory(ct_point_cloud); 
+    main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+
+    // check both end points for TGM ...
+    WCP::PointVector& pts = main_cluster->get_fine_tracking_path();
+    std::vector<double>& dQ = main_cluster->get_dQ();
+    std::vector<double>& dx = main_cluster->get_dx();
+    
+    int kink_num = find_first_kink(main_cluster);
+    
+    double left_L = 0;
+    double left_Q = 0;
+    double exit_L = 0;
+    double exit_Q = 0;
+    for (size_t i=0;i!=kink_num;i++){
+      exit_L += dx.at(i);
+      exit_Q += dQ.at(i);
+    }
+    for (size_t i = kink_num; i!=dx.size(); i++){
+      left_L += dx.at(i);
+      left_Q += dQ.at(i);
+    }
+    
+    std::cout << "Left: " << exit_L/units::cm << " " << left_L/units::cm << " " << (left_Q/(left_L/units::cm+1e-9))/50e3 << " " << (exit_Q/(exit_L/units::cm+1e-9)/50e3) << std::endl;
+    
+    if ( (!inside_fiducial_volume(pts.front(),offset_x)) && (!inside_fiducial_volume(pts.back(),offset_x))){
+      bool flag_TGM_anode = false;
+      
+      if ((pts.back().x < 2*units::cm || pts.front().x < 2*units::cm) && kink_num >=0 && kink_num < pts.size()){ // at Anode ...
+	if (pts.at(kink_num).x < 6*units::cm){
+	  TVector3 v10(pts.back().x-pts.at(kink_num).x,pts.back().y-pts.at(kink_num).y,pts.back().z-pts.at(kink_num).z);
+	  TVector3 v20(pts.front().x-pts.at(kink_num).x,pts.front().y-pts.at(kink_num).y,pts.front().z-pts.at(kink_num).z);
+	  if (fabs(v10.Angle(drift_dir)/3.1415926*180.-90)<12.5 && v10.Mag()>15*units::cm || fabs(v20.Angle(drift_dir)/3.1415926*180.-90)<12.5 && v20.Mag()>15*units::cm)
+	    flag_TGM_anode = true;
+	  //std::cout << v10.Angle(drift_dir)/3.1415926*180. << " " << v20.Angle(drift_dir)/3.1415926*180. << std::endl;
+	}
+      }
+      if ((exit_L < 3*units::cm || left_L < 3*units::cm) || flag_TGM_anode){
+	std::cout << "TGM: " << pts.front() << " " << pts.back() << std::endl;
+	//event_type |= 1UL << 3;
+	return false;
+      }
+    }
+  
+    if (left_L > 40*units::cm || left_L > 7.5*units::cm && (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0){
+      std::cout << "Mid Point A " << inside_dead_region(mid_p) << " " << mid_p << " " << left_L  << " " << (left_Q/(left_L/units::cm+1e-9)/50e3) << std::endl;
+      return false;
+    }else{
+      bool flag_fix_end = false;
+      if (exit_L < 35*units::cm || (left_Q/(left_L/units::cm+1e-9))/50e3 > 2.0 && left_L > 2*units::cm) flag_fix_end = true;
+      
+      if (left_L < 8*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3)< 1.5 ||
+	  left_L < 6*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.7 ||
+	  left_L < 3*units::cm && (left_Q/(left_L/units::cm+1e-9)/50e3) < 1.9){
+	left_L = 0;
+	kink_num = dQ.size();
+	exit_L = 40*units::cm;
+	flag_fix_end = false;
+      }
+
+    
+    
+      bool flag_pass = false;
+      if (!flag_other_clusters){
+	if (left_L < 40*units::cm) {
+	  if (flag_fix_end){
+	    flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
+	  }else{
+	    flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 35*units::cm) ||
+	      eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	  }
+	  
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 15*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 40*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	    }
+	  }
+	}
+	
+	if (left_L < 20*units::cm){
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm, 3.*units::cm, 35*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 35*units::cm) ||
+		eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 35*units::cm);
+	    }
+	  }
+	  
+	  if (!flag_pass){
+	    if (flag_fix_end){
+	      flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm , 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 5*units::cm , 3.*units::cm, 15*units::cm);
+	    }else{
+	      flag_pass = eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 0., 15*units::cm) ||
+		eval_stm(main_cluster, kink_num, 20*units::cm - left_L, 3.*units::cm, 15*units::cm);
+	    }
+	  }
+	}
+      }else{
+	if (flag_fix_end)
+	  flag_pass = eval_stm(main_cluster, kink_num, 5*units::cm, 0., 35*units::cm, true);
+	else
+	  flag_pass = eval_stm(main_cluster, kink_num, 40*units::cm, 0., 35*units::cm, true);
+      }
+
+      if (flag_pass) {
+	main_cluster->clear_fit_tracks();
+	main_cluster->search_other_tracks(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+	if (check_other_tracks(main_cluster, offset_x)){
+	  std::cout << "Mid Point Tracks" << std::endl;
+	  return false;
+	}
+	
+	if (!detect_proton(main_cluster, kink_num)) return true;
+      }
+    }
+  }
+  
+  // check 5512-209-10491
+  // if (inside_dead_region(mid_p)) return true;
+  //  
+
+  // end check ...
+  std::cout << "Mid Point " << std::endl;  
+  return false;
+}
+
