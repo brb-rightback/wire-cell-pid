@@ -1248,16 +1248,48 @@ int main(int argc, char* argv[])
 
   TTree *T_vtx = new TTree("T_vtx","T_vtx");
   T_vtx->SetDirectory(file1);
-  Double_t x_save, y_save, z_save;
-  T_vtx->Branch("x",&x_save,"x/D");
-  T_vtx->Branch("y",&y_save,"y/D");
-  T_vtx->Branch("z",&z_save,"z/D");
-
+  Double_t x_vtx, y_vtx, z_vtx;
+  Int_t type_vtx;
+  // 1: Steiner-inspired graph
+  // 2: Steiner terminals
+  // 3: end point (extreme point, connecting to one object)
+  // 4: kink (connecting to two objects
+  // 5: vertex (connecting to three or more objects)
+  Int_t flag_main_vtx=0; // main vertex or not
+  Int_t cluster_id_vtx; // -1 if not belonging to any cluster ...
+  std::vector<int> *sub_cluster_ids_vtx = new std::vector<int>;
+  
+  T_vtx->Branch("x",&x_vtx,"x/D");
+  T_vtx->Branch("y",&y_vtx,"y/D");
+  T_vtx->Branch("z",&z_vtx,"z/D");
+  T_vtx->Branch("type",&type_vtx,"type/I");
+  T_vtx->Branch("flag_main",&flag_main_vtx,"flag_main/I");
+  T_vtx->Branch("cluster_id",&cluster_id_vtx,"cluster_id/I");
+  T_vtx->Branch("sub_cluster_ids",&sub_cluster_ids_vtx);
+  
   // hack for now ...
   for (Int_t i=0;i!=10;i++){
-    x_save = i * 10;
-    y_save = i*10;
-    z_save = i*10;
+    x_vtx = i * 10;
+    y_vtx = i * 10;
+    z_vtx = i * 10;
+
+    sub_cluster_ids_vtx->clear();
+    
+    if (i<=2) type_vtx = 1;
+    else if (i <=4) type_vtx = 2;
+    else if (i <=6) type_vtx = 3;
+    else if (i <=8) type_vtx = 4;
+    else if (i <=10) type_vtx = 5;
+
+    flag_main_vtx = 0;
+    if (i==5) flag_main_vtx = 1;
+    cluster_id_vtx = 33;
+
+    if (i==5){
+      sub_cluster_ids_vtx->push_back(31);
+      sub_cluster_ids_vtx->push_back(32);
+    }
+    
     T_vtx->Fill();
   }
   
@@ -1266,8 +1298,12 @@ int main(int argc, char* argv[])
   Double_t x,y,z,q,nq;
   Int_t ncluster;
   Int_t temp_time_slice, ch_u, ch_v, ch_w;
+  Int_t real_cluster_id;
+  Int_t sub_cluster_id;
   T_cluster = new TTree("T_cluster","T_cluster");
   T_cluster->Branch("cluster_id",&ncluster,"cluster_id/I");
+  T_cluster->Branch("real_cluster_id",&real_cluster_id,"real_cluster_id/I");
+  T_cluster->Branch("sub_cluster_id",&sub_cluster_id,"sub_cluster_id/I");
   T_cluster->Branch("x",&x,"x/D");
   T_cluster->Branch("y",&y,"y/D");
   T_cluster->Branch("z",&z,"z/D");
@@ -1281,7 +1317,11 @@ int main(int argc, char* argv[])
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     WCPPID::PR3DCluster* new_cluster = *it;  
-    ncluster = map_cluster_parent_id[new_cluster]; 
+    ncluster = map_cluster_parent_id[new_cluster];
+    
+    real_cluster_id = new_cluster->get_cluster_id();
+    //
+    
     ToyPointCloud *pcloud = new_cluster->get_point_cloud();
     if (pcloud!=0){
       WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
@@ -1289,6 +1329,17 @@ int main(int argc, char* argv[])
 	x = cloud.pts[i].x/units::cm;
 	y = cloud.pts[i].y/units::cm;
 	z = cloud.pts[i].z/units::cm;
+
+	// hack for now ...
+	if (3 * i < cloud.pts.size()){
+	  sub_cluster_id =  new_cluster->get_cluster_id()*1000;	  
+	}else if (3*i < 2*cloud.pts.size()){
+	  sub_cluster_id =  new_cluster->get_cluster_id()*1000 + 1;	  
+	}else{
+	  sub_cluster_id =  new_cluster->get_cluster_id()*1000 + 2;	  
+	}
+
+
 	SlimMergeGeomCell *mcell = cloud.pts[i].mcell;
 	ch_u = cloud.pts[i].index_u;
 	ch_v = cloud.pts[i].index_v;
