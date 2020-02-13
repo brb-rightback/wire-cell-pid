@@ -23,7 +23,7 @@ using namespace std;
 int main(int argc, char* argv[])
 {
   if (argc < 4) {
-    cerr << "usage: wire-cell-prod-bee /path/to/ChannelWireGeometry.txt /path/to/matching.root #entry -d[data=0, overlay=1, full mc=2]" << endl;
+    cerr << "usage: wire-cell-prod-nue /path/to/ChannelWireGeometry.txt /path/to/matching.root #entry -d[data=0, overlay=1, full mc=2]" << endl;
     return 1;
   }
   TH1::AddDirectory(kFALSE);
@@ -101,8 +101,9 @@ int main(int argc, char* argv[])
   Trun->GetEntry(entry_no);
   double lowerwindow = 0;
   double upperwindow = 0;
-  if((triggerbits>>11) & 1U) { lowerwindow = 3.0; upperwindow = 5.0; }// bnb  
-  if((triggerbits>>9) & 1U) { lowerwindow = 3.45; upperwindow = 5.45; } // extbnb
+  if((triggerbits>>11) & 1U) { lowerwindow=3.1875; upperwindow=4.96876;} // bnb  
+  if((triggerbits>>9) & 1U) { lowerwindow=3.5625; upperwindow=5.34376; } // extbnb
+  
   
    // define singleton ... 
   TPCParams& mp = Singleton<TPCParams>::Instance();
@@ -220,6 +221,7 @@ int main(int argc, char* argv[])
     map_tpc_flash_ids[tpc_cluster_id] = flash_id;
     map_flash_tpc_pair_type[std::make_pair(flash_id, tpc_cluster_id)] = event_type;
   }
+  // no need to reconstruct flash ...
   
 
   // load mcell
@@ -1181,7 +1183,7 @@ int main(int argc, char* argv[])
   
     
 
-  TFile *file1 = new TFile(Form("bee_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
+  TFile *file1 = new TFile(Form("nue_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
   TTree *Trun1 = new TTree("Trun","Trun");
   Trun1->SetDirectory(file1);
   Trun1->Branch("eventNo",&event_no,"eventNo/I");
@@ -1243,8 +1245,23 @@ int main(int argc, char* argv[])
     if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
     T_match1->Fill();
   }
-      
 
+  TTree *T_vtx = new TTree("T_vtx","T_vtx");
+  T_vtx->SetDirectory(file1);
+  Double_t x_save, y_save, z_save;
+  T_vtx->Branch("x",&x_save,"x/D");
+  T_vtx->Branch("y",&y_save,"y/D");
+  T_vtx->Branch("z",&z_save,"z/D");
+
+  // hack for now ...
+  for (Int_t i=0;i!=10;i++){
+    x_save = i * 10;
+    y_save = i*10;
+    z_save = i*10;
+    T_vtx->Fill();
+  }
+  
+  
   TTree *T_cluster ;
   Double_t x,y,z,q,nq;
   Int_t ncluster;
