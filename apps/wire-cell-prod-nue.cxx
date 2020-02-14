@@ -1180,8 +1180,63 @@ int main(int argc, char* argv[])
     live_clusters.at(i)->Create_point_cloud();
   }
   cout << em("Add X, Y, Z points") << std::endl;
+
+   double first_t_dis = live_clusters.at(0)->get_mcells().front()->GetTimeSlice()*time_slice_width - live_clusters.at(0)->get_mcells().front()->get_sampling_points().front().x;
+  double offset_t = first_t_dis/time_slice_width;
+
+  // test the fiducial volume cut 
+  fid->set_offset_t(offset_t);
   
+  ToyCTPointCloud ct_point_cloud(0,2399,2400,4799,4800,8255, // channel range
+				 offset_t, -first_u_dis/pitch_u, -first_v_dis/pitch_v, -first_w_dis/pitch_w, // offset
+				 1./time_slice_width, 1./pitch_u, 1./pitch_v, 1./pitch_w, // slope
+				 angle_u,angle_v,angle_w// angle
+				 );
+  ct_point_cloud.AddPoints(timesliceId,timesliceChannel,raw_charge,raw_charge_err);
+  ct_point_cloud.AddDeadChs(dead_u_index, dead_v_index, dead_w_index);
+  ct_point_cloud.build_kdtree_index();
+
+  // Code to select nue ...
+  for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
+    double flash_time = map_flash_info[it->first].second;
+    //std::cout << flash_time << " " << triggerbits << " " << lowerwindow << " " << upperwindow << std::endl;
+    if ( (flash_time < lowerwindow || flash_time > upperwindow)) continue;
+    std::vector<WCPPID::PR3DCluster*> temp_clusters = map_parentid_clusters[it->second];
+    WCPPID::PR3DCluster* main_cluster = 0;
+    for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
+      if ((*it1)->get_cluster_id() == it->second){
+	main_cluster = *it1;
+	break;
+      }
+    }
+    std::vector<WCPPID::PR3DCluster*> additional_clusters;
+    for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
+      if (*it1 != main_cluster)
+	additional_clusters.push_back(*it1);
+    }
+    for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
+      (*it1)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+      //(*it1)->recover_steiner_graph();
+    }
+    //std::cout << main_cluster << " " << additional_clusters.size() << std::endl;
+    // dummy code for now ...
+    if (main_cluster->get_point_cloud_steiner()!=0){
+      if (main_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
+	std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = main_cluster->get_two_boundary_wcps(2); 
+	main_cluster->dijkstra_shortest_paths(wcps.first,2); 
+	main_cluster->cal_shortest_path(wcps.second,2);
+      }
+      if (main_cluster->get_path_wcps().size()>=2){
+	main_cluster->collect_charge_trajectory(ct_point_cloud);
+	main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+      }
+    }
     
+  }
+
+  // start saving ...
+
+  
 
   TFile *file1 = new TFile(Form("nue_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
   TTree *Trun1 = new TTree("Trun","Trun");
