@@ -1258,6 +1258,9 @@ int main(int argc, char* argv[])
   // Trun1->Branch("raw_charge",&raw_charge);
   // Trun1->Branch("raw_charge_err",&raw_charge_err);
   Trun1->Fill();
+
+  if (T_bad_ch!=0)
+    T_bad_ch->CloneTree(-1,"fast");
   
   TTree *T_flash1 = new TTree("T_flash","T_flash");
   T_flash1->SetDirectory(file1);
