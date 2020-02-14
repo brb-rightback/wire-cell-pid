@@ -1416,8 +1416,147 @@ int main(int argc, char* argv[])
       }
     }
   }
-  
 
+  Double_t pu, pv, pw, pt;
+  Double_t charge_save=1, ncharge_save=1, chi2_save=1, ndf_save=1;
+  TTree *t_rec_charge = new TTree("T_rec_charge","T_rec_charge");
+  t_rec_charge->SetDirectory(file1);
+  t_rec_charge->Branch("x",&x,"x/D");
+  t_rec_charge->Branch("y",&y,"y/D");
+  t_rec_charge->Branch("z",&z,"z/D");
+  t_rec_charge->Branch("q",&charge_save,"q/D");
+  t_rec_charge->Branch("nq",&ncharge_save,"nq/D");
+  t_rec_charge->Branch("chi2",&chi2_save,"chi2/D");
+  t_rec_charge->Branch("ndf",&ndf_save,"ndf/D");
+  t_rec_charge->Branch("pu",&pu,"pu/D");
+  t_rec_charge->Branch("pv",&pv,"pv/D");
+  t_rec_charge->Branch("pw",&pw,"pw/D");
+  t_rec_charge->Branch("pt",&pt,"pt/D");
+  Double_t reduced_chi2;
+  t_rec_charge->Branch("reduced_chi2",&reduced_chi2,"reduced_chi2/D");
+  
+  TTree *T_proj_data = new TTree("T_proj_data","T_proj_data");
+  std::vector<int> *proj_data_cluster_id = new std::vector<int>;
+  std::vector<std::vector<int>> *proj_data_cluster_channel = new std::vector<std::vector<int>>;
+  std::vector<std::vector<int>> *proj_data_cluster_timeslice= new std::vector<std::vector<int>>;
+  std::vector<std::vector<int>> *proj_data_cluster_charge= new std::vector<std::vector<int>>;
+  std::vector<std::vector<int>> *proj_data_cluster_charge_err= new std::vector<std::vector<int>>;
+  std::vector<std::vector<int>> *proj_data_cluster_charge_pred= new std::vector<std::vector<int>>;
+  
+  T_proj_data->Branch("cluster_id",&proj_data_cluster_id);
+  T_proj_data->Branch("channel",&proj_data_cluster_channel);
+  T_proj_data->Branch("time_slice",&proj_data_cluster_timeslice);
+  T_proj_data->Branch("charge",&proj_data_cluster_charge);
+  T_proj_data->Branch("charge_err",&proj_data_cluster_charge_err);
+  T_proj_data->Branch("charge_pred",&proj_data_cluster_charge_pred);
+  T_proj_data->SetDirectory(file1);
+
+  for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
+    WCPPID::PR3DCluster* cluster = *it;
+    
+    ndf_save = cluster->get_cluster_id();
+    // original
+    PointVector& pts = cluster->get_fine_tracking_path();
+    //std::vector<double> dQ, dx;
+    std::vector<double>& dQ = cluster->get_dQ();
+    std::vector<double>& dx = cluster->get_dx();
+    std::vector<double>& tpu = cluster->get_pu();
+    std::vector<double>& tpv = cluster->get_pv();
+    std::vector<double>& tpw = cluster->get_pw();
+    std::vector<double>& tpt = cluster->get_pt();
+    std::vector<double>& Vreduced_chi2 = cluster->get_reduced_chi2();
+    
+    if (pts.size()!=dQ.size() || pts.size()==0) continue;
+    
+    for (size_t i=0; i!=pts.size(); i++){
+      x = pts.at(i).x/units::cm;
+      y = pts.at(i).y/units::cm;
+      z = pts.at(i).z/units::cm;
+      charge_save = dQ.at(i);
+      ncharge_save = dx.at(i)/units::cm;
+      pu = tpu.at(i);
+      pv = tpv.at(i);
+      pw = tpw.at(i);
+      pt = tpt.at(i);
+      reduced_chi2 = Vreduced_chi2.at(i);
+      t_rec_charge->Fill();
+    }
+
+    std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_u_map = cluster->get_proj_data_u_map();
+    std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_v_map = cluster->get_proj_data_v_map();
+    std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_w_map = cluster->get_proj_data_w_map();
+    
+    proj_data_cluster_id->push_back(ndf_save);
+    std::vector<int> temp_channel;
+    std::vector<int> temp_timeslice;
+    std::vector<int> temp_charge;
+    std::vector<int> temp_charge_err;
+    std::vector<int> temp_charge_pred;
+    for (auto it = proj_data_u_map.begin(); it!=proj_data_u_map.end(); it++){
+      temp_channel.push_back(it->first.first);
+      temp_timeslice.push_back(it->first.second);
+      temp_charge.push_back(std::get<0>(it->second));
+      temp_charge_err.push_back(std::get<1>(it->second));
+      temp_charge_pred.push_back(std::get<2>(it->second));
+    }
+    for (auto it = proj_data_v_map.begin(); it!=proj_data_v_map.end(); it++){
+      temp_channel.push_back(it->first.first);
+      temp_timeslice.push_back(it->first.second);
+      temp_charge.push_back(std::get<0>(it->second));
+      temp_charge_err.push_back(std::get<1>(it->second));
+      temp_charge_pred.push_back(std::get<2>(it->second));
+    }
+    for (auto it = proj_data_w_map.begin(); it!=proj_data_w_map.end(); it++){
+      temp_channel.push_back(it->first.first);
+      temp_timeslice.push_back(it->first.second);
+      temp_charge.push_back(std::get<0>(it->second));
+      temp_charge_err.push_back(std::get<1>(it->second));
+      temp_charge_pred.push_back(std::get<2>(it->second));
+    }
+    proj_data_cluster_channel->push_back(temp_channel);
+    proj_data_cluster_timeslice->push_back(temp_timeslice);
+    proj_data_cluster_charge->push_back(temp_charge);
+    proj_data_cluster_charge_err->push_back(temp_charge_err);
+    proj_data_cluster_charge_pred->push_back(temp_charge_pred);
+    
+  }
+  T_proj_data->Fill();
+
+  // now save the original projected charge information
+  // fill the bad channels ...
+  TTree *T_proj = new TTree("T_proj","T_proj");
+  std::vector<int> *proj_cluster_id = new std::vector<int>;
+  std::vector<std::vector<int>> *proj_cluster_channel = new std::vector<std::vector<int>>;
+  std::vector<std::vector<int>> *proj_cluster_timeslice= new std::vector<std::vector<int>>;
+  std::vector<std::vector<int>> *proj_cluster_charge= new std::vector<std::vector<int>>;
+  std::vector<std::vector<int>> *proj_cluster_charge_err= new std::vector<std::vector<int>>;
+  T_proj->Branch("cluster_id",&proj_cluster_id);
+  T_proj->Branch("channel",&proj_cluster_channel);
+  T_proj->Branch("time_slice",&proj_cluster_timeslice);
+  T_proj->Branch("charge",&proj_cluster_charge);
+  T_proj->Branch("charge_err",&proj_cluster_charge_err);
+  T_proj->SetDirectory(file1);
+  
+  for (auto it = map_parentid_clusters.begin(); it!=map_parentid_clusters.end(); it++){
+    int cluster_id = it->first;
+    std::vector<int> proj_channel;
+    std::vector<int> proj_timeslice;
+    std::vector<int> proj_charge;
+    std::vector<int> proj_charge_err;
+    std::vector<int> proj_flag;
+    for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+      WCPPID::PR3DCluster *cluster = (*it1);
+      cluster->get_projection(proj_channel,proj_timeslice,proj_charge, proj_charge_err, proj_flag, global_wc_map);
+    }
+    proj_cluster_id->push_back(cluster_id);
+    proj_cluster_channel->push_back(proj_channel);
+    proj_cluster_timeslice->push_back(proj_timeslice);
+    proj_cluster_charge->push_back(proj_charge);
+    proj_cluster_charge_err->push_back(proj_charge_err);
+  }
+  T_proj->Fill();
+  
+  
   TTree *t_bad = new TTree("T_bad","T_bad");
   t_bad->SetDirectory(file1);
   Int_t bad_npoints;
