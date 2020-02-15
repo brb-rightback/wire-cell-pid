@@ -1219,18 +1219,32 @@ int main(int argc, char* argv[])
       //(*it1)->recover_steiner_graph();
     }
     //std::cout << main_cluster << " " << additional_clusters.size() << std::endl;
-    // dummy code for now ...
-    if (main_cluster->get_point_cloud_steiner()!=0){
-      if (main_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
-	std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = main_cluster->get_two_boundary_wcps(2); 
-	main_cluster->dijkstra_shortest_paths(wcps.first,2); 
-	main_cluster->cal_shortest_path(wcps.second,2);
-      }
-      if (main_cluster->get_path_wcps().size()>=2){
-	main_cluster->collect_charge_trajectory(ct_point_cloud);
-	main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+    // dummy code for now ... all clusters ...
+    for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
+      WCPPID::PR3DCluster *temp_cluster = (*it1);
+      if (temp_cluster->get_point_cloud_steiner()!=0){
+	if (temp_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
+	  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_two_boundary_wcps(2); 
+	  temp_cluster->dijkstra_shortest_paths(wcps.first,2); 
+	  temp_cluster->cal_shortest_path(wcps.second,2);
+	}
+	if (temp_cluster->get_path_wcps().size()>=2){
+	  temp_cluster->collect_charge_trajectory(ct_point_cloud);
+	  temp_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+	}
       }
     }
+    // if (main_cluster->get_point_cloud_steiner()!=0){
+    //   if (main_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
+    // 	std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = main_cluster->get_two_boundary_wcps(2); 
+    // 	main_cluster->dijkstra_shortest_paths(wcps.first,2); 
+    // 	main_cluster->cal_shortest_path(wcps.second,2);
+    //   }
+    //   if (main_cluster->get_path_wcps().size()>=2){
+    // 	main_cluster->collect_charge_trajectory(ct_point_cloud);
+    // 	main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+    //   }
+    // }
     
   }
 
