@@ -35,6 +35,22 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::glm_ta
 	std::vector<double> tgm_tol_vec =     {2.2, 2.8, 2.8, 2.8, 2.8};
 	std::vector<double> tgm_nof_tol_vec = {0.8, 1.2, 1.2, 1.2, 1.2};
 
+/*
+	if(!fully_contained){
+		chi2_stm_tol = 1;
+		chi2_tgm_tol = 1;
+		bundle_ks_stm_tol =     0.04;
+		bundle_ks_tgm_tol =     0.06;
+		bundle_ks_tgm_nof_tol = 0.06;
+		stm_flash_tol = 1.2*units::m;
+		tgm_flash_tol = 1.2*units::m;
+		stm_pe_frac_tol = 1.3;
+		tgm_pe_frac_tol = 1.3;
+		stm_tol_vec =     {0.0, 1.5, 1.5, 2.0, 1.5};
+		tgm_tol_vec =     {1.6, 2.0, 2.0, 2.0, 2.0};
+		tgm_nof_tol_vec = {0.6, 0.9, 0.9, 0.9, 0.9};
+	}
+*/
 	if(!fully_contained){
 		chi2_stm_tol = 1;
 		chi2_tgm_tol = 1;

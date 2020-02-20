@@ -1584,6 +1584,9 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
   double ks2 = h3->KolmogorovTest(h1,"M");
   double ratio2 = h3->GetSum()/(h1->GetSum()+1e-9);
   
+  delete h1;
+  delete h2;
+  delete h3;
 
   std::cout << "KS value: " << flag_strong_check << " " << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << " "  << res_dis1/(res_length1+1e-9) << " " << res_length /units::cm << " " << ave_res_dQ_dx/50000. << std::endl;
   
@@ -1594,14 +1597,13 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
   // results.push_back(ratio2);
   // return results;
 
-  int stm_type = 0;	//0 = default not-stm, 1 = labeled not-stm, 2 = stm
-  if (ks1-ks2 >= 0.0) stm_type = 1;
-  if (sqrt(pow(ks2/0.06,2)+pow((ratio2-1)/0.06,2))< 1.4 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.02) stm_type = 1;
+  if (ks1-ks2 >= 0.0) return false;
+  if (sqrt(pow(ks2/0.06,2)+pow((ratio2-1)/0.06,2))< 1.4 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.02) return false;
 
   
   if ((res_length > 8*units::cm && ave_res_dQ_dx/50000. > 0.9 && res_length1 > 5*units::cm ||
        res_length1 > 1.5*units::cm && ave_res_dQ_dx/50000. > 2.3)&& res_dis1/(res_length1+1e-9) > 0.99 )
-    stm_type = 1;
+    return false;
   
   // if residual does not look like a michel electron
   if (res_length > 20 * units::cm && ave_res_dQ_dx/50000. > 1.2 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.02 ||
@@ -1613,32 +1615,22 @@ bool WCPPID::ToyFiducial::eval_stm(WCPPID::PR3DCluster* main_cluster,int kink_nu
       res_length > 4 * units::cm && ave_res_dQ_dx/50000. > 1.4 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > 0.02 ||
       res_length > 2*units::cm && ave_res_dQ_dx/50000. > 4.5
       )
-    stm_type = 1;
+    return false;
 
-  if(stm_type==0){
-    if (!flag_strong_check){
-      if (ks1 - ks2 < -0.02 && (ks2 > 0.09 && fabs(ratio2-1) >0.1 || ratio2 > 1.5 || ks2 > 0.2)) stm_type = 2;
-      if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0) stm_type = 2;
-    }else{
-      if (ks1 - ks2 < -0.02 && (ks2 > 0.09 || ratio2 > 1.5) && ks1 < 0.05 && fabs(ratio1-1)<0.1) stm_type = 2;
-      if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0 && ks1 < 0.05 && fabs(ratio1-1)<0.1) stm_type = 2;
-      //if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.03 && ks1 < 0.03 && fabs(ratio1-1)<0.15) return true;
-      // if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.05 && ks1 < 0.04 && fabs(ratio1-1)<0.15) return true;    
-      //if (ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.03 && ks1 < 0.04 && ks2 > 0.05 && ratio1 < 1 && ratio2 < 1) return true;
-    }
-  }
-
-std::cout << "draw if stm:" << std::endl;  
-  bool flag_stm = (stm_type==2);
-  if(flag_stm){
-    h1->Draw();
-std::cout << "yes stm!  did we draw?" << std::endl;
-  }
   
-  delete h1;
-  delete h2;
-  delete h3;
-  return flag_stm;
+  
+  if (!flag_strong_check){
+    if (ks1 - ks2 < -0.02 && (ks2 > 0.09 && fabs(ratio2-1) >0.1 || ratio2 > 1.5 || ks2 > 0.2)) return true;
+    if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0) return true;
+  }else{
+    if (ks1 - ks2 < -0.02 && (ks2 > 0.09 || ratio2 > 1.5) && ks1 < 0.05 && fabs(ratio1-1)<0.1) return true;
+    if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0 && ks1 < 0.05 && fabs(ratio1-1)<0.1) return true;
+    //if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.03 && ks1 < 0.03 && fabs(ratio1-1)<0.15) return true;
+    // if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.05 && ks1 < 0.04 && fabs(ratio1-1)<0.15) return true;    
+    //if (ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < -0.03 && ks1 < 0.04 && ks2 > 0.05 && ratio1 < 1 && ratio2 < 1) return true;
+  }
+
+  return false;
   
 }
 
