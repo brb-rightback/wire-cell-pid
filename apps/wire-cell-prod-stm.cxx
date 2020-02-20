@@ -791,15 +791,15 @@ int main(int argc, char* argv[])
 	flag_stm = (event_type >> 5) & 1U;
 
 	//debugging glm tagger
-	// if(pass_pre_glm_cuts){
-	//   if(flag_tgm){
-	//     fid->write_debug(run_no,subrun_no,event_no,tag_glm);
-	//   } else if(flag_stm){
-	//     fid->write_debug(run_no,subrun_no,event_no,tag_glm);
-	//   } else{
-	//     fid->write_debug(run_no,subrun_no,event_no,0);
-	//   }
-	// }
+	 if(pass_pre_glm_cuts){
+	   if(flag_tgm){
+	     fid->write_debug(run_no,subrun_no,event_no,tag_glm);
+	   } else if(flag_stm){
+	     fid->write_debug(run_no,subrun_no,event_no,tag_glm);
+	   } else{
+	     fid->write_debug(run_no,subrun_no,event_no,0);
+	   }
+	 }
 
       }
 

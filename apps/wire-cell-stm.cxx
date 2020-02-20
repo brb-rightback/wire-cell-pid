@@ -222,11 +222,14 @@ int main(int argc, char* argv[])
     map_flash_tpc_pair_type[std::make_pair(flash_id, tpc_cluster_id)] = std::make_tuple(event_type, ks_dis, chi2, ndf);
   }
   
+std::cout << "here 1" << std::endl;
 
   // load mcell
   TTree *TC = (TTree*)file->Get("TC");
   std::vector<int> *cluster_id_vec = new std::vector<int>;
+std::cout << "here 1.1" << std::endl;
   std::vector<int> *parent_cluster_id = new std::vector<int>;
+std::cout << "here 1.2" << std::endl;
   std::vector<int> *time_slice_vec = new std::vector<int>;
   std::vector<double> *q_vec = new std::vector<double>;
   std::vector<double> *uq_vec = new std::vector<double>;
@@ -242,6 +245,7 @@ int main(int argc, char* argv[])
   std::vector<int> *flag_u_vec = new  std::vector<int>;
   std::vector<int> *flag_v_vec = new  std::vector<int>;
   std::vector<int> *flag_w_vec = new  std::vector<int>;
+std::cout << "here 1.3" << std::endl;
 
   std::vector<std::vector<int>> *wire_index_u_vec = new std::vector<std::vector<int>>;
   std::vector<std::vector<int>> *wire_index_v_vec = new std::vector<std::vector<int>>;
@@ -261,6 +265,7 @@ int main(int argc, char* argv[])
   TC->SetBranchAddress("vq",&vq_vec);
   TC->SetBranchAddress("wq",&wq_vec);
   TC->SetBranchAddress("udq",&udq_vec);
+std::cout << "here 2" << std::endl;
 
   TC->SetBranchAddress("vdq",&vdq_vec);
   TC->SetBranchAddress("wdq",&wdq_vec);
@@ -279,12 +284,14 @@ int main(int argc, char* argv[])
   TC->SetBranchAddress("wire_charge_err_u",&wire_charge_err_u_vec);
   TC->SetBranchAddress("wire_charge_err_v",&wire_charge_err_v_vec);
   TC->SetBranchAddress("wire_charge_err_w",&wire_charge_err_w_vec);
+std::cout << "here 3" << std::endl;
 
   //load mcell
   TTree *TDC = (TTree*)file->Get("TDC");
   std::vector<int> *ntime_slice_vec = new std::vector<int>;
   std::vector<std::vector<int>> *time_slices_vec = new std::vector<std::vector<int>>;
   TDC->SetBranchAddress("cluster_id",&cluster_id_vec);
+std::cout << "here 3.1" << std::endl;
   TDC->SetBranchAddress("ntime_slice",&ntime_slice_vec);
   TDC->SetBranchAddress("time_slice",&time_slices_vec);
 
@@ -297,6 +304,7 @@ int main(int argc, char* argv[])
   TDC->SetBranchAddress("wire_index_u",&wire_index_u_vec);
   TDC->SetBranchAddress("wire_index_v",&wire_index_v_vec);
   TDC->SetBranchAddress("wire_index_w",&wire_index_w_vec);
+std::cout << "here 4" << std::endl;
 
   WCPPID::ToyFiducial *fid = new WCPPID::ToyFiducial(3,800,-first_u_dis/pitch_u, -first_v_dis/pitch_v, -first_w_dis/pitch_w,
 								   1./time_slice_width, 1./pitch_u, 1./pitch_v, 1./pitch_w, // slope
@@ -416,6 +424,7 @@ int main(int argc, char* argv[])
     prev_cluster_id = cluster_id;
     ident++;
   }
+std::cout << "here 5" << std::endl;
   
   prev_cluster_id = -1;
   cluster_id_vec->clear();
