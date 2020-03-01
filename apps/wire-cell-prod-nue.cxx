@@ -8,9 +8,9 @@
 #include "WCPPID/ToyFiducial.h"
 #include "WCPPID/CalcPoints.h"
 //#include "WCPPID/PR3DCluster.h"
+//#include "WCPPID/ImprovePR3DCluster.h"
 
 #include "WCPPID/ExecMon.h"
-//#include "WCPPID/ImprovePR3DCluster.h"
 #include "WCPPID/NeutrinoID.h"
 
 #include "TH1.h"
@@ -1235,7 +1235,7 @@ int main(int argc, char* argv[])
     // 	}
     //   }
     // }
-    WCPPID::NeutrinoID(main_cluster, additional_clusters, ct_point_cloud, global_wc_map, flash_time);
+    WCPPID::NeutrinoID neutrino(main_cluster, additional_clusters, &ct_point_cloud, global_wc_map, flash_time);
     
     // if (main_cluster->get_point_cloud_steiner()!=0){
     //   if (main_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
