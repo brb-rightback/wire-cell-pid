@@ -1,6 +1,8 @@
 #ifndef WIRECELLPID_NEUTRINOID_H
 #define WIRECELLPID_NEUTRINOID_H
 
+#include "WCPSst/GeomDataSource.h"
+
 #include "WCPPID/PR3DCluster.h"
 #include "WCPData/ToyCTPointCloud.h"
 
@@ -11,7 +13,7 @@
 namespace WCPPID{
   class NeutrinoID{
   public:
-    NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, WCP::ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double flash_time);
+    NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis,	WCP::ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double flash_time);
     ~NeutrinoID();
 
     // actual functions ...

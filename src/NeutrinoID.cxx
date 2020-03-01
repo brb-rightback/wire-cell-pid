@@ -2,7 +2,7 @@
 
 using namespace WCP;
 
-WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time)
+WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time)
   : main_cluster(main_cluster)
   , other_clusters(other_clusters)
   , ct_point_cloud(ct_point_cloud)
@@ -10,6 +10,11 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   , flash_time(flash_time)
   , type(0)
 {
+  // create Steiner-inspired graph
+  main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+  for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
+    (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+  }
   
   // deal with main cluster
   process_main_cluster();

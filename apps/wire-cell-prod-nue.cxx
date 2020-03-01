@@ -1214,10 +1214,13 @@ int main(int argc, char* argv[])
       if (*it1 != main_cluster)
 	additional_clusters.push_back(*it1);
     }
-    for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
-      (*it1)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-      //(*it1)->recover_steiner_graph();
-    }
+
+    WCPPID::NeutrinoID neutrino(main_cluster, additional_clusters, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time);
+    
+    // for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
+    //   (*it1)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+    //   //(*it1)->recover_steiner_graph();
+    // }
     
     //std::cout << main_cluster << " " << additional_clusters.size() << std::endl;
     // dummy code for now ... all clusters ...
@@ -1235,7 +1238,7 @@ int main(int argc, char* argv[])
     // 	}
     //   }
     // }
-    WCPPID::NeutrinoID neutrino(main_cluster, additional_clusters, &ct_point_cloud, global_wc_map, flash_time);
+    
     
     // if (main_cluster->get_point_cloud_steiner()!=0){
     //   if (main_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
