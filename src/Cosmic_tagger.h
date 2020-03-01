@@ -143,9 +143,10 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::glm_ta
 			reasonable_pe = flash_pe_tot < pred_pe_tot*tgm_pe_frac_tol;
 			nearby_flash = flash_pe_z_centroid > pred_pe_z_centroid-tgm_flash_tol && flash_pe_z_centroid < pred_pe_z_centroid+tgm_flash_tol;
 			if(better_chi2 && reasonable_pe && nearby_flash){
-				if(ks_frac > 2){for(int i=0;i<5;i++){tgm_tol_vec[i] *= 1.3;}}
+				std::vector<double> temp_tgm_tol_vec = tgm_tol_vec;
+				if(ks_frac > 2){for(int i=0;i<5;i++){temp_tgm_tol_vec[i] *= 1.3;}}
 				if(ks_frac > 1){
-					boundary_num_tgm = check_boundary(extreme_points, offset_x, &tgm_tol_vec);
+					boundary_num_tgm = check_boundary(extreme_points, offset_x, &temp_tgm_tol_vec);
 				}
 			}
 
@@ -156,10 +157,11 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::glm_ta
 			reasonable_pe = flash_pe_tot < pred_pe_tot*stm_pe_frac_tol;
 			nearby_flash = flash_pe_z_centroid > pred_pe_z_centroid-stm_flash_tol && flash_pe_z_centroid < pred_pe_z_centroid+stm_flash_tol;
 			if(better_chi2 && cathode_side && reasonable_pe && nearby_flash){
-				if(ks_frac > 3){for(int i=0;i<5;i++){stm_tol_vec[i] *= 1.3;}}
-				if(ks_frac > 2){for(int i=0;i<5;i++){stm_tol_vec[i] *= 1.3;}}
+				std::vector<double> temp_stm_tol_vec = stm_tol_vec;
+				if(ks_frac > 3){for(int i=0;i<5;i++){temp_stm_tol_vec[i] *= 1.3;}}
+				if(ks_frac > 2){for(int i=0;i<5;i++){temp_stm_tol_vec[i] *= 1.3;}}
 				if(ks_frac > 1){
-					boundary_num_stm = check_boundary(extreme_points, offset_x, &stm_tol_vec);
+					boundary_num_stm = check_boundary(extreme_points, offset_x, &temp_stm_tol_vec);
 				}
 			}
 
