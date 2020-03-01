@@ -8,10 +8,12 @@
 #include "WCPPID/ToyFiducial.h"
 
 #include "WCPPID/CalcPoints.h"
-#include "WCPPID/PR3DCluster.h"
+//#include "WCPPID/PR3DCluster.h"
 
 #include "WCPPID/ExecMon.h"
-#include "WCPPID/ImprovePR3DCluster.h"
+//#include "WCPPID/ImprovePR3DCluster.h"
+
+#include "WCPPID/NeutrinoID.h"
 
 #include "TH1.h"
 #include "TFile.h"
@@ -1218,22 +1220,25 @@ int main(int argc, char* argv[])
       (*it1)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
       //(*it1)->recover_steiner_graph();
     }
+    
     //std::cout << main_cluster << " " << additional_clusters.size() << std::endl;
     // dummy code for now ... all clusters ...
-    for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
-      WCPPID::PR3DCluster *temp_cluster = (*it1);
-      if (temp_cluster->get_point_cloud_steiner()!=0){
-	if (temp_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
-	  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_two_boundary_wcps(2); 
-	  temp_cluster->dijkstra_shortest_paths(wcps.first,2); 
-	  temp_cluster->cal_shortest_path(wcps.second,2);
-	}
-	if (temp_cluster->get_path_wcps().size()>=2){
-	  temp_cluster->collect_charge_trajectory(ct_point_cloud);
-	  temp_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
-	}
-      }
-    }
+    // for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
+    //   WCPPID::PR3DCluster *temp_cluster = (*it1);
+    //   if (temp_cluster->get_point_cloud_steiner()!=0){
+    // 	if (temp_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
+    // 	  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_two_boundary_wcps(2); 
+    // 	  temp_cluster->dijkstra_shortest_paths(wcps.first,2); 
+    // 	  temp_cluster->cal_shortest_path(wcps.second,2);
+    // 	}
+    // 	if (temp_cluster->get_path_wcps().size()>=2){
+    // 	  temp_cluster->collect_charge_trajectory(ct_point_cloud);
+    // 	  temp_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
+    // 	}
+    //   }
+    // }
+    WCPPID::NeutrinoID(main_cluster, additional_clusters, ct_point_cloud, global_wc_map, flash_time);
+    
     // if (main_cluster->get_point_cloud_steiner()!=0){
     //   if (main_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
     // 	std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = main_cluster->get_two_boundary_wcps(2); 
@@ -1245,7 +1250,6 @@ int main(int argc, char* argv[])
     // 	main_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
     //   }
     // }
-    
   }
 
   // start saving ...
