@@ -4,6 +4,8 @@
 #include "WCPPID/PR3DCluster.h"
 #include "WCPData/ToyCTPointCloud.h"
 
+#include "WCPPID/WCVertex.h"
+#include "WCPPID/WCParticle.h"
 
 
 namespace WCPPID{
@@ -25,6 +27,10 @@ namespace WCPPID{
 
     // output ...
     int type; // nue, numu, NC for 1,2,3,    0 for no ID
+
+    WCVertexSelection vertices;
+    WCParticleSelection particles;
+    
   };
   
 }
