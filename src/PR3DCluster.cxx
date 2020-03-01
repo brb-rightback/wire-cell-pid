@@ -22,6 +22,8 @@ using namespace WCP;
 #include "PR3DCluster_crawl.h"
 #include "PR3DCluster_pattern_recognition.h"
 
+#include "PR3DCluster_nu_proto_vertex.h"
+
 void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double time, bool flag_dQ_dx_fit_reg){
   fine_tracking_path.clear();
   dQ.clear();

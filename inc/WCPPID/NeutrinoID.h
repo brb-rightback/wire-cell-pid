@@ -19,6 +19,9 @@ namespace WCPPID{
     // actual functions ...
     void process_main_cluster();
     void process_other_clusters();
+
+    // proto-vertex finder
+    void find_proto_vertex(WCPPID::PR3DCluster *cluster);
     
   protected:
     // input ...

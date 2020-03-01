@@ -32,6 +32,19 @@ WCPPID::NeutrinoID::~NeutrinoID(){
 }
 
 
+void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
+  if (temp_cluster->get_point_cloud_steiner()==0) return;
+  if (temp_cluster->get_point_cloud_steiner()->get_num_points()<2) return;
+
+  // do the first search of the trajectory ...
+  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_two_boundary_wcps(2);
+  
+  temp_cluster->dijkstra_shortest_paths(wcps.first,2); 
+  temp_cluster->cal_shortest_path(wcps.second,2);
+
+  
+}
+
 void WCPPID::NeutrinoID::process_main_cluster(){ 
 
   WCPPID::PR3DCluster *temp_cluster = main_cluster;
