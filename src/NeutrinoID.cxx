@@ -38,6 +38,7 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
 
   // do the first search of the trajectory ...
   std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_two_boundary_wcps(2);
+
   
   temp_cluster->dijkstra_shortest_paths(wcps.first,2); 
   temp_cluster->cal_shortest_path(wcps.second,2);
