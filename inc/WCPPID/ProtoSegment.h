@@ -55,6 +55,7 @@ namespace WCPPID{
     bool flag_fit;
   };
   typedef std::vector<ProtoSegment*> ProtoSegmentSelection;
+  typedef std::set<ProtoSegment*> ProtoSegmentSet;
 }
 
 #endif 

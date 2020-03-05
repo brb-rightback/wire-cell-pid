@@ -45,6 +45,7 @@ namespace WCPPID{
     bool flag_fit;
   };
   typedef std::vector<ProtoVertex*> ProtoVertexSelection;
+  typedef std::set<ProtoVertex*> ProtoVertexSet;
 }
 
 #endif

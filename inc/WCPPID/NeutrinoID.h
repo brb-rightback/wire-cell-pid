@@ -19,12 +19,22 @@ namespace WCPPID{
     NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis,	WCP::ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double flash_time);
     ~NeutrinoID();
 
+    // deal with the map ...
+    bool del_proto_vertex(ProtoVertex *pv);
+    bool del_proto_segment(ProtoSegment *ps);
+    void add_proto_connection(ProtoVertex *pv, ProtoSegment *ps, WCPPID::PR3DCluster* cluster);
+    
+    
     // actual functions ...
     void process_main_cluster();
     void process_other_clusters();
 
+
+    
     // proto-vertex finder
     void find_proto_vertex(WCPPID::PR3DCluster *cluster);
+
+    
     
   protected:
     // input ...
@@ -38,10 +48,18 @@ namespace WCPPID{
     int type; // nue, numu, NC for 1,2,3,    0 for no ID
 
     // graph ...
-    ProtoVertexSelection proto_vertices;
-    ProtoSegmentSelection proto_segments;
-    std::map<ProtoVertex*, ProtoSegmentSelection> map_vertex_segments;
-    std::map<ProtoSegment*, ProtoVertexSelection> map_segment_vertices;
+    ProtoVertexSet proto_vertices;
+    ProtoSegmentSet proto_segments;
+    std::map<ProtoVertex*, ProtoSegmentSet> map_vertex_segments;
+    std::map<ProtoSegment*, ProtoVertexSet> map_segment_vertices;
+
+    // map the cluster to the vertices/segments
+    std::map<PR3DCluster*, ProtoVertexSet> map_cluster_vertices;
+    std::map<ProtoVertex*, PR3DCluster*> map_vertex_cluster;
+    std::map<PR3DCluster*, ProtoSegmentSet> map_cluster_segments;
+    std::map<ProtoSegment*, PR3DCluster*> map_segment_cluster;
+
+
     
     // after fit, for alter direction
     WCVertexSelection vertices;
