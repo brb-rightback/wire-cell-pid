@@ -28,7 +28,18 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
 
 
 WCPPID::NeutrinoID::~NeutrinoID(){
-  
+  for (auto it = proto_vertices.begin(); it != proto_vertices.end(); it++){
+    delete (*it);
+  }
+  for (auto it = proto_segments.begin(); it != proto_segments.end(); it++){
+    delete (*it);
+  }
+  for (auto it = vertices.begin(); it!= vertices.end(); it++){
+    delete (*it);
+  }
+  for (auto it = particles.begin(); it!=particles.end(); it++){
+    delete (*it);
+  }
 }
 
 

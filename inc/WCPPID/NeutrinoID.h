@@ -9,6 +9,9 @@
 #include "WCPPID/WCVertex.h"
 #include "WCPPID/WCParticle.h"
 
+#include "WCPPID/ProtoVertex.h"
+#include "WCPPID/ProtoSegment.h"
+
 
 namespace WCPPID{
   class NeutrinoID{
@@ -34,6 +37,13 @@ namespace WCPPID{
     // output ...
     int type; // nue, numu, NC for 1,2,3,    0 for no ID
 
+    // graph ...
+    ProtoVertexSelection proto_vertices;
+    ProtoSegmentSelection proto_segments;
+    std::map<ProtoVertex*, ProtoSegmentSelection> map_vertex_segments;
+    std::map<ProtoSegment*, ProtoVertexSelection> map_segment_vertices;
+    
+    // after fit, for alter direction
     WCVertexSelection vertices;
     WCParticleSelection particles;
     
