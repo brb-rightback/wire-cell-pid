@@ -85,9 +85,30 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
   WCP::WCPointCloud<double>::WCPoint break_wcp = temp_cluster->proto_extend_point(kink_pair.first, kink_pair.second);
   //std::cout << kink_pair.first << " " << break_wcp.x/units::cm << " " << break_wcp.y/units::cm << " " << break_wcp.z/units::cm << std::endl;
   
-  // find the new path ... PR3DCluster function 
-
+  // find the new path ... PR3DCluster function
   // break into two tracks and adding a ProtoVertex in this function ...
+  {
+    std::list<WCP::WCPointCloud<double>::WCPoint> wcps_list1;
+    std::list<WCP::WCPointCloud<double>::WCPoint> wcps_list2;
+    bool flag_break = temp_cluster->proto_break_tracks(v1->get_wcpt(), break_wcp, v2->get_wcpt(), wcps_list1, wcps_list2);
+    //std::cout << wcps_list1.front().index << " " << wcps_list1.back().index << " " << wcps_list2.front().index << " " << wcps_list2.back().index << std::endl;
+
+    WCPPID::ProtoVertex *v3 = new WCPPID::ProtoVertex(break_wcp);
+    WCPPID::ProtoSegment *sg2 = new WCPPID::ProtoSegment(wcps_list1);
+    WCPPID::ProtoSegment *sg3 = new WCPPID::ProtoSegment(wcps_list2);
+
+    add_proto_connection(v1, sg2, temp_cluster);
+    add_proto_connection(v3, sg2, temp_cluster);
+    add_proto_connection(v3, sg3, temp_cluster);
+    add_proto_connection(v2, sg3, temp_cluster);
+  
+    del_proto_segment(sg1);
+    delete sg1;
+
+    std::cout << proto_vertices.size() << " " << map_vertex_segments.size() << " " << map_segment_vertices[sg2].size() << " " << map_cluster_vertices[main_cluster].size() << " " << map_vertex_cluster.size()  << std::endl;
+    std::cout << proto_segments.size() << " " << map_segment_vertices.size() << " " << map_vertex_segments[v3].size() << " " << map_cluster_segments[main_cluster].size() << " " << map_segment_cluster.size() << std::endl;
+  }
+  
 
   
   
@@ -105,7 +126,14 @@ int WCPPID::NeutrinoID::get_num_segments(WCPPID::ProtoVertex *pv){
   }
 }
 
-void WCPPID::NeutrinoID::add_proto_connection(WCPPID::ProtoVertex *pv, WCPPID::ProtoSegment *ps, WCPPID::PR3DCluster* cluster){
+bool WCPPID::NeutrinoID::add_proto_connection(WCPPID::ProtoVertex *pv, WCPPID::ProtoSegment *ps, WCPPID::PR3DCluster* cluster){
+
+  if (pv->get_wcpt().index != ps->get_wcpt_vec().front().index && pv->get_wcpt().index != ps->get_wcpt_vec().back().index){
+    std::cout << "Error! Vertex and Segment does not match" << std::endl;
+    return false;
+  }
+
+  
   proto_vertices.insert(pv);
   map_vertex_cluster[pv] = cluster;
   if (map_cluster_vertices.find(cluster)!=map_cluster_vertices.end()){
@@ -141,7 +169,8 @@ void WCPPID::NeutrinoID::add_proto_connection(WCPPID::ProtoVertex *pv, WCPPID::P
     map_segment_vertices[ps] = temp_vertices;
     map_segment_vertices[ps].insert(pv);
   }
-  
+
+  return true;
 }
 
 

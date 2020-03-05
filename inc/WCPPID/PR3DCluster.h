@@ -204,6 +204,7 @@ namespace WCPPID{
 
     // prepare for the multiple track fitting ...
     WCP::WCPointCloud<double>::WCPoint proto_extend_point(WCP::Point& p, TVector3& dir);
+    bool proto_break_tracks(WCP::WCPointCloud<double>::WCPoint& start_wcp, WCP::WCPointCloud<double>::WCPoint& break_wcp, WCP::WCPointCloud<double>::WCPoint& end_wcp, std::list<WCP::WCPointCloud<double>::WCPoint>& wcp_list1, std::list<WCP::WCPointCloud<double>::WCPoint>& wcp_list2);
     
   protected:
     

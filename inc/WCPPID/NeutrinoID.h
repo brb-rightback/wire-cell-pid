@@ -22,7 +22,7 @@ namespace WCPPID{
     // deal with the map ...
     bool del_proto_vertex(ProtoVertex *pv);
     bool del_proto_segment(ProtoSegment *ps);
-    void add_proto_connection(ProtoVertex *pv, ProtoSegment *ps, WCPPID::PR3DCluster* cluster);
+    bool add_proto_connection(ProtoVertex *pv, ProtoSegment *ps, WCPPID::PR3DCluster* cluster);
 
     // get segments
     int get_num_segments(ProtoVertex *pv);
