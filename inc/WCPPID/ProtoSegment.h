@@ -32,11 +32,15 @@ namespace WCPPID{
     bool get_fit_flag(){return flag_fit;};
     void set_fit_flag(bool flag){flag_fit = flag;};
 
+    // get direction
     void print_dis();
     
     // get point
     std::pair<double, WCP::Point> get_closest_point(WCP::Point &p);
     std::tuple<double, double, double> get_closest_2d_dis(WCP::Point &p);
+
+    // search for kinks ...  return  position, direction ...
+    std::pair<WCP::Point, TVector3> search_kink(WCP::Point start_p);
     
   protected:
     std::vector<WCP::WCPointCloud<double>::WCPoint > wcpt_vec;

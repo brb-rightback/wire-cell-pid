@@ -80,6 +80,9 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
   //sg1->print_dis();
   //std::cout << v1->get_fit_init_dis()/units::cm << " " << v2->get_fit_init_dis()/units::cm << std::endl;
   
+  std::pair<Point, TVector3> kink_pair = sg1->search_kink(temp_cluster->get_fine_tracking_path().front());
+  
+  
   // practice kink identification ...
 
   

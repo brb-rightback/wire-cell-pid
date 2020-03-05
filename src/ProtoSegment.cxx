@@ -17,6 +17,123 @@ WCPPID::ProtoSegment::~ProtoSegment(){
   if (pcloud_fit != (ToyPointCloud*)0)
     delete pcloud_fit;
 }
+std::pair<WCP::Point, TVector3> WCPPID::ProtoSegment::search_kink(WCP::Point start_p){
+  // find the first point ...
+  std::pair<double, WCP::Point> tmp_results = get_closest_point(start_p);
+  Point test_p = tmp_results.second;
+
+  TVector3 drift_dir(1,0,0);
+
+  std::vector<double> refl_angles(fit_pt_vec.size(),0);
+  std::vector<double> para_angles(fit_pt_vec.size(),0);
+  
+  // start the angle search
+ 
+  for (size_t i=0;i!=fit_pt_vec.size(); i++){
+    double angle1 = 0;
+    double angle2 = 0;
+    
+    for (int j=0;j!=6;j++){    
+      TVector3 v10(0,0,0);
+      TVector3 v20(0,0,0);
+      if (i>j)
+	v10.SetXYZ(fit_pt_vec.at(i).x - fit_pt_vec.at(i-j-1).x,
+		   fit_pt_vec.at(i).y - fit_pt_vec.at(i-j-1).y,
+		   fit_pt_vec.at(i).z - fit_pt_vec.at(i-j-1).z);
+      
+      if (i+j+1<fit_pt_vec.size())
+	v20.SetXYZ(fit_pt_vec.at(i+j+1).x - fit_pt_vec.at(i).x,
+		   fit_pt_vec.at(i+j+1).y - fit_pt_vec.at(i).y,
+		   fit_pt_vec.at(i+j+1).z - fit_pt_vec.at(i).z);
+      
+      if (j==0){
+	angle1 = v10.Angle(v20)/3.1415926*180.;
+	angle2 = std::max(fabs(v10.Angle(drift_dir)/3.1415926*180.-90.),
+			  fabs(v20.Angle(drift_dir)/3.1415926*180.-90.));
+      }else{
+	if (v10.Mag()!=0 && v20.Mag()!=0){
+	  angle1 = std::min(v10.Angle(v20)/3.1415926*180., angle1);
+	  angle2 = std::min(std::max(fabs(v10.Angle(drift_dir)/3.1415926*180.-90.),
+				     fabs(v20.Angle(drift_dir)/3.1415926*180.-90.)),angle2);
+	}
+      }
+    }
+    
+    refl_angles.at(i) = angle1;
+    para_angles.at(i) = angle2;
+  }
+
+  bool flag_check = false;
+  int save_i = -1;
+  
+  for (int i=0;i!=fit_pt_vec.size();i++){
+    if (sqrt(pow(test_p.x - fit_pt_vec.at(i).x,2) +
+	     pow(test_p.y - fit_pt_vec.at(i).y,2) +
+	     pow(test_p.z - fit_pt_vec.at(i).z,2) ) < 0.1*units::cm) flag_check = true;
+    
+    if (flag_check){
+      double min_dQ_dx = dQ_vec.at(i)/dx_vec.at(i);
+      for (size_t j = 1;j!=6;j++){
+	if (i+j<fit_pt_vec.size())
+	  if (dQ_vec.at(i+j)/dx_vec.at(i+j) < min_dQ_dx)
+	    min_dQ_dx = dQ_vec.at(i+j)/dx_vec.at(i+j);
+      }
+      
+      double sum_angles = 0;
+      double nsum = 0;
+      for (int j = -2; j!=3;j++){
+	if (i+j>=0 && i+j<fit_pt_vec.size()){
+	  if (para_angles.at(i+j)>10){
+	    sum_angles += pow(refl_angles.at(i+j),2);
+	    nsum ++;
+	  }
+	}
+      }
+      if (nsum!=0) sum_angles=sqrt(sum_angles/nsum);
+
+    
+      if (min_dQ_dx < 1000 && para_angles.at(i) > 10 && refl_angles.at(i) > 25){
+	save_i = i;
+	break;
+      }else if (para_angles.at(i) > 15 && refl_angles.at(i) > 27 && sum_angles > 12.5){
+	
+	save_i = i;
+	break;
+      }
+    }
+  }
+
+  // return the results ...
+  if (save_i>=0){
+    Point p = fit_pt_vec.at(save_i);
+    
+    Point prev_p(0,0,0);
+    int num_p = 0;
+    for (size_t i=1;i!=6;i++){
+      if (save_i>=i){
+	prev_p.x += fit_pt_vec.at(save_i-i).x;
+	prev_p.y += fit_pt_vec.at(save_i-i).y;
+	prev_p.z += fit_pt_vec.at(save_i-i).z;
+	num_p ++;
+      }
+    }
+    prev_p.x /= num_p;
+    prev_p.y /= num_p;
+    prev_p.z /= num_p;
+    
+    TVector3 dir(p.x - prev_p.x, p.y - prev_p.y, p.z - prev_p.z);
+    dir = dir.Unit();
+    
+    return std::make_pair(p,dir);
+  }else{
+    Point p1 = fit_pt_vec.back();
+    TVector3 dir(0,0,0);
+    return std::make_pair(p1,dir);
+  }
+  //  std::cout << save_i << std::endl;
+  
+}
+
 
 
 
