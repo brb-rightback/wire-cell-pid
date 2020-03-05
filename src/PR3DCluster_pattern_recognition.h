@@ -188,7 +188,7 @@ void WCPPID::PR3DCluster::search_other_tracks(WCP::ToyCTPointCloud& ct_point_clo
 			+ pow(cloud.pts[sep_clusters[i].at(j)].z - cloud.pts[special_A].z,2));
       if (dis > min_dis){
 	min_dis = dis;
-	special_B = sep_clusters[i].at(j);
+	special_B = sep_clusters[i].at(j); // furthest away from special_A
       }
 
       // also judge whether this track is fake ...
