@@ -41,3 +41,10 @@ double WCPPID::ProtoVertex::get_dis(WCP::Point& p){
 		    + pow(p.z - fit_pt.z,2) );
   return dis;
 }
+
+double WCPPID::ProtoVertex::get_fit_init_dis(){
+  double dis = sqrt(pow(wcpt.x - fit_pt.x,2) +
+		    pow(wcpt.y - fit_pt.y,2) +
+		    pow(wcpt.z - fit_pt.z,2));
+  return dis;
+}

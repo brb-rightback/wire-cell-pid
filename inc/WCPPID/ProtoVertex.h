@@ -32,6 +32,7 @@ namespace WCPPID{
     
     // get_distance ...  
     double get_dis(WCP::Point& p);
+    double get_fit_init_dis();
     
   protected:
     WCP::WCPointCloud<double>::WCPoint wcpt; // initial WCP point from the graph ...
