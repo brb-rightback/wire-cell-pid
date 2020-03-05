@@ -81,9 +81,17 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
   //std::cout << v1->get_fit_init_dis()/units::cm << " " << v2->get_fit_init_dis()/units::cm << std::endl;
   
   std::pair<Point, TVector3> kink_pair = sg1->search_kink(temp_cluster->get_fine_tracking_path().front());
+  // find the extreme point ... PR3DCluster function
+  WCP::WCPointCloud<double>::WCPoint break_wcp = temp_cluster->proto_extend_point(kink_pair.first, kink_pair.second);
+  //std::cout << kink_pair.first << " " << break_wcp.x/units::cm << " " << break_wcp.y/units::cm << " " << break_wcp.z/units::cm << std::endl;
+  
+  // find the new path ... PR3DCluster function 
+
+  // break into two tracks and adding a ProtoVertex in this function ...
+
   
   
-  // practice kink identification ...
+ 
 
   
   // practice other components ...

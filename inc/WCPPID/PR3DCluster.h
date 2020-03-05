@@ -200,6 +200,10 @@ namespace WCPPID{
     WCP::TrackInfoSelection& get_fit_tracks(){return fit_tracks;};
     void clear_fit_tracks();
     void search_other_tracks(WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double time = 4*units::microsecond, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
+
+
+    // prepare for the multiple track fitting ...
+    WCP::WCPointCloud<double>::WCPoint proto_extend_point(WCP::Point& p, TVector3& dir);
     
   protected:
     
