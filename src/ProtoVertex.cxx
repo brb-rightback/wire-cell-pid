@@ -5,6 +5,8 @@ using namespace WCP;
 WCPPID::ProtoVertex::ProtoVertex(WCP::WCPointCloud<double>::WCPoint& wcpt)
   : wcpt(wcpt)
   , flag_fit(false)
+  , dQ(0)
+  , dx(-1)
 {
   fit_pt.x = wcpt.x;
   fit_pt.y = wcpt.y;

@@ -11,20 +11,28 @@ namespace WCPPID{
 
     std::vector<WCP::WCPointCloud<double>::WCPoint >& get_wcpt_vec(){return wcpt_vec;};
     std::vector<WCP::Point >& get_pt_vec(){return fit_pt_vec;};
-    void clear_pt_vec(){fit_pt_vec.clear();};
+    std::vector<double>& get_dQ_vec(){return dQ_vec;};
+    std::vector<double>& get_dx_vec(){return dx_vec;};
 
-    void set_fit_pt_vec(std::vector<WCP::Point >& tmp_fit_pt_vec){fit_pt_vec = tmp_fit_pt_vec;};
+    std::vector<double> get_dQ_dx_vec(){return dQ_dx_vec;};
     
+    // after fit
+    void clear_fit();
+    void set_fit_vec(std::vector<WCP::Point >& tmp_fit_pt_vec, std::vector<double>& tmp_dQ_vec, std::vector<double>& tmp_dx_vec);
+    
+
+    // if fit_flag is set, the fit_pts are useful ...
     bool get_fit_flag(){return flag_fit;};
     void set_fit_flag(bool flag){flag_fit = flag;};
     
   protected:
     std::vector<WCP::WCPointCloud<double>::WCPoint > wcpt_vec;
+
     std::vector<WCP::Point > fit_pt_vec;
-
-    ProtoVertex *v1;
-    ProtoVertex *v2;
-
+    std::vector<double> dQ_vec;
+    std::vector<double> dx_vec;
+    std::vector<double> dQ_dx_vec;
+    
     bool flag_fit;
   };
   typedef std::vector<ProtoSegment*> ProtoSegmentSelection;
