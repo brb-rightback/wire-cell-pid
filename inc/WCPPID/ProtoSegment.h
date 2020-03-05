@@ -31,6 +31,8 @@ namespace WCPPID{
     // if fit_flag is set, the fit_pts are useful ...
     bool get_fit_flag(){return flag_fit;};
     void set_fit_flag(bool flag){flag_fit = flag;};
+
+    void print_dis();
     
     // get point
     std::pair<double, WCP::Point> get_closest_point(WCP::Point &p);

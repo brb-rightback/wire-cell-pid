@@ -58,6 +58,15 @@ void WCPPID::ProtoSegment::clear_fit(){
   
 }
 
+void WCPPID::ProtoSegment::print_dis(){
+  for (size_t i=0;i!=wcpt_vec.size(); i++){
+    Point p(wcpt_vec.at(i).x, wcpt_vec.at(i).y, wcpt_vec.at(i).z);
+    std::pair<double, WCP::Point> results = get_closest_point(p);
+    if (results.first > 0.6*units::cm)
+      std::cout << i << " " << results.first/units::cm << std::endl;
+  }
+}
+
 std::pair<double, WCP::Point> WCPPID::ProtoSegment::get_closest_point(WCP::Point &p){
   if (pcloud_fit != (ToyPointCloud*)0) 
     return pcloud_fit->get_closest_point(p);
