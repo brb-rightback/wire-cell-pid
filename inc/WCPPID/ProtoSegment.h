@@ -7,6 +7,7 @@
 namespace WCPPID{
   class ProtoSegment{
   public:
+    // initial creation
     ProtoSegment(std::list<WCP::WCPointCloud<double>::WCPoint >& path_wcps );
     ~ProtoSegment();
 
@@ -23,12 +24,17 @@ namespace WCPPID{
     
     // after fit
     void clear_fit();
+    // set the data ...
     void set_fit_vec(std::vector<WCP::Point >& tmp_fit_pt_vec, std::vector<double>& tmp_dQ_vec, std::vector<double>& tmp_dx_vec, std::vector<double>& tmp_pu_vec, std::vector<double>& tmp_pv_vec, std::vector<double>& tmp_pw_vec, std::vector<double>& tmp_pt_vec, std::vector<double>& tmp_reduced_chi2_vec);
     
 
     // if fit_flag is set, the fit_pts are useful ...
     bool get_fit_flag(){return flag_fit;};
     void set_fit_flag(bool flag){flag_fit = flag;};
+    
+    // get point
+    std::pair<double, WCP::Point> get_closest_point(WCP::Point &p);
+    std::tuple<double, double, double> get_closest_2d_dis(WCP::Point &p);
     
   protected:
     std::vector<WCP::WCPointCloud<double>::WCPoint > wcpt_vec;

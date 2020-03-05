@@ -57,3 +57,24 @@ void WCPPID::ProtoSegment::clear_fit(){
   reduced_chi2_vec.clear();
   
 }
+
+std::pair<double, WCP::Point> WCPPID::ProtoSegment::get_closest_point(WCP::Point &p){
+  if (pcloud_fit != (ToyPointCloud*)0) 
+    return pcloud_fit->get_closest_point(p);
+  else{
+    WCP::Point p1(0,0,0);
+    return std::make_pair(-1,p1);
+  }
+}
+
+std::tuple<double, double, double> WCPPID::ProtoSegment::get_closest_2d_dis(WCP::Point &p){
+  if (pcloud_fit != (ToyPointCloud*)0) {
+    std::pair<int, double> results_u = pcloud_fit->get_closest_2d_dis(p, 0);
+    std::pair<int, double> results_v = pcloud_fit->get_closest_2d_dis(p, 1);
+    std::pair<int, double> results_w = pcloud_fit->get_closest_2d_dis(p, 2);
+    
+    return std::make_tuple(results_u.second, results_v.second, results_w.second);
+  }else{
+    return std::make_tuple(-1,-1,-1);
+  }
+}
