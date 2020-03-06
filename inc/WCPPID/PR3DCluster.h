@@ -117,7 +117,8 @@ namespace WCPPID{
     std::vector<int> distances;
     int source_wcp_index;
     int dest_wcp_index;
-    
+
+    void set_path_wcps( std::list<WCP::WCPointCloud<double>::WCPoint>& list){path_wcps = list;};
     std::list<WCP::WCPointCloud<double>::WCPoint>& get_path_wcps(){return path_wcps;};
     std::list<WCP::SlimMergeGeomCell*>& get_path_mcells(){return path_mcells;};
 
@@ -203,7 +204,7 @@ namespace WCPPID{
 
 
     // prepare for the multiple track fitting ...
-    WCP::WCPointCloud<double>::WCPoint proto_extend_point(WCP::Point& p, TVector3& dir);
+    WCP::WCPointCloud<double>::WCPoint proto_extend_point(WCP::Point& p, TVector3& dir, bool flag_extend=true);
     bool proto_break_tracks(WCP::WCPointCloud<double>::WCPoint& start_wcp, WCP::WCPointCloud<double>::WCPoint& break_wcp, WCP::WCPointCloud<double>::WCPoint& end_wcp, std::list<WCP::WCPointCloud<double>::WCPoint>& wcp_list1, std::list<WCP::WCPointCloud<double>::WCPoint>& wcp_list2);
     
   protected:

@@ -17,7 +17,7 @@ WCPPID::ProtoSegment::~ProtoSegment(){
   if (pcloud_fit != (ToyPointCloud*)0)
     delete pcloud_fit;
 }
-std::pair<WCP::Point, TVector3> WCPPID::ProtoSegment::search_kink(WCP::Point start_p){
+std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(WCP::Point start_p){
   // find the first point ...
   std::pair<double, WCP::Point> tmp_results = get_closest_point(start_p);
   Point test_p = tmp_results.second;
@@ -109,7 +109,7 @@ std::pair<WCP::Point, TVector3> WCPPID::ProtoSegment::search_kink(WCP::Point sta
     
     Point prev_p(0,0,0);
     int num_p = 0;
-    for (size_t i=1;i!=6;i++){
+    for (size_t i=1;i!=10;i++){
       if (save_i>=i){
 	prev_p.x += fit_pt_vec.at(save_i-i).x;
 	prev_p.y += fit_pt_vec.at(save_i-i).y;
@@ -123,12 +123,27 @@ std::pair<WCP::Point, TVector3> WCPPID::ProtoSegment::search_kink(WCP::Point sta
     
     TVector3 dir(p.x - prev_p.x, p.y - prev_p.y, p.z - prev_p.z);
     dir = dir.Unit();
-    
-    return std::make_pair(p,dir);
+
+    double sum_dQ = 0, sum_dx = 0;
+    for (int i=-2;i!=3;i++){
+      if (save_i+i>=0&&save_i+i<fit_pt_vec.size()){
+	sum_dQ += dQ_vec.at(save_i+i);
+	sum_dx += dx_vec.at(save_i+i);
+      }
+    }
+    //    std::cout << sum_dQ/(sum_dx+1e-9) << std::endl;
+    if (sum_dQ/(sum_dx+1e-9) > 2500){
+      return std::make_tuple(p, dir, false);
+    }else{
+      return std::make_tuple(p, dir, true);
+    }
+
   }else{
+
     Point p1 = fit_pt_vec.back();
     TVector3 dir(0,0,0);
-    return std::make_pair(p1,dir);
+    return std::make_tuple(p1,dir, false);
+
   }
   //  std::cout << save_i << std::endl;
   
