@@ -155,6 +155,8 @@ namespace WCPPID{
     std::vector<double>& get_pw(){return pw;};
     std::vector<double>& get_pt(){return pt;};
     std::vector<double>& get_reduced_chi2(){return reduced_chi2;};
+    std::vector<bool>& get_flag_vertex(){return flag_vertex;};
+    std::vector<int>& get_sub_cluster_id(){return sub_cluster_id;};
     
     // main function to do the overall tracking, 
     void do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double time = 4*units::microsecond, bool flag_dQ_dx_fit_reg = true);
@@ -266,6 +268,8 @@ namespace WCPPID{
     std::vector<double> pw;
     std::vector<double> pt;
     std::vector<double> reduced_chi2;
+    std::vector<bool> flag_vertex;
+    std::vector<int> sub_cluster_id;
 
     WCP::TrackInfoSelection fit_tracks;
     

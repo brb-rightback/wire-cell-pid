@@ -1456,6 +1456,11 @@ int main(int argc, char* argv[])
   t_rec_charge->Branch("pt",&pt,"pt/D");
   Double_t reduced_chi2;
   t_rec_charge->Branch("reduced_chi2",&reduced_chi2,"reduced_chi2/D");
+  Int_t flag_vertex_save;
+  t_rec_charge->Branch("flag_vertex",&flag_vertex_save,"flag_vertex/I");
+  t_rec_charge->Branch("sub_cluster_id",&sub_cluster_id,"sub_cluster_id/I");
+  
+
   
   TTree *T_proj_data = new TTree("T_proj_data","T_proj_data");
   std::vector<int> *proj_data_cluster_id = new std::vector<int>;
@@ -1487,6 +1492,8 @@ int main(int argc, char* argv[])
     std::vector<double>& tpw = cluster->get_pw();
     std::vector<double>& tpt = cluster->get_pt();
     std::vector<double>& Vreduced_chi2 = cluster->get_reduced_chi2();
+    std::vector<bool>& Vflag_vertex = cluster->get_flag_vertex();
+    std::vector<int>& Vsub_cluster_id = cluster->get_sub_cluster_id();
     
     if (pts.size()!=dQ.size() || pts.size()==0) continue;
     
@@ -1501,6 +1508,8 @@ int main(int argc, char* argv[])
       pw = tpw.at(i);
       pt = tpt.at(i);
       reduced_chi2 = Vreduced_chi2.at(i);
+      flag_vertex_save = Vflag_vertex.at(i);
+      sub_cluster_id = Vsub_cluster_id.at(i);
       t_rec_charge->Fill();
     }
 
