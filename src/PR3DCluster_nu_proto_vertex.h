@@ -97,3 +97,17 @@ WCP::WCPointCloud<double>::WCPoint WCPPID::PR3DCluster::proto_extend_point(WCP::
   
 }
     
+
+void WCPPID::PR3DCluster::set_fit_parameters(std::map<WCPPID::ProtoVertex*, WCPPID::ProtoSegmentSet>& map_vertex_segments, std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet>& map_segment_vertices){
+  fine_tracking_path.clear();
+  dQ.clear();
+  dx.clear();
+  pu.clear();
+  pv.clear();
+  pw.clear();
+  pt.clear();
+  reduced_chi2.clear();
+
+
+  //
+}
