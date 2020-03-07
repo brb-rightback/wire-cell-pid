@@ -17,8 +17,9 @@ WCPPID::ProtoSegment::~ProtoSegment(){
   if (pcloud_fit != (ToyPointCloud*)0)
     delete pcloud_fit;
 }
-std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(WCP::Point start_p){
+std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& start_p){
   // find the first point ...
+  //  Point start_p = fit_pt_vec.front();
   std::pair<double, WCP::Point> tmp_results = get_closest_point(start_p);
   Point test_p = tmp_results.second;
 
@@ -77,7 +78,10 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(WCP::Po
 	     pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) < 1*units::cm ||
 	sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) +
 	     pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) +
-	     pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) ) < 1*units::cm
+	     pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) ) < 1*units::cm ||
+	sqrt(pow(fit_pt_vec.at(i).x - start_p.x,2) +
+	     pow(fit_pt_vec.at(i).y - start_p.y,2) +
+	     pow(fit_pt_vec.at(i).z - start_p.z,2) ) < 1*units::cm
 	) continue;
     
     if (flag_check){
@@ -100,7 +104,12 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(WCP::Po
       }
       if (nsum!=0) sum_angles=sqrt(sum_angles/nsum);
 
-      //      std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << std::endl;
+      // std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) +
+      // 	     pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) +
+      // 																     pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " <<
+      // 	sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) +
+      // 	     pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) +
+      // 	     pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << std::endl;
       
       if (min_dQ_dx < 1000 && para_angles.at(i) > 10 && refl_angles.at(i) > 25){
 	save_i = i;

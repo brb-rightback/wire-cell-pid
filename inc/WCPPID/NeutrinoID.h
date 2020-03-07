@@ -23,14 +23,14 @@ namespace WCPPID{
     bool del_proto_vertex(ProtoVertex *pv);
     bool del_proto_segment(ProtoSegment *ps);
     bool add_proto_connection(ProtoVertex *pv, ProtoSegment *ps, WCPPID::PR3DCluster* cluster);
-
+    void organize_vertices_segments();
+    
     // get segments
     int get_num_segments(ProtoVertex *pv);
     
     // actual functions ...
     void process_main_cluster();
     void process_other_clusters();
-
 
     
     // proto-vertex finder
@@ -50,8 +50,8 @@ namespace WCPPID{
     int type; // nue, numu, NC for 1,2,3,    0 for no ID
 
     // graph ...
-    ProtoVertexSet proto_vertices;
-    ProtoSegmentSet proto_segments;
+    ProtoVertexSelection proto_vertices;
+    ProtoSegmentSelection proto_segments;
     std::map<ProtoVertex*, ProtoSegmentSet> map_vertex_segments;
     std::map<ProtoSegment*, ProtoVertexSet> map_segment_vertices;
 

@@ -40,7 +40,7 @@ namespace WCPPID{
     std::tuple<double, double, double> get_closest_2d_dis(WCP::Point &p);
 
     // search for kinks ...  return  position, direction ...
-    std::tuple<WCP::Point, TVector3, bool> search_kink(WCP::Point start_p);
+    std::tuple<WCP::Point, TVector3, bool> search_kink(WCP::Point& start_p);
     
   protected:
     std::vector<WCP::WCPointCloud<double>::WCPoint > wcpt_vec;

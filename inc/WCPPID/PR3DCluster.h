@@ -213,7 +213,8 @@ namespace WCPPID{
     bool proto_break_tracks(WCP::WCPointCloud<double>::WCPoint& start_wcp, WCP::WCPointCloud<double>::WCPoint& break_wcp, WCP::WCPointCloud<double>::WCPoint& end_wcp, std::list<WCP::WCPointCloud<double>::WCPoint>& wcp_list1, std::list<WCP::WCPointCloud<double>::WCPoint>& wcp_list2);
 
     void set_fit_parameters(std::map<ProtoVertex*, ProtoSegmentSet>& map_vertex_segments, std::map<ProtoSegment*, ProtoVertexSet>& map_segment_vertices);
-    
+    void set_fit_parameters(ProtoVertexSelection& temp_vertices, ProtoSegmentSelection& temp_segments);
+      
   protected:
     
     int cluster_id;

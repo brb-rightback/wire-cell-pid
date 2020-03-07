@@ -3,7 +3,7 @@ bool WCPPID::PR3DCluster::proto_break_tracks(WCP::WCPointCloud<double>::WCPoint&
   double dis1 = sqrt(pow(curr_wcp.x-first_wcp.x,2) + pow(curr_wcp.y-first_wcp.y,2) + pow(curr_wcp.z-first_wcp.z,2));
   double dis2 = sqrt(pow(curr_wcp.x-last_wcp.x,2) + pow(curr_wcp.y-last_wcp.y,2) + pow(curr_wcp.z-last_wcp.z,2));
 
-  //std::cout << dis1/units::cm << " " << dis2/units::cm << std::endl;
+  //  std::cout << first_wcp.index << " " << curr_wcp.index << " " << last_wcp.index << " " << dis1/units::cm << " " << dis2/units::cm << std::endl;
   
   if (dis1 > 1*units::cm && dis2 > 1*units::cm){
     dijkstra_shortest_paths(first_wcp,2);
@@ -30,7 +30,7 @@ bool WCPPID::PR3DCluster::proto_break_tracks(WCP::WCPointCloud<double>::WCPoint&
 	wcps_list2.pop_front();
       }
     }
-    
+    curr_wcp = wcps_list1.back();
     
     return true;
   }else {
@@ -135,6 +135,51 @@ void WCPPID::PR3DCluster::set_fit_parameters(std::map<WCPPID::ProtoVertex*, WCPP
     pt.insert(pt.end(),(it->first)->get_pt_vec().begin(), (it->first)->get_pt_vec().end());
     reduced_chi2.insert(reduced_chi2.end(),(it->first)->get_reduced_chi2_vec().begin(), (it->first)->get_reduced_chi2_vec().end());
     for (size_t i=0;i!=(it->first)->get_point_vec().size();i++){
+      flag_vertex.push_back(false);
+      sub_cluster_id.push_back(tmp_id);
+    }
+    tmp_id ++;
+  }
+  //
+}
+
+
+
+void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::ProtoVertexSelection& temp_vertices, WCPPID::ProtoSegmentSelection& temp_segments){
+  fine_tracking_path.clear();
+  dQ.clear();
+  dx.clear();
+  pu.clear();
+  pv.clear();
+  pw.clear();
+  pt.clear();
+  reduced_chi2.clear();
+
+  for (auto it = temp_vertices.begin(); it!=temp_vertices.end(); it++){
+    fine_tracking_path.push_back((*it)->get_fit_pt());
+    dQ.push_back((*it)->get_dQ());
+    dx.push_back((*it)->get_dx());
+    pu.push_back((*it)->get_pu());
+    pv.push_back((*it)->get_pv());
+    pw.push_back((*it)->get_pw());
+    pt.push_back((*it)->get_pt());
+    reduced_chi2.push_back((*it)->get_reduced_chi2());
+
+    flag_vertex.push_back(true);
+    sub_cluster_id.push_back(-1);
+  }
+
+  int tmp_id = cluster_id*1000 + 1;
+  for (auto it=temp_segments.begin(); it!=temp_segments.end(); it++){
+    fine_tracking_path.insert(fine_tracking_path.end(),(*it)->get_point_vec().begin(), (*it)->get_point_vec().end());
+    dQ.insert(dQ.end(),(*it)->get_dQ_vec().begin(), (*it)->get_dQ_vec().end());
+    dx.insert(dx.end(),(*it)->get_dx_vec().begin(), (*it)->get_dx_vec().end());
+    pu.insert(pu.end(),(*it)->get_pu_vec().begin(), (*it)->get_pu_vec().end());
+    pv.insert(pv.end(),(*it)->get_pv_vec().begin(), (*it)->get_pv_vec().end());
+    pw.insert(pw.end(),(*it)->get_pw_vec().begin(), (*it)->get_pw_vec().end());
+    pt.insert(pt.end(),(*it)->get_pt_vec().begin(), (*it)->get_pt_vec().end());
+    reduced_chi2.insert(reduced_chi2.end(),(*it)->get_reduced_chi2_vec().begin(), (*it)->get_reduced_chi2_vec().end());
+    for (size_t i=0;i!=(*it)->get_point_vec().size();i++){
       flag_vertex.push_back(false);
       sub_cluster_id.push_back(tmp_id);
     }
