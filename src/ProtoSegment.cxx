@@ -70,6 +70,15 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(WCP::Po
     if (sqrt(pow(test_p.x - fit_pt_vec.at(i).x,2) +
 	     pow(test_p.y - fit_pt_vec.at(i).y,2) +
 	     pow(test_p.z - fit_pt_vec.at(i).z,2) ) < 0.1*units::cm) flag_check = true;
+
+    // not too close and not too far to the begin and end ...
+    if (sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) +
+	     pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) +
+	     pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) < 1*units::cm ||
+	sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) +
+	     pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) +
+	     pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) ) < 1*units::cm
+	) continue;
     
     if (flag_check){
       double min_dQ_dx = dQ_vec.at(i)/dx_vec.at(i);
@@ -91,7 +100,8 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(WCP::Po
       }
       if (nsum!=0) sum_angles=sqrt(sum_angles/nsum);
 
-    
+      //      std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << std::endl;
+      
       if (min_dQ_dx < 1000 && para_angles.at(i) > 10 && refl_angles.at(i) > 25){
 	save_i = i;
 	break;

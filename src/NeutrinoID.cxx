@@ -86,43 +86,46 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
   std::tuple<Point, TVector3, bool> kink_tuple = sg1->search_kink(temp_cluster->get_fine_tracking_path().front());
 
   
-  if (std::get<1>(kink_tuple).Mag()!=0){
+  if (std::get<1>(kink_tuple).Mag()!=0 ){
     // find the extreme point ... PR3DCluster function
     WCP::WCPointCloud<double>::WCPoint break_wcp = temp_cluster->proto_extend_point(std::get<0>(kink_tuple), std::get<1>(kink_tuple), std::get<2>(kink_tuple));
-    //std::cout << kink_pair.first << " " << break_wcp.x/units::cm << " " << break_wcp.y/units::cm << " " << break_wcp.z/units::cm << std::endl;
+
+    //std::cout << std::get<0>(kink_tuple) << " " << std::get<1>(kink_tuple).Mag() << " " << std::get<2>(kink_tuple) << " " << break_wcp.x/units::cm << " " << break_wcp.y/units::cm << " " << break_wcp.z/units::cm << " " << break_wcp.index << std::endl;
     
     // find the new path ... PR3DCluster function
     // break into two tracks and adding a ProtoVertex in this function ...
     std::list<WCP::WCPointCloud<double>::WCPoint> wcps_list1;
     std::list<WCP::WCPointCloud<double>::WCPoint> wcps_list2;
     bool flag_break = temp_cluster->proto_break_tracks(v1->get_wcpt(), break_wcp, v2->get_wcpt(), wcps_list1, wcps_list2);
-    //std::cout << wcps_list1.front().index << " " << wcps_list1.back().index << " " << wcps_list2.front().index << " " << wcps_list2.back().index << std::endl;
 
-    WCPPID::ProtoVertex *v3 = new WCPPID::ProtoVertex(break_wcp);
-    WCPPID::ProtoSegment *sg2 = new WCPPID::ProtoSegment(wcps_list1);
-    WCPPID::ProtoSegment *sg3 = new WCPPID::ProtoSegment(wcps_list2);
+    //    std::cout << wcps_list1.front().index << " " << wcps_list1.back().index << " " << wcps_list2.front().index << " " << wcps_list2.back().index << std::endl;
 
-    add_proto_connection(v1, sg2, temp_cluster);
-    add_proto_connection(v3, sg2, temp_cluster);
-    add_proto_connection(v3, sg3, temp_cluster);
-    add_proto_connection(v2, sg3, temp_cluster);
+    if (flag_break){
+      WCPPID::ProtoVertex *v3 = new WCPPID::ProtoVertex(break_wcp);
+      WCPPID::ProtoSegment *sg2 = new WCPPID::ProtoSegment(wcps_list1);
+      WCPPID::ProtoSegment *sg3 = new WCPPID::ProtoSegment(wcps_list2);
+      
+      add_proto_connection(v1, sg2, temp_cluster);
+      add_proto_connection(v3, sg2, temp_cluster);
+      add_proto_connection(v3, sg3, temp_cluster);
+      add_proto_connection(v2, sg3, temp_cluster);
   
-    del_proto_segment(sg1);
-    delete sg1;
-
-    // temporary fit hack ...
-    temp_cluster->set_path_wcps(wcps_list1);
-    temp_cluster->collect_charge_trajectory(*ct_point_cloud);
-    temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
-
-    sg2->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
-    v3->set_fit(temp_cluster->get_fine_tracking_path().back(), temp_cluster->get_dQ().back(), temp_cluster->get_dx().back(), temp_cluster->get_pu().back(), temp_cluster->get_pv().back(), temp_cluster->get_pw().back(), temp_cluster->get_pt().back(), temp_cluster->get_reduced_chi2().back());
-    temp_cluster->set_path_wcps(wcps_list2);
-    temp_cluster->collect_charge_trajectory(*ct_point_cloud);
-    temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
-    sg3->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
+      del_proto_segment(sg1);
+      delete sg1;
+      
+      // temporary fit hack ...
+      temp_cluster->set_path_wcps(wcps_list1);
+      temp_cluster->collect_charge_trajectory(*ct_point_cloud);
+      temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
+      
+      sg2->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
+      v3->set_fit(temp_cluster->get_fine_tracking_path().back(), temp_cluster->get_dQ().back(), temp_cluster->get_dx().back(), temp_cluster->get_pu().back(), temp_cluster->get_pv().back(), temp_cluster->get_pw().back(), temp_cluster->get_pt().back(), temp_cluster->get_reduced_chi2().back());
+      temp_cluster->set_path_wcps(wcps_list2);
+      temp_cluster->collect_charge_trajectory(*ct_point_cloud);
+      temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
+      sg3->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
+    }
     
-    temp_cluster->set_fit_parameters(map_vertex_segments, map_segment_vertices);
     
       
     
@@ -130,7 +133,7 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
     // std::cout << proto_segments.size() << " " << map_segment_vertices.size() << " " << map_vertex_segments[v3].size() << " " << map_cluster_segments[main_cluster].size() << " " << map_segment_cluster.size() << std::endl;
   }
   
-
+  temp_cluster->set_fit_parameters(map_vertex_segments, map_segment_vertices);
   
   
  
