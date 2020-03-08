@@ -84,17 +84,38 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
   std::vector<WCPPID::ProtoSegment*> remaining_segments;
   remaining_segments.push_back(sg1);
 
+  // break tracks ...
+  break_tracks(remaining_segments, temp_cluster);
+  
+  
+  
+  organize_vertices_segments();
+  //  temp_cluster->set_fit_parameters(map_vertex_segments, map_segment_vertices);
+  temp_cluster->set_fit_parameters(proto_vertices, proto_segments);
+  
+  
+ 
+
+  
+  // practice other components ...
+}
+
+void WCPPID::NeutrinoID::break_tracks(std::vector<WCPPID::ProtoSegment*>& remaining_segments, WCPPID::PR3DCluster* temp_cluster){
   
   while(remaining_segments.size()!=0){
     WCPPID::ProtoSegment* curr_sg = remaining_segments.back();
+    remaining_segments.pop_back();
     WCPPID::ProtoVertex *start_v=0, *end_v=0;
     for (auto it = map_segment_vertices[curr_sg].begin(); it!=map_segment_vertices[curr_sg].end(); it++){
       if ((*it)->get_wcpt().index == curr_sg->get_wcpt_vec().front().index) start_v = *it;
       if ((*it)->get_wcpt().index == curr_sg->get_wcpt_vec().back().index) end_v = *it;
     }
-    std::cout << "Vertex: " << start_v->get_wcpt().index << " " << end_v->get_wcpt().index << std::endl;
-    remaining_segments.pop_back();
-
+    if (start_v==0 || end_v==0){
+      std::cout << "Error in finding vertices for a segment" << std::endl; 
+      //std::cout << "Vertex: " << start_v->get_wcpt().index << " " << end_v->get_wcpt().index << std::endl;
+    }
+    
+    // initialize the start points
     WCP::WCPointCloud<double>::WCPoint break_wcp = start_v->get_wcpt();
     Point test_start_p = curr_sg->get_point_vec().front();
     
@@ -108,13 +129,13 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
       if (std::get<1>(kink_tuple).Mag()!=0 ){
 	// find the extreme point ... PR3DCluster function
 	break_wcp = temp_cluster->proto_extend_point(std::get<0>(kink_tuple), std::get<1>(kink_tuple), std::get<2>(kink_tuple));
-	std::cout << "Break point: " << remaining_segments.size() << " " << std::get<0>(kink_tuple) << " " << std::get<1>(kink_tuple).Mag() << " " << std::get<2>(kink_tuple) << " " << break_wcp.x/units::cm << " " << break_wcp.y/units::cm << " " << break_wcp.z/units::cm << " " << break_wcp.index << std::endl;
+	//std::cout << "Break point: " << remaining_segments.size() << " " << std::get<0>(kink_tuple) << " " << std::get<1>(kink_tuple).Mag() << " " << std::get<2>(kink_tuple) << " " << break_wcp.x/units::cm << " " << break_wcp.y/units::cm << " " << break_wcp.z/units::cm << " " << break_wcp.index << std::endl;
         if (sqrt(pow(start_v->get_wcpt().x - break_wcp.x,2) +
 	       pow(start_v->get_wcpt().y - break_wcp.y,2) +
 	       pow(start_v->get_wcpt().z - break_wcp.z,2)) <= 1*units::cm &&
-	  sqrt(pow(end_v->get_wcpt().x - break_wcp.x,2) +
-	       pow(end_v->get_wcpt().y - break_wcp.y,2) +
-	       pow(end_v->get_wcpt().z - break_wcp.z,2)) > 1*units::cm)
+	    sqrt(pow(end_v->get_wcpt().x - break_wcp.x,2) +
+		 pow(end_v->get_wcpt().y - break_wcp.y,2) +
+		 pow(end_v->get_wcpt().z - break_wcp.z,2)) > 1*units::cm)
 	  test_start_p = std::get<0>(kink_tuple);
       }else{
 	break;
@@ -143,7 +164,7 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
 	add_proto_connection(end_v, sg3, temp_cluster);
 	
 	del_proto_segment(curr_sg);
-	delete curr_sg;
+	//delete curr_sg;
 	
 	// temporary fit hack ...
 	temp_cluster->set_path_wcps(wcps_list1);
@@ -162,17 +183,9 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
     //    std::cout << proto_vertices.size() << " " << map_vertex_segments.size() << " " << map_segment_vertices[sg2].size() << " " << map_cluster_vertices[main_cluster].size() << " " << map_vertex_cluster.size()  << std::endl;
     // std::cout << proto_segments.size() << " " << map_segment_vertices.size() << " " << map_vertex_segments[v3].size() << " " << map_cluster_segments[main_cluster].size() << " " << map_segment_cluster.size() << std::endl;
   }
-
-  organize_vertices_segments();
-  //  temp_cluster->set_fit_parameters(map_vertex_segments, map_segment_vertices);
-  temp_cluster->set_fit_parameters(proto_vertices, proto_segments);
-  
-  
- 
-
-  
-  // practice other components ...
 }
+
+
 
 int WCPPID::NeutrinoID::get_num_segments(WCPPID::ProtoVertex *pv){
   if (map_vertex_segments.find(pv) != map_vertex_segments.end()){
@@ -278,21 +291,32 @@ void WCPPID::NeutrinoID::organize_vertices_segments(){
   proto_segments.clear();
   WCPPID::ProtoVertexSet temp_vset;
   WCPPID::ProtoSegmentSet temp_sset;
+  WCPPID::ProtoSegmentSet temp_delset;
   for (auto it = temp_vertices.begin(); it!=temp_vertices.end(); it++){
     if (map_vertex_segments.find(*it)!=map_vertex_segments.end() &&
 	temp_vset.find(*it)==temp_vset.end()){
       proto_vertices.push_back(*it);
       temp_vset.insert(*it);
       //std::cout << "1: " << *it << std::endl;
+      // std::cout <<"1: " << (*it)->get_wcpt().index << std::endl;
     }
   }
   for (auto it = temp_segments.begin(); it!=temp_segments.end(); it++){
-    if (map_segment_vertices.find(*it)!=map_segment_vertices.end() &&
-	temp_sset.find(*it)==temp_sset.end()){
-      proto_segments.push_back(*it);
-      temp_sset.insert(*it);
-      //std::cout << "2: " << *it << std::endl;
+    
+    if (map_segment_vertices.find(*it)!=map_segment_vertices.end()){
+      if (temp_sset.find(*it)==temp_sset.end()){
+	proto_segments.push_back(*it);
+	temp_sset.insert(*it);
+	std::cout << (*it)->get_wcpt_vec().front().index << " " << (*it)->get_wcpt_vec().back().index << " " << (*it)->get_point_vec().front() << " " << (*it)->get_wcpt_vec().front().x << " " << (*it)->get_wcpt_vec().front().y << " " << (*it)->get_wcpt_vec().front().z << " " << (*it)->get_point_vec().back() << " " << (*it)->get_wcpt_vec().back().x << " " << (*it)->get_wcpt_vec().back().y << " " << (*it)->get_wcpt_vec().back().z << std::endl;
+	//std::cout << "2: " << *it << std::endl;
+      }
+    }else{
+      temp_delset.insert(*it);
     }
+  }
+
+  for (auto it = temp_delset.begin(); it!=temp_delset.end();it++){
+    delete *it;
   }
 }
 
