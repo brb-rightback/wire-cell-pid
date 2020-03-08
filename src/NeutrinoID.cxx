@@ -17,7 +17,6 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   //  (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
   // }
 
-
   find_proto_vertex(main_cluster);
 
   
@@ -81,12 +80,13 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
   //sg1->print_dis();
   //std::cout << v1->get_fit_init_dis()/units::cm << " " << v2->get_fit_init_dis()/units::cm << std::endl;
 
+  // break tracks ...
   std::vector<WCPPID::ProtoSegment*> remaining_segments;
   remaining_segments.push_back(sg1);
-
-  // break tracks ...
-  break_tracks(remaining_segments, temp_cluster);
+  break_segments(remaining_segments, temp_cluster);
   
+  // find other segments ...
+  find_other_segments(temp_cluster);
   
   
   organize_vertices_segments();
@@ -94,13 +94,51 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
   temp_cluster->set_fit_parameters(proto_vertices, proto_segments);
   
   
- 
-
   
   // practice other components ...
 }
 
-void WCPPID::NeutrinoID::break_tracks(std::vector<WCPPID::ProtoSegment*>& remaining_segments, WCPPID::PR3DCluster* temp_cluster){
+void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster,  double search_range, double scaling_2d){
+  
+
+  const int N = temp_cluster->get_point_cloud_steiner()->get_num_points();
+  std::vector<bool> flag_tagged(N, false);
+  int num_tagged = 0;
+  WCP::WCPointCloud<double>& cloud = temp_cluster->get_point_cloud_steiner()->get_cloud();
+  for (size_t i=0;i!=N;i++){
+    Point p(cloud.pts[i].x, cloud.pts[i].y, cloud.pts[i].z);
+    double min_dis_u = 1e9, min_dis_v = 1e9, min_dis_w = 1e9;
+    for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+      WCPPID::ProtoSegment *sg1 = it->first;
+      std::pair<double, WCP::Point> closest_dis_point = sg1->get_closest_point(p);
+      std::tuple<double, double, double> closest_2d_dis = sg1->get_closest_2d_dis(p);
+      if (closest_dis_point.first < search_range){
+	flag_tagged[i] = true;
+	num_tagged ++;
+	break;
+      }
+      if (std::get<0>(closest_2d_dis) < min_dis_u) min_dis_u = std::get<0>(closest_2d_dis);
+      if (std::get<1>(closest_2d_dis) < min_dis_v) min_dis_v = std::get<1>(closest_2d_dis);
+      if (std::get<2>(closest_2d_dis) < min_dis_w) min_dis_w = std::get<2>(closest_2d_dis);
+    }
+
+    if (!flag_tagged[i]){
+      if ((min_dis_u < scaling_2d * search_range || ct_point_cloud->get_closest_dead_chs(p, 0) ) &&
+	  (min_dis_v < scaling_2d * search_range || ct_point_cloud->get_closest_dead_chs(p, 1) ) &&
+	  (min_dis_w < scaling_2d * search_range || ct_point_cloud->get_closest_dead_chs(p, 2) ) )
+	flag_tagged[i] = true;
+	  // std::cout << min_dis_u/units::cm << " " << min_dis_v/units::cm << " " << min_dis_w/units::cm << std::endl;
+    }
+  }
+
+
+  
+  
+}
+
+
+
+void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& remaining_segments, WCPPID::PR3DCluster* temp_cluster){
   
   while(remaining_segments.size()!=0){
     WCPPID::ProtoSegment* curr_sg = remaining_segments.back();
@@ -307,7 +345,7 @@ void WCPPID::NeutrinoID::organize_vertices_segments(){
       if (temp_sset.find(*it)==temp_sset.end()){
 	proto_segments.push_back(*it);
 	temp_sset.insert(*it);
-	std::cout << (*it)->get_wcpt_vec().front().index << " " << (*it)->get_wcpt_vec().back().index << " " << (*it)->get_point_vec().front() << " " << (*it)->get_wcpt_vec().front().x << " " << (*it)->get_wcpt_vec().front().y << " " << (*it)->get_wcpt_vec().front().z << " " << (*it)->get_point_vec().back() << " " << (*it)->get_wcpt_vec().back().x << " " << (*it)->get_wcpt_vec().back().y << " " << (*it)->get_wcpt_vec().back().z << std::endl;
+	//std::cout << (*it)->get_wcpt_vec().front().index << " " << (*it)->get_wcpt_vec().back().index << " " << (*it)->get_point_vec().front() << " " << (*it)->get_wcpt_vec().front().x << " " << (*it)->get_wcpt_vec().front().y << " " << (*it)->get_wcpt_vec().front().z << " " << (*it)->get_point_vec().back() << " " << (*it)->get_wcpt_vec().back().x << " " << (*it)->get_wcpt_vec().back().y << " " << (*it)->get_wcpt_vec().back().z << std::endl;
 	//std::cout << "2: " << *it << std::endl;
       }
     }else{
