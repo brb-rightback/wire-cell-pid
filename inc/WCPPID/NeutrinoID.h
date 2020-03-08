@@ -25,6 +25,8 @@ namespace WCPPID{
     bool add_proto_connection(ProtoVertex *pv, ProtoSegment *ps, WCPPID::PR3DCluster* cluster);
     void organize_vertices_segments();
     
+    std::tuple<ProtoVertex*, ProtoSegment*, WCP::Point> check_end_point(WCP::PointVector& tracking_path, bool flag_front = true);
+    
     // get segments
     int get_num_segments(ProtoVertex *pv);
     
