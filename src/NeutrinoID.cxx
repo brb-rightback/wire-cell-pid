@@ -325,8 +325,32 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     saved_cluster_points.at(i) = std::make_pair(special_A, special_B);
   }
 
-  
 
+  // save segments ...
+  for (auto it = saved_clusters.begin(); it!= saved_clusters.end(); it++){
+    temp_cluster->dijkstra_shortest_paths(cloud.pts[(saved_cluster_points.at(*it)).first],2); 
+    temp_cluster->cal_shortest_path(cloud.pts[(saved_cluster_points.at(*it)).second],2);
+    temp_cluster->collect_charge_trajectory(*ct_point_cloud);
+    temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
+
+    if (temp_cluster->get_fine_tracking_path().size() >1){
+      
+      WCPPID::ProtoVertex *v1 = new WCPPID::ProtoVertex(cloud.pts[(saved_cluster_points.at(*it)).first]);
+      WCPPID::ProtoVertex *v2 = new WCPPID::ProtoVertex(cloud.pts[(saved_cluster_points.at(*it)).second]);
+      WCPPID::ProtoSegment *sg1 = new WCPPID::ProtoSegment(temp_cluster->get_path_wcps());
+      add_proto_connection(v1,sg1,temp_cluster);
+      add_proto_connection(v2,sg1,temp_cluster);
+
+
+      v1->set_fit(temp_cluster->get_fine_tracking_path().front(), temp_cluster->get_dQ().front(), temp_cluster->get_dx().front(), temp_cluster->get_pu().front(), temp_cluster->get_pv().front(), temp_cluster->get_pw().front(), temp_cluster->get_pt().front(), temp_cluster->get_reduced_chi2().front());
+      v2->set_fit(temp_cluster->get_fine_tracking_path().back(), temp_cluster->get_dQ().back(), temp_cluster->get_dx().back(), temp_cluster->get_pu().back(), temp_cluster->get_pv().back(), temp_cluster->get_pw().back(), temp_cluster->get_pt().back(), temp_cluster->get_reduced_chi2().back());
+      sg1->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
+      
+      
+    }
+    
+  }
+  
   
 }
 

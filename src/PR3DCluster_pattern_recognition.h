@@ -142,7 +142,7 @@ void WCPPID::PR3DCluster::search_other_tracks(WCP::ToyCTPointCloud& ct_point_clo
       }
     }
     //      std::cout << source(*it, terminal_graph) << " " << target(*it, terminal_graph) << std::endl;
-  
+  }
   //std::cout << map_connection.size() << std::endl;
   //    std::cout << map_saved_edge.size() << " " << terminal_edge.size() << std::endl;
   
