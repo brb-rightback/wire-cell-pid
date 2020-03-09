@@ -1,11 +1,11 @@
-bool WCPPID::PR3DCluster::proto_break_tracks(WCP::WCPointCloud<double>::WCPoint& first_wcp, WCP::WCPointCloud<double>::WCPoint& curr_wcp, WCP::WCPointCloud<double>::WCPoint& last_wcp, std::list<WCP::WCPointCloud<double>::WCPoint>& wcps_list1, std::list<WCP::WCPointCloud<double>::WCPoint>& wcps_list2){
+bool WCPPID::PR3DCluster::proto_break_tracks(WCP::WCPointCloud<double>::WCPoint& first_wcp, WCP::WCPointCloud<double>::WCPoint& curr_wcp, WCP::WCPointCloud<double>::WCPoint& last_wcp, std::list<WCP::WCPointCloud<double>::WCPoint>& wcps_list1, std::list<WCP::WCPointCloud<double>::WCPoint>& wcps_list2, bool flag_pass_check){
 
   double dis1 = sqrt(pow(curr_wcp.x-first_wcp.x,2) + pow(curr_wcp.y-first_wcp.y,2) + pow(curr_wcp.z-first_wcp.z,2));
   double dis2 = sqrt(pow(curr_wcp.x-last_wcp.x,2) + pow(curr_wcp.y-last_wcp.y,2) + pow(curr_wcp.z-last_wcp.z,2));
 
   //  std::cout << first_wcp.index << " " << curr_wcp.index << " " << last_wcp.index << " " << dis1/units::cm << " " << dis2/units::cm << std::endl;
   
-  if (dis1 > 1*units::cm && dis2 > 1*units::cm){
+  if (dis1 > 1*units::cm && dis2 > 1*units::cm || flag_pass_check){
     dijkstra_shortest_paths(first_wcp,2);
     cal_shortest_path(curr_wcp,2);
 

@@ -10,7 +10,8 @@ namespace WCPPID{
     // initial creation
     ProtoSegment(std::list<WCP::WCPointCloud<double>::WCPoint >& path_wcps );
     ~ProtoSegment();
-
+    
+    
     std::vector<WCP::WCPointCloud<double>::WCPoint >& get_wcpt_vec(){return wcpt_vec;};
     std::vector<WCP::Point >& get_point_vec(){return fit_pt_vec;};
     std::vector<double>& get_dQ_vec(){return dQ_vec;};
@@ -21,6 +22,8 @@ namespace WCPPID{
     std::vector<double>& get_pw_vec(){return pw_vec;};
     std::vector<double>& get_pt_vec(){return pt_vec;};
     std::vector<double>& get_reduced_chi2_vec(){return reduced_chi2_vec;};
+
+    WCP::WCPointCloud<double>::WCPoint get_closest_wcpt(WCP::Point& test_p);
     
     // after fit
     void clear_fit();

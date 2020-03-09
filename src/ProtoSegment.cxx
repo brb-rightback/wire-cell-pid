@@ -238,3 +238,17 @@ std::tuple<double, double, double> WCPPID::ProtoSegment::get_closest_2d_dis(WCP:
     return std::make_tuple(-1,-1,-1);
   }
 }
+
+
+WCP::WCPointCloud<double>::WCPoint WCPPID::ProtoSegment::get_closest_wcpt(WCP::Point& test_p){
+  double min_dis = 1e9;
+  WCP::WCPointCloud<double>::WCPoint min_wcpt = wcpt_vec.front();
+  for (auto it = wcpt_vec.begin(); it!=wcpt_vec.end(); it++){
+    double dis = sqrt(pow(test_p.x - (*it).x,2) + pow(test_p.y - (*it).y,2) + pow(test_p.z - (*it).z,2));
+    if (dis < min_dis){
+      min_dis = dis;
+      min_wcpt =  *it;
+    }
+  }
+  return min_wcpt;
+}
