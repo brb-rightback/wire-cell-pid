@@ -358,9 +358,11 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	}
 	if (start_v ==0 || end_v ==0) std::cout << "Error in finding vertices for a sgement" << std::endl;
 
-	if (break_wcp.index==start_v->get_wcpt().index){
+	//	if (break_wcp.index==start_v->get_wcpt().index){
+	if (sqrt(pow(start_v->get_wcpt().x - break_wcp.x,2)+pow(start_v->get_wcpt().y - break_wcp.y,2) + pow(start_v->get_wcpt().z - break_wcp.z,2)) < 0.9*units::cm){
 	  v1 = start_v;
-	}else if (break_wcp.index == end_v->get_wcpt().index){
+	}else if (sqrt(pow(end_v->get_wcpt().x - break_wcp.x,2)+pow(end_v->get_wcpt().y - break_wcp.y,2) + pow(end_v->get_wcpt().z - break_wcp.z,2)) < 0.9*units::cm){
+	  //}else if (break_wcp.index == end_v->get_wcpt().index){
 	  v1 = end_v;
 	}else{
 	  std::list<WCP::WCPointCloud<double>::WCPoint> wcps_list1;
@@ -418,9 +420,11 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	}
 	if (start_v ==0 || end_v ==0) std::cout << "Error in finding vertices for a sgement" << std::endl;
 
-	if (start_v->get_wcpt().index == break_wcp.index){
+	//	if (start_v->get_wcpt().index == break_wcp.index){
+	if (sqrt(pow(start_v->get_wcpt().x - break_wcp.x,2)+pow(start_v->get_wcpt().y - break_wcp.y,2) + pow(start_v->get_wcpt().z - break_wcp.z,2)) < 0.9*units::cm){
 	  v2 = start_v;
-	}else if (end_v->get_wcpt().index == break_wcp.index){
+	  //	}else if (end_v->get_wcpt().index == break_wcp.index){
+	}else if (sqrt(pow(end_v->get_wcpt().x - break_wcp.x,2)+pow(end_v->get_wcpt().y - break_wcp.y,2) + pow(end_v->get_wcpt().z - break_wcp.z,2)) < 0.9*units::cm){
 	  v2 = end_v;
 	}else{
 	  std::list<WCP::WCPointCloud<double>::WCPoint> wcps_list1;
@@ -540,8 +544,8 @@ std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::Neut
     double dis4 = temp_l.closest_dis(p2);
 
     // std::cout << dis1/units::cm << " " << dis2/units::cm << " " <<
-    // dis3/units::cm << " " << dis4/units::cm 
-    // 	      << std::endl;
+    //   dis3/units::cm << " " << dis4/units::cm 
+    //  	      << std::endl;
        
     if (std::min(dis1,dis2) < 0.9*units::cm && std::max(dis1,dis2) < 2*units::cm || std::min(dis3,dis4)<0.9*units::cm && std::max(dis3,dis4) < 2*units::cm){
       vtx = test_v;
@@ -584,6 +588,8 @@ std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::Neut
     }
     seg = min_sg;
 
+    //    std::cout << min_sg << " " << min_dis/units::cm << " " << min_dis1/units::cm << std::endl;
+    
     //    if (min_sg!=0) std::cout << min_sg->get_wcpt_vec().size() << std::endl;
     
   }
