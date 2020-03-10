@@ -168,7 +168,9 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& 
   
 }
 
-
+void WCPPID::ProtoSegment::set_point_vec(std::vector<WCP::Point >& tmp_pt_vec){
+  fit_pt_vec = tmp_pt_vec;
+}
 
 
 void WCPPID::ProtoSegment::set_fit_vec(std::vector<WCP::Point >& tmp_fit_pt_vec, std::vector<double>& tmp_dQ_vec, std::vector<double>& tmp_dx_vec, std::vector<double>& tmp_pu_vec, std::vector<double>& tmp_pv_vec, std::vector<double>& tmp_pw_vec, std::vector<double>& tmp_pt_vec, std::vector<double>& tmp_reduced_chi2_vec){

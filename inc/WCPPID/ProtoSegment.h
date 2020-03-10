@@ -14,6 +14,7 @@ namespace WCPPID{
     
     std::vector<WCP::WCPointCloud<double>::WCPoint >& get_wcpt_vec(){return wcpt_vec;};
     std::vector<WCP::Point >& get_point_vec(){return fit_pt_vec;};
+    void set_point_vec(std::vector<WCP::Point >& tmp_pt_vec);
     std::vector<double>& get_dQ_vec(){return dQ_vec;};
     std::vector<double>& get_dx_vec(){return dx_vec;};
     std::vector<double>& get_dQ_dx_vec(){return dQ_dx_vec;};

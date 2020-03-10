@@ -34,7 +34,26 @@ void WCPPID::PR3DCluster::do_multi_tracking(std::map<WCPPID::ProtoVertex*, WCPPI
 }
 
 void WCPPID::PR3DCluster::organize_segments_path(std::map<WCPPID::ProtoVertex*, WCPPID::ProtoSegmentSet >& map_vertex_segments, std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet >& map_segment_vertices, double low_dis_limit, double end_point_limit){
-  
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
+    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
+      WCPPID::ProtoVertex *vt = *it1;
+      if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	start_v = vt;
+      }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
+	end_v = vt;
+      }
+    }
+    bool flag_startv_end = true;
+    bool flag_endv_end = true;
+    if (map_vertex_segments[start_v].size()>1) flag_startv_end = false;
+    if (map_vertex_segments[end_v].size()>1) flag_endv_end = false;
+
+    
+    //    std::cout << sg << flag_startv_end << " " << flag_endv_end << std::endl;
+    //    std::cout << sg << " " << start_v << " " << end_v << std::endl;
+  }
 }
     
 
