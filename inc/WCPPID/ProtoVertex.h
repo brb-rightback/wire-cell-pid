@@ -19,7 +19,7 @@ namespace WCPPID{
     // after trajectory fit ...
     void set_fit(WCP::Point& tmp_fit_pt, double tmp_dQ, double tmp_dx, double tmp_pu, double tmp_pv, double tmp_pw, double tmp_pt, double tmp_reduced_chi2);
     WCP::Point& get_fit_pt() {return fit_pt;};
-
+    void set_fit_pt(WCP::Point& p){fit_pt = p;};
     // after dQ/dx fit ...
     double get_dQ(){return dQ;};
     double get_dx(){return dx;};

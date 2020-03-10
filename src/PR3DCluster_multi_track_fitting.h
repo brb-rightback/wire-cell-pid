@@ -29,7 +29,19 @@ void WCPPID::PR3DCluster::do_multi_tracking(std::map<WCPPID::ProtoVertex*, WCPPI
   double end_point_limit = 0.6*units::cm;
   organize_segments_path(map_vertex_segments, map_segment_vertices, low_dis_limit, end_point_limit);
   
-  
+  // form association ...
+  // map 3D index to set of 2D points
+  std::map<int,std::pair<std::set<std::pair<int,int>>, float> > map_3D_2DU_set;
+  std::map<int,std::pair<std::set<std::pair<int,int>>, float> > map_3D_2DV_set;
+  std::map<int,std::pair<std::set<std::pair<int,int>>, float> > map_3D_2DW_set;
+  // map 2D points to 3D indices
+  std::map<std::pair<int,int>,std::set<int>> map_2DU_3D_set;
+  std::map<std::pair<int,int>,std::set<int>> map_2DV_3D_set;
+  std::map<std::pair<int,int>,std::set<int>> map_2DW_3D_set;
+
+  if (flag_1st_tracking){
+    
+  }
   
 }
 
@@ -50,7 +62,89 @@ void WCPPID::PR3DCluster::organize_segments_path(std::map<WCPPID::ProtoVertex*, 
     if (map_vertex_segments[start_v].size()>1) flag_startv_end = false;
     if (map_vertex_segments[end_v].size()>1) flag_endv_end = false;
 
+    PointVector pts;
+    std::vector<WCPointCloud<double>::WCPoint> temp_wcps_vec = sg->get_wcpt_vec();
+    Point start_p, end_p;
     
+    // start_ point
+    start_p.x = temp_wcps_vec.front().x;
+    start_p.y = temp_wcps_vec.front().y;
+    start_p.z = temp_wcps_vec.front().z;
+
+    if (flag_startv_end){
+      Point p2(temp_wcps_vec.front().x, temp_wcps_vec.front().y, temp_wcps_vec.front().z);
+      double dis1 = 0;
+      for (auto it = temp_wcps_vec.begin(); it!=temp_wcps_vec.end(); it++){
+	p2.x = (*it).x;
+	p2.y = (*it).y;
+	p2.z = (*it).z;
+	dis1 = sqrt(pow(start_p.x-p2.x,2)+pow(start_p.y-p2.y,2)+pow(start_p.z-p2.z,2));
+	if (dis1 > low_dis_limit) break;
+      }
+      if (dis1!=0){
+	start_p.x += (start_p.x-p2.x)/dis1*end_point_limit;
+	start_p.y += (start_p.y-p2.y)/dis1*end_point_limit;
+	start_p.z += (start_p.z-p2.z)/dis1*end_point_limit;
+      }
+    }
+    
+    // end_point
+    end_p.x = temp_wcps_vec.back().x;
+    end_p.y = temp_wcps_vec.back().y;
+    end_p.z = temp_wcps_vec.back().z;
+    if (flag_endv_end){
+      Point p2(temp_wcps_vec.back().x, temp_wcps_vec.back().y, temp_wcps_vec.back().z);
+      double dis1 = 0;
+      for (auto it = temp_wcps_vec.rbegin(); it!=temp_wcps_vec.rend(); it++){
+	p2.x = (*it).x;
+	p2.y = (*it).y;
+	p2.z = (*it).z;
+	dis1 = sqrt(pow(end_p.x-p2.x,2)+pow(end_p.y-p2.y,2)+pow(end_p.z-p2.z,2));
+	if (dis1 > low_dis_limit) break;
+      }
+      if (dis1!=0){
+	end_p.x += (end_p.x - p2.x)/dis1 * end_point_limit;
+	end_p.y += (end_p.y - p2.y)/dis1 * end_point_limit;
+	end_p.z += (end_p.z - p2.z)/dis1 * end_point_limit;
+      }
+    }
+    start_v->set_fit_pt(start_p);
+    end_v->set_fit_pt(end_p);
+
+    // middle points
+    pts.push_back(start_p);
+    for (size_t i=0;i!=temp_wcps_vec.size(); i++){
+      Point p1(temp_wcps_vec.at(i).x, temp_wcps_vec.at(i).y, temp_wcps_vec.at(i).z);
+      double dis = low_dis_limit;
+      double dis1 = sqrt(pow(p1.x-end_p.x,2) + pow(p1.y-end_p.y,2) + pow(p1.z-end_p.z,2));
+      if (pts.size()>0)
+	dis = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));
+
+      if (dis1 < low_dis_limit * 0.8){
+	continue;
+      }else if (dis < low_dis_limit * 0.8 ){
+	continue;
+      }else if (dis < low_dis_limit * 1.6){
+	pts.push_back(p1);
+	//std::cout << p1 << " " << sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2))/units::cm << std::endl;
+      }else{
+	int npoints = std::round(dis/low_dis_limit);
+	
+	Point p_save = pts.back();
+	for (int j=0;j!=npoints;j++){
+	  Point p(p_save.x + (p1.x-p_save.x) / npoints * (j+1),
+		  p_save.y + (p1.y-p_save.y) / npoints * (j+1),
+		  p_save.z + (p1.z-p_save.z) / npoints * (j+1));
+	  pts.push_back(p);
+	  //	std::cout << p << " " << sqrt(pow(p.x-pts.back().x,2)+pow(p.y-pts.back().y,2)+pow(p.z-pts.back().z,2))/units::cm << std::endl;
+	}
+	
+      }
+    }
+    pts.push_back(end_p);
+
+    sg->set_point_vec(pts);
+    //std::cout << sg << " " << start_p << " " << end_p << " " << temp_wcps_vec.size() << " " << pts.size() << std::endl;
     //    std::cout << sg << flag_startv_end << " " << flag_endv_end << std::endl;
     //    std::cout << sg << " " << start_v << " " << end_v << std::endl;
   }
