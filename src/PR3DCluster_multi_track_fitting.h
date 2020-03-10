@@ -1,4 +1,37 @@
- 
+
+void WCPPID::PR3DCluster::do_multi_tracking(std::map<WCPPID::ProtoVertex*, WCPPID::ProtoSegmentSet >& map_vertex_segments, std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet >& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double time, bool flag_dQ_dx_fit_reg){
+  // collect charge
+  collect_charge_multi_trajectory(map_segment_vertices, ct_point_cloud);
+
+  // clear things
+  fine_tracking_path.clear();
+  dQ.clear();
+  dx.clear();
+  pu.clear();
+  pv.clear();
+  pw.clear();
+  pt.clear();
+  reduced_chi2.clear();
+
+  bool flag_1st_tracking = true;
+  bool flag_2nd_tracking = true;
+  bool flag_dQ_dx = true;
+
+  // prepare the data for the fit, do not contain everything ...
+  // form from the cluster ...
+  std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_ut_charge;
+  std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_vt_charge;
+  std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_wt_charge;
+  prepare_data(ct_point_cloud, global_wc_map, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+
+  // first round of organizing the path from the path_wcps (shortest path)
+  double low_dis_limit = 1.2*units::cm;
+  double end_point_limit = 0.6*units::cm;
+  //std::cout << path_wcps.size() << std::endl;
+
+  
+}
+
 void WCPPID::PR3DCluster::collect_charge_multi_trajectory(std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet>& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, double dis_cut, double range_cut){
   //clear up ...
   collected_charge_map.clear();
@@ -107,7 +140,7 @@ void WCPPID::PR3DCluster::collect_charge_multi_trajectory(std::map<WCPPID::Proto
       }
     }
     
-    // std::cout << collected_charge_map.size() << std::endl;
+    //    std::cout << collected_charge_map.size() << std::endl;
     
   }
 
