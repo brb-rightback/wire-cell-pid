@@ -55,6 +55,141 @@ void WCPPID::PR3DCluster::form_map_multi_segments(std::map<WCPPID::ProtoVertex*,
 						  std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<int, std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, int> >& map_3D_tuple,
 						  std::map<std::pair<int,int>,std::set<int>>& map_2DU_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DV_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DW_3D_set,
 						  double end_point_factor, double mid_point_factor, int nlevel, double time_cut, double charge_cut){
+  map_3D_2DU_set.clear();
+  map_3D_2DV_set.clear();
+  map_3D_2DW_set.clear();
+  map_3D_tuple.clear();
+
+  map_2DU_3D_set.clear();
+  map_2DV_3D_set.clear();
+  map_2DW_3D_set.clear();
+
+  int count = 0;
+  
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
+    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
+      WCPPID::ProtoVertex *vt = *it1;
+      if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	start_v = vt;
+      }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
+	end_v = vt;
+      }
+    }
+    std::vector<WCP::Point >& pts = sg->get_point_vec();
+    PointVector saved_pts;
+    std::vector<int> saved_index;
+    std::vector<bool> saved_skip;
+
+    std::vector<double> distances;
+    for (size_t i=0;i+1!=pts.size();i++){
+      distances.push_back(sqrt(pow(pts.at(i+1).x-pts.at(i).x,2) +
+			       pow(pts.at(i+1).y-pts.at(i).y,2) +
+			       pow(pts.at(i+1).z-pts.at(i).z,2)));
+    }
+    
+    for (size_t i=0;i!=pts.size();i++){
+      double dis_cut;
+      if (i==0){
+	dis_cut = std::min(distances.at(i) * end_point_factor,4/3.*end_point_factor*units::cm);
+	if (start_v->get_fit_range()<0){
+	  start_v->set_fit_range(dis_cut);
+	}else{
+	  if (dis_cut < start_v->get_fit_range()) start_v->set_fit_range(dis_cut);
+	}
+      }else if (i+1==pts.size()){
+	dis_cut = std::min(distances.back() * end_point_factor,4/3.*end_point_factor*units::cm);
+	if (end_v->get_fit_range()<0){
+	  end_v->set_fit_range(dis_cut);
+	}else{
+	  if (dis_cut < end_v->get_fit_range()) end_v->set_fit_range(dis_cut);
+	}
+      }else{
+	dis_cut = std::min(std::max(distances.at(i-1)*mid_point_factor,distances.at(i)*mid_point_factor),4/3.*mid_point_factor*units::cm);
+      }
+
+      // not the first and last point
+      if (i!=0 && i+1!=pts.size()){
+	std::set<std::pair<int,int> > temp_2dut, temp_2dvt, temp_2dwt;
+	form_point_association(pts.at(i), temp_2dut, temp_2dvt, temp_2dwt, ct_point_cloud, dis_cut, nlevel, time_cut);
+	// examine ...
+	std::vector<int> temp_results = ct_point_cloud.convert_3Dpoint_time_ch(pts.at(i));
+	temp_results.at(2)-=2400;
+	temp_results.at(3)-=4800;
+	std::vector<float> temp_flag;
+	if (i==0 || i==1 || i+1 ==pts.size() || i+2 == pts.size()){
+	  temp_flag = examine_point_association(temp_results, temp_2dut, temp_2dvt, temp_2dwt, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,true,charge_cut);
+	}else{
+	  temp_flag = examine_point_association(temp_results, temp_2dut, temp_2dvt, temp_2dwt, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,false,charge_cut);
+	}
+	if (temp_flag.at(0) + temp_flag.at(1) + temp_flag.at(2) > 0){
+	  map_3D_2DU_set[count] = std::make_pair(temp_2dut,temp_flag.at(0));
+	  map_3D_2DV_set[count] = std::make_pair(temp_2dvt,temp_flag.at(1));
+	  map_3D_2DW_set[count] = std::make_pair(temp_2dwt,temp_flag.at(2));
+	  map_3D_tuple[count] = std::make_tuple((WCPPID::ProtoVertex*)0,sg,i);
+	  
+	  for (auto it = temp_2dut.begin(); it!=temp_2dut.end();it++){
+	    if (map_2DU_3D_set.find(*it)==map_2DU_3D_set.end()){
+	      std::set<int>  temp_set;
+	      temp_set.insert(count);
+	      map_2DU_3D_set[*it] = temp_set;
+	    }else{
+	      map_2DU_3D_set[*it].insert(count);
+	    }
+	  }
+	  for (auto it = temp_2dvt.begin(); it!=temp_2dvt.end();it++){
+	    if (map_2DV_3D_set.find(*it)==map_2DV_3D_set.end()){
+	      std::set<int>  temp_set;
+	      temp_set.insert(count);
+	      map_2DV_3D_set[*it] = temp_set;
+	    }else{
+	      map_2DV_3D_set[*it].insert(count);
+	    }
+	  }
+	  for (auto it = temp_2dwt.begin(); it!=temp_2dwt.end();it++){
+	    if (map_2DW_3D_set.find(*it)==map_2DW_3D_set.end()){
+	      std::set<int>  temp_set;
+	      temp_set.insert(count);
+	      map_2DW_3D_set[*it] = temp_set;
+	    }else{
+	      map_2DW_3D_set[*it].insert(count);
+	    }
+	  }
+	  
+	  saved_pts.push_back(pts.at(i));
+	  saved_index.push_back(count);
+	  saved_skip.push_back(false);
+	  count ++;
+	}
+      }else if (i==0){ // first point
+	saved_pts.push_back(pts.at(i));
+	saved_index.push_back(count);
+	saved_skip.push_back(true);
+	if (start_v->get_fit_index()==-1){
+	  start_v->set_fit_index(count);
+	  count ++;
+	}
+      }else if (i+1==pts.size()){ // last point
+	saved_pts.push_back(pts.at(i));
+	saved_index.push_back(count);
+	saved_skip.push_back(true);
+	if (end_v->get_fit_index()==-1){
+	  end_v->set_fit_index(count);
+	  count ++;
+	}
+      } 
+    } // loop over points ...
+    // fill the segments ...
+    sg->set_fit_associate_vec(saved_pts, saved_index, saved_skip);
+    //    std::cout << saved_pts.size() << " " << saved_index.size() << " " << saved_skip.size() << std::endl;
+  } // loop over segment
+
+  // deal with all the vertex again ...
+  for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
+    WCPPID::ProtoVertex *vtx = it->first;
+    
+  }
 }
 
 void WCPPID::PR3DCluster::organize_segments_path(std::map<WCPPID::ProtoVertex*, WCPPID::ProtoSegmentSet >& map_vertex_segments, std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet >& map_segment_vertices, double low_dis_limit, double end_point_limit){

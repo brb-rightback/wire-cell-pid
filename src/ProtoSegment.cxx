@@ -196,6 +196,12 @@ void WCPPID::ProtoSegment::set_fit_vec(std::vector<WCP::Point >& tmp_fit_pt_vec,
   pcloud_fit->build_kdtree_index();
 }
 
+void WCPPID::ProtoSegment::set_fit_associate_vec(std::vector<WCP::Point >& tmp_fit_pt_vec, std::vector<int>& tmp_fit_index, std::vector<bool>& tmp_fit_skip){
+  fit_pt_vec = tmp_fit_pt_vec;
+  fit_index_vec = tmp_fit_index;
+  fit_flag_skip = tmp_fit_skip;
+}
+
 void WCPPID::ProtoSegment::clear_fit(){
   flag_fit = false;
   fit_pt_vec.clear();
@@ -208,7 +214,9 @@ void WCPPID::ProtoSegment::clear_fit(){
   pw_vec.clear();
   pt_vec.clear();
   reduced_chi2_vec.clear();
-  
+
+  fit_index_vec.clear();
+  fit_flag_skip.clear();
 }
 
 void WCPPID::ProtoSegment::print_dis(){

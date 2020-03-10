@@ -7,6 +7,9 @@ WCPPID::ProtoVertex::ProtoVertex(WCP::WCPointCloud<double>::WCPoint& wcpt)
   , flag_fit(false)
   , dQ(0)
   , dx(-1)
+  , fit_index(-1)
+  , flag_fit_fix(false)
+  , fit_range(-1)
 {
   fit_pt.x = wcpt.x;
   fit_pt.y = wcpt.y;

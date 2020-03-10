@@ -24,6 +24,10 @@ namespace WCPPID{
     std::vector<double>& get_pt_vec(){return pt_vec;};
     std::vector<double>& get_reduced_chi2_vec(){return reduced_chi2_vec;};
 
+    void set_fit_associate_vec(std::vector<WCP::Point >& tmp_fit_pt_vec, std::vector<int>& tmp_fit_index, std::vector<bool>& tmp_fit_skip);
+    std::vector<int>& get_fit_index_vec(){return fit_index_vec;};
+    std::vector<bool>& get_fit_flag_skip(){return fit_flag_skip;};
+    
     WCP::WCPointCloud<double>::WCPoint get_closest_wcpt(WCP::Point& test_p);
     
     // after fit
@@ -59,6 +63,9 @@ namespace WCPPID{
     std::vector<double> pt_vec;
     std::vector<double> reduced_chi2_vec;
 
+    std::vector<int> fit_index_vec;
+    std::vector<bool> fit_flag_skip; // vertex???
+    
     // point cloud ...
     WCP::ToyPointCloud* pcloud_fit;
     
