@@ -37,6 +37,7 @@ namespace WCPPID{
     
     // proto-vertex finder
     void find_proto_vertex(WCPPID::PR3DCluster *cluster);
+    WCPPID::ProtoSegment* init_first_segment(WCPPID::PR3DCluster *cluster);
     void break_segments(std::vector<WCPPID::ProtoSegment*>& remaining_segments, WCPPID::PR3DCluster* temp_cluster);
 
     void find_other_segments(WCPPID::PR3DCluster* temp_cluster, double search_range = 1.5*units::cm, double scaling_2d = 0.8);

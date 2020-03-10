@@ -60,12 +60,7 @@ WCPPID::NeutrinoID::~NeutrinoID(){
 }
 
 
-void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
-  
-  if (temp_cluster->get_point_cloud_steiner()==0) return;
-  if (temp_cluster->get_point_cloud_steiner()->get_num_points()<2) return;
-  
-  
+WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster *temp_cluster){
   // do the first search of the trajectory ...
   std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_two_boundary_wcps(2);
   temp_cluster->dijkstra_shortest_paths(wcps.first,2); 
@@ -90,16 +85,27 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
   v2->set_fit(temp_cluster->get_fine_tracking_path().back(), temp_cluster->get_dQ().back(), temp_cluster->get_dx().back(), temp_cluster->get_pu().back(), temp_cluster->get_pv().back(), temp_cluster->get_pw().back(), temp_cluster->get_pt().back(), temp_cluster->get_reduced_chi2().back());
   sg1->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
   // finish the temporary fit ...
+  
   //sg1->print_dis();
   //std::cout << v1->get_fit_init_dis()/units::cm << " " << v2->get_fit_init_dis()/units::cm << std::endl;
+  return sg1;
+}
 
+
+void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
+  
+  if (temp_cluster->get_point_cloud_steiner()==0) return;
+  if (temp_cluster->get_point_cloud_steiner()->get_num_points()<2) return;
+  
+  WCPPID::ProtoSegment* sg1 = init_first_segment(temp_cluster);
+  
   // break tracks ...
   std::vector<WCPPID::ProtoSegment*> remaining_segments;
   remaining_segments.push_back(sg1);
   break_segments(remaining_segments, temp_cluster);
   
-  // find other segments ...
-  find_other_segments(temp_cluster);
+  // // find other segments ...
+  // find_other_segments(temp_cluster);
   
   
   

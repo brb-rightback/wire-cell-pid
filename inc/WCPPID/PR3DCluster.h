@@ -147,7 +147,7 @@ namespace WCPPID{
     // projection related
     void get_projection(std::vector<int>& proj_channel, std::vector<int>& proj_timeslice, std::vector<int>& proj_charge, std::vector<int>& proj_charge_err , std::vector<int>& proj_flag, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map);
     void collect_charge_trajectory(WCP::ToyCTPointCloud& ct_point_cloud, double dis_cut = 0.6*units::cm, double range_cut = 1.0*units::cm);
-
+    void collect_charge_multi_trajectory(std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet>& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, double dis_cut = 0.6*units::cm, double range_cut = 1.0*units::cm);
 
     //fine tracking related ...
     WCP::PointVector& get_fine_tracking_path(){return fine_tracking_path;};
