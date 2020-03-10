@@ -170,6 +170,7 @@ namespace WCPPID{
     void organize_ps_path(WCP::PointVector& ps_vec, double low_dis_limit, double end_point_limit);
     // prepare data
     void prepare_data(WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge);
+    void organize_segments_path(std::map<WCPPID::ProtoVertex*, WCPPID::ProtoSegmentSet >& map_vertex_segments, std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet >& map_segment_vertices,double low_dis_limit, double end_point_limit);
     
     // form map ...
     void form_map(WCP::ToyCTPointCloud& ct_point_cloud, WCP::PointVector& pts,
