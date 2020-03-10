@@ -34,15 +34,27 @@ void WCPPID::PR3DCluster::do_multi_tracking(std::map<WCPPID::ProtoVertex*, WCPPI
   std::map<int,std::pair<std::set<std::pair<int,int>>, float> > map_3D_2DU_set;
   std::map<int,std::pair<std::set<std::pair<int,int>>, float> > map_3D_2DV_set;
   std::map<int,std::pair<std::set<std::pair<int,int>>, float> > map_3D_2DW_set;
+  std::map<int,std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, int> > map_3D_tuple;
   // map 2D points to 3D indices
   std::map<std::pair<int,int>,std::set<int>> map_2DU_3D_set;
   std::map<std::pair<int,int>,std::set<int>> map_2DV_3D_set;
   std::map<std::pair<int,int>,std::set<int>> map_2DW_3D_set;
-
+  
   if (flag_1st_tracking){
+    form_map_multi_segments(map_vertex_segments, map_segment_vertices, ct_point_cloud,
+			    map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
+			    map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
+			    map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set);
     
   }
   
+}
+
+void WCPPID::PR3DCluster::form_map_multi_segments(std::map<WCPPID::ProtoVertex*, WCPPID::ProtoSegmentSet >& map_vertex_segments, std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet >& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud,
+						  std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge,
+						  std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<int, std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, int> >& map_3D_tuple,
+						  std::map<std::pair<int,int>,std::set<int>>& map_2DU_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DV_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DW_3D_set,
+						  double end_point_factor, double mid_point_factor, int nlevel, double time_cut, double charge_cut){
 }
 
 void WCPPID::PR3DCluster::organize_segments_path(std::map<WCPPID::ProtoVertex*, WCPPID::ProtoSegmentSet >& map_vertex_segments, std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet >& map_segment_vertices, double low_dis_limit, double end_point_limit){
