@@ -183,12 +183,178 @@ void WCPPID::PR3DCluster::multi_trajectory_fit(std::map<WCPPID::ProtoVertex*, WC
   }
 
   // deal vertex
-  
+  for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
+    WCPPID::ProtoVertex *vtx = it->first;
+    int i = vtx->get_fit_index();
+    bool flag_fit_fix = vtx->get_flag_fit_fix();
+    Point init_p = vtx->get_fit_pt();
+    if (!flag_fit_fix){
+      fit_point(init_p, i, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
+      		map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
+      		map_Udiv_fac, map_Vdiv_fac, map_Wdiv_fac, offset_t, slope_x,
+      		offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv,
+      		offset_w, slope_yw, slope_zw);
+    } // not fit the fit ...
+  }
 
   // deal tracks 
   
   
 }
+
+Point WCPPID::PR3DCluster::fit_point(Point& init_p, int i, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<std::pair<int,int>, std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, std::map<std::tuple<int,int, int>, double>& map_Udiv_fac, std::map<std::tuple<int,int, int>, double>& map_Vdiv_fac, std::map<std::tuple<int,int, int>, double>& map_Wdiv_fac, double offset_t, double slope_x, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw){
+  int n_2D_u = 2* map_3D_2DU_set[i].first.size();
+  int n_2D_v = 2* map_3D_2DV_set[i].first.size();
+  int n_2D_w = 2* map_3D_2DW_set[i].first.size();
+  Eigen::VectorXd temp_pos_3D(3),data_u_2D(n_2D_u), data_v_2D(n_2D_v), data_w_2D(n_2D_w);
+  Eigen::VectorXd temp_pos_3D_init(3);
+  Eigen::SparseMatrix<double> RU(n_2D_u, 3) ;
+  Eigen::SparseMatrix<double> RV(n_2D_v, 3) ;
+  Eigen::SparseMatrix<double> RW(n_2D_w, 3) ;
+  // initialization
+  temp_pos_3D_init(0) = init_p.x;
+  temp_pos_3D_init(1) = init_p.y;
+  temp_pos_3D_init(2) = init_p.z;
+
+  for (size_t i=0;i!=n_2D_u;i++){
+    data_u_2D(i) = 0;
+  }
+  for (size_t i=0;i!=n_2D_v;i++){
+    data_v_2D(i) = 0;
+  }
+  for (size_t i=0;i!=n_2D_w;i++){
+    data_w_2D(i) = 0;
+  }
+  
+  int index = 0;
+  for (auto it = map_3D_2DU_set[i].first.begin(); it!=map_3D_2DU_set[i].first.end(); it++){
+    double charge, charge_err;
+    if (map_2D_ut_charge.find(*it)!=map_2D_ut_charge.end()){
+      charge = std::get<0>(map_2D_ut_charge[*it]);
+      charge_err = std::get<1>(map_2D_ut_charge[*it]);
+    }else{
+      charge = 100; // serve as regularization ...
+      charge_err = 1000;
+    }
+    if (charge<100){
+      charge = 100;
+      charge_err = 1000;
+    }
+    // induction plane error is large, so they have less weights in the fit to decide X position
+    double scaling = charge/charge_err * map_Udiv_fac[std::make_tuple(it->first, it->second, i)];
+    
+    if (map_3D_2DU_set[i].second < 0.5){
+      if (map_3D_2DU_set[i].second!=0)
+	scaling *= pow(map_3D_2DU_set[i].second/0.5,1);
+      else
+	scaling *= 0.05;
+    }
+    
+    if (scaling!=0){
+      data_u_2D(2*index) =  scaling * (it->first - offset_u);
+      data_u_2D(2*index+1) = scaling * (it->second - offset_t);
+      
+      RU.insert(2*index, 1) = scaling * slope_yu; // Y--> U
+      RU.insert(2*index, 2) = scaling * slope_zu; // Z--> U
+      RU.insert(2*index+1,0) = scaling * slope_x; // X --> T
+    }
+    index ++;
+  }
+  index = 0;
+  for (auto it = map_3D_2DV_set[i].first.begin(); it!=map_3D_2DV_set[i].first.end(); it++){
+    double charge, charge_err;
+    if (map_2D_vt_charge.find(*it)!=map_2D_vt_charge.end()){
+      charge = std::get<0>(map_2D_vt_charge[*it]);
+      charge_err = std::get<1>(map_2D_vt_charge[*it]);
+    }else{
+      charge = 100; // serve as regularization ...
+      charge_err = 1000;
+    }
+    if (charge < 100){
+      charge = 100;
+      charge_err = 1000;
+    }
+    // induction plane error is large, so they have less weights in the fit to decide X position
+    double scaling = charge/charge_err * map_Vdiv_fac[std::make_tuple(it->first, it->second, i)];
+    if (map_3D_2DV_set[i].second < 0.5){
+      if (map_3D_2DV_set[i].second!=0)
+	scaling *= pow(map_3D_2DV_set[i].second/0.5,1);
+      else
+	scaling *= 0.05;
+    }
+    
+    if (scaling!=0){
+      data_v_2D(2*index) =  scaling * (it->first - offset_v);
+      data_v_2D(2*index+1) = scaling * (it->second - offset_t);
+      
+      RV.insert(2*index, 1) = scaling * slope_yv; // Y--> V
+      RV.insert(2*index, 2) = scaling * slope_zv; // Z--> V
+      RV.insert(2*index+1,0) = scaling * slope_x; // X --> T
+    }
+    index ++;
+  }
+  
+  index = 0;
+  for (auto it = map_3D_2DW_set[i].first.begin(); it!=map_3D_2DW_set[i].first.end(); it++){
+    double charge, charge_err;
+    if (map_2D_wt_charge.find(*it)!=map_2D_wt_charge.end()){
+      charge = std::get<0>(map_2D_wt_charge[*it]);
+      charge_err = std::get<1>(map_2D_wt_charge[*it]);
+    }else{
+      charge = 100; // serve as regularization ...
+      charge_err = 1000;
+    }
+    if (charge<100){
+      charge = 100;
+      charge_err = 1000;
+    }
+    // induction plane error is large, so they have less weights in the fit to decide X position
+    double scaling = charge/charge_err * map_Wdiv_fac[std::make_tuple(it->first, it->second, i)];
+    
+    if (map_3D_2DW_set[i].second < 0.5){
+      if (map_3D_2DW_set[i].second!=0)
+	scaling *= pow(map_3D_2DW_set[i].second/0.5,1);
+      else
+	scaling *= 0.05;
+    }
+    if (scaling!=0){
+      data_w_2D(2*index) =  scaling * (it->first - offset_w);
+      data_w_2D(2*index+1) = scaling * (it->second - offset_t);
+      
+      RW.insert(2*index, 2) = scaling * slope_zw; // Z--> W
+      RW.insert(2*index+1,0) = scaling * slope_x; // X --> T
+    }
+    index ++;
+  }
+  
+  Eigen::SparseMatrix<double> RUT = Eigen::SparseMatrix<double>(RU.transpose());
+  Eigen::SparseMatrix<double> RVT = Eigen::SparseMatrix<double>(RV.transpose());
+  Eigen::SparseMatrix<double> RWT = Eigen::SparseMatrix<double>(RW.transpose());
+  
+  Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
+  Eigen::VectorXd b = RUT * data_u_2D + RVT * data_v_2D + RWT * data_w_2D;// + PMatrixT * pos_3D_init ;
+  
+  Eigen::SparseMatrix<double> A =   RUT * RU + RVT * RV + RWT * RW ;// + PMatrixT*PMatrix;
+  solver.compute(A);
+  
+  temp_pos_3D = solver.solveWithGuess(b,temp_pos_3D_init);
+  
+  Point final_p;
+  if (std::isnan(solver.error())){
+    final_p.x = temp_pos_3D_init(0);
+    final_p.y = temp_pos_3D_init(1);
+    final_p.z = temp_pos_3D_init(2);
+  }else{
+    final_p.x = temp_pos_3D(0);
+    final_p.y = temp_pos_3D(1);
+    final_p.z = temp_pos_3D(2);
+  }
+  
+  //std::cout << init_p << " " << final_p << std::endl;
+  
+  return final_p;
+}
+
 
 void WCPPID::PR3DCluster::form_map_multi_segments(std::map<WCPPID::ProtoVertex*, WCPPID::ProtoSegmentSet >& map_vertex_segments, std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet >& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud,
 						  std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge,
