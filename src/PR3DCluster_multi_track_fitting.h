@@ -188,17 +188,72 @@ void WCPPID::PR3DCluster::multi_trajectory_fit(std::map<WCPPID::ProtoVertex*, WC
     int i = vtx->get_fit_index();
     bool flag_fit_fix = vtx->get_flag_fit_fix();
     Point init_p = vtx->get_fit_pt();
-    if (!flag_fit_fix){
-      fit_point(init_p, i, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
-      		map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
-      		map_Udiv_fac, map_Vdiv_fac, map_Wdiv_fac, offset_t, slope_x,
-      		offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv,
-      		offset_w, slope_yw, slope_zw);
-    } // not fit the fit ...
+    if (!flag_fit_fix){ // not fix the fit ...
+      init_p = fit_point(init_p, i, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
+			 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
+			 map_Udiv_fac, map_Vdiv_fac, map_Wdiv_fac, offset_t, slope_x,
+			 offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv,
+			 offset_w, slope_yw, slope_zw);
+    } 
+    vtx->set_fit(init_p, 0, -1, offset_u + 0.5 + (slope_yu * init_p.y + slope_zu * init_p.z), offset_v + 0.5 + (slope_yv * init_p.y + slope_zv * init_p.z)+2400, offset_w + 0.5 + (slope_yw * init_p.y + slope_zw * init_p.z)+4800, offset_t + 0.5 + slope_x * init_p.x, -1);
   }
 
   // deal tracks 
-  
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
+    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
+      WCPPID::ProtoVertex *vt = *it1;
+      if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	start_v = vt;
+      }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
+	end_v = vt;
+      }
+    }
+    PointVector init_ps = sg->get_point_vec();
+    std::vector<int> init_indices = sg->get_fit_index_vec();
+    std::vector<bool> init_fit_skip = sg->get_fit_flag_skip();
+    //    std::cout << init_ps.size() << " " << init_indices.size() << " " << init_fit_skip.size() << " " << init_fit_skip.front() << " " << init_fit_skip.back() << std::endl;
+
+    PointVector final_ps;
+    
+    for (size_t i=0;i!=init_ps.size();i++){
+      if (i==0){
+	final_ps.push_back(start_v->get_fit_pt());
+      }else if (i+1==init_ps.size()){
+	final_ps.push_back(end_v->get_fit_pt());
+      }else{
+	Point temp_p = init_ps.at(i);
+	if (init_fit_skip.at(i)){
+	  temp_p = fit_point(init_ps.at(i), init_indices.at(i), map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
+			     map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
+			     map_Udiv_fac, map_Vdiv_fac, map_Wdiv_fac, offset_t, slope_x,
+			     offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv,
+			     offset_w, slope_yw, slope_zw);
+	}
+	final_ps.push_back(temp_p);
+      }
+    }
+    // sort out the results ...
+    
+    
+    // set results
+    std::vector<double> tmp_dQ_vec(final_ps.size(),0);
+    std::vector<double> tmp_dx_vec(final_ps.size(),-1);
+    std::vector<double> tmp_pu_vec(final_ps.size(),0);
+    std::vector<double> tmp_pv_vec(final_ps.size(),0);
+    std::vector<double> tmp_pw_vec(final_ps.size(),0);
+    std::vector<double> tmp_pt_vec(final_ps.size(),0);
+    std::vector<double> tmp_reduced_chi2_vec(final_ps.size(),0);
+    for (size_t i=0;i!=final_ps.size();i++){
+      tmp_pu_vec.at(i) = offset_u + 0.5 + (slope_yu * final_ps.at(i).y + slope_zu * final_ps.at(i).z);
+      tmp_pv_vec.at(i) = offset_v + 0.5 + (slope_yv * final_ps.at(i).y + slope_zv * final_ps.at(i).z)+2400;
+      tmp_pw_vec.at(i) = offset_w + 0.5 + (slope_yw * final_ps.at(i).y + slope_zw * final_ps.at(i).z)+4800;
+      tmp_pt_vec.at(i) = offset_t + 0.5 + slope_x * final_ps.at(i).x ;
+    }
+    sg->set_fit_vec(final_ps, tmp_dQ_vec, tmp_dx_vec, tmp_pu_vec, tmp_pv_vec, tmp_pw_vec, tmp_pt_vec, tmp_reduced_chi2_vec);
+    
+  }
   
 }
 
