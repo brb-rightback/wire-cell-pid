@@ -57,7 +57,7 @@ namespace WCPPID{
     int fit_index;
     bool flag_fit_fix;
     double fit_range;
-    
+        
     bool flag_fit;
   };
   typedef std::vector<ProtoVertex*> ProtoVertexSelection;

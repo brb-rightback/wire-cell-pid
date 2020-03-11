@@ -1154,9 +1154,7 @@ std::vector<float> WCPPID::PR3DCluster::examine_point_association(std::vector<in
   temp_2dvt = saved_2dvt;
   temp_2dwt = saved_2dwt;
   
-  
- 
-  
+    
   
   return results;
 }

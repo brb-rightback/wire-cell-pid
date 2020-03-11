@@ -188,7 +188,54 @@ void WCPPID::PR3DCluster::form_map_multi_segments(std::map<WCPPID::ProtoVertex*,
   // deal with all the vertex again ...
   for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
     WCPPID::ProtoVertex *vtx = it->first;
+    double dis_cut = vtx->get_fit_range();
+    count = vtx->get_fit_index();
+    Point pt = vtx->get_fit_pt();
     
+    std::set<std::pair<int,int> > temp_2dut, temp_2dvt, temp_2dwt; 
+    form_point_association(pt, temp_2dut, temp_2dvt, temp_2dwt, ct_point_cloud, dis_cut, nlevel, time_cut); 
+    // examine ... 
+    std::vector<int> temp_results = ct_point_cloud.convert_3Dpoint_time_ch(pt); 
+    temp_results.at(2)-=2400; 
+    temp_results.at(3)-=4800; 
+    std::vector<float> temp_flag;
+
+    temp_flag = examine_point_association(temp_results, temp_2dut, temp_2dvt, temp_2dwt, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,true,charge_cut); 
+  
+    
+    map_3D_2DU_set[count] = std::make_pair(temp_2dut,temp_flag.at(0)); 
+    map_3D_2DV_set[count] = std::make_pair(temp_2dvt,temp_flag.at(1)); 
+    map_3D_2DW_set[count] = std::make_pair(temp_2dwt,temp_flag.at(2)); 
+    map_3D_tuple[count] = std::make_tuple(vtx,(WCPPID::ProtoSegment*)0,0); 
+	  
+    for (auto it = temp_2dut.begin(); it!=temp_2dut.end();it++){
+      if (map_2DU_3D_set.find(*it)==map_2DU_3D_set.end()){
+	std::set<int>  temp_set;
+	temp_set.insert(count);
+	map_2DU_3D_set[*it] = temp_set;
+      }else{
+	map_2DU_3D_set[*it].insert(count);
+      }
+    }
+    for (auto it = temp_2dvt.begin(); it!=temp_2dvt.end();it++){
+      if (map_2DV_3D_set.find(*it)==map_2DV_3D_set.end()){
+	std::set<int>  temp_set;
+	temp_set.insert(count);
+	map_2DV_3D_set[*it] = temp_set;
+      }else{
+	map_2DV_3D_set[*it].insert(count);
+      }
+    }
+    for (auto it = temp_2dwt.begin(); it!=temp_2dwt.end();it++){
+      if (map_2DW_3D_set.find(*it)==map_2DW_3D_set.end()){
+	std::set<int>  temp_set;
+	temp_set.insert(count);
+	map_2DW_3D_set[*it] = temp_set;
+      }else{
+	map_2DW_3D_set[*it].insert(count);
+      }
+    }
+   
   }
 }
 
