@@ -45,8 +45,50 @@ void WCPPID::PR3DCluster::do_multi_tracking(std::map<WCPPID::ProtoVertex*, WCPPI
 			    map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
 			    map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
 			    map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set);
-    
+    multi_trajectory_fit(map_vertex_segments, map_segment_vertices,
+			 map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
+			 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
+			 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
   }
+  
+}
+
+void WCPPID::PR3DCluster::multi_trajectory_fit(std::map<WCPPID::ProtoVertex*, WCPPID::ProtoSegmentSet >& map_vertex_segments, std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet >& map_segment_vertices, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<std::pair<int,int>,std::set<int>>& map_2DU_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DV_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DW_3D_set,std::map<std::pair<int,int>, std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, int charge_div_method, double div_sigma){
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  double pitch_u = mp.get_pitch_u();
+  double pitch_v = mp.get_pitch_v();
+  double pitch_w = mp.get_pitch_w();
+  double angle_u = mp.get_angle_u();
+  double angle_v = mp.get_angle_v();
+  double angle_w = mp.get_angle_w();
+  double time_slice_width = mp.get_ts_width();
+  double first_u_dis = mp.get_first_u_dis();
+  double first_v_dis = mp.get_first_v_dis();
+  double first_w_dis = mp.get_first_w_dis();
+
+  /* for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){ */
+  /*   std::cout  << " " << it->mcell << std::endl; */
+  /* } */
+  
+  double slope_x = 1./time_slice_width;
+  //mcell
+  double first_t_dis = point_cloud->get_cloud().pts[0].mcell->GetTimeSlice()*time_slice_width - point_cloud->get_cloud().pts[0].x;
+    //  double first_t_dis = path_wcps.front().mcell->GetTimeSlice()*time_slice_width - path_wcps.front().x;
+  double offset_t = first_t_dis / time_slice_width;
+
+  //  convert Z to W ... 
+  double slope_zw = 1./pitch_w * cos(angle_w);
+  double slope_yw = 1./pitch_w * sin(angle_w);
+  
+  double slope_yu = -1./pitch_u * sin(angle_u);
+  double slope_zu = 1./pitch_u * cos(angle_u);
+  double slope_yv = -1./pitch_v * sin(angle_v);
+  double slope_zv = 1./pitch_v * cos(angle_v);
+  
+  //convert Y,Z to U,V
+  double offset_w = -first_w_dis/pitch_w;
+  double offset_u = -first_u_dis/pitch_u;
+  double offset_v = -first_v_dis/pitch_v;
   
 }
 
