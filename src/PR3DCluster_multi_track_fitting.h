@@ -46,14 +46,27 @@ void WCPPID::PR3DCluster::do_multi_tracking(std::map<WCPPID::ProtoVertex*, WCPPI
 			    map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
 			    map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set);
     multi_trajectory_fit(map_vertex_segments, map_segment_vertices,
-			 map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
+			 map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
 			 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
 			 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
   }
   
 }
 
-void WCPPID::PR3DCluster::multi_trajectory_fit(std::map<WCPPID::ProtoVertex*, WCPPID::ProtoSegmentSet >& map_vertex_segments, std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet >& map_segment_vertices, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<std::pair<int,int>,std::set<int>>& map_2DU_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DV_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DW_3D_set,std::map<std::pair<int,int>, std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, int charge_div_method, double div_sigma){
+WCP::Point WCPPID::PR3DCluster::get_pos_multi(std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, int>& input){
+  WCPPID::ProtoVertex* vtx = std::get<0>(input);
+  WCPPID::ProtoSegment* seg = std::get<1>(input);
+  int num = std::get<2>(input);
+  Point p;
+  if (vtx!=0){
+    p = vtx->get_fit_pt();
+  }else{
+    p = seg->get_point_vec().at(num);
+  }
+  return p;
+}
+
+void WCPPID::PR3DCluster::multi_trajectory_fit(std::map<WCPPID::ProtoVertex*, WCPPID::ProtoSegmentSet >& map_vertex_segments, std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet >& map_segment_vertices, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<int, std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, int> >& map_3D_tuple, std::map<std::pair<int,int>,std::set<int>>& map_2DU_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DV_3D_set, std::map<std::pair<int,int>,std::set<int>>& map_2DW_3D_set,std::map<std::pair<int,int>, std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, int charge_div_method, double div_sigma){
   TPCParams& mp = Singleton<TPCParams>::Instance();
   double pitch_u = mp.get_pitch_u();
   double pitch_v = mp.get_pitch_v();
@@ -89,6 +102,91 @@ void WCPPID::PR3DCluster::multi_trajectory_fit(std::map<WCPPID::ProtoVertex*, WC
   double offset_w = -first_w_dis/pitch_w;
   double offset_u = -first_u_dis/pitch_u;
   double offset_v = -first_v_dis/pitch_v;
+
+  // 2D pixel and then the 3D index ...
+  std::map<std::tuple<int,int, int>, double> map_Udiv_fac;
+  std::map<std::tuple<int,int, int>, double> map_Vdiv_fac;
+  std::map<std::tuple<int,int, int>, double> map_Wdiv_fac;
+
+  if (charge_div_method==1){
+    // equal division
+    for (auto it = map_2DU_3D_set.begin(); it!=map_2DU_3D_set.end(); it++){
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+  	map_Udiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = 1./it->second.size();
+  	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+      }
+    }
+    for (auto it = map_2DV_3D_set.begin(); it!=map_2DV_3D_set.end(); it++){
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+  	map_Vdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = 1./it->second.size();
+  	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+      }
+    }
+    for (auto it = map_2DW_3D_set.begin(); it!=map_2DW_3D_set.end(); it++){
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+  	map_Wdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = 1./it->second.size();
+  	//	std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+      }
+    }
+  }else if (charge_div_method == 2){
+    // use div_sigma ...
+    for (auto it = map_2DU_3D_set.begin(); it!=map_2DU_3D_set.end(); it++){
+      double sum = 0;
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+	Point tmp_p = get_pos_multi(map_3D_tuple[*it1]);
+  	double central_t = slope_x * tmp_p.x + offset_t;
+  	double central_ch = slope_yu * tmp_p.y + slope_zu * tmp_p.z + offset_u;
+  	double factor = exp(-0.5 * (pow((central_t-it->first.second)*time_slice_width,2) + pow((central_ch-it->first.first)*pitch_u,2))/pow(div_sigma,2));
+  	map_Udiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = factor;
+  	sum += factor;
+  	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << std::endl;
+      }
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+  	map_Udiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] /= sum;
+      }
+    }
+
+    for (auto it = map_2DV_3D_set.begin(); it!=map_2DV_3D_set.end(); it++){
+      double sum = 0;
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+	Point tmp_p = get_pos_multi(map_3D_tuple[*it1]);
+  	double central_t = slope_x * tmp_p.x + offset_t;
+  	double central_ch = slope_yv * tmp_p.y + slope_zv * tmp_p.z + offset_v;
+  	double factor = exp(-0.5 * (pow((central_t-it->first.second)*time_slice_width,2) + pow((central_ch-it->first.first)*pitch_v,2))/pow(div_sigma,2));
+  	map_Vdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = factor;
+  	sum += factor;
+	//	if ( it->first.first == 2520 &&  it->first.second ==1)
+	//  std::cout << it->first.first << " " << it->first.second << " " << central_t << " " << central_ch << " " << factor << std::endl;
+      }
+     
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+  	map_Vdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] /= sum;
+      }
+    }
+
+    
+    for (auto it = map_2DW_3D_set.begin(); it!=map_2DW_3D_set.end(); it++){
+      double sum = 0;
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+	Point tmp_p = get_pos_multi(map_3D_tuple[*it1]);
+  	double central_t = slope_x * tmp_p.x + offset_t;
+  	double central_ch = slope_yw * tmp_p.y + slope_zw * tmp_p.z + offset_w;
+  	double factor = exp(-0.5 * (pow((central_t-it->first.second)*time_slice_width,2) + pow((central_ch-it->first.first)*pitch_w,2))/pow(div_sigma,2));
+  	map_Wdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] = factor;
+  	sum += factor;
+  	//std::cout << it->first.first << " " << it->first.second << " " << *it1 << " " << factor << std::endl;
+      }
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+  	map_Wdiv_fac[std::make_tuple(it->first.first, it->first.second, *it1)] /= sum;
+      }
+    }
+  }
+
+  // deal vertex
+  
+
+  // deal tracks 
+  
   
 }
 
