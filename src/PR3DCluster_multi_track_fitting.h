@@ -224,13 +224,14 @@ void WCPPID::PR3DCluster::multi_trajectory_fit(std::map<WCPPID::ProtoVertex*, WC
 	final_ps.push_back(end_v->get_fit_pt());
       }else{
 	Point temp_p = init_ps.at(i);
-	if (init_fit_skip.at(i)){
+	if (!init_fit_skip.at(i)){
 	  temp_p = fit_point(init_ps.at(i), init_indices.at(i), map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
 			     map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
 			     map_Udiv_fac, map_Vdiv_fac, map_Wdiv_fac, offset_t, slope_x,
 			     offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv,
 			     offset_w, slope_yw, slope_zw);
 	}
+	//	std::cout << i << " " << init_ps.at(i) << " " << temp_p << std::endl;
 	final_ps.push_back(temp_p);
       }
     }
