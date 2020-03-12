@@ -1055,6 +1055,13 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(std::map<WCPPID::ProtoVerte
     {
       double dis1 = sqrt(pow(pts.back().x-end_p.x,2) + pow(pts.back().y-end_p.y,2) + pow(pts.back().z-end_p.z,2));
       if (dis1 < low_dis_limit * 0.2) pts.pop_back();
+      else if (dis1 > low_dis_limit * 1.6){
+	Point tmp_p;
+	tmp_p.x =  pts.back().x + (end_p.x - pts.back().x )/2.;
+	tmp_p.y =  pts.back().y + (end_p.y - pts.back().y )/2.;
+	tmp_p.z =  pts.back().z + (end_p.z - pts.back().z )/2.;
+	pts.push_back(tmp_p);
+      }
       pts.push_back(end_p);
     }
 
@@ -1183,6 +1190,13 @@ void WCPPID::PR3DCluster::organize_segments_path(std::map<WCPPID::ProtoVertex*, 
     {
       double dis1 = sqrt(pow(pts.back().x-end_p.x,2) + pow(pts.back().y-end_p.y,2) + pow(pts.back().z-end_p.z,2));
       if (dis1 < low_dis_limit * 0.2) pts.pop_back();
+      else if (dis1 > low_dis_limit * 1.6){
+	Point tmp_p;
+	tmp_p.x =  pts.back().x + (end_p.x - pts.back().x )/2.;
+	tmp_p.y =  pts.back().y + (end_p.y - pts.back().y )/2.;
+	tmp_p.z =  pts.back().z + (end_p.z - pts.back().z )/2.;
+	pts.push_back(tmp_p);
+      }
       pts.push_back(end_p);
     }
     
