@@ -28,6 +28,8 @@ namespace WCPPID{
     void set_flag_fit_fix(bool flag){flag_fit_fix = flag;};
     double get_fit_range(){return fit_range;};
     void set_fit_range(double val){fit_range = val;};
+
+    void reset_fit_prop();
     
     // after dQ/dx fit ...
     double get_dQ(){return dQ;};

@@ -202,6 +202,11 @@ void WCPPID::ProtoSegment::set_fit_associate_vec(std::vector<WCP::Point >& tmp_f
   fit_flag_skip = tmp_fit_skip;
 }
 
+void WCPPID::ProtoSegment::reset_fit_prop(){
+  fit_index_vec.resize(fit_pt_vec.size(),-1);
+  fit_flag_skip.resize(fit_pt_vec.size(),false);
+}
+
 void WCPPID::ProtoSegment::clear_fit(){
   flag_fit = false;
   fit_pt_vec.clear();

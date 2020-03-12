@@ -19,6 +19,12 @@ WCPPID::ProtoVertex::ProtoVertex(WCP::WCPointCloud<double>::WCPoint& wcpt)
 WCPPID::ProtoVertex::~ProtoVertex(){
 }
 
+void WCPPID::ProtoVertex::reset_fit_prop(){
+  fit_index = -1;
+  flag_fit_fix = false;
+  fit_range = -1;
+}
+
 void WCPPID::ProtoVertex::set_wcpt(WCP::WCPointCloud<double>::WCPoint& tmp_pt){
   wcpt = tmp_pt;
 }

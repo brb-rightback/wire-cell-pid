@@ -50,6 +50,8 @@ void WCPPID::PR3DCluster::do_multi_tracking(std::map<WCPPID::ProtoVertex*, WCPPI
 			 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
 			 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
   }
+
+  
   
 }
 
@@ -552,8 +554,17 @@ void WCPPID::PR3DCluster::form_map_multi_segments(std::map<WCPPID::ProtoVertex*,
   map_2DV_3D_set.clear();
   map_2DW_3D_set.clear();
 
-  int count = 0;
+  for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
+    WCPPID::ProtoVertex *vtx = it->first;
+    vtx->reset_fit_prop();
+  }
+  for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end();it++){
+    WCPPID::ProtoSegment *seg = it->first;
+    seg->reset_fit_prop();
+  }
   
+  
+  int count = 0;
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
