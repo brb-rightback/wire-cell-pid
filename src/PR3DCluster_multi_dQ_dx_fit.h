@@ -70,6 +70,7 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
   int n_2D_u = map_2D_ut_charge.size();
   int n_2D_v = map_2D_vt_charge.size();
   int n_2D_w = map_2D_wt_charge.size();
+  
   for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
@@ -84,11 +85,80 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
     std::vector<WCP::Point >& pts = sg->get_point_vec();
     std::vector<int>& indices = sg->get_fit_index_vec();
     std::cout << pts.size() << " " << indices.size() << std::endl;
-    for (size_t i = 0;i!=pts.size(); i++){
-
+    for (size_t i = 0;i!=indices.size(); i++){
+      if (i==0){
+	if (start_v->get_fit_index()==-1){
+	  start_v->set_fit_index(n_3D_pos);
+	  n_3D_pos++;
+	}
+      }else if (i+1 == pts.size()){
+	if (end_v->get_fit_index()==-1){
+	  end_v->set_fit_index(n_3D_pos);
+	  n_3D_pos++;
+	}
+      }else{
+	indices.at(i) = n_3D_pos;
+	n_3D_pos++;
+      }
     }
-    
-    
   }
+  //  std::cout << n_3D_pos << std::endl;
+
+  Eigen::VectorXd pos_3D(n_3D_pos), data_u_2D(n_2D_u), data_v_2D(n_2D_v), data_w_2D(n_2D_w), pred_data_u_2D(n_2D_u), pred_data_v_2D(n_2D_v), pred_data_w_2D(n_2D_w);
+  Eigen::SparseMatrix<double> RU(n_2D_u, n_3D_pos) ;
+  Eigen::SparseMatrix<double> RV(n_2D_v, n_3D_pos) ;
+  Eigen::SparseMatrix<double> RW(n_2D_w, n_3D_pos) ;
+
+  // initial values ...
+  Eigen::VectorXd pos_3D_init(n_3D_pos);
+  for (int i = 0;i!=n_3D_pos;i++){
+    pos_3D_init(i) = 5000 * 6; // single MIP ...
+  }
+
+  // regular flag ...
+  std::vector<int> reg_flag_u(n_3D_pos,0), reg_flag_v(n_3D_pos,0), reg_flag_w(n_3D_pos,0);
+
+  // start to fill in the data
+  {
+    int n_u = 0;
+    for (auto it = map_2D_ut_charge.begin(); it!= map_2D_ut_charge.end(); it++){
+      if (std::get<0>(it->second) > 0)
+	data_u_2D(n_u) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2) + pow(add_uncer_ind,2));
+      else
+	data_u_2D(n_u) = 0;
+      if (std::isnan(data_u_2D(n_u)))
+	std::cout << "U: " << data_u_2D(n_u) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*rel_uncer_ind << " " << std::endl;
+      n_u ++;
+    }
+    int n_v = 0;
+    for (auto it = map_2D_vt_charge.begin(); it!= map_2D_vt_charge.end(); it++){
+      if (std::get<0>(it->second) > 0)
+	data_v_2D(n_v) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2) + pow(add_uncer_ind,2));
+      else
+	data_v_2D(n_v) = 0;
+      if (std::isnan(data_v_2D(n_v)))
+	std::cout << "V: " << data_v_2D(n_v) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*rel_uncer_ind << " " << std::endl;
+      n_v ++;
+    }
+    int n_w = 0;
+    for (auto it = map_2D_wt_charge.begin(); it!= map_2D_wt_charge.end(); it++){
+      if (std::get<0>(it->second)>0)
+	data_w_2D(n_w) = std::get<0>(it->second)/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_col,2) + pow(add_uncer_col,2));
+      else
+	data_w_2D(n_w) = 0;
+      if (std::isnan(data_w_2D(n_w)))
+	std::cout << "W: " << data_w_2D(n_w) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*rel_uncer_col << " " << std::endl;
+
+
+      //      std::cout << "W: " << data_w_2D(n_w) << " " << std::get<1>(it->second) << " " << std::get<0>(it->second)*rel_uncer_col << " " << std::endl;
+      
+      n_w ++;
+    }
+  }
+
+
+
+  
+  
   
 }
