@@ -51,7 +51,37 @@ void WCPPID::PR3DCluster::do_multi_tracking(std::map<WCPPID::ProtoVertex*, WCPPI
 			 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
   }
 
-  
+
+  if (flag_2nd_tracking){
+    // second round trajectory fit ...
+    low_dis_limit = 0.6*units::cm;
+    end_point_limit = 0.3*units::cm;
+
+    // organize path
+    
+    map_3D_2DU_set.clear();
+    map_3D_2DV_set.clear();
+    map_3D_2DW_set.clear();
+    // map 2D points to 3D indices
+    map_2DU_3D_set.clear();
+    map_2DV_3D_set.clear();
+    map_2DW_3D_set.clear();
+
+    form_map_multi_segments(map_vertex_segments, map_segment_vertices, ct_point_cloud,
+			    map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
+			    map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
+			    map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set);
+    multi_trajectory_fit(map_vertex_segments, map_segment_vertices,
+			 map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
+			 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
+			 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+
+    // organize path
+  }
+
+  if (flag_dQ_dx){
+    
+  }
   
 }
 
