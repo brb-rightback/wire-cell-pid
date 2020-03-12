@@ -1,3 +1,69 @@
 void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID::ProtoSegmentSet >& map_vertex_segments, std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet >& map_segment_vertices, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,  std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, double flash_time , double dis_end_point_ext , bool flag_dQ_dx_fit_reg ){
   
+   // Need to take into account the time, so one can properly calculate X value for diffusion ...
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  double time_slice_width = mp.get_ts_width();
+  int time_offset = mp.get_time_offset();
+  int nrebin = mp.get_nrebin();
+  double pitch_u = mp.get_pitch_u();
+  double pitch_v = mp.get_pitch_v();
+  double pitch_w = mp.get_pitch_w();
+  double first_u_dis = mp.get_first_u_dis();
+  double first_v_dis = mp.get_first_v_dis();
+  double first_w_dis = mp.get_first_w_dis();
+  double angle_u = mp.get_angle_u();
+  double angle_v = mp.get_angle_v();
+  double angle_w = mp.get_angle_w();
+  //  convert Z to W ... 
+  double slope_zw = 1./pitch_w * cos(angle_w);
+  double slope_yw = 1./pitch_w * sin(angle_w);
+  
+  double slope_yu = -1./pitch_u * sin(angle_u);
+  double slope_zu = 1./pitch_u * cos(angle_u);
+  double slope_yv = -1./pitch_v * sin(angle_v);
+  double slope_zv = 1./pitch_v * cos(angle_v);
+  //convert Y,Z to U,V
+  double offset_w = -first_w_dis/pitch_w + 0.5;
+  double offset_u = -first_u_dis/pitch_u + 0.5;
+  double offset_v = -first_v_dis/pitch_v + 0.5;
+  
+  double first_t_dis = point_cloud->get_cloud().pts[0].mcell->GetTimeSlice()*time_slice_width - point_cloud->get_cloud().pts[0].x;
+  double slope_xt = 1./time_slice_width;
+  double offset_t =  first_t_dis/time_slice_width + 0.5;
+  
+  // get the correct flash time matching TPC side
+  flash_time = flash_time - time_offset*units::microsecond; // us
+
+  // given an x position value, we want to convert this to a drift time 
+  // pos_x/time_slice_width * nrebin * 0.5*units::us // us
+  // difference between these two numbers are the time in us ... 
+  
+  // Now figure out the diffusion coefficients
+  // these are current  numbers in WCT, not sure what would be the values for data ... 
+  double DL = 6.4 * pow(units::cm,2)/units::second ;
+  double DT = 9.8 * pow(units::cm,2)/units::second ;
+
+  // these are the transverse broading due to software filters in the wire dimension
+  // these should be quadrature added to the
+  // there is some cancellation of this effect with the effect of using average field response in the deconvolution ... 0-
+  double col_sigma_w_T = 0.188060 * pitch_w*0.2; // units::mm
+  double ind_sigma_u_T = 0.402993 * pitch_u*0.3; // units::mm
+  double ind_sigma_v_T = 0.402993 * pitch_v*0.5; // units::mm
+
+  double rel_uncer_ind = 0.075; // original 0.1
+  double rel_uncer_col = 0.05; // original 0.035
+
+  double add_uncer_ind = 0.0;
+  double add_uncer_col = 300.0; // if 800 can reach balance with induction planes ...
+  
+  // this is the longitudinal filters in the time dimension ...
+  double add_sigma_L = 1.428249  * time_slice_width / nrebin / 0.5; // units::mm
+
+  // Point-like case ... 
+  // these should be the expected values:
+  // U, V, W, T,  1252.01, 3819.54, 6799.62, 1485.81
+  // reco position 1252.02, 3819.63, 6799.67, 1485.79
+  // good ...
+
+  
 }
