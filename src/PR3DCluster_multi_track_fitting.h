@@ -262,7 +262,124 @@ void WCPPID::PR3DCluster::multi_trajectory_fit(std::map<WCPPID::ProtoVertex*, WC
 
 WCP::PointVector WCPPID::PR3DCluster::examine_trajectory(WCP::PointVector& final_ps_vec, WCP::PointVector& init_ps_vec, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<std::pair<int,int>, std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, double offset_t, double slope_x, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw){
   PointVector result_ps;
+  PointVector orig_ps;
+  int skip_count = 0;
+  for (size_t i=0; i!=final_ps_vec.size(); i++){
+    Point p = final_ps_vec.at(i);
+    bool flag_skip = skip_trajectory_point(p, i, init_ps_vec, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, result_ps, offset_t, slope_x,  offset_u,  slope_yu,  slope_zu,  offset_v,  slope_yv,  slope_zv,  offset_w, slope_yw,  slope_zw);
+    // vertex not moving ...
+    if (i == 0 || i+1 == final_ps_vec.size()) flag_skip = false;
+    // protection ...
+    if (flag_skip){
+      skip_count ++;
+      if (skip_count <=3)
+	continue;
+      else
+	skip_count = 0;
+    }
+    orig_ps.push_back(init_ps_vec.at(i));
+    result_ps.push_back(p);
+  }
 
+  for (size_t i=0;i!=result_ps.size(); i++){
+    bool flag_replace = false;
+    
+    if (i != 0 && i+1 != result_ps.size()) {
+      // -1 vs. +1
+      double a = sqrt(pow(result_ps.at(i-1).x - result_ps.at(i).x,2)
+		      +pow(result_ps.at(i-1).y - result_ps.at(i).y,2)
+		      +pow(result_ps.at(i-1).z - result_ps.at(i).z,2));
+      double b = sqrt(pow(result_ps.at(i+1).x - result_ps.at(i).x,2)
+		      +pow(result_ps.at(i+1).y - result_ps.at(i).y,2)
+		      +pow(result_ps.at(i+1).z - result_ps.at(i).z,2));
+      double c = sqrt(pow(result_ps.at(i-1).x - result_ps.at(i+1).x,2)
+		      +pow(result_ps.at(i-1).y - result_ps.at(i+1).y,2)
+		      +pow(result_ps.at(i-1).z - result_ps.at(i+1).z,2));
+      double s = (a+b+c)/2.;
+      double area1 = sqrt(s*(s-a)*(s-b)*(s-c));
+
+      a = sqrt(pow(result_ps.at(i-1).x - orig_ps.at(i).x,2)
+	       +pow(result_ps.at(i-1).y - orig_ps.at(i).y,2)
+	       +pow(result_ps.at(i-1).z - orig_ps.at(i).z,2));
+      b = sqrt(pow(result_ps.at(i+1).x - orig_ps.at(i).x,2)
+	       +pow(result_ps.at(i+1).y - orig_ps.at(i).y,2)
+	       +pow(result_ps.at(i+1).z - orig_ps.at(i).z,2));
+      s = (a+b+c)/2.;
+      double area2 = sqrt(s*(s-a)*(s-b)*(s-c));
+
+      //      std::cout << i << " A " << area1/c << " " << area2/c  << std::endl;
+
+      if (area1 > 1.8*units::mm * c && area1 > 1.7 * area2)
+	flag_replace = true;
+    }
+      
+    // -2, +1
+    if ((!flag_replace) && i>=2 && i+1 != result_ps.size()){
+      double a = sqrt(pow(result_ps.at(i-2).x - result_ps.at(i).x,2)
+		      +pow(result_ps.at(i-2).y - result_ps.at(i).y,2)
+		      +pow(result_ps.at(i-2).z - result_ps.at(i).z,2));
+      double b = sqrt(pow(result_ps.at(i+1).x - result_ps.at(i).x,2)
+		      +pow(result_ps.at(i+1).y - result_ps.at(i).y,2)
+		      +pow(result_ps.at(i+1).z - result_ps.at(i).z,2));
+      double c = sqrt(pow(result_ps.at(i-2).x - result_ps.at(i+1).x,2)
+		      +pow(result_ps.at(i-2).y - result_ps.at(i+1).y,2)
+		      +pow(result_ps.at(i-2).z - result_ps.at(i+1).z,2));
+      double s = (a+b+c)/2.;
+      double area1 = sqrt(s*(s-a)*(s-b)*(s-c));
+
+      a = sqrt(pow(result_ps.at(i-2).x - orig_ps.at(i).x,2)
+	       +pow(result_ps.at(i-2).y - orig_ps.at(i).y,2)
+	       +pow(result_ps.at(i-2).z - orig_ps.at(i).z,2));
+      b = sqrt(pow(result_ps.at(i+1).x - orig_ps.at(i).x,2)
+	       +pow(result_ps.at(i+1).y - orig_ps.at(i).y,2)
+	       +pow(result_ps.at(i+1).z - orig_ps.at(i).z,2));
+      s = (a+b+c)/2.;
+      double area2 = sqrt(s*(s-a)*(s-b)*(s-c));
+      //std::cout << i << " B " << area1/c << " " << area2/c  << std::endl;
+      if (area1 > 1.8*units::mm * c && area1 > 1.7 * area2)
+	flag_replace = true;	
+     
+      
+    }
+    
+    
+    // -1, +2
+    if ((!flag_replace) && i>0 && i+2<result_ps.size()){
+      double a = sqrt(pow(result_ps.at(i-1).x - result_ps.at(i).x,2)
+		      +pow(result_ps.at(i-1).y - result_ps.at(i).y,2)
+		      +pow(result_ps.at(i-1).z - result_ps.at(i).z,2));
+      double b = sqrt(pow(result_ps.at(i+2).x - result_ps.at(i).x,2)
+		      +pow(result_ps.at(i+2).y - result_ps.at(i).y,2)
+		      +pow(result_ps.at(i+2).z - result_ps.at(i).z,2));
+      double c = sqrt(pow(result_ps.at(i-1).x - result_ps.at(i+2).x,2)
+		      +pow(result_ps.at(i-1).y - result_ps.at(i+2).y,2)
+		      +pow(result_ps.at(i-1).z - result_ps.at(i+2).z,2));
+      double s = (a+b+c)/2.;
+      double area1 = sqrt(s*(s-a)*(s-b)*(s-c));
+
+      a = sqrt(pow(result_ps.at(i-1).x - orig_ps.at(i).x,2)
+	       +pow(result_ps.at(i-1).y - orig_ps.at(i).y,2)
+	       +pow(result_ps.at(i-1).z - orig_ps.at(i).z,2));
+      b = sqrt(pow(result_ps.at(i+2).x - orig_ps.at(i).x,2)
+	       +pow(result_ps.at(i+2).y - orig_ps.at(i).y,2)
+	       +pow(result_ps.at(i+2).z - orig_ps.at(i).z,2));
+      s = (a+b+c)/2.;
+      double area2 = sqrt(s*(s-a)*(s-b)*(s-c));
+
+      //      std::cout << i << " C " << area1/c << " " << area2/c  << std::endl;
+      
+      if (area1 > 1.8*units::mm * c && area1 > 1.7 * area2)
+	flag_replace = true;
+    }
+
+    
+    if (flag_replace){
+      result_ps.at(i) = orig_ps.at(i);
+      //      std::cout << i << std::endl;
+    }
+  }
+  
+  
   return result_ps;
 }
 
