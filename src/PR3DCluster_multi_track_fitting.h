@@ -82,7 +82,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(std::map<WCPPID::ProtoVertex*, WCPPI
   }
 
   if (flag_dQ_dx){
-    
+    dQ_dx_multi_fit(map_vertex_segments, map_segment_vertices, global_wc_map, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, time, end_point_limit, flag_dQ_dx_fit_reg);
   }
   
 }
@@ -1147,3 +1147,6 @@ void WCPPID::PR3DCluster::collect_charge_multi_trajectory(std::map<WCPPID::Proto
 
   
 }
+
+
+
