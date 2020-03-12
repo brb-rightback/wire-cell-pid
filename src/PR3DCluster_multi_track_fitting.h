@@ -76,12 +76,23 @@ void WCPPID::PR3DCluster::do_multi_tracking(std::map<WCPPID::ProtoVertex*, WCPPI
 			 map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
 			 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
 			 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
-
-    // organize path 
-    organize_segments_path_2nd(map_vertex_segments, map_segment_vertices, low_dis_limit, 0); 
+    
+    // organize path
+    low_dis_limit = 0.6*units::cm;
+    organize_segments_path_3rd(map_vertex_segments, map_segment_vertices, low_dis_limit); 
+    
   }
 
   if (flag_dQ_dx){
+    for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
+      WCPPID::ProtoVertex *vtx = it->first;
+      vtx->reset_fit_prop();
+    }
+    for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end();it++){
+      WCPPID::ProtoSegment *seg = it->first;
+      seg->reset_fit_prop();
+    }
+    
     dQ_dx_multi_fit(map_vertex_segments, map_segment_vertices, global_wc_map, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, time, end_point_limit, flag_dQ_dx_fit_reg);
   }
   
@@ -770,6 +781,147 @@ void WCPPID::PR3DCluster::form_map_multi_segments(std::map<WCPPID::ProtoVertex*,
   }
 }
 
+void WCPPID::PR3DCluster::organize_segments_path_3rd(std::map<WCPPID::ProtoVertex*, WCPPID::ProtoSegmentSet >& map_vertex_segments, std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet >& map_segment_vertices, double step_size){
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  double pitch_u = mp.get_pitch_u();
+  double pitch_v = mp.get_pitch_v();
+  double pitch_w = mp.get_pitch_w();
+  double angle_u = mp.get_angle_u();
+  double angle_v = mp.get_angle_v();
+  double angle_w = mp.get_angle_w();
+  double time_slice_width = mp.get_ts_width();
+  double first_u_dis = mp.get_first_u_dis();
+  double first_v_dis = mp.get_first_v_dis();
+  double first_w_dis = mp.get_first_w_dis();
+
+  /* for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){ */
+  /*   std::cout  << " " << it->mcell << std::endl; */
+  /* } */
+  
+  double slope_x = 1./time_slice_width;
+  //mcell
+  double first_t_dis = point_cloud->get_cloud().pts[0].mcell->GetTimeSlice()*time_slice_width - point_cloud->get_cloud().pts[0].x;
+    //  double first_t_dis = path_wcps.front().mcell->GetTimeSlice()*time_slice_width - path_wcps.front().x;
+  double offset_t = first_t_dis / time_slice_width;
+
+  //  convert Z to W ... 
+  double slope_zw = 1./pitch_w * cos(angle_w);
+  double slope_yw = 1./pitch_w * sin(angle_w);
+  
+  double slope_yu = -1./pitch_u * sin(angle_u);
+  double slope_zu = 1./pitch_u * cos(angle_u);
+  double slope_yv = -1./pitch_v * sin(angle_v);
+  double slope_zv = 1./pitch_v * cos(angle_v);
+  
+  //convert Y,Z to U,V
+  double offset_w = -first_w_dis/pitch_w;
+  double offset_u = -first_u_dis/pitch_u;
+  double offset_v = -first_v_dis/pitch_v;
+
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+
+    PointVector pts;
+    PointVector curr_pts = sg->get_point_vec();
+    Point start_p, end_p;
+    
+    start_p = curr_pts.front();
+    end_p = curr_pts.back();
+
+           
+    // middle points
+    pts.push_back(start_p);
+    double dis_end;
+    double dis_prev;
+
+    // extra distance ...
+    double extra_dis = 0;
+    for (size_t i=0;i!=curr_pts.size(); i++){
+      Point p1 = curr_pts.at(i);
+      dis_end = sqrt(pow(p1.x-end_p.x,2) + pow(p1.y-end_p.y,2) + pow(p1.z-end_p.z,2)); 
+      if (dis_end < step_size) continue;
+
+      dis_prev = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));
+      if (dis_prev + extra_dis > step_size){
+	extra_dis += dis_prev;
+	while (extra_dis > step_size){
+	  Point tmp_p;
+	  tmp_p.x = pts.back().x + (p1.x - pts.back().x)/dis_prev * step_size;
+	  tmp_p.y = pts.back().y + (p1.y - pts.back().y)/dis_prev * step_size;
+	  tmp_p.z = pts.back().z + (p1.z - pts.back().z)/dis_prev * step_size;
+	  pts.push_back(tmp_p);
+	  dis_prev = sqrt(pow(p1.x-pts.back().x,2)+pow(p1.y-pts.back().y,2)+pow(p1.z-pts.back().z,2));	  
+	  extra_dis -= step_size;
+	}
+	
+      }else if (dis_prev + extra_dis < step_size){
+	extra_dis += dis_prev;
+	continue;
+      }else{
+	pts.push_back(p1);
+      }
+    }
+
+    // proper deal with the end_point ...
+    {
+      double dis1 = sqrt(pow(pts.back().x-end_p.x,2) + pow(pts.back().y-end_p.y,2) + pow(pts.back().z-end_p.z,2));
+
+      if (dis1 < step_size * 0.6) {
+	if (pts.size()<=1){
+	}else{
+	  double dis2 = sqrt(pow(pts.back().x - pts.at(pts.size()-2).x,2) + pow(pts.back().y - pts.at(pts.size()-2).y,2) + pow(pts.back().z - pts.at(pts.size()-2).z,2));
+	  double dis3 = (dis1+dis2)/2.;
+
+	  Point tmp_p;
+	  tmp_p.x =  pts.at(pts.size()-2).x + (pts.back().x - pts.at(pts.size()-2).x)/dis2*dis3;
+	  tmp_p.y =  pts.at(pts.size()-2).y + (pts.back().y - pts.at(pts.size()-2).y)/dis2*dis3;
+	  tmp_p.z =  pts.at(pts.size()-2).z + (pts.back().z - pts.at(pts.size()-2).z)/dis2*dis3;
+	  pts.pop_back();
+	  pts.push_back(tmp_p);
+	}
+      }else if (dis1 > step_size * 1.6){
+	Point tmp_p;
+	
+	tmp_p.x =  pts.back().x + (end_p.x - pts.back().x )/dis1*step_size;
+	tmp_p.y =  pts.back().y + (end_p.y - pts.back().y )/dis1*step_size;
+	tmp_p.z =  pts.back().z + (end_p.z - pts.back().z )/dis1*step_size;
+	pts.push_back(tmp_p);
+      }
+      
+      pts.push_back(end_p);
+    }
+
+    //    for (size_t i=1;i<pts.size();i++){
+    //  std::cout << i << " " << sqrt(pow(pts.at(i).x-pts.at(i-1).x,2) + pow(pts.at(i).y-pts.at(i-1).y,2) + pow(pts.at(i).z-pts.at(i-1).z,2))/units::cm << std::endl;
+    //}
+
+
+    
+    std::vector<double> tmp_dQ_vec(pts.size(),0);
+    std::vector<double> tmp_dx_vec(pts.size(),-1);
+    std::vector<double> tmp_pu_vec(pts.size(),0);
+    std::vector<double> tmp_pv_vec(pts.size(),0);
+    std::vector<double> tmp_pw_vec(pts.size(),0);
+    std::vector<double> tmp_pt_vec(pts.size(),0);
+    std::vector<double> tmp_reduced_chi2_vec(pts.size(),0);
+    for (size_t i=0;i!=pts.size();i++){
+      tmp_pu_vec.at(i) = offset_u + 0.5 + (slope_yu * pts.at(i).y + slope_zu * pts.at(i).z);
+      tmp_pv_vec.at(i) = offset_v + 0.5 + (slope_yv * pts.at(i).y + slope_zv * pts.at(i).z)+2400;
+      tmp_pw_vec.at(i) = offset_w + 0.5 + (slope_yw * pts.at(i).y + slope_zw * pts.at(i).z)+4800;
+      tmp_pt_vec.at(i) = offset_t + 0.5 + slope_x * pts.at(i).x ;
+    }
+    sg->set_fit_vec(pts, tmp_dQ_vec, tmp_dx_vec, tmp_pu_vec, tmp_pv_vec, tmp_pw_vec, tmp_pt_vec, tmp_reduced_chi2_vec);
+
+    
+    //std::cout << sg << " " << start_p << " " << end_p << " " << temp_wcps_vec.size() << " " << pts.size() << std::endl;
+    //    std::cout << sg << flag_startv_end << " " << flag_endv_end << std::endl;
+    //    std::cout << sg << " " << start_v << " " << end_v << std::endl;
+    
+  }
+
+  
+}
+
 void WCPPID::PR3DCluster::organize_segments_path_2nd(std::map<WCPPID::ProtoVertex*, WCPPID::ProtoSegmentSet >& map_vertex_segments, std::map<WCPPID::ProtoSegment*, WCPPID::ProtoVertexSet >& map_segment_vertices,double low_dis_limit, double end_point_limit){
   TPCParams& mp = Singleton<TPCParams>::Instance();
   double pitch_u = mp.get_pitch_u();
@@ -899,7 +1051,12 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(std::map<WCPPID::ProtoVerte
 	
       }
     }
-    pts.push_back(end_p);
+
+    {
+      double dis1 = sqrt(pow(pts.back().x-end_p.x,2) + pow(pts.back().y-end_p.y,2) + pow(pts.back().z-end_p.z,2));
+      if (dis1 < low_dis_limit * 0.2) pts.pop_back();
+      pts.push_back(end_p);
+    }
 
     // sg->set_point_vec(pts);
 
@@ -1022,7 +1179,13 @@ void WCPPID::PR3DCluster::organize_segments_path(std::map<WCPPID::ProtoVertex*, 
 	
       }
     }
-    pts.push_back(end_p);
+
+    {
+      double dis1 = sqrt(pow(pts.back().x-end_p.x,2) + pow(pts.back().y-end_p.y,2) + pow(pts.back().z-end_p.z,2));
+      if (dis1 < low_dis_limit * 0.2) pts.pop_back();
+      pts.push_back(end_p);
+    }
+    
 
     sg->set_point_vec(pts);
     //std::cout << sg << " " << start_p << " " << end_p << " " << temp_wcps_vec.size() << " " << pts.size() << std::endl;

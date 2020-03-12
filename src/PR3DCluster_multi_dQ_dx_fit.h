@@ -64,6 +64,31 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
   // U, V, W, T,  1252.01, 3819.54, 6799.62, 1485.81
   // reco position 1252.02, 3819.63, 6799.67, 1485.79
   // good ...
+  update_data_dQ_dx_fit(global_wc_map, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
 
+  int n_3D_pos = 0;
+  int n_2D_u = map_2D_ut_charge.size();
+  int n_2D_v = map_2D_vt_charge.size();
+  int n_2D_w = map_2D_wt_charge.size();
+  for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
+    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
+      WCPPID::ProtoVertex *vt = *it1;
+      if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	start_v = vt;
+      }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
+	end_v = vt;
+      }
+    }
+    std::vector<WCP::Point >& pts = sg->get_point_vec();
+    std::vector<int>& indices = sg->get_fit_index_vec();
+    std::cout << pts.size() << " " << indices.size() << std::endl;
+    for (size_t i = 0;i!=pts.size(); i++){
+
+    }
+    
+    
+  }
   
 }
