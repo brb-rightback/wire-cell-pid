@@ -156,7 +156,175 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
     }
   }
 
+  // loop over segments ...
+  for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
 
+    PointVector& pts = sg->get_point_vec();
+    std::vector<int>& indices = sg->get_fit_index_vec();
+    std::vector<double>& dx_vec = sg->get_dx_vec();
+    
+    //    std::cout<< pts.size() << " " << dx_vec.size() << std::endl;
+
+    for (size_t i1=1; i1+1<pts.size();i1++){
+      Point prev_rec_pos, next_rec_pos;
+      Point curr_rec_pos = pts.at(i1);
+      prev_rec_pos.x = (pts.at(i1-1).x + pts.at(i1).x)/2.;
+      prev_rec_pos.y = (pts.at(i1-1).y + pts.at(i1).y)/2.;
+      prev_rec_pos.z = (pts.at(i1-1).z + pts.at(i1).z)/2.;
+      next_rec_pos.x = (pts.at(i1+1).x + pts.at(i1).x)/2.;
+      next_rec_pos.y = (pts.at(i1+1).y + pts.at(i1).y)/2.;
+      next_rec_pos.z = (pts.at(i1+1).z + pts.at(i1).z)/2.;
+
+      dx.at(indices.at(i1)) = sqrt(pow(curr_rec_pos.x-prev_rec_pos.x,2)+pow(curr_rec_pos.y-prev_rec_pos.y,2)+pow(curr_rec_pos.z-prev_rec_pos.z,2))
+	+ sqrt(pow(curr_rec_pos.x-next_rec_pos.x,2)+pow(curr_rec_pos.y-next_rec_pos.y,2)+pow(curr_rec_pos.z-next_rec_pos.z,2));
+
+      std::vector<double> centers_U ;
+      std::vector<double> centers_V ;
+      std::vector<double> centers_W ;
+      std::vector<double> centers_T ;
+      std::vector<double> sigmas_T;
+      std::vector<double> sigmas_U;
+      std::vector<double> sigmas_V;
+      std::vector<double> sigmas_W;
+      std::vector<double> weights;
+
+      for (int j=0;j!=5;j++){
+	Point reco_pos;
+	reco_pos.x = prev_rec_pos.x + (curr_rec_pos.x-prev_rec_pos.x)/5.*(j+0.5);
+	reco_pos.y = prev_rec_pos.y + (curr_rec_pos.y-prev_rec_pos.y)/5.*(j+0.5);
+	reco_pos.z = prev_rec_pos.z + (curr_rec_pos.z-prev_rec_pos.z)/5.*(j+0.5);
+	double central_T = offset_t + slope_xt * reco_pos.x ;
+	double central_U = offset_u + (slope_yu * reco_pos.y + slope_zu * reco_pos.z);
+	double central_V = offset_v + (slope_yv * reco_pos.y + slope_zv * reco_pos.z)+2400;
+	double central_W = offset_w + (slope_yw * reco_pos.y + slope_zw * reco_pos.z)+4800;
+	double weight = sqrt(pow(prev_rec_pos.x-curr_rec_pos.x,2)+
+			     pow(prev_rec_pos.y-curr_rec_pos.y,2)+
+			     pow(prev_rec_pos.z-curr_rec_pos.z,2));
+	
+	double drift_time = reco_pos.x/time_slice_width * nrebin * 0.5*units::microsecond  - flash_time ;
+	if (drift_time <50 *units::microsecond ) drift_time = 50* units::microsecond;
+
+	//  std::cout << drift_time/units::microsecond << std::endl;
+	double diff_sigma_L = sqrt(2* DL * drift_time);
+	double diff_sigma_T = sqrt(2* DT * drift_time);
+	
+	double sigma_L = sqrt(pow(diff_sigma_L,2) + pow(add_sigma_L,2))/time_slice_width;
+	double sigma_T_u = sqrt(pow(diff_sigma_T,2) + pow(ind_sigma_u_T,2))/pitch_u;
+	double sigma_T_v = sqrt(pow(diff_sigma_T,2) + pow(ind_sigma_v_T,2))/pitch_v;
+	double sigma_T_w = sqrt(pow(diff_sigma_T,2) + pow(col_sigma_w_T,2))/pitch_w;
+
+	centers_U.push_back(central_U);
+	centers_V.push_back(central_V);
+	centers_W.push_back(central_W);
+	centers_T.push_back(central_T);
+	
+	weights.push_back(weight);
+	
+	sigmas_U.push_back(sigma_T_u);
+	sigmas_V.push_back(sigma_T_v);
+	sigmas_W.push_back(sigma_T_w);
+	sigmas_T.push_back(sigma_L);
+
+	reco_pos.x = next_rec_pos.x + (curr_rec_pos.x-next_rec_pos.x)/5.*(j+0.5);
+	reco_pos.y = next_rec_pos.y + (curr_rec_pos.y-next_rec_pos.y)/5.*(j+0.5);
+	reco_pos.z = next_rec_pos.z + (curr_rec_pos.z-next_rec_pos.z)/5.*(j+0.5);
+	central_T = offset_t + slope_xt * reco_pos.x ;
+	central_U = offset_u + (slope_yu * reco_pos.y + slope_zu * reco_pos.z);
+	central_V = offset_v + (slope_yv * reco_pos.y + slope_zv * reco_pos.z)+2400;
+	central_W = offset_w + (slope_yw * reco_pos.y + slope_zw * reco_pos.z)+4800;
+	weight = sqrt(pow(next_rec_pos.x-curr_rec_pos.x,2)+
+		      pow(next_rec_pos.y-curr_rec_pos.y,2)+
+		      pow(next_rec_pos.z-curr_rec_pos.z,2));
+
+	drift_time = reco_pos.x/time_slice_width * nrebin * 0.5*units::microsecond  - flash_time ;
+	if (drift_time <50 *units::microsecond ) drift_time = 50* units::microsecond;
+	//  std::cout << drift_time/units::microsecond << std::endl;
+	diff_sigma_L = sqrt(2* DL * drift_time);
+	diff_sigma_T = sqrt(2* DT * drift_time);
+	
+	sigma_L = sqrt(pow(diff_sigma_L,2) + pow(add_sigma_L,2))/time_slice_width;
+	sigma_T_u = sqrt(pow(diff_sigma_T,2) + pow(ind_sigma_u_T,2))/pitch_u;
+	sigma_T_v = sqrt(pow(diff_sigma_T,2) + pow(ind_sigma_v_T,2))/pitch_v;
+	sigma_T_w = sqrt(pow(diff_sigma_T,2) + pow(col_sigma_w_T,2))/pitch_w;
+
+	centers_U.push_back(central_U);
+	centers_V.push_back(central_V);
+	centers_W.push_back(central_W);
+	centers_T.push_back(central_T);
+	
+	weights.push_back(weight);
+	
+	sigmas_U.push_back(sigma_T_u);
+	sigmas_V.push_back(sigma_T_v);
+	sigmas_W.push_back(sigma_T_w);
+	sigmas_T.push_back(sigma_L);
+      }
+
+      int n_u = 0;
+      double sum_u = 0;
+      for (auto it = map_2D_ut_charge.begin(); it!= map_2D_ut_charge.end(); it++){
+	if (fabs(it->first.first - centers_U.front()) <= 10 && fabs(it->first.second - centers_T.front()) <= 10 ){
+	  double value = cal_gaus_integral_seg(it->first.second, it->first.first,centers_T, sigmas_T, centers_U, sigmas_U, weights , 0 , 4);
+	  sum_u += value;
+	  // near dead channels ...
+	  if (std::get<2>(it->second)==0 && value > 0) reg_flag_u.at(indices.at(i1)) = 1;
+	  if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
+	    // if (i!=143)
+	    RU.insert(n_u,indices.at(i1)) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2) + pow(add_uncer_ind,2));
+	    // if (i==143) std::cout << "U: " << it->first.first << " " << it->first.second << " " << value << std::endl;
+	  }
+	}
+	n_u ++;
+      }
+      
+      int n_v = 0;
+      double sum_v = 0;
+      for (auto it = map_2D_vt_charge.begin(); it!= map_2D_vt_charge.end(); it++){
+	if (fabs(it->first.first +  2400 - centers_V.front()) <= 10 && fabs(it->first.second - centers_T.front()) <= 10 ){
+	  double value = cal_gaus_integral_seg(it->first.second, it->first.first + 2400, centers_T, sigmas_T, centers_V, sigmas_V, weights , 0 , 4);
+	  sum_v += value;
+	  // near dead channels
+	  if (std::get<2>(it->second)==0 && value > 0) {
+	    // if (i==136) std::cout << it->first.first << " " << it->first.second << std::endl;
+	    reg_flag_v.at(indices.at(i1)) = 1;
+	  }
+	  
+	  if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
+	    //	  if (i==136) std::cout << "V: " << it->first.first << " " << it->first.second << " " << value << std::endl;
+	    // if (i!=143)
+	    RV.insert(n_v,indices.at(i1)) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2) + pow(add_uncer_ind,2));
+	  }
+	}
+	n_v ++;
+      }
+
+      int n_w = 0;
+      double sum_w = 0;
+      for (auto it = map_2D_wt_charge.begin(); it!= map_2D_wt_charge.end(); it++){
+	if (fabs(it->first.first + 4800 - centers_W.front()) <= 10 && fabs(it->first.second - centers_T.front()) <= 10 ){
+	  double value = cal_gaus_integral_seg(it->first.second, it->first.first + 4800,centers_T, sigmas_T, centers_W, sigmas_W, weights , 0 , 4);
+	  sum_w += value;
+	  // near dead channels ...
+	  if (std::get<2>(it->second)==0 && value > 0) reg_flag_w.at(indices.at(i1)) = 1;
+	  
+	  // relevant && charge > 0 && not dead channel ...
+	  if (value > 0 && std::get<0>(it->second) >0 && std::get<2>(it->second)!=0){
+	    // if (i!=143)
+	    RW.insert(n_w,indices.at(i1)) = value/sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_col,2) + pow(add_uncer_col,2));
+	    //  if (i==147) std::cout << "W: " << it->first.first << " " << it->first.second << " " << value << std::endl;
+	  }
+	}
+	n_w ++;
+      }
+      
+      
+    } // loop over points ...
+  } // loop over segments ...
+  
+  // loop over vertices ...
+  
+  
 
   
   
