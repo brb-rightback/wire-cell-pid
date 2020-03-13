@@ -89,12 +89,18 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
       if (i==0){
 	if (start_v->get_fit_index()==-1){
 	  start_v->set_fit_index(n_3D_pos);
+	  indices.at(i) = n_3D_pos;
 	  n_3D_pos++;
+	}else{
+	  indices.at(i) = start_v->get_fit_index();
 	}
       }else if (i+1 == pts.size()){
 	if (end_v->get_fit_index()==-1){
 	  end_v->set_fit_index(n_3D_pos);
+	  indices.at(i) = n_3D_pos;
 	  n_3D_pos++;
+	}else{
+	  indices.at(i) = end_v->get_fit_index();
 	}
       }else{
 	indices.at(i) = n_3D_pos;
@@ -108,7 +114,9 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
   Eigen::SparseMatrix<double> RU(n_2D_u, n_3D_pos) ;
   Eigen::SparseMatrix<double> RV(n_2D_v, n_3D_pos) ;
   Eigen::SparseMatrix<double> RW(n_2D_w, n_3D_pos) ;
-
+  PointVector traj_pts(n_3D_pos);
+  std::vector<double> traj_reduced_chi2(n_3D_pos,0);
+  
   // initial values ...
   Eigen::VectorXd pos_3D_init(n_3D_pos);
   for (int i = 0;i!=n_3D_pos;i++){
@@ -164,6 +172,11 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
     PointVector& pts = sg->get_point_vec();
     std::vector<int>& indices = sg->get_fit_index_vec();
     std::vector<double>& dx_vec = sg->get_dx_vec();
+
+    for (size_t i=0;i!=indices.size();i++){
+    //std::cout << i << " " << indices.at(i) << std::endl;
+      traj_pts.at(indices.at(i)) = pts.at(i);
+    }
     
     //    std::cout<< pts.size() << " " << indices.size() << " " << dx_vec.size() << std::endl;
 
@@ -544,10 +557,110 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
     	}
       }
     }
-
-    
     
   }
+
+  Eigen::SparseMatrix<double> RUT = Eigen::SparseMatrix<double>(RU.transpose());
+  Eigen::SparseMatrix<double> RVT = Eigen::SparseMatrix<double>(RV.transpose());
+  Eigen::SparseMatrix<double> RWT = Eigen::SparseMatrix<double>(RW.transpose());
+  
+  // check the compact view, relax the uncertainties ... regularization ...
+  Eigen::SparseMatrix<double> MU(n_2D_u, n_2D_u), MV(n_2D_v, n_2D_v), MW(n_2D_w, n_2D_w);
+  for (int k=0;k!=n_2D_u;k++){
+    MU.insert(k,k) = 1;
+  }
+  for (int k=0;k!=n_2D_v;k++){
+    MV.insert(k,k) = 1;
+  }
+  for (int k=0;k!=n_2D_w;k++){
+    MW.insert(k,k) = 1;
+  }
+  /* std::vector<std::pair<double, double> > overlap_u = cal_compact_matrix(MU, RUT, n_2D_u, n_3D_pos,3); */
+  /* std::vector<std::pair<double, double> > overlap_v = cal_compact_matrix(MV, RVT, n_2D_v, n_3D_pos,3); // three wire sharing ... */
+  /* std::vector<std::pair<double, double> > overlap_w = cal_compact_matrix(MW, RWT, n_2D_w, n_3D_pos,2); // two wire sharing  ... */
+
+  //  std::cout << overlap_u.size() << " " << overlap_v.size() << " " << overlap_w.size() << std::endl;
+  
+  Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
+  Eigen::VectorXd b = RUT * MU * data_u_2D + RVT * MV * data_v_2D + RWT * MW * data_w_2D;
+  Eigen::SparseMatrix<double> A =  RUT * MU * RU + RVT * MV * RV + RWT * MW * RW;// + FMatrixT * FMatrix;//
+  solver.compute(A);
+  
+  pos_3D = solver.solveWithGuess(b,pos_3D_init);
+
+  if (std::isnan(solver.error())){
+    pos_3D = solver.solve(b);
+  }
+
+  // prediction ...
+  pred_data_u_2D = RU * pos_3D;
+  pred_data_v_2D = RV * pos_3D;
+  pred_data_w_2D = RW * pos_3D;
+
+  int n_u = 0;
+  for (auto it = map_2D_ut_charge.begin(); it!=map_2D_ut_charge.end(); it++){
+    proj_data_u_map[std::make_pair(it->first.first, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_u_2D(n_u) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2)+pow(add_uncer_ind,2)));
+    n_u++;
+  }
+  int n_v = 0;
+  for (auto it = map_2D_vt_charge.begin(); it!=map_2D_vt_charge.end(); it++){
+    proj_data_v_map[std::make_pair(it->first.first+2400, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_v_2D(n_v) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_ind,2) + pow(add_uncer_ind,2)));
+    n_v++;
+  }
+  int n_w = 0;
+  for (auto it = map_2D_wt_charge.begin(); it!=map_2D_wt_charge.end(); it++){
+    proj_data_w_map[std::make_pair(it->first.first+4800, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_w_2D(n_w) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_col,2)+pow(add_uncer_col,2)));
+    n_w++;
+  }
+
+  // label the data comparison ...
+  traj_reduced_chi2.clear();
+  for (int k=0;k!=RU.outerSize(); ++k){
+    double sum[3] = {0,0,0};
+    double sum1[3] = {0,0,0};
+    for (Eigen::SparseMatrix<double>::InnerIterator it(RU,k); it; ++it){
+      sum[0] += pow(data_u_2D(it.row()) - pred_data_u_2D(it.row()),2) * (it.value() * pos_3D(k) )/pred_data_u_2D(it.row());
+      //      std::cout << it.value() << " " << it.row() << " " << it.col() << std::endl;
+      sum1[0] += (it.value() * pos_3D(k) )/pred_data_u_2D(it.row());
+    }
+
+    for (Eigen::SparseMatrix<double>::InnerIterator it(RV,k); it; ++it){
+      sum[1] += pow(data_v_2D(it.row()) - pred_data_v_2D(it.row()),2) * (it.value() * pos_3D(k))/pred_data_v_2D(it.row());
+      //      std::cout << it.value() << " " << it.row() << " " << it.col() << std::endl;
+      sum1[1] += (it.value() * pos_3D(k))/pred_data_v_2D(it.row());
+    }
+
+    for (Eigen::SparseMatrix<double>::InnerIterator it(RW,k); it; ++it){
+      sum[2] += pow(data_w_2D(it.row()) - pred_data_w_2D(it.row()),2) * (it.value() * pos_3D(k))/pred_data_w_2D(it.row());
+      //      std::cout << it.value() << " " << it.row() << " " << it.col() << std::endl;
+      sum1[2] += (it.value()*pos_3D(k))/pred_data_w_2D(it.row());
+    }
+    traj_reduced_chi2.push_back(sqrt((sum[0] + sum[1] + sum[2]/4.)/(sum1[0]+sum1[1]+sum1[2])));
+    //    std::cout << "Xin: " << cluster_id << " " << k << " " << sum[0] << " " << sum[1] << " " << sum[2] << " " << sum1[0] << " " << sum1[1] << " " << sum1[2] << " " <<  (fine_tracking_path.at(k).x - time_slice_width /( nrebin * 0.5*units::microsecond) * flash_time)/units::cm << " " <<  fine_tracking_path.at(k).y/units::cm << " " <<  fine_tracking_path.at(k).z/units::cm << std::endl;
+  }
+
+  //  std::cout << traj_pts.size() << " " << traj_reduced_chi2.size() << std::endl;
+  
+  
+  // fill the final results ...
+  double sum = 0;
+  for (int i=0;i!=n_3D_pos;i++){
+    //    std::cout << i << " " << pos_3D(i) << " " << traj_pts.at(i) << std::endl;
+    double central_U = offset_u + (slope_yu * traj_pts.at(i).y + slope_zu * traj_pts.at(i).z);
+    if (central_U >=296 && central_U <=327 ||
+	central_U >=336 && central_U <=337 ||
+	central_U >=343 && central_U <=351 ||
+	central_U >=376 && central_U <=400 ||
+	central_U >=410 && central_U <=484 ||
+	central_U >=501 && central_U <=524 ||
+	central_U >=536 && central_U <=671)
+      pos_3D(i) = pos_3D(i)/0.7;
+    
+    sum += pos_3D(i);
+  }
+  std::cout << "total: " << sum << std::endl;
+
+  
   
 
   
