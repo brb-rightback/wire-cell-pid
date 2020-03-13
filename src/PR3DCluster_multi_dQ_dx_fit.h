@@ -609,9 +609,9 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
   std::vector<std::vector<double> > overlap_w = cal_compact_matrix_multi(connected_vec, MW, RWT, n_2D_w, n_3D_pos,2); // two wire sharing  ...
 
 
-  // for(size_t i=0;i!=connected_vec.size();i++){
-  // std::cout << i << " " << connected_vec.at(i).size() << " " << overlap_u.at(i).size() << std::endl;
-  // }
+  /* for(size_t i=0;i!=connected_vec.size();i++){ */
+  /*   std::cout << i << " " << connected_vec.at(i).size() << " " << overlap_u.at(i).size() << " " << overlap_v.at(i).size() << " " << overlap_w.at(i).size() << std::endl; */
+  /* } */
 
   // add regularization ...
   Eigen::SparseMatrix<double> FMatrix(n_3D_pos, n_3D_pos);
@@ -622,6 +622,33 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
   double close_ind_weight = 0.15;
   double close_col_weight = 0.45;
   
+  for (size_t i=0; i!=n_3D_pos; i++){
+    bool flag_u = reg_flag_u.at(i);
+    bool flag_v = reg_flag_v.at(i);
+    bool flag_w = reg_flag_w.at(i);
+
+    double weight = 0;
+    if (flag_u) weight += dead_ind_weight;
+    if (flag_v) weight += dead_ind_weight;
+    if (flag_w) weight += dead_col_weight;
+
+    double scaling = 1.;
+    if (connected_vec.at(i).size()>2) scaling = 2./connected_vec.at(i).size();
+    
+    for (size_t j=0; j!= connected_vec.at(i).size();j++){
+      double weight1 = weight;
+      int row = i;
+      int col = connected_vec.at(i).at(j);
+
+      if (overlap_u.at(i).at(j) > 0.5) weight1 += close_ind_weight * pow(overlap_u.at(i).at(j)-0.5,2);
+      if (overlap_v.at(i).at(j) > 0.5) weight1 += close_ind_weight * pow(overlap_v.at(i).at(j)-0.5,2);
+      if (overlap_w.at(i).at(j) > 0.5) weight1 += close_col_weight * pow(overlap_w.at(i).at(j)-0.5,2);
+
+      FMatrix.coeffRef(row,row) += -weight1 * scaling;
+      FMatrix.coeffRef(row,col) += weight1 * scaling;
+    }
+    
+  }
   
   
   double lambda = 0.0005;
@@ -832,6 +859,7 @@ std::vector<std::vector<double> > WCPPID::PR3DCluster::cal_compact_matrix_multi(
   // figure out the sharing among nearby points ...
   for (auto it = map_3D_2D.begin(); it!=map_3D_2D.end(); it++){
     int row = it->first;
+    //std::cout << row << " " << connected_vec.at(row).size() << std::endl;
     for (size_t i=0;i!=connected_vec.at(row).size();i++){
       double sum[2]={0, 0};
       auto it1 = map_3D_2D.find(connected_vec.at(row).at(i) );
@@ -855,7 +883,13 @@ std::vector<std::vector<double> > WCPPID::PR3DCluster::cal_compact_matrix_multi(
       }
       results.at(row).push_back(sum[1]/(sum[0]+1e-9));
     }
-  }  
+  }
+
+  for (size_t i=0;i!=results.size(); i++){
+    if (results.at(i).size() != connected_vec.at(i).size()){
+      results.at(i).resize(connected_vec.at(i).size(),0);
+    }
+  }
   
   
   
