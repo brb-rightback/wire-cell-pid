@@ -353,7 +353,40 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
   
   
   // loop over vertices ...
-  
+  for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
+    WCPPID::ProtoVertex *vtx = it->first;
+    Point curr_rec_pos = vtx->get_fit_pt();
+    PointVector connected_pts;
+    for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+      WCPPID::ProtoSegment *sg = *it1;
+      if ( vtx->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	Point p;
+	p.x = (curr_rec_pos.x + sg->get_point_vec().at(1).x)/2.;
+	p.y = (curr_rec_pos.y + sg->get_point_vec().at(1).y)/2.;
+	p.z = (curr_rec_pos.z + sg->get_point_vec().at(1).z)/2.;
+	connected_pts.push_back(p);
+      }else if (vtx->get_wcpt().index == sg->get_wcpt_vec().back().index){
+	Point p;
+	p.x = (curr_rec_pos.x + sg->get_point_vec().at(sg->get_point_vec().size()-2).x)/2.;
+	p.y = (curr_rec_pos.y + sg->get_point_vec().at(sg->get_point_vec().size()-2).y)/2.;
+	p.z = (curr_rec_pos.z + sg->get_point_vec().at(sg->get_point_vec().size()-2).z)/2.;
+	connected_pts.push_back(p);
+      }
+    }
+    if (connected_pts.size()==1){
+      double length = sqrt(pow(connected_pts.at(0).x - curr_rec_pos.x,2) + pow(connected_pts.at(0).y - curr_rec_pos.y,2) + pow(connected_pts.at(0).z - curr_rec_pos.z,2));
+      Point p = curr_rec_pos;
+      if (length>0){
+	p.x = curr_rec_pos.x - (connected_pts.at(0).x - curr_rec_pos.x)/length * dis_end_point_ext;
+	p.y = curr_rec_pos.y - (connected_pts.at(0).y - curr_rec_pos.y)/length * dis_end_point_ext;
+	p.z = curr_rec_pos.z - (connected_pts.at(0).z - curr_rec_pos.z)/length * dis_end_point_ext;
+      }
+      connected_pts.push_back(p);
+      // std::cout << length << std::endl;
+      // std::cout << connected_pts.size() << std::endl;
+    }
+    std::cout << connected_pts.size() << std::endl;
+  }
   
 
   
