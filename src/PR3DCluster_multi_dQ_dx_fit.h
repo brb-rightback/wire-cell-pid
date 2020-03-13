@@ -575,9 +575,41 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
   for (int k=0;k!=n_2D_w;k++){
     MW.insert(k,k) = 1;
   }
-  /* std::vector<std::pair<double, double> > overlap_u = cal_compact_matrix(MU, RUT, n_2D_u, n_3D_pos,3); */
-  /* std::vector<std::pair<double, double> > overlap_v = cal_compact_matrix(MV, RVT, n_2D_v, n_3D_pos,3); // three wire sharing ... */
-  /* std::vector<std::pair<double, double> > overlap_w = cal_compact_matrix(MW, RWT, n_2D_w, n_3D_pos,2); // two wire sharing  ... */
+  std::vector<std::vector<int> > connected_vec(n_3D_pos);
+  for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    std::vector<int>& indices = sg->get_fit_index_vec();
+    for (size_t i=1;i+1<indices.size();i++){
+      connected_vec.at(indices.at(i)).push_back(indices.at(i-1));
+      connected_vec.at(indices.at(i)).push_back(indices.at(i+1));
+    }
+  }
+  for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
+    WCPPID::ProtoVertex *vtx = it->first;
+    int index = vtx->get_fit_index();
+    for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+      WCPPID::ProtoSegment *sg = *it1;
+      std::vector<int>& indices = sg->get_fit_index_vec();
+      if (index == indices.front()){
+	connected_vec.at(index).push_back(indices.at(1));
+      }else if (index == indices.back()){
+	connected_vec.at(index).push_back(indices.size()-2);
+      }else{
+	std::cout << "Something Wrong! " << std::endl;
+      }
+    }
+  }
+
+  // for(size_t i=0;i!=connected_vec.size();i++){
+  //  std::cout << i << " " << connected_vec.at(i).size() << std::endl;
+  // }
+  
+  
+  
+  
+  std::vector<std::vector<double> > overlap_u = cal_compact_matrix_multi(connected_vec, MU, RUT, n_2D_u, n_3D_pos,3); 
+  std::vector<std::vector<double> > overlap_v = cal_compact_matrix_multi(connected_vec, MV, RVT, n_2D_v, n_3D_pos,3); // three wire sharing ... 
+  std::vector<std::vector<double> > overlap_w = cal_compact_matrix_multi(connected_vec, MW, RWT, n_2D_w, n_3D_pos,2); // two wire sharing  ...
 
   //  std::cout << overlap_u.size() << " " << overlap_v.size() << " " << overlap_w.size() << std::endl;
   
@@ -693,4 +725,11 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
   
   
   
+}
+
+
+std::vector<std::vector<double> > WCPPID::PR3DCluster::cal_compact_matrix_multi(std::vector<std::vector<int> >& connected_vec, Eigen::SparseMatrix<double>& MW, Eigen::SparseMatrix<double>& RWT, int n_2D_w, int n_3D_pos, double cut_pos){
+  std::vector<std::vector<double> > results(connected_vec.size());
+
+  return results;
 }
