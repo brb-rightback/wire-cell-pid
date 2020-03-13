@@ -33,6 +33,7 @@ namespace WCPPID{
     
     // after dQ/dx fit ...
     double get_dQ(){return dQ;};
+    void set_dx(double val){dx = val;};
     double get_dx(){return dx;};
     double get_dQ_dx(){return dQ/(dx+1e-9);};
     double get_pu(){return pu;};

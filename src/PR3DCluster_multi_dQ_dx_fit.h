@@ -385,7 +385,30 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
       // std::cout << length << std::endl;
       // std::cout << connected_pts.size() << std::endl;
     }
-    std::cout << connected_pts.size() << std::endl;
+    //    std::cout << connected_pts.size() << std::endl;
+
+    double tmp_dx = 0;
+    for (size_t i=0;i!=connected_pts.size();i++){
+      tmp_dx += sqrt(pow(connected_pts.at(i).x - curr_rec_pos.x,2) + pow(connected_pts.at(i).y - curr_rec_pos.y,2) + pow(connected_pts.at(i).z - curr_rec_pos.z,2));
+    }
+    vtx->set_dx(tmp_dx);
+    for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+      WCPPID::ProtoSegment *sg = *it1;
+      std::vector<double>& dx_vec = sg->get_dx_vec();
+      if ( vtx->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	dx_vec.front() = tmp_dx;
+      }else if (vtx->get_wcpt().index == sg->get_wcpt_vec().back().index){
+	dx_vec.back() = tmp_dx;
+      }
+    }
+
+    /* for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){ */
+    /*   WCPPID::ProtoSegment *sg = *it1; */
+    /*   std::cout << vtx->get_dx() << " " << sg->get_dx_vec().front() << " " << sg->get_dx_vec().back() << " " << std::endl; */
+    /* } */
+    
+    
+    
   }
   
 
