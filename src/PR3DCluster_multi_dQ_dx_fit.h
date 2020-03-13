@@ -600,10 +600,7 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
     }
   }
 
-  // for(size_t i=0;i!=connected_vec.size();i++){
-  //  std::cout << i << " " << connected_vec.at(i).size() << std::endl;
-  // }
-  
+ 
   
   
   
@@ -611,11 +608,35 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
   std::vector<std::vector<double> > overlap_v = cal_compact_matrix_multi(connected_vec, MV, RVT, n_2D_v, n_3D_pos,3); // three wire sharing ... 
   std::vector<std::vector<double> > overlap_w = cal_compact_matrix_multi(connected_vec, MW, RWT, n_2D_w, n_3D_pos,2); // two wire sharing  ...
 
+
+  // for(size_t i=0;i!=connected_vec.size();i++){
+  // std::cout << i << " " << connected_vec.at(i).size() << " " << overlap_u.at(i).size() << std::endl;
+  // }
+
+  // add regularization ...
+  Eigen::SparseMatrix<double> FMatrix(n_3D_pos, n_3D_pos);
+  
+  double dead_ind_weight = 0.3;
+  double dead_col_weight = 0.9;
+  
+  double close_ind_weight = 0.15;
+  double close_col_weight = 0.45;
+  
+  
+  
+  double lambda = 0.0005;
+  FMatrix *= lambda;
+  
+  if (!flag_dQ_dx_fit_reg)
+    FMatrix *=0.01;
+  
+  Eigen::SparseMatrix<double> FMatrixT = Eigen::SparseMatrix<double>(FMatrix.transpose());
+  
   //  std::cout << overlap_u.size() << " " << overlap_v.size() << " " << overlap_w.size() << std::endl;
   
   Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
   Eigen::VectorXd b = RUT * MU * data_u_2D + RVT * MV * data_v_2D + RWT * MW * data_w_2D;
-  Eigen::SparseMatrix<double> A =  RUT * MU * RU + RVT * MV * RV + RWT * MW * RW;// + FMatrixT * FMatrix;//
+  Eigen::SparseMatrix<double> A =  RUT * MU * RU + RVT * MV * RV + RWT * MW * RW + FMatrixT * FMatrix;//
   solver.compute(A);
   
   pos_3D = solver.solveWithGuess(b,pos_3D_init);
@@ -731,5 +752,112 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
 std::vector<std::vector<double> > WCPPID::PR3DCluster::cal_compact_matrix_multi(std::vector<std::vector<int> >& connected_vec, Eigen::SparseMatrix<double>& MW, Eigen::SparseMatrix<double>& RWT, int n_2D_w, int n_3D_pos, double cut_pos){
   std::vector<std::vector<double> > results(connected_vec.size());
 
+  // initial data ...
+  std::vector<int> count_2D(n_2D_w,1);
+  std::map<int, std::set<int> > map_2D_3D;
+  std::map<int, std::set<int> > map_3D_2D;
+  std::map<std::pair<int, int>, double> map_pair_val;    
+  for (int k=0;k<RWT.outerSize(); ++k){
+    int count = 0;
+    
+    for (Eigen::SparseMatrix<double>::InnerIterator it(RWT,k); it; ++it){
+      
+      if (map_2D_3D.find(it.col()) != map_2D_3D.end()){
+	map_2D_3D[it.col()].insert(it.row());
+      }else{
+	std::set<int> temp_set;
+	temp_set.insert(it.row());
+	map_2D_3D[it.col()] = temp_set;
+      }
+      
+      if (map_3D_2D.find(it.row())!=map_3D_2D.end()){
+	map_3D_2D[it.row()].insert(it.col());
+      }else{
+	std::set<int> temp_set;
+	temp_set.insert(it.col());
+	map_3D_2D[it.row()] = temp_set;
+      }
+      
+      map_pair_val[std::make_pair(it.row(), it.col())] = it.value();
+      count ++;
+    }
+    
+    count_2D.at(k) = count;
+
+    /* if (count > 2) */
+    /*   std::cout << k << " " << count << std::endl; */
+    //    if (count>2){
+    // MW.coeffRef(k,k)=pow(1./(count-1.),2);
+    // }
+    
+  }
+
+  // figure out the 3D count
+  std::vector<std::pair<double,int> > ave_count(n_3D_pos);
+  for (auto it = map_3D_2D.begin(); it!=map_3D_2D.end(); it++){
+    int row = it->first;
+    double sum1 = 0;
+    double sum2 = 0;
+    int flag = 0;
+    for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+      int col = *it1;
+      double val = map_pair_val[std::make_pair(row, col)];
+      sum1 += count_2D[col] * val;
+      sum2 += val;
+      if (count_2D[col] > 2) flag = 1;
+      // std::cout << row << " " << count_2D[col] << " " << val << std::endl;
+    }
+    ave_count.at(row) = std::make_pair(sum1/sum2, flag);
+  }
+
+  // figure out the 2D count ..
+  for (auto it = map_2D_3D.begin(); it!=map_2D_3D.end(); it++){
+    int col = it->first;
+    double sum1 = 0;
+    double sum2 = 0;
+    int flag = 0;
+    for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+      int row = *it1;
+      double val = map_pair_val[std::make_pair(row, col)];
+      if (ave_count.at(row).second==1) flag = 1;
+      sum1 += ave_count.at(row).first * val;
+      sum2 += val;
+    }
+    if (flag==1 && MW.coeffRef(col,col)==1 && sum1 > cut_pos*sum2){
+      MW.coeffRef(col,col)=pow(1./(sum1/sum2-cut_pos+1),2);
+      //std::cout << col << " " << sum1/sum2 << " " << flag << std::endl;
+    }
+  }
+
+  // figure out the sharing among nearby points ...
+  for (auto it = map_3D_2D.begin(); it!=map_3D_2D.end(); it++){
+    int row = it->first;
+    for (size_t i=0;i!=connected_vec.at(row).size();i++){
+      double sum[2]={0, 0};
+      auto it1 = map_3D_2D.find(connected_vec.at(row).at(i) );
+      for (auto it3 = it->second.begin(); it3!=it->second.end(); it3++){
+	int col = *it3;
+	double val = map_pair_val[std::make_pair(row, col)];
+	sum[0] += 1;//val;
+      }
+      if (it1!=map_3D_2D.end()){
+	std::vector<int> common_results(it->second.size());
+	{
+	  auto it3 = std::set_intersection(it->second.begin(), it->second.end(), it1->second.begin(), it1->second.end(), common_results.begin());
+	  common_results.resize(it3-common_results.begin());
+	}
+	for (auto it3 = common_results.begin(); it3!=common_results.end(); it3++){
+	  int col = *it3;
+	  //	std::cout << col << " ";
+	  double val = map_pair_val[std::make_pair(row, col)];
+	  sum[1] += 1;//val;
+	}
+      }
+      results.at(row).push_back(sum[1]/(sum[0]+1e-9));
+    }
+  }  
+  
+  
+  
   return results;
 }
