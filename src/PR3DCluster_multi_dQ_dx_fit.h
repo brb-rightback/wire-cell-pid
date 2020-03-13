@@ -660,7 +660,34 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(std::map<WCPPID::ProtoVertex*, WCPPID:
   }
   std::cout << "total: " << sum << std::endl;
 
-  
+  for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+      WCPPID::ProtoVertex *vtx = *it1;
+      Point p = vtx->get_fit_pt();
+      int index = vtx->get_fit_index();
+      double tmp_dQ = pos_3D(index);
+      double tmp_dx = vtx->get_dx();
+      double tmp_reduced_chi2 = traj_reduced_chi2.at(index);
+      double tmp_pu = vtx->get_pu();
+      double tmp_pv = vtx->get_pv();
+      double tmp_pw = vtx->get_pw();
+      double tmp_pt = vtx->get_pt();
+      
+      vtx->set_fit(p, tmp_dQ, tmp_dx, tmp_pu, tmp_pv, tmp_pw, tmp_pt, tmp_reduced_chi2);
+    }
+
+    //    PointVector& pts = sg->get_point_vec();
+    std::vector<int>& indices = sg->get_fit_index_vec();
+    std::vector<double>& dQ_vec = sg->get_dQ_vec();
+    std::vector<double>& reduced_chi2_vec = sg->get_reduced_chi2_vec();
+    for (size_t i=0;i!=dQ_vec.size();i++){
+      dQ_vec.at(i) = pos_3D(indices.at(i));
+      reduced_chi2_vec.at(i) = traj_reduced_chi2.at(indices.at(i));
+    }
+    
+    
+  }
   
 
   
