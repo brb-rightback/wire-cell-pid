@@ -77,7 +77,21 @@ namespace WCPPID{
     bool flag_fit;
   };
   typedef std::vector<ProtoSegment*> ProtoSegmentSelection;
-  typedef std::set<ProtoSegment*> ProtoSegmentSet;
+  
+  struct ProtoSegmentCompare{
+    bool operator() (ProtoSegment *a, ProtoSegment *b) const {
+      
+      if (a->get_id() < b->get_id()){
+	return true;
+      }else if (a->get_id() > b->get_id()){
+	return false;
+      }else if (a->get_id() == b->get_id()){
+	return a < b;
+      }
+      return a < b;
+    }
+  };
+  typedef std::set<ProtoSegment*, ProtoSegmentCompare> ProtoSegmentSet;
 }
 
 #endif 

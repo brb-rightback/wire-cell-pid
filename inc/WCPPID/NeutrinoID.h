@@ -9,9 +9,7 @@
 #include "WCPPID/WCVertex.h"
 #include "WCPPID/WCParticle.h"
 
-#include "WCPPID/ProtoVertex.h"
-#include "WCPPID/ProtoSegment.h"
-
+#include "WCPPID/Map_Proto_Vertex_Segment.h"
 
 namespace WCPPID{
   class NeutrinoID{
@@ -58,8 +56,8 @@ namespace WCPPID{
     // graph ...
     ProtoVertexSelection proto_vertices;
     ProtoSegmentSelection proto_segments;
-    std::map<ProtoVertex*, ProtoSegmentSet> map_vertex_segments;
-    std::map<ProtoSegment*, ProtoVertexSet> map_segment_vertices;
+    Map_Proto_Vertex_Segments map_vertex_segments;
+    Map_Proto_Segment_Vertices map_segment_vertices;
 
     // map the cluster to the vertices/segments
     std::map<PR3DCluster*, ProtoVertexSet> map_cluster_vertices;

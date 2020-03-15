@@ -320,7 +320,7 @@ void WCPPID::PR3DCluster::trajectory_fit(WCP::PointVector& ps_vec, std::map<int,
     p.y = pos_3D(3*i+1);
     p.z = pos_3D(3*i+2);
 
-    bool flag_skip = skip_trajectory_point(p, i, ps_vec, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, fine_tracking_path, offset_t, slope_x,  offset_u,  slope_yu,  slope_zu,  offset_v,  slope_yv,  slope_zv,  offset_w, slope_yw,  slope_zw);
+    bool flag_skip = skip_trajectory_point(p, i, i, ps_vec, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge, fine_tracking_path, offset_t, slope_x,  offset_u,  slope_yu,  slope_zu,  offset_v,  slope_yv,  slope_zv,  offset_w, slope_yw,  slope_zw);
 
     // protection ...
     if (flag_skip){
@@ -456,7 +456,7 @@ void WCPPID::PR3DCluster::trajectory_fit(WCP::PointVector& ps_vec, std::map<int,
   
 }
 
-bool WCPPID::PR3DCluster::skip_trajectory_point(WCP::Point& p, int i, WCP::PointVector& ps_vec, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<std::pair<int,int>, std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, WCP::PointVector& fine_tracking_path,
+bool WCPPID::PR3DCluster::skip_trajectory_point(WCP::Point& p, int i, int index, WCP::PointVector& ps_vec, std::map<int, std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DU_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DV_set, std::map<int,std::pair<std::set<std::pair<int,int>>, float> >& map_3D_2DW_set, std::map<std::pair<int,int>, std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, WCP::PointVector& fine_tracking_path,
 						       double offset_t, double slope_x, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw){
 						       
   
@@ -675,7 +675,7 @@ bool WCPPID::PR3DCluster::skip_trajectory_point(WCP::Point& p, int i, WCP::Point
 	c2_w += std::get<0>(it4->second);
     }
   }
-  /* if (i==9) */
+  /* if (i==10) */
   /*   std::cout << u1 << " " << v1 << " " << w1 << " " << t1 << " " */
   /* 	      << u2 << " " << v2 << " " << w2 << " " << t2 << " " */
   /* 	      <<  offset_v + (slope_yv * p.y + slope_zv * p.z) << " " << offset_v + (slope_yv * ps_vec.at(i).y + slope_zv * ps_vec.at(i).z) << std::endl; */
@@ -723,7 +723,8 @@ bool WCPPID::PR3DCluster::skip_trajectory_point(WCP::Point& p, int i, WCP::Point
     /* 	      << u1 << " " << v1 << " " << w1 << " " << t1 << " " << u2 << " " << v2 << " " << w2 << " " << t2 << std::endl;// */
     p = ps_vec.at(i);
   }
-  //	  std::cout << c1_u + c1_v + c1_w << " " << c2_u + c2_v + c2_w << std::endl;
+  /* if (i==10) */
+  /*   std::cout << c1_u + c1_v + c1_w << " " << c2_u + c2_v + c2_w << " " << ratio << " " << ratio_1 << std::endl; */
   
     
   // examine angle ...
@@ -745,13 +746,14 @@ bool WCPPID::PR3DCluster::skip_trajectory_point(WCP::Point& p, int i, WCP::Point
     
     double angle = v1.Angle(v2)/3.1415926*180.;
 
-    //    std::cout << i << " " << angle << " " << angle1 << " " << map_3D_2DU_set[i].second << " " << map_3D_2DV_set[i].second << " " << map_3D_2DW_set[i].second << std::endl;
+    /* if (i==10) */
+    /*   std::cout << i << " " << angle << " " << angle1 << " " << ps_vec.size() << " " << v2.Mag() << " " << map_3D_2DU_set[index].second << " " << map_3D_2DV_set[index].second << " " << map_3D_2DW_set[index].second << std::endl; */
 
     
     // related to the dead channels
-    if (angle > 45 && ((map_3D_2DU_set[i].second==0 && map_3D_2DV_set[i].second==0) ||
-		       (map_3D_2DU_set[i].second==0 && map_3D_2DW_set[i].second==0) ||
-		       (map_3D_2DV_set[i].second==0 && map_3D_2DW_set[i].second==0)) )
+    if (angle > 45 && ((map_3D_2DU_set[index].second==0 && map_3D_2DV_set[index].second==0) ||
+		       (map_3D_2DU_set[index].second==0 && map_3D_2DW_set[index].second==0) ||
+		       (map_3D_2DV_set[index].second==0 && map_3D_2DW_set[index].second==0)) )
       return true;
     
     if (angle > 160 || angle > angle1 + 90) {

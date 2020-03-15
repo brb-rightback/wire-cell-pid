@@ -28,14 +28,14 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   // create Steiner-inspired graph
   main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
 
-  {
-    MCUGraph *graph = main_cluster->get_graph();
-    MCUGraph *graph_steiner = main_cluster->get_graph_steiner();
-    ToyPointCloud* c0 = main_cluster->get_point_cloud();
-    ToyPointCloud* c1 = main_cluster->get_point_cloud_steiner();
-    ToyPointCloud* c2 = main_cluster->get_point_cloud_steiner_terminal();
-    std::cout  << graph << " " << num_vertices(*graph_steiner) << " " << num_edges(*graph_steiner) << " " << c0->get_num_points() << " " << c1->get_num_points() << " " << c2->get_num_points() << std::endl;
-  }
+  // {
+  //   MCUGraph *graph = main_cluster->get_graph();
+  //   MCUGraph *graph_steiner = main_cluster->get_graph_steiner();
+  //   ToyPointCloud* c0 = main_cluster->get_point_cloud();
+  //   ToyPointCloud* c1 = main_cluster->get_point_cloud_steiner();
+  //   ToyPointCloud* c2 = main_cluster->get_point_cloud_steiner_terminal();
+  //   std::cout  << graph << " " << num_vertices(*graph_steiner) << " " << num_edges(*graph_steiner) << " " << c0->get_num_points() << " " << c1->get_num_points() << " " << c2->get_num_points() << std::endl;
+  // }
   
   //for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
   //  (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
@@ -116,10 +116,10 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
   WCPPID::ProtoSegment* sg1 = init_first_segment(temp_cluster);
 
 
-  for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
-    WCPPID::ProtoSegment *sg = it->first;
-    std::cout << sg->get_point_vec().size() << " A " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl;
-  }
+  // for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+  //   WCPPID::ProtoSegment *sg = it->first;
+  //   std::cout << sg->get_point_vec().size() << " A " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl;
+  // }
   
   // break tracks ...
   std::vector<WCPPID::ProtoSegment*> remaining_segments;
@@ -134,10 +134,19 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
   // prepare output ...
   organize_vertices_segments();
 
-  for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
-    WCPPID::ProtoSegment *sg = it->first;
-    std::cout << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl;
-  }
+  // for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+  //   WCPPID::ProtoSegment *sg = it->first;
+  //   std::cout << sg->get_id() << " " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl;
+  //   for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+  //     std::cout << (*it1)->get_id() << " " << (*it1) << std::endl;
+  //   }
+  // }
+  // for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
+  //   std::cout << (it->first)->get_id() << std::endl;
+  //   for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+  //     std::cout << (*it1)->get_id() << " " << (*it1) << std::endl;
+  //   }
+  // }
   
   //  temp_cluster->set_fit_parameters(map_vertex_segments, map_segment_vertices);
   temp_cluster->set_fit_parameters(proto_vertices, proto_segments);
