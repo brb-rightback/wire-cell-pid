@@ -104,20 +104,17 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& 
       }
       if (nsum!=0) sum_angles=sqrt(sum_angles/nsum);
 
-      // std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) +
-      // 	     pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) +
-      // 																     pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " <<
-      // 	sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) +
-      // 	     pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) +
-      // 	     pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << std::endl;
+      //if (wcpt_vec.front().index >940 && wcpt_vec.front().index < 1200)
+
+      // if (fabs(fit_pt_vec.at(i).x-2121.19)<30 && fabs(fit_pt_vec.at(i).y-218.775) < 30 && fabs(fit_pt_vec.at(i).z-715.347)<30)
+      // 	std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
       
-      if (min_dQ_dx < 1000 && para_angles.at(i) > 10 && refl_angles.at(i) > 25){
+      if (para_angles.at(i) > 10 && refl_angles.at(i) > 25 && sum_angles > 15){
 	save_i = i;
 	break;
-      }else if (para_angles.at(i) > 15 && refl_angles.at(i) > 27 && sum_angles > 12.5){
-	
-	save_i = i;
-	break;
+	//      }else if (para_angles.at(i) > 15 && refl_angles.at(i) > 27 && sum_angles > 12.5){
+	//	save_i = i;
+	//break;
       }
     }
   }
