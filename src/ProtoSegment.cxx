@@ -38,16 +38,25 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& 
     for (int j=0;j!=6;j++){    
       TVector3 v10(0,0,0);
       TVector3 v20(0,0,0);
-      if (i>j)
+      if (i>j){
 	v10.SetXYZ(fit_pt_vec.at(i).x - fit_pt_vec.at(i-j-1).x,
 		   fit_pt_vec.at(i).y - fit_pt_vec.at(i-j-1).y,
 		   fit_pt_vec.at(i).z - fit_pt_vec.at(i-j-1).z);
+      }else{
+	v10.SetXYZ(fit_pt_vec.at(i).x - fit_pt_vec.front().x,
+		   fit_pt_vec.at(i).y - fit_pt_vec.front().y,
+		   fit_pt_vec.at(i).z - fit_pt_vec.front().z);
+      }
       
-      if (i+j+1<fit_pt_vec.size())
+      if (i+j+1<fit_pt_vec.size()){
 	v20.SetXYZ(fit_pt_vec.at(i+j+1).x - fit_pt_vec.at(i).x,
 		   fit_pt_vec.at(i+j+1).y - fit_pt_vec.at(i).y,
 		   fit_pt_vec.at(i+j+1).z - fit_pt_vec.at(i).z);
-      
+      }else{
+	v20.SetXYZ(fit_pt_vec.back().x - fit_pt_vec.at(i).x,
+		   fit_pt_vec.back().y - fit_pt_vec.at(i).y,
+		   fit_pt_vec.back().z - fit_pt_vec.at(i).z);
+      }
       if (j==0){
 	angle1 = v10.Angle(v20)/3.1415926*180.;
 	angle2 = std::max(fabs(v10.Angle(drift_dir)/3.1415926*180.-90.),
@@ -84,6 +93,10 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& 
 	     pow(fit_pt_vec.at(i).y - start_p.y,2) +
 	     pow(fit_pt_vec.at(i).z - start_p.z,2) ) < 1*units::cm
 	) continue;
+
+    // std::cout << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) +
+    // 	     pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) +
+    // 		      pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) )/units::cm << std::endl;
     
     if (flag_check){
       double min_dQ_dx = dQ_vec.at(i)/dx_vec.at(i);
@@ -111,11 +124,11 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& 
       //  	std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
       
       if (para_angles.at(i) > 10 && refl_angles.at(i) > 30 && sum_angles > 15){
-	//std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
+	std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
 	save_i = i;
 	break;
       }else if (para_angles.at(i) > 15 && refl_angles.at(i) > 27 && sum_angles > 12.5){
-	//	std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
+	std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
 	save_i = i;
 	break;
       }

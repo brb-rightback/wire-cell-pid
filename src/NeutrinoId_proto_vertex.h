@@ -496,8 +496,10 @@ std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::Neut
 
 
 void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& remaining_segments, WCPPID::PR3DCluster* temp_cluster){
+
+  int count = 0;
   
-  while(remaining_segments.size()!=0){
+  while(remaining_segments.size()!=0 && count < 2){
     WCPPID::ProtoSegment* curr_sg = remaining_segments.back();
     remaining_segments.pop_back();
     WCPPID::ProtoVertex *start_v=0, *end_v=0;
@@ -574,7 +576,7 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
 	/* temp_cluster->collect_charge_trajectory(*ct_point_cloud); */
 	/* temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false); */
 	/* sg3->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2()); */
-	
+	//	count ++;
 	remaining_segments.push_back(sg3); 
       }
     }
