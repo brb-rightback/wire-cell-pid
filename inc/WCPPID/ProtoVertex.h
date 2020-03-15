@@ -6,7 +6,7 @@
 namespace WCPPID{
   class ProtoVertex{
   public:
-    ProtoVertex(WCP::WCPointCloud<double>::WCPoint& wcpt);
+    ProtoVertex(int id, WCP::WCPointCloud<double>::WCPoint& wcpt);
     ~ProtoVertex();
 
     void set_wcpt(WCP::WCPointCloud<double>::WCPoint& tmp_pt);
@@ -42,13 +42,15 @@ namespace WCPPID{
     double get_pt(){return pt;};
     double get_reduced_chi2(){return reduced_chi2;};
     
-
+    int get_id(){return id;};
     
     // get_distance ...  
     double get_dis(WCP::Point& p);
     double get_fit_init_dis();
     
   protected:
+    int id;
+    
     WCP::WCPointCloud<double>::WCPoint wcpt; // initial WCP point from the graph ...
     WCP::Point fit_pt; // best fit points ...
 

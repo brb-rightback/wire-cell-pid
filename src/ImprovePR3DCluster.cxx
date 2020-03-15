@@ -8,11 +8,27 @@ using namespace WCP;
 
 WCPPID::PR3DCluster* WCPPID::Improve_PR3DCluster_2(WCPPID::PR3DCluster* cluster, ToyCTPointCloud& ct_point_cloud,WCPSst::GeomDataSource& gds, WCP2dToy::WCPHolder *holder, int nrebin, int frame_length, double unit_dis){
   cluster->Create_graph(ct_point_cloud);
+
+  // {
+  //   MCUGraph *graph = cluster->get_graph();
+  //   std::cout << num_vertices(*graph) << " " << num_edges(*graph) << std::endl;
+  // }
   
   cluster->establish_same_mcell_steiner_edges(gds);
+  
+  // {
+  //   MCUGraph *graph = cluster->get_graph();
+  //   std::cout << num_vertices(*graph) << " " << num_edges(*graph) << std::endl;
+  // }
+  
   std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps1 = cluster->get_two_boundary_wcps();
   cluster->dijkstra_shortest_paths(wcps1.first);
   cluster->cal_shortest_path(wcps1.second);
+
+  // {
+  //   std::cout << cluster->get_path_wcps().size() << std::endl;
+  // }
+  
   cluster->remove_same_mcell_steiner_edges();
   cluster->Del_graph();
 
@@ -26,6 +42,11 @@ WCPPID::PR3DCluster* WCPPID::Improve_PR3DCluster_2(WCPPID::PR3DCluster* cluster,
   ToyPointCloud* ref_point_cloud = cluster->get_point_cloud();
   temp_cluster->Create_point_cloud();
   temp_cluster->Create_graph(ct_point_cloud, ref_point_cloud);
+
+  // {
+  //   MCUGraph *graph = temp_cluster->get_graph();
+  //   std::cout << num_vertices(*graph) << " " << num_edges(*graph) << std::endl;
+  // }
   
   // WCPPID::PR3DCluster* temp_cluster = cluster;
   // temp_cluster->Create_graph(ct_point_cloud);

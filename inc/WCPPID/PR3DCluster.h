@@ -94,6 +94,7 @@ namespace WCPPID{
     MCUGraph* Create_steiner_tree(WCP::ToyPointCloud *point_cloud_steiner, std::vector<bool>& flag_steiner_terminal, WCP::GeomDataSource& gds, WCP::SMGCSelection& mcells, bool flag_path = false, bool disable_dead_mix_cell = true);
     std::vector<bool>& get_flag_steiner_terminal(){return flag_steiner_terminal;};
     MCUGraph* get_graph_steiner(){return graph_steiner;};
+    MCUGraph* get_graph(){return graph;};
     
     // example for more sophisticated algorithm later ...
     // use the full steiner terminal graph ...

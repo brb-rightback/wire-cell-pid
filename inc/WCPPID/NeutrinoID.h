@@ -43,6 +43,8 @@ namespace WCPPID{
     void find_other_segments(WCPPID::PR3DCluster* temp_cluster, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
     
   protected:
+    int acc_vertex_id;
+    int acc_segment_id;
     // input ...
     WCPPID::PR3DCluster *main_cluster;
     std::vector<WCPPID::PR3DCluster*> other_clusters;

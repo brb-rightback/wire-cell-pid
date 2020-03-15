@@ -18,6 +18,11 @@ void WCPPID::PR3DCluster::create_steiner_graph(WCP::ToyCTPointCloud& ct_point_cl
     new_cluster->Create_point_cloud(); 
     new_cluster->Create_graph(ct_point_cloud, point_cloud);
 
+    /* { */
+    /*   MCUGraph *graph = new_cluster->get_graph(); */
+    /*   std::cout << num_vertices(*graph) << " " << num_edges(*graph) << " " << new_cluster->get_point_cloud()->get_num_points() << std::endl; */
+    /* } */
+    
     new_cluster->establish_same_mcell_steiner_edges(gds,false);
     // find the shortest path
     std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps(); 
