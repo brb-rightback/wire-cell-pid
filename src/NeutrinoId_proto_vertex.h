@@ -225,6 +225,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     temp_cluster->dijkstra_shortest_paths(cloud.pts[(saved_cluster_points.at(*it)).first],2); 
     temp_cluster->cal_shortest_path(cloud.pts[(saved_cluster_points.at(*it)).second],2);
     temp_cluster->collect_charge_trajectory(*ct_point_cloud);
+    // initial tracking test ...
     temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
 
     if (temp_cluster->get_fine_tracking_path().size() >1){
@@ -278,15 +279,17 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	  //std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
 	  
 	  // temporary fit hack ...
-	  temp_cluster->set_path_wcps(wcps_list1);
-	  temp_cluster->collect_charge_trajectory(*ct_point_cloud);
-	  temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
-	  sg2->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
-	  v1->set_fit(temp_cluster->get_fine_tracking_path().back(), temp_cluster->get_dQ().back(), temp_cluster->get_dx().back(), temp_cluster->get_pu().back(), temp_cluster->get_pv().back(), temp_cluster->get_pw().back(), temp_cluster->get_pt().back(), temp_cluster->get_reduced_chi2().back());
-	  temp_cluster->set_path_wcps(wcps_list2);
-	  temp_cluster->collect_charge_trajectory(*ct_point_cloud);
-	  temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
-	  sg3->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
+	  //	  temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
+	  
+	  /* temp_cluster->set_path_wcps(wcps_list1); */
+	  /* temp_cluster->collect_charge_trajectory(*ct_point_cloud); */
+	  /* temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false); */
+	  /* sg2->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2()); */
+	  /* v1->set_fit(temp_cluster->get_fine_tracking_path().back(), temp_cluster->get_dQ().back(), temp_cluster->get_dx().back(), temp_cluster->get_pu().back(), temp_cluster->get_pv().back(), temp_cluster->get_pw().back(), temp_cluster->get_pt().back(), temp_cluster->get_reduced_chi2().back()); */
+	  /* temp_cluster->set_path_wcps(wcps_list2); */
+	  /* temp_cluster->collect_charge_trajectory(*ct_point_cloud); */
+	  /* temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false); */
+	  /* sg3->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2()); */
 	}
 	
       }else{
@@ -337,17 +340,17 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	  del_proto_segment(sg1);
 	  
 	  //std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
-	  
+	  //	  temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
 	  // temporary fit hack ...
-	  temp_cluster->set_path_wcps(wcps_list1);
-	  temp_cluster->collect_charge_trajectory(*ct_point_cloud);
-	  temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
-	  sg2->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
-	  v2->set_fit(temp_cluster->get_fine_tracking_path().back(), temp_cluster->get_dQ().back(), temp_cluster->get_dx().back(), temp_cluster->get_pu().back(), temp_cluster->get_pv().back(), temp_cluster->get_pw().back(), temp_cluster->get_pt().back(), temp_cluster->get_reduced_chi2().back());
-	  temp_cluster->set_path_wcps(wcps_list2);
-	  temp_cluster->collect_charge_trajectory(*ct_point_cloud);
-	  temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false);
-	  sg3->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
+	  /* temp_cluster->set_path_wcps(wcps_list1); */
+	  /* temp_cluster->collect_charge_trajectory(*ct_point_cloud); */
+	  /* temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false); */
+	  /* sg2->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2()); */
+	  /* v2->set_fit(temp_cluster->get_fine_tracking_path().back(), temp_cluster->get_dQ().back(), temp_cluster->get_dx().back(), temp_cluster->get_pu().back(), temp_cluster->get_pv().back(), temp_cluster->get_pw().back(), temp_cluster->get_pt().back(), temp_cluster->get_reduced_chi2().back()); */
+	  /* temp_cluster->set_path_wcps(wcps_list2); */
+	  /* temp_cluster->collect_charge_trajectory(*ct_point_cloud); */
+	  /* temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false); */
+	  /* sg3->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2()); */
 	}
       }else{
 	v2 = new WCPPID::ProtoVertex(acc_vertex_id, cloud.pts[(saved_cluster_points.at(*it)).second]); acc_vertex_id++;
@@ -357,20 +360,22 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
       }else{
 	temp_cluster->dijkstra_shortest_paths(v1->get_wcpt(),2); 
 	temp_cluster->cal_shortest_path(v2->get_wcpt(),2);
-	temp_cluster->collect_charge_trajectory(*ct_point_cloud);
-	temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
+	//temp_cluster->collect_charge_trajectory(*ct_point_cloud);
+	//temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
       }
       
       WCPPID::ProtoSegment *sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps()); acc_segment_id++;
-      sg1->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
-      v1->set_fit(temp_cluster->get_fine_tracking_path().front(), temp_cluster->get_dQ().front(), temp_cluster->get_dx().front(), temp_cluster->get_pu().front(), temp_cluster->get_pv().front(), temp_cluster->get_pw().front(), temp_cluster->get_pt().front(), temp_cluster->get_reduced_chi2().front());
+      //      sg1->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
+      //v1->set_fit(temp_cluster->get_fine_tracking_path().front(), temp_cluster->get_dQ().front(), temp_cluster->get_dx().front(), temp_cluster->get_pu().front(), temp_cluster->get_pv().front(), temp_cluster->get_pw().front(), temp_cluster->get_pt().front(), temp_cluster->get_reduced_chi2().front());
       
-      v2->set_fit(temp_cluster->get_fine_tracking_path().back(), temp_cluster->get_dQ().back(), temp_cluster->get_dx().back(), temp_cluster->get_pu().back(), temp_cluster->get_pv().back(), temp_cluster->get_pw().back(), temp_cluster->get_pt().back(), temp_cluster->get_reduced_chi2().back());
+      //v2->set_fit(temp_cluster->get_fine_tracking_path().back(), temp_cluster->get_dQ().back(), temp_cluster->get_dx().back(), temp_cluster->get_pu().back(), temp_cluster->get_pv().back(), temp_cluster->get_pw().back(), temp_cluster->get_pt().back(), temp_cluster->get_reduced_chi2().back());
 
       //      std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
       add_proto_connection(v1,sg1,temp_cluster);
       //std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
       add_proto_connection(v2,sg1,temp_cluster);
+      
+      temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
       
       // test ...
       std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
