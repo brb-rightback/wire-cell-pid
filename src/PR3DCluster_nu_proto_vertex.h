@@ -124,7 +124,7 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::Map_Proto_Vertex_Segments& 
     sub_cluster_id.push_back(-1);
   }
 
-  int tmp_id = cluster_id*1000 + 1;
+  //  int tmp_id = cluster_id*1000 + 1; // hack ...
   for (auto it=map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
     fine_tracking_path.insert(fine_tracking_path.end(),(it->first)->get_point_vec().begin(), (it->first)->get_point_vec().end());
     dQ.insert(dQ.end(),(it->first)->get_dQ_vec().begin(), (it->first)->get_dQ_vec().end());
@@ -136,9 +136,9 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::Map_Proto_Vertex_Segments& 
     reduced_chi2.insert(reduced_chi2.end(),(it->first)->get_reduced_chi2_vec().begin(), (it->first)->get_reduced_chi2_vec().end());
     for (size_t i=0;i!=(it->first)->get_point_vec().size();i++){
       flag_vertex.push_back(false);
-      sub_cluster_id.push_back(tmp_id);
+      sub_cluster_id.push_back(cluster_id*1000 + it->first->get_id());
     }
-    tmp_id ++;
+    //    tmp_id ++;
   }
   //
 }
@@ -169,7 +169,7 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::ProtoVertexSelection& temp_
     sub_cluster_id.push_back(-1);
   }
 
-  int tmp_id = cluster_id*1000 + 1;
+  //  int tmp_id = cluster_id*1000 + 1;
   for (auto it=temp_segments.begin(); it!=temp_segments.end(); it++){
     fine_tracking_path.insert(fine_tracking_path.end(),(*it)->get_point_vec().begin(), (*it)->get_point_vec().end());
     dQ.insert(dQ.end(),(*it)->get_dQ_vec().begin(), (*it)->get_dQ_vec().end());
@@ -181,9 +181,9 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::ProtoVertexSelection& temp_
     reduced_chi2.insert(reduced_chi2.end(),(*it)->get_reduced_chi2_vec().begin(), (*it)->get_reduced_chi2_vec().end());
     for (size_t i=0;i!=(*it)->get_point_vec().size();i++){
       flag_vertex.push_back(false);
-      sub_cluster_id.push_back(tmp_id);
+      sub_cluster_id.push_back(cluster_id*1000 + (*it)->get_id());
     }
-    tmp_id ++;
+    //   tmp_id ++;
   }
   //
 }

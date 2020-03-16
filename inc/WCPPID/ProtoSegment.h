@@ -8,7 +8,7 @@ namespace WCPPID{
   class ProtoSegment{
   public:
     // initial creation
-    ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::WCPoint >& path_wcps );
+    ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::WCPoint >& path_wcps , int cluster_id);
     ~ProtoSegment();
     
     
@@ -33,6 +33,7 @@ namespace WCPPID{
     WCP::WCPointCloud<double>::WCPoint get_closest_wcpt(WCP::Point& test_p);
 
     int get_id(){return id;};
+    int get_cluster_id(){return cluster_id;};
     
     // after fit
     void clear_fit();
@@ -56,6 +57,7 @@ namespace WCPPID{
     
   protected:
     int id;
+    int cluster_id;
     std::vector<WCP::WCPointCloud<double>::WCPoint > wcpt_vec;
 
     std::vector<WCP::Point > fit_pt_vec;

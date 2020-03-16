@@ -262,10 +262,10 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	  std::list<WCP::WCPointCloud<double>::WCPoint> wcps_list2;
 	  temp_cluster->proto_break_tracks(start_v->get_wcpt(), break_wcp, end_v->get_wcpt(), wcps_list1, wcps_list2, true);
 	  
-	  v1 = new WCPPID::ProtoVertex(acc_vertex_id, break_wcp); acc_vertex_id++;
-	  WCPPID::ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, wcps_list1); acc_segment_id++;
+	  v1 = new WCPPID::ProtoVertex(acc_vertex_id, break_wcp, temp_cluster->get_cluster_id()); acc_vertex_id++;
+	  WCPPID::ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, wcps_list1, temp_cluster->get_cluster_id()); acc_segment_id++;
 	  
-	  WCPPID::ProtoSegment *sg3 = new WCPPID::ProtoSegment(acc_segment_id, wcps_list2); acc_segment_id++;
+	  WCPPID::ProtoSegment *sg3 = new WCPPID::ProtoSegment(acc_segment_id, wcps_list2, temp_cluster->get_cluster_id()); acc_segment_id++;
 	  
 	  //	  std::cout << start_v->get_wcpt().index << " " << break_wcp.index << " " << end_v->get_wcpt().index << " " << wcps_list1.size() << " " << wcps_list2.size() << std::endl;
 	  //std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
@@ -293,7 +293,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	}
 	
       }else{
-	v1 = new WCPPID::ProtoVertex(acc_vertex_id, cloud.pts[(saved_cluster_points.at(*it)).first]); acc_vertex_id++;
+	v1 = new WCPPID::ProtoVertex(acc_vertex_id, cloud.pts[(saved_cluster_points.at(*it)).first], temp_cluster->get_cluster_id()); acc_vertex_id++;
       }
 
       
@@ -326,10 +326,10 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	  std::list<WCP::WCPointCloud<double>::WCPoint> wcps_list2;
 	  temp_cluster->proto_break_tracks(start_v->get_wcpt(), break_wcp, end_v->get_wcpt(), wcps_list1, wcps_list2,true);
 	  
-	  v2 = new WCPPID::ProtoVertex(acc_vertex_id, break_wcp); acc_vertex_id ++;
-	  WCPPID::ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, wcps_list1); acc_segment_id++;
+	  v2 = new WCPPID::ProtoVertex(acc_vertex_id, break_wcp, temp_cluster->get_cluster_id()); acc_vertex_id ++;
+	  WCPPID::ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, wcps_list1, temp_cluster->get_cluster_id()); acc_segment_id++;
 	  
-	  WCPPID::ProtoSegment *sg3 = new WCPPID::ProtoSegment(acc_segment_id, wcps_list2); acc_segment_id++;
+	  WCPPID::ProtoSegment *sg3 = new WCPPID::ProtoSegment(acc_segment_id, wcps_list2, temp_cluster->get_cluster_id()); acc_segment_id++;
 	  
 	  //std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
 	  
@@ -353,7 +353,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	  /* sg3->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2()); */
 	}
       }else{
-	v2 = new WCPPID::ProtoVertex(acc_vertex_id, cloud.pts[(saved_cluster_points.at(*it)).second]); acc_vertex_id++;
+	v2 = new WCPPID::ProtoVertex(acc_vertex_id, cloud.pts[(saved_cluster_points.at(*it)).second], temp_cluster->get_cluster_id()); acc_vertex_id++;
       }
       
       if (v1->get_wcpt().index == cloud.pts[(saved_cluster_points.at(*it)).first].index && v2->get_wcpt().index == cloud.pts[(saved_cluster_points.at(*it)).second].index){
@@ -364,7 +364,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	//temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
       }
       
-      WCPPID::ProtoSegment *sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps()); acc_segment_id++;
+      WCPPID::ProtoSegment *sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
       //      sg1->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
       //v1->set_fit(temp_cluster->get_fine_tracking_path().front(), temp_cluster->get_dQ().front(), temp_cluster->get_dx().front(), temp_cluster->get_pu().front(), temp_cluster->get_pv().front(), temp_cluster->get_pw().front(), temp_cluster->get_pt().front(), temp_cluster->get_reduced_chi2().front());
       
@@ -556,9 +556,9 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
       std::cout << "Break tracks: " << flag_break << " " << wcps_list1.front().index << " " << wcps_list1.back().index << " " << wcps_list2.front().index << " " << wcps_list2.back().index << std::endl;
 	  
       if (flag_break){
-	WCPPID::ProtoVertex *v3 = new WCPPID::ProtoVertex(acc_vertex_id, break_wcp); acc_vertex_id ++;
-	WCPPID::ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, wcps_list1); acc_segment_id++;
-	WCPPID::ProtoSegment *sg3 = new WCPPID::ProtoSegment(acc_segment_id, wcps_list2); acc_segment_id++;
+	WCPPID::ProtoVertex *v3 = new WCPPID::ProtoVertex(acc_vertex_id, break_wcp, temp_cluster->get_cluster_id()); acc_vertex_id ++;
+	WCPPID::ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, wcps_list1, temp_cluster->get_cluster_id()); acc_segment_id++;
+	WCPPID::ProtoSegment *sg3 = new WCPPID::ProtoSegment(acc_segment_id, wcps_list2, temp_cluster->get_cluster_id()); acc_segment_id++;
 	
 	add_proto_connection(start_v, sg2, temp_cluster);
 	add_proto_connection(v3, sg2, temp_cluster);

@@ -2,9 +2,11 @@
 
 using namespace WCP;
 
-WCPPID::ProtoVertex::ProtoVertex(int id, WCP::WCPointCloud<double>::WCPoint& wcpt)
+WCPPID::ProtoVertex::ProtoVertex(int id, WCP::WCPointCloud<double>::WCPoint& wcpt, int cluster_id)
   : id(id)
   , wcpt(wcpt)
+  , cluster_id(cluster_id)
+  , flag_neutrino_vertex(false)
   , flag_fit(false)
   , dQ(0)
   , dx(-1)

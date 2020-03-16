@@ -76,9 +76,9 @@ WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster
   std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_two_boundary_wcps(2);
   temp_cluster->dijkstra_shortest_paths(wcps.first,2); 
   temp_cluster->cal_shortest_path(wcps.second,2);
-  WCPPID::ProtoVertex *v1 = new WCPPID::ProtoVertex(acc_vertex_id, wcps.first); acc_vertex_id++;
-  WCPPID::ProtoVertex *v2 = new WCPPID::ProtoVertex(acc_vertex_id, wcps.second); acc_vertex_id++;
-  WCPPID::ProtoSegment *sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps()); acc_segment_id++;
+  WCPPID::ProtoVertex *v1 = new WCPPID::ProtoVertex(acc_vertex_id, wcps.first, temp_cluster->get_cluster_id()); acc_vertex_id++;
+  WCPPID::ProtoVertex *v2 = new WCPPID::ProtoVertex(acc_vertex_id, wcps.second, temp_cluster->get_cluster_id()); acc_vertex_id++;
+  WCPPID::ProtoSegment *sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
   add_proto_connection(v1,sg1,temp_cluster);
   add_proto_connection(v2,sg1,temp_cluster);
 

@@ -1196,6 +1196,7 @@ int main(int argc, char* argv[])
   ct_point_cloud.AddDeadChs(dead_u_index, dead_v_index, dead_w_index);
   ct_point_cloud.build_kdtree_index();
 
+  std::vector<WCPPID::NeutrinoID *> neutrino_vec;
   // Code to select nue ...
   for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
     double flash_time = map_flash_info[it->first].second;
@@ -1215,7 +1216,8 @@ int main(int argc, char* argv[])
 	additional_clusters.push_back(*it1);
     }
 
-    WCPPID::NeutrinoID neutrino(main_cluster, additional_clusters, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time);
+    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time);
+    neutrino_vec.push_back(neutrino);
     
     // for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
     //   (*it1)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
@@ -1345,26 +1347,33 @@ int main(int argc, char* argv[])
   T_vtx->Branch("cluster_id",&cluster_id_vtx,"cluster_id/I");
   T_vtx->Branch("sub_cluster_ids",&sub_cluster_ids_vtx);
   
-  // hack for now ...
-  // for (Int_t i=0;i!=10;i++){
-  //   x_vtx = i * 10;
-  //   y_vtx = i * 10;
-  //   z_vtx = i * 10;
-  //   sub_cluster_ids_vtx->clear();
-  //   if (i<=2) type_vtx = 1;
-  //   else if (i <=4) type_vtx = 2;
-  //   else if (i <=6) type_vtx = 3;
-  //   else if (i <=8) type_vtx = 4;
-  //   else if (i <=10) type_vtx = 5;
-  //   flag_main_vtx = 0;
-  //   if (i==5) flag_main_vtx = 1;
-  //   cluster_id_vtx = 33;
-  //   if (i==5){
-  //     sub_cluster_ids_vtx->push_back(31);
-  //     sub_cluster_ids_vtx->push_back(32);
-  //   }
-  //   T_vtx->Fill();
-  // }
+  for (size_t i=0;i!=neutrino_vec.size();i++){
+    WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();
+    //    WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices = neutrino.get_map_segment_vertices();
+    for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end();it++){
+      WCPPID::ProtoVertex *vtx = it->first;
+      x_vtx = vtx->get_fit_pt().x;
+      y_vtx = vtx->get_fit_pt().y;
+      z_vtx = vtx->get_fit_pt().z;
+      if (it->second.size()==1){
+	type_vtx = 3;
+      }else if (it->second.size()==2){
+	type_vtx = 4;
+      }else{
+	type_vtx = 5;
+      }
+      flag_main_vtx = vtx->get_flag_neutrino_vertex();
+      cluster_id_vtx = vtx->get_cluster_id();
+      sub_cluster_ids_vtx->clear();
+      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+	WCPPID::ProtoSegment *sg = *it1;
+	sub_cluster_ids_vtx->push_back(cluster_id_vtx*1000 + sg->get_id());
+      }
+      T_vtx->Fill();
+    }
+  }
+
+  
   
   
   TTree *T_cluster ;
@@ -1499,7 +1508,7 @@ int main(int argc, char* argv[])
       x = pts.at(i).x/units::cm;
       y = pts.at(i).y/units::cm;
       z = pts.at(i).z/units::cm;
-      charge_save = dQ.at(i);
+      charge_save = dQ.at(i)/10.; // for display purpose ...
       ncharge_save = dx.at(i)/units::cm;
       pu = tpu.at(i);
       pv = tpv.at(i);
@@ -1510,14 +1519,8 @@ int main(int argc, char* argv[])
       ncluster = ndf_save;
       real_cluster_id = Vsub_cluster_id.at(i);
       sub_cluster_id = Vsub_cluster_id.at(i);
-      t_rec_charge->Fill();
-      if (flag_vertex_save){
-	x_vtx = x;
-	y_vtx = y;
-	z_vtx = z;
-	cluster_id_vtx = cluster->get_cluster_id();
-	T_vtx->Fill();
-      }
+      if (real_cluster_id!=-1)
+	t_rec_charge->Fill();
     }
 
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_u_map = cluster->get_proj_data_u_map();

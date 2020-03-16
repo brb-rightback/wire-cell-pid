@@ -2,10 +2,11 @@
 
 using namespace WCP;
 
-WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::WCPoint >& path_wcps )
+WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::WCPoint >& path_wcps, int cluster_id )
   : id(id)
+  , cluster_id(cluster_id)
   , flag_fit(false)
-  , pcloud_fit(0)
+  , pcloud_fit(0) 
 {
   
   for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){

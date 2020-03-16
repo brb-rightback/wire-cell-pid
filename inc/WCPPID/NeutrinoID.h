@@ -39,6 +39,9 @@ namespace WCPPID{
     void break_segments(std::vector<WCPPID::ProtoSegment*>& remaining_segments, WCPPID::PR3DCluster* temp_cluster);
 
     void find_other_segments(WCPPID::PR3DCluster* temp_cluster, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
+
+    Map_Proto_Vertex_Segments& get_map_vertex_segments(){return map_vertex_segments;};
+    Map_Proto_Segment_Vertices& get_map_segment_verteices(){return map_segment_vertices;};
     
   protected:
     int acc_vertex_id;
