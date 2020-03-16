@@ -1329,7 +1329,7 @@ int main(int argc, char* argv[])
   //TTree *T_vtx = new TTree("T_rec","T_rec");
   T_vtx->SetDirectory(file1);
   Double_t x_vtx, y_vtx, z_vtx;
-  Int_t type_vtx;
+  Int_t type_vtx=0;
   // 1: Steiner-inspired graph
   // 2: Steiner terminals
   // 3: end point (extreme point, connecting to one object)
@@ -1352,22 +1352,22 @@ int main(int argc, char* argv[])
     //    WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices = neutrino.get_map_segment_vertices();
     for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end();it++){
       WCPPID::ProtoVertex *vtx = it->first;
-      x_vtx = vtx->get_fit_pt().x;
-      y_vtx = vtx->get_fit_pt().y;
-      z_vtx = vtx->get_fit_pt().z;
+      x_vtx = vtx->get_fit_pt().x/units::cm;
+      y_vtx = vtx->get_fit_pt().y/units::cm;
+      z_vtx = vtx->get_fit_pt().z/units::cm;
       if (it->second.size()==1){
-	type_vtx = 3;
+      	type_vtx = 3;
       }else if (it->second.size()==2){
-	type_vtx = 4;
+      	type_vtx = 4;
       }else{
-	type_vtx = 5;
+      	type_vtx = 5;
       }
       flag_main_vtx = vtx->get_flag_neutrino_vertex();
       cluster_id_vtx = vtx->get_cluster_id();
       sub_cluster_ids_vtx->clear();
       for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-	WCPPID::ProtoSegment *sg = *it1;
-	sub_cluster_ids_vtx->push_back(cluster_id_vtx*1000 + sg->get_id());
+      	WCPPID::ProtoSegment *sg = *it1;
+      	sub_cluster_ids_vtx->push_back(cluster_id_vtx*1000 + sg->get_id());
       }
       T_vtx->Fill();
     }
@@ -1519,8 +1519,9 @@ int main(int argc, char* argv[])
       ncluster = ndf_save;
       real_cluster_id = Vsub_cluster_id.at(i);
       sub_cluster_id = Vsub_cluster_id.at(i);
-      if (real_cluster_id!=-1)
-	t_rec_charge->Fill();
+
+      //      if (real_cluster_id!=-1)
+      t_rec_charge->Fill();
     }
 
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_u_map = cluster->get_proj_data_u_map();
