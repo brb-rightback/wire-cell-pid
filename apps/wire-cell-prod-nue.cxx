@@ -1324,6 +1324,7 @@ int main(int argc, char* argv[])
   }
 
   TTree *T_vtx = new TTree("T_vtx","T_vtx");
+  //TTree *T_vtx = new TTree("T_rec","T_rec");
   T_vtx->SetDirectory(file1);
   Double_t x_vtx, y_vtx, z_vtx;
   Int_t type_vtx;
@@ -1333,7 +1334,7 @@ int main(int argc, char* argv[])
   // 4: kink (connecting to two objects
   // 5: vertex (connecting to three or more objects)
   Int_t flag_main_vtx=0; // main vertex or not
-  Int_t cluster_id_vtx; // -1 if not belonging to any cluster ...
+  Int_t cluster_id_vtx=-1; // -1 if not belonging to any cluster ...
   std::vector<int> *sub_cluster_ids_vtx = new std::vector<int>;
   
   T_vtx->Branch("x",&x_vtx,"x/D");
@@ -1345,30 +1346,25 @@ int main(int argc, char* argv[])
   T_vtx->Branch("sub_cluster_ids",&sub_cluster_ids_vtx);
   
   // hack for now ...
-  for (Int_t i=0;i!=10;i++){
-    x_vtx = i * 10;
-    y_vtx = i * 10;
-    z_vtx = i * 10;
-
-    sub_cluster_ids_vtx->clear();
-    
-    if (i<=2) type_vtx = 1;
-    else if (i <=4) type_vtx = 2;
-    else if (i <=6) type_vtx = 3;
-    else if (i <=8) type_vtx = 4;
-    else if (i <=10) type_vtx = 5;
-
-    flag_main_vtx = 0;
-    if (i==5) flag_main_vtx = 1;
-    cluster_id_vtx = 33;
-
-    if (i==5){
-      sub_cluster_ids_vtx->push_back(31);
-      sub_cluster_ids_vtx->push_back(32);
-    }
-    
-    T_vtx->Fill();
-  }
+  // for (Int_t i=0;i!=10;i++){
+  //   x_vtx = i * 10;
+  //   y_vtx = i * 10;
+  //   z_vtx = i * 10;
+  //   sub_cluster_ids_vtx->clear();
+  //   if (i<=2) type_vtx = 1;
+  //   else if (i <=4) type_vtx = 2;
+  //   else if (i <=6) type_vtx = 3;
+  //   else if (i <=8) type_vtx = 4;
+  //   else if (i <=10) type_vtx = 5;
+  //   flag_main_vtx = 0;
+  //   if (i==5) flag_main_vtx = 1;
+  //   cluster_id_vtx = 33;
+  //   if (i==5){
+  //     sub_cluster_ids_vtx->push_back(31);
+  //     sub_cluster_ids_vtx->push_back(32);
+  //   }
+  //   T_vtx->Fill();
+  // }
   
   
   TTree *T_cluster ;
@@ -1458,6 +1454,8 @@ int main(int argc, char* argv[])
   t_rec_charge->Branch("reduced_chi2",&reduced_chi2,"reduced_chi2/D");
   Int_t flag_vertex_save;
   t_rec_charge->Branch("flag_vertex",&flag_vertex_save,"flag_vertex/I");
+  t_rec_charge->Branch("cluster_id",&ncluster,"cluster_id/I");
+  t_rec_charge->Branch("real_cluster_id",&real_cluster_id,"real_cluster_id/I");
   t_rec_charge->Branch("sub_cluster_id",&sub_cluster_id,"sub_cluster_id/I");
   
 
@@ -1509,8 +1507,17 @@ int main(int argc, char* argv[])
       pt = tpt.at(i);
       reduced_chi2 = Vreduced_chi2.at(i);
       flag_vertex_save = Vflag_vertex.at(i);
+      ncluster = ndf_save;
+      real_cluster_id = Vsub_cluster_id.at(i);
       sub_cluster_id = Vsub_cluster_id.at(i);
       t_rec_charge->Fill();
+      if (flag_vertex_save){
+	x_vtx = x;
+	y_vtx = y;
+	z_vtx = z;
+	cluster_id_vtx = cluster->get_cluster_id();
+	T_vtx->Fill();
+      }
     }
 
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_u_map = cluster->get_proj_data_u_map();
