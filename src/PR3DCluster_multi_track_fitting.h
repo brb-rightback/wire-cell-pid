@@ -89,19 +89,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     map_2DW_3D_set.clear();
 
    
-    /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
-    /*   WCPPID::ProtoSegment *sg = it->first; */
-    /*   PointVector& pts = sg->get_point_vec(); */
-    /*   for (size_t i=0;i!=pts.size();i++){ */
-    /*   	std::cout << i << " " << pts.at(i) << std::endl; */
-    /*   } */
-    /*   // std::cout << sg->get_wcpt_vec().size() << " C " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
-    /*  } */
-
-     /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
-    /*   WCPPID::ProtoSegment *sg = it->first; */
-    /*   std::cout << sg->get_wcpt_vec().size() << " B " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
-    /* } */
+    
    
     
     form_map_multi_segments(map_vertex_segments, map_segment_vertices, ct_point_cloud,
@@ -147,6 +135,8 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     /*   WCPPID::ProtoSegment *sg = it->first; */
     /*   std::cout << sg->get_wcpt_vec().size() << " D " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
     /* } */
+
+    
     
     // organize path
     low_dis_limit = 0.6*units::cm;
@@ -157,6 +147,18 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     /*   std::cout << sg->get_wcpt_vec().size() << " E " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
     /*   if (sg->get_point_vec().size() > 90) std::cout << sg->get_point_vec().at(88) << std::endl; */
     /* } */
+
+     /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
+     /*  WCPPID::ProtoSegment *sg = it->first; */
+     /*  PointVector& pts = sg->get_point_vec(); */
+     /*  //double length = sqrt(pow(pts.front().x-pts.back().x,2) + pow(pts.front().y - pts.back().y,2) + pow(pts.front().z-pts.back().z,2)); */
+     /*  //std::cout << sg->get_id() << " " << length/units::cm << std::endl; */
+     /*  if (sg->get_id()==3){ */
+     /* 	for (size_t i=0;i+1!=pts.size();i++){ */
+     /* 	  std::cout << i << " " << sqrt(pow(pts.at(i).x - pts.at(i+1).x,2)+pow(pts.at(i).y - pts.at(i+1).y,2)+pow(pts.at(i).z - pts.at(i+1).z,2))/units::cm << std::endl; */
+     /* 	} */
+     /*  } */
+     /* } */
     
   }
 
@@ -955,6 +957,13 @@ void WCPPID::PR3DCluster::organize_segments_path_3rd(WCPPID::Map_Proto_Vertex_Se
     {
       double dis1 = sqrt(pow(pts.back().x-end_p.x,2) + pow(pts.back().y-end_p.y,2) + pow(pts.back().z-end_p.z,2));
 
+      /* if (sg->get_id()==3){ */
+      /* 	std::cout << "kkk: " << dis1/units::cm << " " << std::endl; */
+      /* 	for (size_t i=0;i+1!=curr_pts.size();i++){ */
+      /* 	  std::cout << "kk: " << i << " " << sqrt(pow(curr_pts.at(i).x - curr_pts.at(i+1).x,2) + pow(curr_pts.at(i).y - curr_pts.at(i+1).y,2) + pow(curr_pts.at(i).z - curr_pts.at(i+1).z,2))/units::cm << std::endl; */
+      /* 	} */
+      /* } */
+      
       if (dis1 < step_size * 0.6) {
 	if (pts.size()<=1){
 	}else{
@@ -969,12 +978,15 @@ void WCPPID::PR3DCluster::organize_segments_path_3rd(WCPPID::Map_Proto_Vertex_Se
 	  pts.push_back(tmp_p);
 	}
       }else if (dis1 > step_size * 1.6){
-	Point tmp_p;
-	
-	tmp_p.x =  pts.back().x + (end_p.x - pts.back().x )/dis1*step_size;
-	tmp_p.y =  pts.back().y + (end_p.y - pts.back().y )/dis1*step_size;
-	tmp_p.z =  pts.back().z + (end_p.z - pts.back().z )/dis1*step_size;
-	pts.push_back(tmp_p);
+
+	int npoints = std::round(dis1/step_size);
+	Point p_save = pts.back();
+	for (int j=0;j+1<npoints;j++){
+	  Point p(p_save.x + (end_p.x-p_save.x) / npoints * (j+1),
+		  p_save.y + (end_p.y-p_save.y) / npoints * (j+1),
+		  p_save.z + (end_p.z-p_save.z) / npoints * (j+1));
+	  pts.push_back(p);
+	}
       }
       
       pts.push_back(end_p);
@@ -1145,11 +1157,21 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCPPID::Map_Proto_Vertex_Se
       double dis1 = sqrt(pow(pts.back().x-end_p.x,2) + pow(pts.back().y-end_p.y,2) + pow(pts.back().z-end_p.z,2));
       if (dis1 < low_dis_limit * 0.2) pts.pop_back();
       else if (dis1 > low_dis_limit * 1.6){
-	Point tmp_p;
-	tmp_p.x =  pts.back().x + (end_p.x - pts.back().x )/2.;
-	tmp_p.y =  pts.back().y + (end_p.y - pts.back().y )/2.;
-	tmp_p.z =  pts.back().z + (end_p.z - pts.back().z )/2.;
-	pts.push_back(tmp_p);
+
+	int npoints = std::round(dis1/low_dis_limit);
+	Point p_save = pts.back();
+	for (int j=0;j+1<npoints;j++){
+	  Point p(p_save.x + (end_p.x-p_save.x) / npoints * (j+1),
+		  p_save.y + (end_p.y-p_save.y) / npoints * (j+1),
+		  p_save.z + (end_p.z-p_save.z) / npoints * (j+1));
+	  pts.push_back(p);
+	}
+	
+	//Point tmp_p;
+	//tmp_p.x =  pts.back().x + (end_p.x - pts.back().x )/2.;
+	//tmp_p.y =  pts.back().y + (end_p.y - pts.back().y )/2.;
+	//tmp_p.z =  pts.back().z + (end_p.z - pts.back().z )/2.;
+	//pts.push_back(tmp_p);
       }
       pts.push_back(end_p);
     }
@@ -1280,11 +1302,21 @@ void WCPPID::PR3DCluster::organize_segments_path(WCPPID::Map_Proto_Vertex_Segmen
       double dis1 = sqrt(pow(pts.back().x-end_p.x,2) + pow(pts.back().y-end_p.y,2) + pow(pts.back().z-end_p.z,2));
       if (dis1 < low_dis_limit * 0.2) pts.pop_back();
       else if (dis1 > low_dis_limit * 1.6){
-	Point tmp_p;
-	tmp_p.x =  pts.back().x + (end_p.x - pts.back().x )/2.;
-	tmp_p.y =  pts.back().y + (end_p.y - pts.back().y )/2.;
-	tmp_p.z =  pts.back().z + (end_p.z - pts.back().z )/2.;
-	pts.push_back(tmp_p);
+	
+	int npoints = std::round(dis1/low_dis_limit);
+	Point p_save = pts.back();
+	for (int j=0;j+1<npoints;j++){
+	  Point p(p_save.x + (end_p.x-p_save.x) / npoints * (j+1),
+		  p_save.y + (end_p.y-p_save.y) / npoints * (j+1),
+		  p_save.z + (end_p.z-p_save.z) / npoints * (j+1));
+	  pts.push_back(p);
+	}
+	
+	//Point tmp_p;
+	//tmp_p.x =  pts.back().x + (end_p.x - pts.back().x )/2.;
+	//tmp_p.y =  pts.back().y + (end_p.y - pts.back().y )/2.;
+	//tmp_p.z =  pts.back().z + (end_p.z - pts.back().z )/2.;
+	//pts.push_back(tmp_p);
       }
       pts.push_back(end_p);
     }
