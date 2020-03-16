@@ -738,7 +738,7 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
     
     sum += pos_3D(i);
   }
-  std::cout << "total (multi): " << sum << std::endl;
+  std::cout << "multi-fit total: " << sum << std::endl;
 
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
