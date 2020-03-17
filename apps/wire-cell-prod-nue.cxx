@@ -1202,12 +1202,15 @@ int main(int argc, char* argv[])
     if ( (flash_time < lowerwindow || flash_time > upperwindow)) continue;
     to_be_checked.push_back(it->second);
   }
-  WCPPID::Protect_Over_Clustering(to_be_checked, live_clusters, map_cluster_parent_id, map_parentid_clusters);
+  WCPPID::Protect_Over_Clustering(to_be_checked, live_clusters, map_cluster_parent_id, map_parentid_clusters, ct_point_cloud);
   
+  for (size_t i=0; i!=live_clusters.size();i++){
+    if (live_clusters.at(i)->get_point_cloud()==0){
+      WCPPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
+      live_clusters.at(i)->Create_point_cloud();
+    }
+  }
   
-
-
-
   
   std::vector<WCPPID::NeutrinoID *> neutrino_vec;
   // Code to select nue ...
@@ -1215,6 +1218,7 @@ int main(int argc, char* argv[])
     double flash_time = map_flash_info[it->first].second;
     //std::cout << flash_time << " " << triggerbits << " " << lowerwindow << " " << upperwindow << std::endl;
     if ( (flash_time < lowerwindow || flash_time > upperwindow)) continue;
+    if (map_parentid_clusters.find(it->second) == map_parentid_clusters.end()) continue;
     std::vector<WCPPID::PR3DCluster*> temp_clusters = map_parentid_clusters[it->second];
     WCPPID::PR3DCluster* main_cluster = 0;
     for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
