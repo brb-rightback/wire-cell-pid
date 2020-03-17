@@ -156,12 +156,24 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     }
   }
 
+
+  std::vector<WCPPID::Res_proto_segment> temp_segments(num);
+  std::set<int> remaining_segments;
+  for (int i=0;i!=num;i++){
+    remaining_segments.insert(i);
+  }
+
   
-  std::vector<int> saved_clusters;
-  std::vector<std::pair<int, int> > saved_cluster_points(num);
+  
   for (size_t i=0;i!=num;i++){
-    // inside the original track or just one point ...
-    if (flag_tagged[sep_clusters[i].front()] || ncounts[i] == 1) continue;
+    // inside the original track 
+    if (flag_tagged[sep_clusters[i].front()] ) {
+      remaining_segments.erase(i);
+      continue;
+    }
+    temp_segments.at(i).group_num = i;
+    temp_segments.at(i).number_points = ncounts[i];
+    
     int special_A = -1;
     for (size_t j=0;j!=ncounts[i];j++){
       if (map_connection.find(sep_clusters[i].at(j))!=map_connection.end()){
@@ -172,8 +184,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     int special_B = -1;
     double min_dis = 0;
     
-    int number_not_faked = 0, number_not_faked1 = 0;
-
+    int number_not_faked = 0;
     double max_dis_u = 0, max_dis_v = 0, max_dis_w = 0;
     for (size_t j=0;j!=ncounts[i];j++){
       double dis = sqrt(pow(cloud.pts[sep_clusters[i].at(j)].x - cloud.pts[special_A].x,2)
@@ -187,7 +198,6 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
       // also judge whether this track is fake ...
       WCP::Point p(cloud.pts[sep_clusters[i].at(j)].x, cloud.pts[sep_clusters[i].at(j)].y, cloud.pts[sep_clusters[i].at(j)].z);
       double min_dis_u = 1e9, min_dis_v = 1e9, min_dis_w = 1e9;
-
       for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
 	WCPPID::ProtoSegment *sg1 = it->first;
 	std::tuple<double, double, double> closest_2d_dis = sg1->get_closest_2d_dis(p);
@@ -195,33 +205,138 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	if (std::get<1>(closest_2d_dis) < min_dis_v) min_dis_v = std::get<1>(closest_2d_dis);
 	if (std::get<2>(closest_2d_dis) < min_dis_w) min_dis_w = std::get<2>(closest_2d_dis);
       }
-      
       int flag_num = 0;
       if (min_dis_u > scaling_2d * search_range   && (!ct_point_cloud->get_closest_dead_chs(p, 0))) flag_num ++;
       if (min_dis_v > scaling_2d * search_range   && (!ct_point_cloud->get_closest_dead_chs(p, 1))) flag_num ++;
       if (min_dis_w > scaling_2d * search_range   && (!ct_point_cloud->get_closest_dead_chs(p, 2))) flag_num ++;
-
-      //std::cout << flag_num << " " << min_dis_u/units::cm << " " << min_dis_v/units::cm << " " << min_dis_w/units::cm << std::endl;
       if (min_dis_u > max_dis_u && (!ct_point_cloud->get_closest_dead_chs(p, 0))) max_dis_u = min_dis_u;
       if (min_dis_v > max_dis_v && (!ct_point_cloud->get_closest_dead_chs(p, 1))) max_dis_v = min_dis_v;
       if (min_dis_w > max_dis_w && (!ct_point_cloud->get_closest_dead_chs(p, 2))) max_dis_w = min_dis_w;
       if (flag_num>=2) number_not_faked ++;
-      if (flag_num>=1) number_not_faked1 ++; 
+      
     }
-    std::cout << "jaja1: " << number_not_faked << " " << number_not_faked1 << " " << ncounts[i] <<std::endl;
-    if (number_not_faked < 4 && (number_not_faked < 0.15 * ncounts[i] || number_not_faked ==1)) continue;
-    std::cout << "jaja2: " << max_dis_u/units::cm << " " << max_dis_v/units::cm << " " << max_dis_w/units::cm << std::endl;
-    if (! (( max_dis_u/units::cm > 4 || max_dis_v/units::cm > 4 || max_dis_w/units::cm > 4 ) && max_dis_u + max_dis_v + max_dis_w > 7*units::cm || number_not_faked > 4 && number_not_faked >= 0.75*ncounts[i] ) ) continue;
-    std::cout << "jaja3: " << max_dis_u/units::cm << " " << max_dis_v/units::cm << " " << max_dis_w/units::cm << std::endl;
+
+    double length = sqrt(pow(cloud.pts[special_A].x - cloud.pts[special_B].x,2) + pow(cloud.pts[special_A].y - cloud.pts[special_B].y,2) + pow(cloud.pts[special_A].z - cloud.pts[special_B].z,2));
+    temp_segments.at(i).special_A = special_A;
+    temp_segments.at(i).special_B = special_B;
+    temp_segments.at(i).length = length;
+    temp_segments.at(i).number_not_faked = number_not_faked;
+    temp_segments.at(i).max_dis_u = max_dis_u;
+    temp_segments.at(i).max_dis_v = max_dis_v;
+    temp_segments.at(i).max_dis_w = max_dis_w;
     
-    //std::cout << special_A << " " << special_B << " " << min_dis/units::cm << std::endl;
-    //std::cout << i << " " << ncounts[i] << " " << flag_tagged[sep_clusters[i].front()] << " " << cloud.pts[sep_clusters[i].front()].x/units::cm << " " <<  cloud.pts[sep_clusters[i].front()].y/units::cm << " " <<  cloud.pts[sep_clusters[i].front()].z/units::cm << std::endl;
-    
-    saved_clusters.push_back(i);
-    saved_cluster_points.at(i) = std::make_pair(special_A, special_B);
+    if (temp_segments.at(i).number_points ==1  //  only one point 
+    	|| number_not_faked == 0 &&
+	(length < 3.5*units::cm  // very short & fake
+	 || (number_not_faked < 0.25 * temp_segments.at(i).number_points || number_not_faked < 0.4 * temp_segments.at(i).number_points && length < 7 * units::cm) && max_dis_u/units::cm < 3 && max_dis_v/units::cm < 3 && max_dis_w/units::cm < 3 && max_dis_u + max_dis_v + max_dis_w < 6*units::cm)  // many fake things and very close to each other ...
+     	)
+      remaining_segments.erase(i);
   }
 
+  /* for (auto it = remaining_segments.begin(); it!=remaining_segments.end(); it++){  */
+  /*   std::cout << "jaja1: " << *it << " " << temp_segments.at(*it).number_not_faked << " " << temp_segments.at(*it).number_points << " " <<  temp_segments.at(*it).max_dis_u/units::cm << " " << temp_segments.at(*it).max_dis_v/units::cm << " " << temp_segments.at(*it).max_dis_w/units::cm << " " << temp_segments.at(*it).length/units::cm << std::endl;  */
+  /* }  */
+  
 
+  // plan to examine things ... 
+  std::vector<int> saved_clusters;
+  std::vector<std::pair<int, int> > saved_cluster_points(num);
+
+  /* saved_clusters.push_back(8); */
+  /* saved_cluster_points.at(8) = std::make_pair(temp_segments.at(8).special_A, temp_segments.at(8).special_B); */
+  
+  ProtoSegmentSelection temp_segments_1, temp_segments_2;
+  for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+    temp_segments_1.push_back(it->first);
+  }
+
+  while (remaining_segments.size()>0){
+    //    std::cout << num << " " << remaining_segments.size() << std::endl;
+    // find the maximal length cluster
+    double max_length = 0; int max_length_cluster = -1;
+    double max_number_not_faked = 0;
+    for (auto it = remaining_segments.begin(); it!=remaining_segments.end(); it++){
+      if (temp_segments.at(*it).number_not_faked > max_number_not_faked){
+  	max_length_cluster = *it;
+  	max_number_not_faked = temp_segments.at(*it).number_not_faked;
+  	max_length = temp_segments.at(*it).length;
+      }else if (temp_segments.at(*it).number_not_faked == max_number_not_faked){
+  	if (temp_segments.at(*it).length > max_length){
+  	  max_length_cluster = *it;
+  	  max_number_not_faked = temp_segments.at(*it).number_not_faked;
+  	  max_length = temp_segments.at(*it).length;
+  	}
+      }
+    }
+    // save things ...
+    saved_clusters.push_back(max_length_cluster);
+    saved_cluster_points.at(max_length_cluster) = std::make_pair(temp_segments.at(max_length_cluster).special_A, temp_segments.at(max_length_cluster).special_B);
+    remaining_segments.erase(max_length_cluster);
+
+    // form a new segment with this cluster ...
+    temp_cluster->dijkstra_shortest_paths(cloud.pts[temp_segments.at(max_length_cluster).special_A],2);
+    temp_cluster->cal_shortest_path(cloud.pts[temp_segments.at(max_length_cluster).special_B],2);
+    WCPPID::ProtoSegment *tmp_sg = new WCPPID::ProtoSegment(-1, temp_cluster->get_path_wcps() ,temp_cluster->get_cluster_id());
+    temp_segments_1.push_back(tmp_sg);
+    temp_segments_2.push_back(tmp_sg);
+
+    // examine the rest of points ...
+    for (auto it = remaining_segments.begin(); it!=remaining_segments.end(); it++){
+      //reset
+      temp_segments.at(*it).number_not_faked = 0;
+      temp_segments.at(*it).max_dis_u = 0;
+      temp_segments.at(*it).max_dis_v = 0;
+      temp_segments.at(*it).max_dis_w = 0;
+
+      for (size_t j=0;j!=ncounts[*it];j++){
+  	// also judge whether this track is fake ...
+  	WCP::Point p(cloud.pts[sep_clusters[*it].at(j)].x, cloud.pts[sep_clusters[*it].at(j)].y, cloud.pts[sep_clusters[*it].at(j)].z);
+  	double min_dis_u = 1e9, min_dis_v = 1e9, min_dis_w = 1e9;
+  	for (auto it1 = temp_segments_1.begin(); it1 != temp_segments_1.end(); it1++){
+  	  WCPPID::ProtoSegment *sg1 = *it1;
+  	  std::tuple<double, double, double> closest_2d_dis = sg1->get_closest_2d_dis(p);
+  	  if (std::get<0>(closest_2d_dis) < min_dis_u) min_dis_u = std::get<0>(closest_2d_dis);
+  	  if (std::get<1>(closest_2d_dis) < min_dis_v) min_dis_v = std::get<1>(closest_2d_dis);
+  	  if (std::get<2>(closest_2d_dis) < min_dis_w) min_dis_w = std::get<2>(closest_2d_dis);
+  	}
+  	int flag_num = 0;
+  	if (min_dis_u > scaling_2d * search_range   && (!ct_point_cloud->get_closest_dead_chs(p, 0))) flag_num ++;
+  	if (min_dis_v > scaling_2d * search_range   && (!ct_point_cloud->get_closest_dead_chs(p, 1))) flag_num ++;
+  	if (min_dis_w > scaling_2d * search_range   && (!ct_point_cloud->get_closest_dead_chs(p, 2))) flag_num ++;
+  	if (flag_num>=2) temp_segments.at(*it).number_not_faked ++;
+  	if (min_dis_u > temp_segments.at(*it).max_dis_u && (!ct_point_cloud->get_closest_dead_chs(p, 0))) temp_segments.at(*it).max_dis_u = min_dis_u;
+  	if (min_dis_v > temp_segments.at(*it).max_dis_v && (!ct_point_cloud->get_closest_dead_chs(p, 1))) temp_segments.at(*it).max_dis_v = min_dis_v;
+  	if (min_dis_w > temp_segments.at(*it).max_dis_w && (!ct_point_cloud->get_closest_dead_chs(p, 2))) temp_segments.at(*it).max_dis_w = min_dis_w;
+      }
+
+       if (temp_segments.at(*it).number_points ==1  //  only one point
+       	|| temp_segments.at(*it).number_not_faked ==0 &&
+       	   (temp_segments.at(*it).length < 3.5*units::cm  // very short & fake
+       	    || (temp_segments.at(*it).number_not_faked < 0.25 * temp_segments.at(*it).number_points || temp_segments.at(*it).number_not_faked < 0.4 * temp_segments.at(*it).number_points && temp_segments.at(*it).length < 7 * units::cm) && temp_segments.at(*it).max_dis_u/units::cm < 3 && temp_segments.at(*it).max_dis_v/units::cm < 3 && temp_segments.at(*it).max_dis_w/units::cm < 3 && temp_segments.at(*it).max_dis_u + temp_segments.at(*it).max_dis_v + temp_segments.at(*it).max_dis_w < 6*units::cm)  // many fake things and very close to each other ...
+       	)
+       	 remaining_segments.erase(*it);
+      
+    }
+
+    /* for (auto it = remaining_segments.begin(); it!=remaining_segments.end(); it++){ */
+    /*   std::cout << "jaja1: " << *it << " " << temp_segments.at(*it).number_not_faked << " " << temp_segments.at(*it).number_points << " " <<  temp_segments.at(*it).max_dis_u/units::cm << " " << temp_segments.at(*it).max_dis_v/units::cm << " " << temp_segments.at(*it).max_dis_w/units::cm << " " << temp_segments.at(*it).length/units::cm << std::endl; */
+    /* } */
+    /* std::cout << std::endl; */
+    //    break;
+  }
+  for (auto it = temp_segments_2.begin(); it != temp_segments_2.end(); it++){
+    delete *it;
+  }
+  
+
+
+ 
+  
+ 
+
+ 
+
+  
   // save segments ...
   for (auto it = saved_clusters.begin(); it!= saved_clusters.end(); it++){
     temp_cluster->dijkstra_shortest_paths(cloud.pts[(saved_cluster_points.at(*it)).first],2); 

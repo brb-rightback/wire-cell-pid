@@ -11,7 +11,17 @@ WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::
   
   for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
     wcpt_vec.push_back(*it);
+    Point p;
+    p.x = wcpt_vec.back().x;
+    p.y = wcpt_vec.back().y;
+    p.z = wcpt_vec.back().z;
+    fit_pt_vec.push_back(p);
   }
+
+  if (pcloud_fit != (ToyPointCloud*)0) delete pcloud_fit;
+  pcloud_fit = new ToyPointCloud();
+  pcloud_fit->AddPoints(fit_pt_vec);
+  pcloud_fit->build_kdtree_index();
   
 }
 
@@ -184,6 +194,10 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& 
 
 void WCPPID::ProtoSegment::set_point_vec(std::vector<WCP::Point >& tmp_pt_vec){
   fit_pt_vec = tmp_pt_vec;
+  if (pcloud_fit != (ToyPointCloud*)0) delete pcloud_fit;
+  pcloud_fit = new ToyPointCloud();
+  pcloud_fit->AddPoints(fit_pt_vec);
+  pcloud_fit->build_kdtree_index();
 }
 
 
@@ -214,6 +228,11 @@ void WCPPID::ProtoSegment::set_fit_associate_vec(std::vector<WCP::Point >& tmp_f
   fit_pt_vec = tmp_fit_pt_vec;
   fit_index_vec = tmp_fit_index;
   fit_flag_skip = tmp_fit_skip;
+  
+  if (pcloud_fit != (ToyPointCloud*)0) delete pcloud_fit;
+  pcloud_fit = new ToyPointCloud();
+  pcloud_fit->AddPoints(fit_pt_vec);
+  pcloud_fit->build_kdtree_index();
 }
 
 void WCPPID::ProtoSegment::reset_fit_prop(){

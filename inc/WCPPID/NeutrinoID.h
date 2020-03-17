@@ -69,12 +69,22 @@ namespace WCPPID{
     std::map<PR3DCluster*, ProtoSegmentSet> map_cluster_segments;
     std::map<ProtoSegment*, PR3DCluster*> map_segment_cluster;
 
-
-    
     // after fit, for alter direction
     WCVertexSelection vertices;
     WCParticleSelection particles;
     
+  };
+
+  struct Res_proto_segment
+  {
+    int group_num;
+    int number_points;
+    int special_A, special_B;
+    double length;
+    int number_not_faked;
+    double max_dis_u;
+    double max_dis_v;
+    double max_dis_w;
   };
   
 }
