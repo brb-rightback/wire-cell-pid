@@ -89,6 +89,9 @@ namespace WCPPID{
     void Connect_graph(WCP::ToyCTPointCloud& ct_point_cloud, WCP::ToyPointCloud* ref_point_cloud = 0);
     void Del_graph();
 
+    // protect against over clustering
+    std::vector<WCP::SMGCSelection> Examine_graph(WCP::ToyCTPointCloud& ct_point_cloud);
+    
     // Steiner tree
     void create_steiner_graph(WCP::ToyCTPointCloud& ct_point_cloud, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis);
     MCUGraph* Create_steiner_tree(WCP::ToyPointCloud *point_cloud_steiner, std::vector<bool>& flag_steiner_terminal, WCP::GeomDataSource& gds, WCP::SMGCSelection& mcells, bool flag_path = false, bool disable_dead_mix_cell = true);

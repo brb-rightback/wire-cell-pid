@@ -11,6 +11,7 @@ namespace WCPPID{
 			       std::map<int, std::vector<WCPPID::PR3DCluster*> >& map_parentid_clusters, // main cluster to clusters
 			       WCP::ToyCTPointCloud& ct_point_cloud
 			       );
+  int get_next_cluster_id(int acc_cluster_id, std::set<int>& used_cluster_ids);
 }
 
 #endif 
