@@ -328,13 +328,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     delete *it;
   }
   
-
-
- 
   
- 
-
- 
 
   
   // save segments ...
