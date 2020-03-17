@@ -1326,7 +1326,6 @@ int main(int argc, char* argv[])
   }
 
   TTree *T_vtx = new TTree("T_vtx","T_vtx");
-  //TTree *T_vtx = new TTree("T_rec","T_rec");
   T_vtx->SetDirectory(file1);
   Double_t x_vtx, y_vtx, z_vtx;
   Int_t type_vtx=0;
@@ -1466,7 +1465,24 @@ int main(int argc, char* argv[])
   t_rec_charge->Branch("cluster_id",&ncluster,"cluster_id/I");
   t_rec_charge->Branch("real_cluster_id",&real_cluster_id,"real_cluster_id/I");
   t_rec_charge->Branch("sub_cluster_id",&sub_cluster_id,"sub_cluster_id/I");
-  
+
+  // extra save ...
+  TTree *t_rec_simple = new TTree("T_rec","T_rec");
+  t_rec_simple->SetDirectory(file1);
+  t_rec_simple->Branch("x",&x,"x/D");
+  t_rec_simple->Branch("y",&y,"y/D");
+  t_rec_simple->Branch("z",&z,"z/D");
+  t_rec_simple->SetDirectory(file1);
+  // extra save ...
+  TTree *t_rec_deblob = new TTree("T_rec_charge_blob","T_rec_charge_blob");
+  t_rec_deblob->SetDirectory(file1);
+  t_rec_deblob->Branch("x",&x,"x/D");
+  t_rec_deblob->Branch("y",&y,"y/D");
+  t_rec_deblob->Branch("z",&z,"z/D");
+  t_rec_deblob->Branch("q",&charge_save,"q/D");
+  t_rec_deblob->Branch("nq",&ncharge_save,"nq/D");
+  t_rec_deblob->Branch("chi2",&chi2_save,"chi2/D");
+  t_rec_deblob->Branch("ndf",&ndf_save,"ndf/D");
 
   
   TTree *T_proj_data = new TTree("T_proj_data","T_proj_data");
@@ -1485,6 +1501,34 @@ int main(int argc, char* argv[])
   T_proj_data->Branch("charge_pred",&proj_data_cluster_charge_pred);
   T_proj_data->SetDirectory(file1);
 
+  // save the Steiner-inspired Graph ...
+  for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
+    WCPPID::PR3DCluster* cluster = *it;
+    ndf_save = cluster->get_cluster_id();
+    if (cluster->get_point_cloud_steiner()!=0){
+      WCP::WCPointCloud<double>& cloud = cluster->get_point_cloud_steiner()->get_cloud();
+      std::vector<bool>& flag_tagged = cluster->get_flag_tagged_steiner_graph();
+      for (size_t i=0;i!=cloud.pts.size();i++){
+	x = cloud.pts[i].x/units::cm;
+	y = cloud.pts[i].y/units::cm;
+	z = cloud.pts[i].z/units::cm;
+	t_rec_simple->Fill();
+
+	charge_save = 1;
+	ncharge_save = 1;
+	chi2_save = 1;
+  
+	if (flag_tagged.size()>0){
+	  if (!flag_tagged.at(i)) t_rec_deblob->Fill();
+	}
+      }
+      
+    }
+  }
+
+  
+
+  // original save ...
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     WCPPID::PR3DCluster* cluster = *it;
     

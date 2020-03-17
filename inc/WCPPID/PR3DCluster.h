@@ -56,6 +56,7 @@ namespace WCPPID{
     WCP::ToyPointCloud* get_point_cloud(){return point_cloud;};
     WCP::ToyPointCloud* get_point_cloud_steiner(){return point_cloud_steiner;};
     WCP::ToyPointCloud* get_point_cloud_steiner_terminal(){return point_cloud_steiner_terminal;};
+    std::vector<bool>& get_flag_tagged_steiner_graph(){return flag_tagged_steiner_graph;};
     
     WCP::Point calc_ave_pos(WCP::Point& p, double dis);
     WCP::Point calc_ave_pos(WCP::Point& p, int N);
@@ -110,6 +111,8 @@ namespace WCPPID{
 
     std::set<int> get_steiner_graph_terminals(){return steiner_graph_terminal_indices;};
     std::set<int> get_steiner_graph_selected_terminals(){return steiner_graph_selected_terminal_indices;};
+    
+    
     
     // find peak points within the mcells ...
     std::set<int> find_peak_point_indices(WCP::SMGCSelection mcells,WCP::GeomDataSource& gds, bool disable_dead_mix_cell = true, int nlevel = 1);
@@ -278,6 +281,7 @@ namespace WCPPID{
     // more derived quantities to come ...
     std::set<int> steiner_graph_terminal_indices;
     std::set<int> steiner_graph_selected_terminal_indices;
+    std::vector<bool> flag_tagged_steiner_graph;
     
     //path related
     std::list<WCP::WCPointCloud<double>::WCPoint> path_wcps;

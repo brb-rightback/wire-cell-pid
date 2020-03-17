@@ -2,7 +2,8 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
   
 
   const int N = temp_cluster->get_point_cloud_steiner()->get_num_points();
-  std::vector<bool> flag_tagged(N, false);
+  std::vector<bool>& flag_tagged = temp_cluster->get_flag_tagged_steiner_graph();
+  flag_tagged.resize(N, false);
   int num_tagged = 0;
   WCP::WCPointCloud<double>& cloud = temp_cluster->get_point_cloud_steiner()->get_cloud();
   for (size_t i=0;i!=N;i++){
@@ -139,14 +140,14 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 
   std::vector<int> component(num_vertices(terminal_graph_cluster));
   const int num = connected_components(terminal_graph_cluster,&component[0]);
+  //  std::cout << "jaja: " << num << std::endl;
   int ncounts[num];
   std::vector<std::vector<int> > sep_clusters(num);
   for (size_t i=0;i!=num;i++){
     ncounts[i] = 0;
     std::vector<int> temp;
     sep_clusters[i] = temp;
-  }
-  
+  }  
   {
     std::vector<int>::size_type i;
     for (i=0;i!=component.size(); ++i){
@@ -171,7 +172,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     int special_B = -1;
     double min_dis = 0;
     
-    int number_not_faked = 0;
+    int number_not_faked = 0, number_not_faked1 = 0;
 
     double max_dis_u = 0, max_dis_v = 0, max_dis_w = 0;
     for (size_t j=0;j!=ncounts[i];j++){
@@ -205,12 +206,13 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
       if (min_dis_v > max_dis_v && (!ct_point_cloud->get_closest_dead_chs(p, 1))) max_dis_v = min_dis_v;
       if (min_dis_w > max_dis_w && (!ct_point_cloud->get_closest_dead_chs(p, 2))) max_dis_w = min_dis_w;
       if (flag_num>=2) number_not_faked ++;
+      if (flag_num>=1) number_not_faked1 ++; 
     }
-    //std::cout << number_not_faked << " " << ncounts[i] <<std::endl;
+    std::cout << "jaja1: " << number_not_faked << " " << number_not_faked1 << " " << ncounts[i] <<std::endl;
     if (number_not_faked < 4 && (number_not_faked < 0.15 * ncounts[i] || number_not_faked ==1)) continue;
-    //std::cout << max_dis_u/units::cm << " " << max_dis_v/units::cm << " " << max_dis_w/units::cm << std::endl;
+    std::cout << "jaja2: " << max_dis_u/units::cm << " " << max_dis_v/units::cm << " " << max_dis_w/units::cm << std::endl;
     if (! (( max_dis_u/units::cm > 4 || max_dis_v/units::cm > 4 || max_dis_w/units::cm > 4 ) && max_dis_u + max_dis_v + max_dis_w > 7*units::cm || number_not_faked > 4 && number_not_faked >= 0.75*ncounts[i] ) ) continue;
-    
+    std::cout << "jaja3: " << max_dis_u/units::cm << " " << max_dis_v/units::cm << " " << max_dis_w/units::cm << std::endl;
     
     //std::cout << special_A << " " << special_B << " " << min_dis/units::cm << std::endl;
     //std::cout << i << " " << ncounts[i] << " " << flag_tagged[sep_clusters[i].front()] << " " << cloud.pts[sep_clusters[i].front()].x/units::cm << " " <<  cloud.pts[sep_clusters[i].front()].y/units::cm << " " <<  cloud.pts[sep_clusters[i].front()].z/units::cm << std::endl;
@@ -249,7 +251,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
       std::cout << "# of Vertices: " << map_vertex_segments.size() << "; # of Segments: " << map_segment_vertices.size() << std::endl;
 
       //hack ...
-      break;
+      //break;
     }
     
   }
@@ -260,6 +262,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::find_vertex_other_segment(WCPPID::PR3DC
 
  std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, Point> check_results = check_end_point(temp_cluster->get_fine_tracking_path(), flag_forward);
 
+ // hack ...
  std::get<0>(check_results) = 0;
  std::get<1>(check_results) = 0;
 
