@@ -1196,7 +1196,13 @@ int main(int argc, char* argv[])
   ct_point_cloud.build_kdtree_index();
 
   // examine the clustering ... 
-  WCPPID::Protect_Over_Clustering(live_clusters, map_cluster_parent_id, map_parentid_clusters);
+  std::vector<int> to_be_checked;
+  for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
+    double flash_time = map_flash_info[it->first].second;
+    if ( (flash_time < lowerwindow || flash_time > upperwindow)) continue;
+    to_be_checked.push_back(it->second);
+  }
+  WCPPID::Protect_Over_Clustering(to_be_checked, live_clusters, map_cluster_parent_id, map_parentid_clusters);
   
   
 
