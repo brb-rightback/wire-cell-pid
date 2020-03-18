@@ -42,38 +42,43 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& 
   
   // start the angle search
  
-  for (size_t i=0;i!=fit_pt_vec.size(); i++){
+  for (int i=0;i!=fit_pt_vec.size(); i++){
     double angle1 = 0;
     double angle2 = 0;
     
     for (int j=0;j!=6;j++){    
       TVector3 v10(0,0,0);
       TVector3 v20(0,0,0);
-      if (i>j){
-	v10.SetXYZ(fit_pt_vec.at(i).x - fit_pt_vec.at(i-j-1).x,
-		   fit_pt_vec.at(i).y - fit_pt_vec.at(i-j-1).y,
-		   fit_pt_vec.at(i).z - fit_pt_vec.at(i-j-1).z);
+
+      //      std::cout << i << " " << j << std::endl;
+      if (i >= (j+1)*2){
+	v10.SetXYZ(fit_pt_vec.at(i).x - fit_pt_vec.at(i-(j+1)*2).x,
+		   fit_pt_vec.at(i).y - fit_pt_vec.at(i-(j+1)*2).y,
+		   fit_pt_vec.at(i).z - fit_pt_vec.at(i-(j+1)*2).z);
       }else{
 	v10.SetXYZ(fit_pt_vec.at(i).x - fit_pt_vec.front().x,
 		   fit_pt_vec.at(i).y - fit_pt_vec.front().y,
 		   fit_pt_vec.at(i).z - fit_pt_vec.front().z);
       }
       
-      if (i+j+1<fit_pt_vec.size()){
-	v20.SetXYZ(fit_pt_vec.at(i+j+1).x - fit_pt_vec.at(i).x,
-		   fit_pt_vec.at(i+j+1).y - fit_pt_vec.at(i).y,
-		   fit_pt_vec.at(i+j+1).z - fit_pt_vec.at(i).z);
+      if (i+(j+1)*2<fit_pt_vec.size()){
+	v20.SetXYZ(fit_pt_vec.at(i+(j+1)*2).x - fit_pt_vec.at(i).x,
+		   fit_pt_vec.at(i+(j+1)*2).y - fit_pt_vec.at(i).y,
+		   fit_pt_vec.at(i+(j+1)*2).z - fit_pt_vec.at(i).z);
       }else{
 	v20.SetXYZ(fit_pt_vec.back().x - fit_pt_vec.at(i).x,
 		   fit_pt_vec.back().y - fit_pt_vec.at(i).y,
 		   fit_pt_vec.back().z - fit_pt_vec.at(i).z);
       }
+      
       if (j==0){
 	angle1 = v10.Angle(v20)/3.1415926*180.;
 	angle2 = std::max(fabs(v10.Angle(drift_dir)/3.1415926*180.-90.),
 			  fabs(v20.Angle(drift_dir)/3.1415926*180.-90.));
       }else{
 	if (v10.Mag()!=0 && v20.Mag()!=0){
+
+	  // std::cout << i << " " << j << " " << angle1 << " " << angle2 << std::endl;
 	  angle1 = std::min(v10.Angle(v20)/3.1415926*180., angle1);
 	  angle2 = std::min(std::max(fabs(v10.Angle(drift_dir)/3.1415926*180.-90.),
 				     fabs(v20.Angle(drift_dir)/3.1415926*180.-90.)),angle2);
@@ -132,7 +137,7 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& 
       //if (wcpt_vec.front().index >940 && wcpt_vec.front().index < 1200)
 
       // if (fabs(fit_pt_vec.at(i).x-2121.19)<30 && fabs(fit_pt_vec.at(i).y-218.775) < 30 && fabs(fit_pt_vec.at(i).z-715.347)<30)
-      //  	std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
+      //std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
       
       if (para_angles.at(i) > 10 && refl_angles.at(i) > 30 && sum_angles > 15){
 	//	std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;

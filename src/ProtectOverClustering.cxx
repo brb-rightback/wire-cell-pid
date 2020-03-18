@@ -38,7 +38,6 @@ void WCPPID::Protect_Over_Clustering(std::vector<int>& to_be_checked, WCPPID::PR
       //      if (temp_cluster->get_cluster_id() == curr_main_cluster_id)
 	vec_mcells = temp_cluster->Examine_graph(ct_point_cloud);
 
-
       // check mcell size ...
       // int nsum = 0;
       // for (size_t j=0;j!=vec_mcells.size();j++){
