@@ -127,7 +127,7 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
   break_segments(remaining_segments, temp_cluster);
   
   // find other segments ...
-  //  find_other_segments(temp_cluster);
+  find_other_segments(temp_cluster);
   
   
   

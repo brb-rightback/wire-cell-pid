@@ -372,8 +372,8 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::find_vertex_other_segment(WCPPID::PR3DC
  std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, Point> check_results = check_end_point(temp_cluster->get_fine_tracking_path(), flag_forward);
 
  // hack ...
- std::get<0>(check_results) = 0;
- std::get<1>(check_results) = 0;
+ // std::get<0>(check_results) = 0;
+ //std::get<1>(check_results) = 0;
 
  
  if (std::get<0>(check_results) != 0){
@@ -425,105 +425,128 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::find_vertex_other_segment(WCPPID::PR3DC
 std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::NeutrinoID::check_end_point(WCP::PointVector& tracking_path, bool flag_front ){
 
   if (tracking_path.size()<2) std::cout << "vector size wrong!" << std::endl;
-  
-  Point test_p(0,0,0);
-  Point dir_p(0,0,0);
-  int ncount =0;
+  int ncount = 5;
+  Point test_p;
   if (flag_front){
     test_p = tracking_path.front();
-    for (size_t k = 1; k<tracking_path.size(); k++){
-      dir_p.x += test_p.x - tracking_path.at(k).x;
-      dir_p.y += test_p.x - tracking_path.at(k).y;
-      dir_p.z += test_p.x - tracking_path.at(k).z;
-      ncount ++;
-      if (ncount==5) break;
-    }
   }else{
     test_p = tracking_path.back();
-    for (size_t k=tracking_path.size()-2; k>=0; k--){
-      dir_p.x += test_p.x - tracking_path.at(k).x;
-      dir_p.y += test_p.x - tracking_path.at(k).y;
-      dir_p.z += test_p.x - tracking_path.at(k).z;
-      ncount ++;
-      if (ncount==5) break;
-    }
   }
-  TVector3 temp_dir(dir_p.x, dir_p.y, dir_p.z);
-  temp_dir = temp_dir.Unit();
-  Line temp_l(test_p, temp_dir);
-
-
-  
   WCPPID::ProtoVertex *vtx=0;
   WCPPID::ProtoSegment *seg=0;
-  Point rtp = test_p;
   
-  // check vertex
-  for (auto it1 = map_vertex_segments.begin(); it1!= map_vertex_segments.end(); it1++){
-    WCPPID::ProtoVertex *test_v = it1->first;
-    Point p1(test_v->get_wcpt().x, test_v->get_wcpt().y, test_v->get_wcpt().z);
-    Point p2 = test_v->get_fit_pt();
-
-    double dis1 = sqrt(pow(test_p.x - p1.x,2)
-		       + pow(test_p.y - p1.y,2)
-		       + pow(test_p.z - p1.z,2));
-    double dis2 = temp_l.closest_dis(p1);
-    double dis3 = sqrt(pow(test_p.x - p2.x,2)
-		       + pow(test_p.y - p2.y,2)
-		       + pow(test_p.z - p2.z,2));
-    double dis4 = temp_l.closest_dis(p2);
-
-    // std::cout << dis1/units::cm << " " << dis2/units::cm << " " <<
-    //   dis3/units::cm << " " << dis4/units::cm 
-    //  	      << std::endl;
-       
-    if (std::min(dis1,dis2) < 0.9*units::cm && std::max(dis1,dis2) < 2*units::cm || std::min(dis3,dis4)<0.9*units::cm && std::max(dis3,dis4) < 2*units::cm){
-      vtx = test_v;
-      break;
+  Point dir_p(0,0,0);
+  for (int i=0;i!=ncount;i++){
+    if (flag_front){
+      if (i+1<tracking_path.size()){
+	dir_p.x = test_p.x - tracking_path.at(i+1).x;
+	dir_p.y = test_p.y - tracking_path.at(i+1).y;
+	dir_p.z = test_p.z - tracking_path.at(i+1).z;
+      }else{
+	dir_p.x = test_p.x - tracking_path.back().x;
+	dir_p.y = test_p.y - tracking_path.back().y;
+	dir_p.z = test_p.z - tracking_path.back().z;
+      }
+    }else{
+      if (tracking_path.size() >= i+1){
+	dir_p.x = test_p.x - tracking_path.at(tracking_path.size()-1-i).x;
+	dir_p.y = test_p.y - tracking_path.at(tracking_path.size()-1-i).y;
+	dir_p.z = test_p.z - tracking_path.at(tracking_path.size()-1-i).z;
+      }else{
+	dir_p.x = test_p.x - tracking_path.front().x;
+	dir_p.x = test_p.y - tracking_path.front().y;
+	dir_p.x = test_p.z - tracking_path.front().z;
+      }
     }
-    
-    
+    TVector3 temp_dir(dir_p.x, dir_p.y, dir_p.z);
+    temp_dir = temp_dir.Unit();
+    Line temp_l(test_p, temp_dir);
+
+    // check vertex
+    for (auto it1 = map_vertex_segments.begin(); it1!= map_vertex_segments.end(); it1++){
+      WCPPID::ProtoVertex *test_v = it1->first;
+      Point p1(test_v->get_wcpt().x, test_v->get_wcpt().y, test_v->get_wcpt().z);
+      Point p2 = test_v->get_fit_pt();
+      
+      double dis1 = sqrt(pow(test_p.x - p1.x,2)
+			 + pow(test_p.y - p1.y,2)
+			 + pow(test_p.z - p1.z,2));
+      double dis2 = temp_l.closest_dis(p1);
+      double dis3 = sqrt(pow(test_p.x - p2.x,2)
+			 + pow(test_p.y - p2.y,2)
+			 + pow(test_p.z - p2.z,2));
+      double dis4 = temp_l.closest_dis(p2);
+      
+      /* std::cout << dis1/units::cm << " " << dis2/units::cm << " " << */
+      /*   dis3/units::cm << " " << dis4/units::cm << " " << it1->second.size() << " "  */
+      /*   	      << std::endl; */
+      
+      if (std::min(dis1,dis2) < 0.9*units::cm && std::max(dis1,dis2) < 2*units::cm ||
+	  std::min(dis3,dis4) < 0.9*units::cm && std::max(dis3,dis4) < 2*units::cm){
+	vtx = test_v;
+	break;
+      }
+    }
+
+    if (vtx!=0) break;
   }
-  // std::cout << std::endl;
-
-
+   
   // check segment 
   if (vtx == 0){
-    WCPPID::ProtoSegment *min_sg = 0;
+    WCPPID::ProtoSegment* min_sg=0;
+    Point min_point(0,0,0);
     double min_dis = 1e9;
-    double min_dis1 = 1e9;
+      
     for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
       std::pair<double, WCP::Point> results = it->first->get_closest_point(test_p);
-      if (results.first < min_dis){
-  	min_sg = it->first;
-  	min_dis = results.first;
+      if (results.first < 2*units::cm){
+	PointVector& points = it->first->get_point_vec();
+
+	Point dir_p(0,0,0);
+	for (int i=0;i!=ncount;i++){
+	  if (flag_front){
+	    if (i+1<tracking_path.size()){
+	      dir_p.x = test_p.x - tracking_path.at(i+1).x;
+	      dir_p.y = test_p.y - tracking_path.at(i+1).y;
+	      dir_p.z = test_p.z - tracking_path.at(i+1).z;
+	    }else{
+	      dir_p.x = test_p.x - tracking_path.back().x;
+	      dir_p.y = test_p.y - tracking_path.back().y;
+	      dir_p.z = test_p.z - tracking_path.back().z;
+	    }
+	  }else{
+	    if (tracking_path.size() >= i+1){
+	      dir_p.x = test_p.x - tracking_path.at(tracking_path.size()-1-i).x;
+	      dir_p.y = test_p.y - tracking_path.at(tracking_path.size()-1-i).y;
+	      dir_p.z = test_p.z - tracking_path.at(tracking_path.size()-1-i).z;
+	    }else{
+	      dir_p.x = test_p.x - tracking_path.front().x;
+	      dir_p.x = test_p.y - tracking_path.front().y;
+	      dir_p.x = test_p.z - tracking_path.front().z;
+	    }
+	  }
+	  TVector3 temp_dir(dir_p.x, dir_p.y, dir_p.z);
+	  temp_dir = temp_dir.Unit();
+	  Line temp_l(test_p, temp_dir);
+	
+	  for (size_t i= 0; i!=points.size();i++){
+	    double dis1 = temp_l.closest_dis(points.at(i) );
+	    if (dis1 < 1.2*units::cm && dis1 < min_dis){
+	      min_dis = dis1;
+	      min_point = points.at(i);
+	      min_sg = it->first;
+	    }
+	  }
+	}
       }
     }
-
     
-    if (min_dis < 2*units::cm){
-      PointVector& points = min_sg->get_point_vec();
-
-      for (size_t i= 0; i!=points.size();i++){
-  	double dis1 = temp_l.closest_dis(points.at(i) );
-  	if (dis1 < min_dis1){
-  	  min_dis1 = dis1;
-  	  test_p = points.at(i);
-  	}
-      }
-      // find the closest point
-      if (min_dis1 > 1.2*units::cm) min_sg = 0;
-    }else{
-      min_sg = 0;
+    if (min_sg!=0){
+      seg = min_sg;
+      test_p = min_point;
     }
-    seg = min_sg;
-
-    //    std::cout << min_sg << " " << min_dis/units::cm << " " << min_dis1/units::cm << std::endl;
-    
-    //    if (min_sg!=0) std::cout << min_sg->get_wcpt_vec().size() << std::endl;
-    
   }
-
+    
   
   // return ...
   return std::make_tuple(vtx, seg, test_p);
