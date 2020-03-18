@@ -27,7 +27,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
 {
   // create Steiner-inspired graph
   main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-
+  find_proto_vertex(main_cluster);
   // {
   //   MCUGraph *graph = main_cluster->get_graph();
   //   MCUGraph *graph_steiner = main_cluster->get_graph_steiner();
@@ -37,11 +37,12 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   //   std::cout  << graph << " " << num_vertices(*graph_steiner) << " " << num_edges(*graph_steiner) << " " << c0->get_num_points() << " " << c1->get_num_points() << " " << c2->get_num_points() << std::endl;
   // }
   
-  //for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
-  //  (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-  // }
+  for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
+    (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+    //    find_proto_vertex(*it);
+  }
 
-  find_proto_vertex(main_cluster);
+
 
   
   // deal with main cluster
@@ -127,7 +128,7 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
   break_segments(remaining_segments, temp_cluster);
   
   // find other segments ...
-  for (size-t i=0;i!=2;i++){
+  for (size_t i=0;i!=2;i++){
     find_other_segments(temp_cluster);
   }
   
