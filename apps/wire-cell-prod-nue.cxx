@@ -1221,7 +1221,7 @@ int main(int argc, char* argv[])
     if (map_parentid_clusters.find(it->second) == map_parentid_clusters.end()) continue;
 
     // hack for now ...
-    continue;
+    //continue;
     
     std::vector<WCPPID::PR3DCluster*> temp_clusters = map_parentid_clusters[it->second];
     WCPPID::PR3DCluster* main_cluster = 0;

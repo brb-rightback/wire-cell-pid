@@ -81,34 +81,110 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
     
     // closest distance approach ...
     std::vector< std::vector< std::tuple<int,int,double> > > index_index_dis(num, std::vector< std::tuple<int,int,double> >(num));
+    //    std::vector< std::vector< std::tuple<int,int,double> > > index_index_dis_mst(num, std::vector< std::tuple<int,int,double> >(num));
 
+    std::vector< std::vector< std::tuple<int,int,double> > > index_index_dis_dir1(num, std::vector< std::tuple<int,int,double> >(num));
+    std::vector< std::vector< std::tuple<int,int,double> > > index_index_dis_dir2(num, std::vector< std::tuple<int,int,double> >(num));
+    //std::vector< std::vector< std::tuple<int,int,double> > > index_index_dis_dir_mst(num, std::vector< std::tuple<int,int,double> >(num));
+     
+    // initialization ...
     for (int j=0;j!=num;j++){
       for (int k=0;k!=num;k++){
 	index_index_dis[j][k] = std::make_tuple(-1,-1,1e9);
+	//	index_index_dis_mst[j][k] = std::make_tuple(-1,-1,1e9);
+
+	index_index_dis_dir1[j][k] = std::make_tuple(-1,-1,1e9);
+  	index_index_dis_dir2[j][k] = std::make_tuple(-1,-1,1e9);
+	//index_index_dis_dir_mst[j][k] = std::make_tuple(-1,-1,1e9);
       }
     }
-
     for (int j=0;j!=num;j++){
       for (int k=j+1;k!=num;k++){
-	index_index_dis[j][k] = pt_clouds.at(j)->get_closest_points(pt_clouds.at(k));
-	index_index_dis[k][j] = index_index_dis[j][k];
+	// closest distance ...
+	std::tuple<int, int, double>  temp_index_index_dis = pt_clouds.at(j)->get_closest_points(pt_clouds.at(k));
+	
+	// close distance ...
+	if (std::get<0>(temp_index_index_dis) != -1){
+	  index_index_dis[j][k] = temp_index_index_dis; 
+	  
+	  bool flag = check_connectivity(index_index_dis[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k));
+	  if (!flag) index_index_dis[j][k] = std::make_tuple(-1,-1,1e9);
+	  
+	  index_index_dis[k][j] = index_index_dis[j][k];
+
+	  
+	  // direction ...
+	  WCPointCloud<double>::WCPoint wp1 = cloud.pts.at(std::get<0>(temp_index_index_dis));
+  	  WCPointCloud<double>::WCPoint wp2 = cloud.pts.at(std::get<1>(temp_index_index_dis));
+  	  Point p1(wp1.x,wp1.y,wp1.z);
+  	  Point p2(wp2.x,wp2.y,wp2.z);
+	  
+  	  TVector3 dir1 = VHoughTrans(p1, 30*units::cm, pt_clouds.at(j));
+  	  TVector3 dir2 = VHoughTrans(p2, 30*units::cm, pt_clouds.at(k));
+  	  dir1 *= -1;
+  	  dir2 *= -1;
+	  
+  	  std::pair<int,double> result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+	  if (result1.first >=0){
+	    index_index_dis_dir1[j][k] = std::make_tuple(std::get<0>(index_index_dis[j][k]), result1.first, result1.second);
+	    bool flag = check_connectivity(index_index_dis_dir1[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k));
+	    if (!flag) index_index_dis_dir1[j][k] = std::make_tuple(-1,-1,1e9);
+	    index_index_dis_dir1[k][j] = index_index_dis_dir1[j][k];
+	  }
+  	  
+	  std::pair<int,double> result2 = pt_clouds.at(j)->get_closest_point_along_vec(p2, dir2, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+	  if (result2.first >=0){
+	    index_index_dis_dir2[j][k] = std::make_tuple(result2.first, std::get<1>(index_index_dis[j][k]), result2.second);
+	    bool flag = check_connectivity(index_index_dis_dir2[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k));
+	    if (!flag) index_index_dis_dir2[j][k] = std::make_tuple(-1,-1,1e9);
+	    index_index_dis_dir2[k][j] = index_index_dis_dir2[j][k];
+	  }
+	}
+	  
+      } // loop over separated pieces ...
+    }
+    
+    for (int j=0; j!=num; j++){
+      for (int k=j+1; k!=num; k++){
+	// adding edges ...
+	if (std::get<0>(index_index_dis[j][k])>=0){
+	  auto edge = add_edge(std::get<0>(index_index_dis[j][k]),std::get<1>(index_index_dis[j][k]), WCPPID::EdgeProp(std::get<2>(index_index_dis[j][k])), *graph);
+	}
+
+	if (std::get<0>(index_index_dis_dir1[j][k])>=0){
+	  if (std::get<2>(index_index_dis_dir1[j][k])>5*units::cm){
+	    auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]), WCPPID::EdgeProp(std::get<2>(index_index_dis_dir1[j][k])*1.2), *graph);
+	  }else{
+	    auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]), WCPPID::EdgeProp(std::get<2>(index_index_dis_dir1[j][k])), *graph);
+	  }
+	}
+
+	if (std::get<0>(index_index_dis_dir2[j][k])>=0){
+	  if (std::get<2>(index_index_dis_dir2[j][k])>5*units::cm){
+	    auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]), WCPPID::EdgeProp(std::get<2>(index_index_dis_dir2[j][k])*1.2), *graph);
+	  }else{
+	    auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]), WCPPID::EdgeProp(std::get<2>(index_index_dis_dir2[j][k])), *graph);
+	  }
+	}
+	
       }
     }
 
-
     // test check the main
-    for (int i=0;i!=num;i++){
-      if (i==max_cluster) continue;
-      std::cout << "number points: " << pt_clouds.at(max_cluster)->get_num_points() << " " << pt_clouds.at(i)->get_num_points() << " " << std::get<2>(index_index_dis[max_cluster][i])/units::cm << std::endl;
+    /* for (int i=0;i!=num;i++){ */
+    /*   for (int j=i+1;j!=num;j++){ */
+    /* 	if (fabs(pt_clouds.at(j)->get_num_points()-425)<10 || pt_clouds.at(j)->get_num_points()>1000){ */
+    /* 	  std::cout << "number points: " << pt_clouds.at(j)->get_num_points() << " " << pt_clouds.at(i)->get_num_points() << " " << std::get<2>(index_index_dis[j][i])/units::cm << " " << std::get<2>(index_index_dis_dir1[j][i])/units::cm << " " << std::get<2>(index_index_dis_dir2[j][i])/units::cm << std::endl; */
       
-      // if (fabs(pt_clouds.at(i)->get_num_points()-310)>10) continue;
-      bool flag = check_connectivity(index_index_dis[max_cluster][i], cloud, ct_point_cloud, pt_clouds.at(max_cluster), pt_clouds.at(i) );
-      std::cout << flag << std::endl;
-      
-      
-      
-      
-    }
+    /* 	  if (pt_clouds.at(i)->get_num_points() ==9){ */
+    /* 	    bool flag1 = check_connectivity(index_index_dis[j][i], cloud, ct_point_cloud, pt_clouds.at(max_cluster), pt_clouds.at(i)); */
+    /* 	    bool flag2 = check_connectivity(index_index_dis_dir1[j][i], cloud, ct_point_cloud, pt_clouds.at(max_cluster), pt_clouds.at(i)); */
+    /* 	    bool flag3 = check_connectivity(index_index_dis_dir2[j][i], cloud, ct_point_cloud, pt_clouds.at(max_cluster), pt_clouds.at(i)); */
+    /* 	    std::cout << flag1 << " " << flag2 << " " << flag3 << std::endl; */
+    /* 	  } */
+    /* 	} */
+    /*   } */
+    /* } */
 
 
 
@@ -123,13 +199,16 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 
 
 bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index_index_dis, WCP::WCPointCloud<double>& cloud, WCP::ToyCTPointCloud& ct_point_cloud, WCP::ToyPointCloud* pc1, WCP::ToyPointCloud* pc2){
-  
+  if (std::get<0>(index_index_dis)==-1 || std::get<1>(index_index_dis)==-1) return false;
   
   WCPointCloud<double>::WCPoint wp1 = cloud.pts.at(std::get<0>(index_index_dis));
   WCPointCloud<double>::WCPoint wp2 = cloud.pts.at(std::get<1>(index_index_dis));
   Point p1(wp1.x,wp1.y,wp1.z);
   Point p2(wp2.x,wp2.y,wp2.z);
 
+  // std::cout << wp1.index_u << " " << wp1.index_v << " " << wp1.index_w << " " << p1 << std::endl;
+  //std::cout << wp2.index_u << " " << wp2.index_v << " " << wp2.index_w << " " << p2 << std::endl;
+  
   // directions
   TVector3 dir1 = VHoughTrans(p1, 15*units::cm, pc1);  dir1 *= -1;
   TVector3 dir2 = VHoughTrans(p2, 15*units::cm, pc2);   dir2 *= -1;
@@ -147,9 +226,9 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
   if (flag_3.at(0) && (flag_1.at(0) || flag_2.at(0))) flag_prolonged_u = true;
   if (flag_3.at(1) && (flag_1.at(1) || flag_2.at(1))) flag_prolonged_v = true;
   if (flag_3.at(2) && (flag_1.at(2) || flag_2.at(2))) flag_prolonged_w = true;
-  if (flag_3.at(3) && (flag_1.at(3) || flag_2.at(3))) flag_parallel = true;
+  if (flag_3.at(3) && (flag_1.at(3) && flag_2.at(3))) flag_parallel = true;
   
-  //  std::cout << flag_prolonged_u << " " << flag_prolonged_v << " " << flag_prolonged_w << " " << flag_parallel << std::endl;
+  //std::cout << flag_prolonged_u << " " << flag_prolonged_v << " " << flag_prolonged_w << " " << flag_parallel << std::endl;
   
   
   double dis = sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2)+pow(p1.z-p2.z,2));
@@ -157,7 +236,7 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
   double step_size = 0.6*units::cm;
   int num_steps = std::round(dis/step_size);
 
-  int num_bad[4]={0,0,0,0};
+  int num_bad[5]={0,0,0,0,0};
  
   
   for (int i=0;i!=num_steps;i++){
@@ -192,19 +271,24 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
     }else{
       if (num_bad_details>0) num_bad[3] ++;
     }
-    //    std::cout << i << " " << num_bad_details[i] << std::endl;
+    //    std::cout << i << " " << num_bad_details << std::endl;
     //    std::cout << i << " " << scores.at(0) << " " << scores.at(1) << " " << scores.at(2) << " " << scores.at(3) << " " << scores.at(4) << " " << scores.at(5) << std::endl;
   }
-  // std::cout << num_bad[0] << " " << num_bad[1] << " " << num_bad[2] << " " << num_bad[3] << std::endl;
+  //  std::cout << num_bad[0] << " " << num_bad[1] << " " << num_bad[2] << " " << num_bad[3] << " " << num_steps << std::endl;
 
+  
+  
   // prolonged case ...
   if (num_bad[0] <=2 && num_bad[1] <= 2 && num_bad[2] <=2 &&
       (num_bad[0] + num_bad[1] + num_bad[2] <=3) && 
       num_bad[0] < 0.1 * num_steps && num_bad[1] < 0.1 * num_steps && num_bad[2] < 0.1 * num_steps &&
-      (num_bad[0] + num_bad[1] + num_bad[2]) < 0.15 * num_steps ||
-      num_bad[3] <=2 && num_bad[3] < 0.1*num_steps
-      )
+      (num_bad[0] + num_bad[1] + num_bad[2]) < 0.15 * num_steps){
+    if (flag_prolonged_u && flag_prolonged_v && flag_prolonged_w)
+      if (num_bad[3] >0.6 * num_steps) return false;
     return true;
+  }else if (num_bad[3] <=2 && num_bad[3] < 0.1*num_steps){
+    return true;
+  }
   
 
   return false;
