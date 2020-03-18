@@ -1475,7 +1475,7 @@ std::vector<SMGCSelection> WCPPID::PR3DCluster::Examine_graph(WCP::ToyCTPointClo
   graph = new MCUGraph(N);
   Establish_close_connected_graph();
 
-  //Connect_graph_overclustering_protection(ct_point_cloud);
+  Connect_graph_overclustering_protection(ct_point_cloud);
   std::vector<int> component(num_vertices(*graph));
   const int num = connected_components(*graph,&component[0]);
 
@@ -1506,4 +1506,9 @@ std::vector<SMGCSelection> WCPPID::PR3DCluster::Examine_graph(WCP::ToyCTPointClo
   
   
   return sep_mcells;
+}
+
+
+void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPointCloud& ct_point_cloud){
+  
 }
