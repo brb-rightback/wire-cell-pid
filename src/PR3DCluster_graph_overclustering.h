@@ -125,12 +125,7 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index_index_dis, WCP::WCPointCloud<double>& cloud, WCP::ToyCTPointCloud& ct_point_cloud, WCP::ToyPointCloud* pc1, WCP::ToyPointCloud* pc2){
 
 
-  // parallel case 1 and perpendicular case 2 
-  TVector3 drift_dir(1,0,0);
-  // pronlonged case for U 3 and V 4 ...
-  TVector3 U_dir(0,cos(60./180.*3.1415926),sin(60./180.*3.1415926));
-  TVector3 V_dir(0,cos(60./180.*3.1415926),-sin(60./180.*3.1415926));
-  TVector3 W_dir(0,1,0);
+ 
   
   WCPointCloud<double>::WCPoint wp1 = cloud.pts.at(std::get<0>(index_index_dis));
   WCPointCloud<double>::WCPoint wp2 = cloud.pts.at(std::get<1>(index_index_dis));
@@ -138,29 +133,25 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
   Point p2(wp2.x,wp2.y,wp2.z);
 
   // directions
-  TVector3 dir1 = VHoughTrans(p1, 15*units::cm, pc1);
-  TVector3 dir2 = VHoughTrans(p2, 15*units::cm, pc2);
-  dir1 *= -1;
-  dir2 *= -1;
+  TVector3 dir1 = VHoughTrans(p1, 15*units::cm, pc1);  dir1 *= -1;
+  TVector3 dir2 = VHoughTrans(p2, 15*units::cm, pc2);   dir2 *= -1;
+  TVector3 dir3(p1.x - p2.x, p1.y - p2.y, p1.z- p2.z);
 
-  TVector3 tempV1(0, p2.y - p1.y, p2.z - p1.z);
-  TVector3 tempV5;
-  // prolonged U ...
-  double angle1 = tempV1.Angle(U_dir);
-  tempV5.SetXYZ(fabs(p2.x-p1.x),sqrt(pow(p2.y - p1.y,2)+pow(p2.z - p1.z,2))*sin(angle1),0);
-  angle1 = tempV5.Angle(drift_dir);
-  // prolonged V ...
-  double angle2 = tempV1.Angle(V_dir);
-  tempV5.SetXYZ(fabs(p2.x-p1.x),sqrt(pow(p2.y - p1.y,2)+pow(p2.z - p1.z,2))*sin(angle2),0);
-  angle2 = tempV5.Angle(drift_dir);
-  tempV5.SetXYZ(p2.x-p1.x,p2.y-p1.y,p2.z-p1.z);
-  // prolonged W ...
-  double angle3 = tempV1.Angle(W_dir);
-  tempV5.SetXYZ(fabs(p2.x-p1.x),sqrt(pow(p2.y - p1.y,2)+pow(p2.z - p1.z,2))*sin(angle3),0);
-  angle3 = tempV5.Angle(drift_dir);
+  std::vector<bool> flag_1 = check_direction(dir1);
+  std::vector<bool> flag_2 = check_direction(dir2);
+  std::vector<bool> flag_3 = check_direction(dir3);
+
+  bool flag_prolonged_u = false;
+  bool flag_prolonged_v = false;
+  bool flag_prolonged_w = false;
+  bool flag_parallel = false;
+
+  if (flag_3.at(0) && (flag_1.at(0) || flag_2.at(0))) flag_prolonged_u = true;
+  if (flag_3.at(1) && (flag_1.at(1) || flag_2.at(1))) flag_prolonged_v = true;
+  if (flag_3.at(2) && (flag_1.at(2) || flag_2.at(2))) flag_prolonged_w = true;
+  if (flag_3.at(3) && (flag_1.at(3) || flag_2.at(3))) flag_parallel = true;
   
-
-
+  //std::cout << flag_prolonged_u << " " << flag_prolonged_v << " " << flag_prolonged_w << " " << flag_parallel << std::endl;
   
   
   double dis = sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2)+pow(p1.z-p2.z,2));
@@ -190,5 +181,37 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
 
 
 std::vector<bool> WCPPID::PR3DCluster::check_direction(TVector3& v1){
+   // parallel case 1 and perpendicular case 2 
+  TVector3 drift_dir(1,0,0);
+  // pronlonged case for U 3 and V 4 ...
+  TVector3 U_dir(0,cos(60./180.*3.1415926),sin(60./180.*3.1415926));
+  TVector3 V_dir(0,cos(60./180.*3.1415926),-sin(60./180.*3.1415926));
+  TVector3 W_dir(0,1,0);
+
+
+  TVector3 tempV1(0, v1.Y(), v1.Z());
+  TVector3 tempV5;
+  // prolonged U ...
+  double angle1 = tempV1.Angle(U_dir);
+  tempV5.SetXYZ(fabs(v1.X()),sqrt(pow(v1.Y(),2)+pow(v1.Z(),2))*sin(angle1),0);
+  angle1 = tempV5.Angle(drift_dir);
+  // prolonged V ...
+  double angle2 = tempV1.Angle(V_dir);
+  tempV5.SetXYZ(fabs(v1.X()),sqrt(pow(v1.Y(),2)+pow(v1.Z(),2))*sin(angle2),0);
+  angle2 = tempV5.Angle(drift_dir);
+  // prolonged W ...
+  double angle3 = tempV1.Angle(W_dir);
+  tempV5.SetXYZ(fabs(v1.X()),sqrt(pow(v1.Y(),2)+pow(v1.Z(),2))*sin(angle3),0);
+  angle3 = tempV5.Angle(drift_dir);
   
+  double angle4 = v1.Angle(drift_dir); // parallel ...
+  std::vector<bool> results(4, false);
+
+  // prolonged U
+  if (angle1<12.5/180.*3.1415926) results.at(0) = true;
+  if (angle2<12.5/180.*3.1415926) results.at(1) = true;
+  if (angle3<12.5/180.*3.1415926) results.at(2) = true;
+  if (fabs(angle4-3.1415926/2.)<10./180.*3.1415925) results.at(3) = true;
+  
+  return results;
 }
