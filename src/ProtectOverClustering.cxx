@@ -33,7 +33,10 @@ void WCPPID::Protect_Over_Clustering(std::vector<int>& to_be_checked, WCPPID::PR
     // examine these clusters ...
     for (auto it1 = examined_clusters.begin(); it1 != examined_clusters.end(); it1++){
       WCPPID::PR3DCluster *temp_cluster = *it1;
-      std::vector<WCP::SMGCSelection> vec_mcells = temp_cluster->Examine_graph(ct_point_cloud);
+      std::vector<WCP::SMGCSelection> vec_mcells;
+      // hack for now ...
+      if (temp_cluster->get_cluster_id() == curr_main_cluster_id)
+	vec_mcells = temp_cluster->Examine_graph(ct_point_cloud);
 
 
       // check mcell size ...

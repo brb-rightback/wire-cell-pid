@@ -1219,6 +1219,10 @@ int main(int argc, char* argv[])
     //std::cout << flash_time << " " << triggerbits << " " << lowerwindow << " " << upperwindow << std::endl;
     if ( (flash_time < lowerwindow || flash_time > upperwindow)) continue;
     if (map_parentid_clusters.find(it->second) == map_parentid_clusters.end()) continue;
+
+    // hack for now ...
+    continue;
+    
     std::vector<WCPPID::PR3DCluster*> temp_clusters = map_parentid_clusters[it->second];
     WCPPID::PR3DCluster* main_cluster = 0;
     for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){

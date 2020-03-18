@@ -92,6 +92,8 @@ namespace WCPPID{
     // protect against over clustering
     std::vector<WCP::SMGCSelection> Examine_graph(WCP::ToyCTPointCloud& ct_point_cloud);
     void Connect_graph_overclustering_protection(WCP::ToyCTPointCloud& ct_point_cloud);
+    bool check_connectivity(std::tuple<int, int, double>& index_index_dis, WCP::WCPointCloud<double>& cloud, WCP::ToyCTPointCloud& ct_point_cloud, WCP::ToyPointCloud* pc1, WCP::ToyPointCloud* pc2);
+    std::vector<bool> check_direction(TVector3& v1);
     
     // Steiner tree
     void create_steiner_graph(WCP::ToyCTPointCloud& ct_point_cloud, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, double unit_dis);

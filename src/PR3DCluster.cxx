@@ -15,6 +15,7 @@
 using namespace WCP;
 
 #include "PR3DCluster_graph.h"
+#include "PR3DCluster_graph_overclustering.h"
 #include "PR3DCluster_steiner.h"
 #include "PR3DCluster_path.h"
 #include "PR3DCluster_trajectory_fit.h"
