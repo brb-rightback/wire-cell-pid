@@ -327,10 +327,9 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
   for (auto it = temp_segments_2.begin(); it != temp_segments_2.end(); it++){
     delete *it;
   }
-  
-  
 
   
+  std::vector<WCPPID::ProtoSegment*> new_segments;
   // save segments ...
   for (auto it = saved_clusters.begin(); it!= saved_clusters.end(); it++){
     temp_cluster->dijkstra_shortest_paths(cloud.pts[(saved_cluster_points.at(*it)).first],2); 
@@ -350,9 +349,11 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
       }
       
       WCPPID::ProtoSegment *sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
-
       add_proto_connection(v1,sg1,temp_cluster);
       add_proto_connection(v2,sg1,temp_cluster);
+
+      if (sg1->get_length()/units::cm > 12*units::cm)	new_segments.push_back(sg1);
+      
       
       temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
       
@@ -362,8 +363,9 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
       //hack ...
       //break;
     }
-    
   }
+  break_segments(new_segments, temp_cluster);
+  
 }
 
 WCPPID::ProtoVertex* WCPPID::NeutrinoID::find_vertex_other_segment(WCPPID::PR3DCluster* temp_cluster, bool flag_forward, WCP::WCPointCloud<double>::WCPoint& wcp){

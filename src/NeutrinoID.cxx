@@ -127,12 +127,16 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster){
   break_segments(remaining_segments, temp_cluster);
   
   // find other segments ...
-  find_other_segments(temp_cluster);
+  for (size-t i=0;i!=2;i++){
+    find_other_segments(temp_cluster);
+  }
   
   
   
   // prepare output ...
   organize_vertices_segments();
+
+  
 
   // for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
   //   WCPPID::ProtoSegment *sg = it->first;

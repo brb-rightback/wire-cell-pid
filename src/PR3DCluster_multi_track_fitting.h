@@ -67,18 +67,20 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
   }
 
 
+  // second round trajectory fit ...
+  low_dis_limit = 0.6*units::cm;
+  end_point_limit = 0.3*units::cm;
+  
+  /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
+  /*   WCPPID::ProtoSegment *sg = it->first; */
+  /*   std::cout << sg->get_wcpt_vec().size() << " A " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
+  /* } */
+  
+  // organize path
+  organize_segments_path_2nd(map_vertex_segments, map_segment_vertices, low_dis_limit, end_point_limit);    
+  
   if (flag_2nd_tracking){
-    // second round trajectory fit ...
-    low_dis_limit = 0.6*units::cm;
-    end_point_limit = 0.3*units::cm;
-
-    /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
-    /*   WCPPID::ProtoSegment *sg = it->first; */
-    /*   std::cout << sg->get_wcpt_vec().size() << " A " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
-    /* } */
     
-    // organize path
-    organize_segments_path_2nd(map_vertex_segments, map_segment_vertices, low_dis_limit, end_point_limit);    
     map_3D_2DU_set.clear();
     map_3D_2DV_set.clear();
     map_3D_2DW_set.clear();
@@ -87,10 +89,6 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     map_2DU_3D_set.clear();
     map_2DV_3D_set.clear();
     map_2DW_3D_set.clear();
-
-   
-    
-   
     
     form_map_multi_segments(map_vertex_segments, map_segment_vertices, ct_point_cloud,
 			    map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
@@ -136,31 +134,30 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     /*   std::cout << sg->get_wcpt_vec().size() << " D " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
     /* } */
 
-    
-    
-    // organize path
-    low_dis_limit = 0.6*units::cm;
-    organize_segments_path_3rd(map_vertex_segments, map_segment_vertices, low_dis_limit);
-
-    /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
-    /*   WCPPID::ProtoSegment *sg = it->first; */
-    /*   std::cout << sg->get_wcpt_vec().size() << " E " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
-    /*   if (sg->get_point_vec().size() > 90) std::cout << sg->get_point_vec().at(88) << std::endl; */
-    /* } */
-
-     /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
-     /*  WCPPID::ProtoSegment *sg = it->first; */
-     /*  PointVector& pts = sg->get_point_vec(); */
-     /*  //double length = sqrt(pow(pts.front().x-pts.back().x,2) + pow(pts.front().y - pts.back().y,2) + pow(pts.front().z-pts.back().z,2)); */
-     /*  //std::cout << sg->get_id() << " " << length/units::cm << std::endl; */
-     /*  if (sg->get_id()==3){ */
-     /* 	for (size_t i=0;i+1!=pts.size();i++){ */
-     /* 	  std::cout << i << " " << sqrt(pow(pts.at(i).x - pts.at(i+1).x,2)+pow(pts.at(i).y - pts.at(i+1).y,2)+pow(pts.at(i).z - pts.at(i+1).z,2))/units::cm << std::endl; */
-     /* 	} */
-     /*  } */
-     /* } */
-    
   }
+  
+  // organize path
+  low_dis_limit = 0.6*units::cm;
+  organize_segments_path_3rd(map_vertex_segments, map_segment_vertices, low_dis_limit);
+
+  /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
+  /*   WCPPID::ProtoSegment *sg = it->first; */
+  /*   std::cout << sg->get_wcpt_vec().size() << " E " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
+  /*   if (sg->get_point_vec().size() > 90) std::cout << sg->get_point_vec().at(88) << std::endl; */
+  /* } */
+  
+  /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
+  /*  WCPPID::ProtoSegment *sg = it->first; */
+  /*  PointVector& pts = sg->get_point_vec(); */
+  /*  //double length = sqrt(pow(pts.front().x-pts.back().x,2) + pow(pts.front().y - pts.back().y,2) + pow(pts.front().z-pts.back().z,2)); */
+  /*  //std::cout << sg->get_id() << " " << length/units::cm << std::endl; */
+  /*  if (sg->get_id()==3){ */
+  /* 	for (size_t i=0;i+1!=pts.size();i++){ */
+  /* 	  std::cout << i << " " << sqrt(pow(pts.at(i).x - pts.at(i+1).x,2)+pow(pts.at(i).y - pts.at(i+1).y,2)+pow(pts.at(i).z - pts.at(i+1).z,2))/units::cm << std::endl; */
+  /* 	} */
+  /*  } */
+  /* } */
+  
 
   if (flag_dQ_dx){
     for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){

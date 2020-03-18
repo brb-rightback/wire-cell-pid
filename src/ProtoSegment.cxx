@@ -29,6 +29,15 @@ WCPPID::ProtoSegment::~ProtoSegment(){
   if (pcloud_fit != (ToyPointCloud*)0)
     delete pcloud_fit;
 }
+
+double WCPPID::ProtoSegment::get_length(){
+  double length = 0;
+  for (size_t i=0;i+1<fit_pt_vec.size();i++){
+    length += sqrt(pow(fit_pt_vec.at(i+1).x - fit_pt_vec.at(i).x ,2) + pow(fit_pt_vec.at(i+1).y - fit_pt_vec.at(i).y,2) + pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
+  }
+  return length;
+}
+
 std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& start_p){
   // find the first point ...
   //  Point start_p = fit_pt_vec.front();

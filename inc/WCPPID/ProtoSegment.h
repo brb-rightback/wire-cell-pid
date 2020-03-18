@@ -28,7 +28,8 @@ namespace WCPPID{
     void reset_fit_prop();
     std::vector<int>& get_fit_index_vec(){return fit_index_vec;};
     std::vector<bool>& get_fit_flag_skip(){return fit_flag_skip;};
-    
+
+    double get_length();
 
     WCP::WCPointCloud<double>::WCPoint get_closest_wcpt(WCP::Point& test_p);
 
