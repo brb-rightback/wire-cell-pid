@@ -101,9 +101,9 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
       if (i==max_cluster) continue;
       std::cout << "number points: " << pt_clouds.at(max_cluster)->get_num_points() << " " << pt_clouds.at(i)->get_num_points() << " " << std::get<2>(index_index_dis[max_cluster][i])/units::cm << std::endl;
       
-      if (fabs(pt_clouds.at(i)->get_num_points()-310)>10) continue;
+      // if (fabs(pt_clouds.at(i)->get_num_points()-310)>10) continue;
       bool flag = check_connectivity(index_index_dis[max_cluster][i], cloud, ct_point_cloud, pt_clouds.at(max_cluster), pt_clouds.at(i) );
-      
+      std::cout << flag << std::endl;
       
       
       
@@ -123,9 +123,7 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 
 
 bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index_index_dis, WCP::WCPointCloud<double>& cloud, WCP::ToyCTPointCloud& ct_point_cloud, WCP::ToyPointCloud* pc1, WCP::ToyPointCloud* pc2){
-
-
- 
+  
   
   WCPointCloud<double>::WCPoint wp1 = cloud.pts.at(std::get<0>(index_index_dis));
   WCPointCloud<double>::WCPoint wp2 = cloud.pts.at(std::get<1>(index_index_dis));
@@ -151,13 +149,17 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
   if (flag_3.at(2) && (flag_1.at(2) || flag_2.at(2))) flag_prolonged_w = true;
   if (flag_3.at(3) && (flag_1.at(3) || flag_2.at(3))) flag_parallel = true;
   
-  //std::cout << flag_prolonged_u << " " << flag_prolonged_v << " " << flag_prolonged_w << " " << flag_parallel << std::endl;
+  //  std::cout << flag_prolonged_u << " " << flag_prolonged_v << " " << flag_prolonged_w << " " << flag_parallel << std::endl;
   
   
   double dis = sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2)+pow(p1.z-p2.z,2));
   // check 2 pitch ...
   double step_size = 0.6*units::cm;
   int num_steps = std::round(dis/step_size);
+
+  int num_bad[4]={0,0,0,0};
+ 
+  
   for (int i=0;i!=num_steps;i++){
     Point test_p;
     test_p.x = p1.x + (p2.x-p1.x)/(num_steps+1.)*(i+1);
@@ -170,13 +172,42 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
     else
       scores = ct_point_cloud.test_good_point(test_p);
 
+    int num_bad_details= 0;
+    if (scores.at(0) + scores.at(3)==0){
+      if (!flag_prolonged_u) num_bad[0] ++;
+      num_bad_details ++;
+    }
+    if (scores.at(1) + scores.at(4)==0){
+      if (!flag_prolonged_v) num_bad[1] ++;
+      num_bad_details ++;
+    }
+    if (scores.at(2) + scores.at(5)==0){
+      if (!flag_prolonged_w) num_bad[2] ++;
+      num_bad_details ++;
+    }
 
-
-
-    
-    std::cout << i << " " << scores.at(0) << " " << scores.at(1) << " " << scores.at(2) << " " << scores.at(3) << " " << scores.at(4) << " " << scores.at(5) << std::endl;
+    // parallel case ...
+    if (flag_parallel){
+      if (num_bad_details>1) num_bad[3] ++;
+    }else{
+      if (num_bad_details>0) num_bad[3] ++;
+    }
+    //    std::cout << i << " " << num_bad_details[i] << std::endl;
+    //    std::cout << i << " " << scores.at(0) << " " << scores.at(1) << " " << scores.at(2) << " " << scores.at(3) << " " << scores.at(4) << " " << scores.at(5) << std::endl;
   }
+  // std::cout << num_bad[0] << " " << num_bad[1] << " " << num_bad[2] << " " << num_bad[3] << std::endl;
+
+  // prolonged case ...
+  if (num_bad[0] <=2 && num_bad[1] <= 2 && num_bad[2] <=2 &&
+      (num_bad[0] + num_bad[1] + num_bad[2] <=3) && 
+      num_bad[0] < 0.1 * num_steps && num_bad[1] < 0.1 * num_steps && num_bad[2] < 0.1 * num_steps &&
+      (num_bad[0] + num_bad[1] + num_bad[2]) < 0.15 * num_steps ||
+      num_bad[3] <=2 && num_bad[3] < 0.1*num_steps
+      )
+    return true;
   
+
+  return false;
 }
 
 
