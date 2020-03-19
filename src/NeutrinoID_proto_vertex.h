@@ -347,8 +347,28 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
       WCPPID::ProtoVertex *v2 = find_vertex_other_segment(temp_cluster, false, cloud.pts[(saved_cluster_points.at(*it)).second]);   
       if (v1->get_wcpt().index == cloud.pts[(saved_cluster_points.at(*it)).first].index && v2->get_wcpt().index == cloud.pts[(saved_cluster_points.at(*it)).second].index){
       }else{
-	temp_cluster->dijkstra_shortest_paths(v1->get_wcpt(),2); 
-	temp_cluster->cal_shortest_path(v2->get_wcpt(),2);
+	// this is between v1 and v2 ...
+	std::list<WCP::WCPointCloud<double>::WCPoint> temp_path_list = temp_cluster->get_path_wcps();
+	//std::cout << temp_path_list.size() << std::endl;
+	if (v1->get_wcpt().index != cloud.pts[(saved_cluster_points.at(*it)).first].index){
+	  // the starting point is already the first point
+	  temp_cluster->cal_shortest_path(v1->get_wcpt(),2);
+	  for (auto it1 = temp_cluster->get_path_wcps().begin(); it1 != temp_cluster->get_path_wcps().end(); it1++){
+	    if ((*it1).index != temp_path_list.front().index) temp_path_list.push_front(*it1);
+	  }
+	}
+	//std::cout << temp_path_list.size() << std::endl;
+	if (v2->get_wcpt().index != cloud.pts[(saved_cluster_points.at(*it)).second].index){
+	  temp_cluster->dijkstra_shortest_paths(cloud.pts[(saved_cluster_points.at(*it)).second],2); 
+	  temp_cluster->cal_shortest_path(v2->get_wcpt(),2);
+	  for (auto it1 = temp_cluster->get_path_wcps().begin(); it1 != temp_cluster->get_path_wcps().end(); it1++){
+	    if ((*it1).index != temp_path_list.back().index) temp_path_list.push_back(*it1);
+	  }
+	}
+	//	std::cout << temp_path_list.size() << std::endl;
+	temp_cluster->set_path_wcps(temp_path_list);
+	//	temp_cluster->dijkstra_shortest_paths(v1->get_wcpt(),2); 
+	//	temp_cluster->cal_shortest_path(v2->get_wcpt(),2);
       }
       
       WCPPID::ProtoSegment *sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
