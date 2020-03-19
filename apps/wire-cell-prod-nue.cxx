@@ -1407,8 +1407,14 @@ int main(int argc, char* argv[])
 	y = cloud.pts[i].y/units::cm;
 	z = cloud.pts[i].z/units::cm;
 
-	if (point_sub_cluster_ids.size() == cloud.pts.size())
-	  real_cluster_id =new_cluster->get_cluster_id()*1000 + point_sub_cluster_ids.at(i);
+	if (point_sub_cluster_ids.size() == cloud.pts.size()){
+	  if (point_sub_cluster_ids.at(i)==-1){
+	    real_cluster_id = -1;
+	    continue;
+	  }else{
+	    real_cluster_id =new_cluster->get_cluster_id()*1000 + point_sub_cluster_ids.at(i);
+	  }
+	}
 	sub_cluster_id =  new_cluster->get_cluster_id();//*1000;	  
 	
 	SlimMergeGeomCell *mcell = cloud.pts[i].mcell;
