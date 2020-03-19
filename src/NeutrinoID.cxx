@@ -28,11 +28,13 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   // create Steiner-inspired graph
   main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
   find_proto_vertex(main_cluster);
+  main_cluster->clustering_points(map_vertex_segments, map_segment_vertices);
   
   // deal with the other clusters ...
   // for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
   //   (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
   //   find_proto_vertex(*it, false, 1);
+  // (*it)->clustering_points(map_vertex_segments, map_segment_vertices);
   // }
 
 

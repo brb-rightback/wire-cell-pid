@@ -250,6 +250,11 @@ namespace WCPPID{
 
     void set_fit_parameters(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices);
     void set_fit_parameters(ProtoVertexSelection& temp_vertices, ProtoSegmentSelection& temp_segments);
+
+    void clustering_points(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, int choice = 1);
+
+    std::vector<int>& get_point_sub_cluster_ids(){return point_sub_cluster_ids;};
+    std::vector<int>& get_point_steiner_sub_cluster_ids(){return point_steiner_sub_cluster_ids;};
       
   protected:
     
@@ -259,14 +264,16 @@ namespace WCPPID{
     std::map<int,WCP::SMGCSet> time_cells_set_map;
     std::map<WCP::SlimMergeGeomCell*, std::set<int>> cell_times_set_map;
 
+    // graph
+    MCUGraph *graph;
     WCP::ToyPointCloud *point_cloud;
-    WCP::Vector center;
+    std::vector<int> point_sub_cluster_ids;
     
+    WCP::Vector center;
     WCP::Vector PCA_axis[3];
     double PCA_values[3];
 
-    // graph
-    MCUGraph *graph;
+    
 
 
     std::vector<edge_descriptor> same_mcell_steiner_edges;
@@ -282,6 +289,7 @@ namespace WCPPID{
     // data product for Steinter Tree Results
     MCUGraph *graph_steiner;
     WCP::ToyPointCloud *point_cloud_steiner;
+    std::vector<int> point_steiner_sub_cluster_ids;
     WCP::ToyPointCloud *point_cloud_steiner_terminal;
     std::vector<bool> flag_steiner_terminal;
     // more derived quantities to come ...

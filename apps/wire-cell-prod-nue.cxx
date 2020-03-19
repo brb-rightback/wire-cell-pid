@@ -1394,23 +1394,23 @@ int main(int argc, char* argv[])
     //
     
     ToyPointCloud *pcloud = new_cluster->get_point_cloud();
+    
+
+      
     if (pcloud!=0){
       WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
+
+      std::vector<int>& point_sub_cluster_ids = new_cluster->get_point_sub_cluster_ids();
+      
       for (size_t i=0;i!=cloud.pts.size();i++){
 	x = cloud.pts[i].x/units::cm;
 	y = cloud.pts[i].y/units::cm;
 	z = cloud.pts[i].z/units::cm;
 
-	// hack for now ...
-	if (3 * i < cloud.pts.size()){
-	  sub_cluster_id =  new_cluster->get_cluster_id()*1000;	  
-	}else if (3*i < 2*cloud.pts.size()){
-	  sub_cluster_id =  new_cluster->get_cluster_id()*1000 + 1;	  
-	}else{
-	  sub_cluster_id =  new_cluster->get_cluster_id()*1000 + 2;	  
-	}
-
-
+	if (point_sub_cluster_ids.size() == cloud.pts.size())
+	  real_cluster_id =new_cluster->get_cluster_id()*1000 + point_sub_cluster_ids.at(i);
+	sub_cluster_id =  new_cluster->get_cluster_id();//*1000;	  
+	
 	SlimMergeGeomCell *mcell = cloud.pts[i].mcell;
 	ch_u = cloud.pts[i].index_u;
 	ch_v = cloud.pts[i].index_v;
