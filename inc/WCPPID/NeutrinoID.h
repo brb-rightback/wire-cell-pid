@@ -68,8 +68,8 @@ namespace WCPPID{
     std::map<PR3DCluster*, ProtoSegmentSet> map_cluster_segments;
     std::map<ProtoSegment*, PR3DCluster*> map_segment_cluster;
 
-
-
+    std::vector<std::tuple<PR3DCluster*, int, int> > residual_segment_candidates;
+    
     
     // after fit, for alter direction
     WCVertexSelection vertices;

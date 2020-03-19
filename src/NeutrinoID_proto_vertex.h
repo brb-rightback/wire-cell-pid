@@ -370,18 +370,20 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	//	temp_cluster->dijkstra_shortest_paths(v1->get_wcpt(),2); 
 	//	temp_cluster->cal_shortest_path(v2->get_wcpt(),2);
       }
-      
-      WCPPID::ProtoSegment *sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
-      add_proto_connection(v1,sg1,temp_cluster);
-      add_proto_connection(v2,sg1,temp_cluster);
 
-      if (sg1->get_length()/units::cm > 12*units::cm)	new_segments.push_back(sg1);
-      
-      
-      temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
-      
+      if (map_vertex_segments.find(v1)!=map_vertex_segments.end() || map_vertex_segments.find(v2) != map_vertex_segments.end()){
+	WCPPID::ProtoSegment *sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
+	add_proto_connection(v1,sg1,temp_cluster);
+	add_proto_connection(v2,sg1,temp_cluster);
+	if (sg1->get_length()/units::cm > 12*units::cm)	new_segments.push_back(sg1);
+	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
       // update output ...
-      std::cout << "# of Vertices: " << map_vertex_segments.size() << "; # of Segments: " << map_segment_vertices.size() << std::endl;
+	std::cout << "Other tracks -- # of Vertices: " << map_vertex_segments.size() << "; # of Segments: " << map_segment_vertices.size() << std::endl;
+      }else{
+	residual_segment_candidates.push_back(std::make_tuple(temp_cluster, v1->get_wcpt().index, v2->get_wcpt().index));
+	delete v1;
+	delete v2;
+      }
 
       //hack ...
       //break;
@@ -582,7 +584,8 @@ std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::Neut
 
 
 void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& remaining_segments, WCPPID::PR3DCluster* temp_cluster){
-
+  bool flag_print = false;
+  
   int count = 0;
   
   while(remaining_segments.size()!=0 && count < 2){
@@ -649,7 +652,7 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
 	del_proto_segment(curr_sg);
 	//delete curr_sg;
 
-
+	flag_print = true;
 	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
 	
 	// temporary fit hack ...
@@ -671,7 +674,8 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
     // std::cout << proto_segments.size() << " " << map_segment_vertices.size() << " " << map_vertex_segments[v3].size() << " " << map_cluster_segments[main_cluster].size() << " " << map_segment_cluster.size() << std::endl;
   }
 
-  std::cout << "# of Vertices: " << map_vertex_segments.size() << "; # of Segments: " << map_segment_vertices.size() << std::endl;
+  if (flag_print)
+    std::cout << "Break tracks  -- # of Vertices: " << map_vertex_segments.size() << "; # of Segments: " << map_segment_vertices.size() << std::endl;
 }
 
 
