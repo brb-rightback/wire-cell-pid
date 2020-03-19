@@ -381,6 +381,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	std::cout << "Other tracks -- # of Vertices: " << map_vertex_segments.size() << "; # of Segments: " << map_segment_vertices.size() << std::endl;
       }else{
 	residual_segment_candidates.push_back(std::make_tuple(temp_cluster, v1->get_wcpt().index, v2->get_wcpt().index));
+	std::cout << "Isolated residual segment found: " << sqrt(pow(v1->get_fit_pt().x - v2->get_fit_pt().x,2) + pow(v1->get_fit_pt().y - v2->get_fit_pt().y,2) + pow(v1->get_fit_pt().z - v2->get_fit_pt().z,2))/units::cm << " cm " << v1->get_fit_pt() << " " << v2->get_fit_pt() << std::endl;
 	delete v1;
 	delete v2;
       }
