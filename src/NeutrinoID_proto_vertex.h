@@ -353,16 +353,47 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	if (v1->get_wcpt().index != cloud.pts[(saved_cluster_points.at(*it)).first].index){
 	  // the starting point is already the first point
 	  temp_cluster->cal_shortest_path(v1->get_wcpt(),2);
-	  for (auto it1 = temp_cluster->get_path_wcps().begin(); it1 != temp_cluster->get_path_wcps().end(); it1++){
-	    if ((*it1).index != temp_path_list.front().index) temp_path_list.push_front(*it1);
+	  
+	  if (temp_cluster->get_path_wcps().size() >0 && temp_path_list.size() > 0){
+	    WCP::WCPointCloud<double>::WCPoint curr_wcp;
+	    bool flag_replace = false;
+	    while(temp_cluster->get_path_wcps().front().index == temp_path_list.front().index){
+	      curr_wcp =  temp_path_list.front();
+	      flag_replace = true;
+	      temp_cluster->get_path_wcps().pop_front();
+	      temp_path_list.pop_front();
+	      if (temp_cluster->get_path_wcps().size() ==0 || temp_path_list.size() == 0) break;
+	    }
+	    if (flag_replace) temp_path_list.push_front(curr_wcp);
 	  }
+	    
+	  for (auto it1 = temp_cluster->get_path_wcps().begin(); it1 != temp_cluster->get_path_wcps().end(); it1++){
+	    temp_path_list.push_front(*it1);
+	  }
+
+	  /* for (auto it1 = temp_path_list.begin(); it1!=temp_path_list.end(); it1++){ */
+	  /*   std::cout <<  (*it1).index << std::endl; */
+	  /* } */
+	  
 	}
 	//std::cout << temp_path_list.size() << std::endl;
 	if (v2->get_wcpt().index != cloud.pts[(saved_cluster_points.at(*it)).second].index){
 	  temp_cluster->dijkstra_shortest_paths(cloud.pts[(saved_cluster_points.at(*it)).second],2); 
 	  temp_cluster->cal_shortest_path(v2->get_wcpt(),2);
+
+	  if (temp_cluster->get_path_wcps().size() >0 && temp_path_list.size() > 0){
+	    WCP::WCPointCloud<double>::WCPoint curr_wcp;
+	    bool flag_replace = false;
+	    while(temp_cluster->get_path_wcps().front().index == temp_path_list.back().index){
+	      curr_wcp = temp_path_list.back();
+	      flag_replace = true;
+	      temp_cluster->get_path_wcps().pop_front();
+	      temp_path_list.pop_back();
+	    }
+	    if (flag_replace) temp_path_list.push_back(curr_wcp);
+	  }
 	  for (auto it1 = temp_cluster->get_path_wcps().begin(); it1 != temp_cluster->get_path_wcps().end(); it1++){
-	    if ((*it1).index != temp_path_list.back().index) temp_path_list.push_back(*it1);
+	    temp_path_list.push_back(*it1);
 	  }
 	}
 	//	std::cout << temp_path_list.size() << std::endl;
