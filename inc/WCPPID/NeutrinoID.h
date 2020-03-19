@@ -34,11 +34,11 @@ namespace WCPPID{
 
     
     // proto-vertex finder
-    void find_proto_vertex(WCPPID::PR3DCluster *cluster);
+    void find_proto_vertex(WCPPID::PR3DCluster *cluster, bool flag_break_trak = true, int nrounds_find_other_tracks = 2);
     WCPPID::ProtoSegment* init_first_segment(WCPPID::PR3DCluster *cluster);
     void break_segments(std::vector<WCPPID::ProtoSegment*>& remaining_segments, WCPPID::PR3DCluster* temp_cluster);
 
-    void find_other_segments(WCPPID::PR3DCluster* temp_cluster, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
+    void find_other_segments(WCPPID::PR3DCluster* temp_cluster, bool flag_break_track = true, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
     ProtoVertex* find_vertex_other_segment(WCPPID::PR3DCluster *temp_cluster, bool flag_forward, WCP::WCPointCloud<double>::WCPoint& wcp);
     
     Map_Proto_Vertex_Segments& get_map_vertex_segments(){return map_vertex_segments;};
@@ -62,13 +62,15 @@ namespace WCPPID{
     ProtoSegmentSelection proto_segments;
     Map_Proto_Vertex_Segments map_vertex_segments;
     Map_Proto_Segment_Vertices map_segment_vertices;
-
     // map the cluster to the vertices/segments
     std::map<PR3DCluster*, ProtoVertexSet> map_cluster_vertices;
     std::map<ProtoVertex*, PR3DCluster*> map_vertex_cluster;
     std::map<PR3DCluster*, ProtoSegmentSet> map_cluster_segments;
     std::map<ProtoSegment*, PR3DCluster*> map_segment_cluster;
 
+
+
+    
     // after fit, for alter direction
     WCVertexSelection vertices;
     WCParticleSelection particles;

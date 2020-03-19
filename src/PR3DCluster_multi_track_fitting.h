@@ -161,10 +161,12 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
 
   if (flag_dQ_dx){
     for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
+      if (it->first->get_cluster_id() != cluster_id) continue;
       WCPPID::ProtoVertex *vtx = it->first;
       vtx->reset_fit_prop();
     }
     for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end();it++){
+      if (it->first->get_cluster_id() != cluster_id) continue;
       WCPPID::ProtoSegment *seg = it->first;
       seg->reset_fit_prop();
     }
@@ -305,6 +307,7 @@ void WCPPID::PR3DCluster::multi_trajectory_fit(WCPPID::Map_Proto_Vertex_Segments
 
   // deal vertex
   for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
+    if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoVertex *vtx = it->first;
     int i = vtx->get_fit_index();
     bool flag_fit_fix = vtx->get_flag_fit_fix();
@@ -322,6 +325,7 @@ void WCPPID::PR3DCluster::multi_trajectory_fit(WCPPID::Map_Proto_Vertex_Segments
 
   // deal tracks 
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoSegment *sg = it->first;
     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
     for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
@@ -682,10 +686,12 @@ void WCPPID::PR3DCluster::form_map_multi_segments(WCPPID::Map_Proto_Vertex_Segme
   map_2DW_3D_set.clear();
 
   for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
+    if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoVertex *vtx = it->first;
     vtx->reset_fit_prop();
   }
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end();it++){
+    if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoSegment *seg = it->first;
     seg->reset_fit_prop();
   }
@@ -694,6 +700,7 @@ void WCPPID::PR3DCluster::form_map_multi_segments(WCPPID::Map_Proto_Vertex_Segme
   int count = 0;
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
     for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
       WCPPID::ProtoVertex *vt = *it1;
@@ -813,6 +820,7 @@ void WCPPID::PR3DCluster::form_map_multi_segments(WCPPID::Map_Proto_Vertex_Segme
 
   // deal with all the vertex again ...
   for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
+    if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoVertex *vtx = it->first;
     double dis_cut = vtx->get_fit_range();
     count = vtx->get_fit_index();
@@ -906,7 +914,8 @@ void WCPPID::PR3DCluster::organize_segments_path_3rd(WCPPID::Map_Proto_Vertex_Se
 
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
-
+    if (sg->get_cluster_id() != cluster_id) continue;
+    
     PointVector pts;
     PointVector curr_pts = sg->get_point_vec();
     Point start_p, end_p;
@@ -1061,6 +1070,7 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCPPID::Map_Proto_Vertex_Se
   
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
     for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
       WCPPID::ProtoVertex *vt = *it1;
@@ -1201,6 +1211,7 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCPPID::Map_Proto_Vertex_Se
 void WCPPID::PR3DCluster::organize_segments_path(WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments, WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices, double low_dis_limit, double end_point_limit){
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
     for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
       WCPPID::ProtoVertex *vt = *it1;
@@ -1358,7 +1369,7 @@ void WCPPID::PR3DCluster::collect_charge_multi_trajectory(WCPPID::Map_Proto_Segm
 
   for (auto it2 = map_segment_vertices.begin(); it2 != map_segment_vertices.end(); it2++){
     WCPPID::ProtoSegment* sg1 = it2->first;
-    
+    if (sg1->get_cluster_id() != cluster_id) continue;
     // form a trajectory according to dis and fine tracking?
     PointVector traj_pts;
     //  PointVector& pts = get_fine_tracking_path();

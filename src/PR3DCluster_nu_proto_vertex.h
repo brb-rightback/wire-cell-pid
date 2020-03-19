@@ -111,6 +111,7 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::Map_Proto_Vertex_Segments& 
   reduced_chi2.clear();
 
   for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
+    if (it->first->get_cluster_id()!=cluster_id) continue;
     fine_tracking_path.push_back((it->first)->get_fit_pt());
     dQ.push_back((it->first)->get_dQ());
     dx.push_back((it->first)->get_dx());
@@ -126,6 +127,7 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::Map_Proto_Vertex_Segments& 
 
   //  int tmp_id = cluster_id*1000 + 1; // hack ...
   for (auto it=map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+    if (it->first->get_cluster_id()!=cluster_id) continue;
     fine_tracking_path.insert(fine_tracking_path.end(),(it->first)->get_point_vec().begin(), (it->first)->get_point_vec().end());
     dQ.insert(dQ.end(),(it->first)->get_dQ_vec().begin(), (it->first)->get_dQ_vec().end());
     dx.insert(dx.end(),(it->first)->get_dx_vec().begin(), (it->first)->get_dx_vec().end());

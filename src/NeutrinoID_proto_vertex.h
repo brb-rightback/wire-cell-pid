@@ -1,4 +1,4 @@
-void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster,  double search_range, double scaling_2d){
+void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, bool flag_break_track, double search_range, double scaling_2d){
   
 
   const int N = temp_cluster->get_point_cloud_steiner()->get_num_points();
@@ -11,6 +11,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     double min_dis_u = 1e9, min_dis_v = 1e9, min_dis_w = 1e9;
     for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
       WCPPID::ProtoSegment *sg1 = it->first;
+      if (sg1->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
       std::pair<double, WCP::Point> closest_dis_point = sg1->get_closest_point(p);
       std::tuple<double, double, double> closest_2d_dis = sg1->get_closest_2d_dis(p);
       if (closest_dis_point.first < search_range){
@@ -200,6 +201,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
       double min_dis_u = 1e9, min_dis_v = 1e9, min_dis_w = 1e9;
       for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
 	WCPPID::ProtoSegment *sg1 = it->first;
+	if (sg1->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
 	std::tuple<double, double, double> closest_2d_dis = sg1->get_closest_2d_dis(p);
 	if (std::get<0>(closest_2d_dis) < min_dis_u) min_dis_u = std::get<0>(closest_2d_dis);
 	if (std::get<1>(closest_2d_dis) < min_dis_v) min_dis_v = std::get<1>(closest_2d_dis);
@@ -247,6 +249,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
   
   ProtoSegmentSelection temp_segments_1, temp_segments_2;
   for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+    if (it->first->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
     temp_segments_1.push_back(it->first);
   }
 
@@ -364,15 +367,16 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
       //break;
     }
   }
-  break_segments(new_segments, temp_cluster);
+  if (flag_break_track)
+    break_segments(new_segments, temp_cluster);
   
 }
 
 WCPPID::ProtoVertex* WCPPID::NeutrinoID::find_vertex_other_segment(WCPPID::PR3DCluster* temp_cluster, bool flag_forward, WCP::WCPointCloud<double>::WCPoint& wcp){
- WCPPID::ProtoVertex *v1 = 0;
-
- std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, Point> check_results = check_end_point(temp_cluster->get_fine_tracking_path(), flag_forward);
-
+  WCPPID::ProtoVertex *v1 = 0;
+  
+  std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, Point> check_results = check_end_point(temp_cluster->get_fine_tracking_path(), flag_forward);
+  
  // hack ...
  // std::get<0>(check_results) = 0;
  //std::get<1>(check_results) = 0;

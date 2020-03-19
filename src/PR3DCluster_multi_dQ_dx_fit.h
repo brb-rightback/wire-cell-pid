@@ -72,6 +72,7 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
   int n_2D_w = map_2D_wt_charge.size();
   
   for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+    if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoSegment *sg = it->first;
     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
     for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
@@ -167,6 +168,7 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
   
   // loop over segments ...
   for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+    if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoSegment *sg = it->first;
 
     PointVector& pts = sg->get_point_vec();
@@ -367,6 +369,7 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
   
   // loop over vertices ...
   for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
+    if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoVertex *vtx = it->first;
     Point curr_rec_pos = vtx->get_fit_pt();
     int index = vtx->get_fit_index();
@@ -577,6 +580,7 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
   }
   std::vector<std::vector<int> > connected_vec(n_3D_pos);
   for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+    if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoSegment *sg = it->first;
     std::vector<int>& indices = sg->get_fit_index_vec();
     for (size_t i=1;i+1<indices.size();i++){
@@ -585,6 +589,7 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
     }
   }
   for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
+    if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoVertex *vtx = it->first;
     int index = vtx->get_fit_index();
     for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
@@ -741,6 +746,7 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
   std::cout << "multi-fit total: " << sum << std::endl;
 
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+    if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoSegment *sg = it->first;
     for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
       WCPPID::ProtoVertex *vtx = *it1;
