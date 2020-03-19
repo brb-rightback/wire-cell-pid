@@ -66,20 +66,19 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     /* } */
   }
 
-
-  // second round trajectory fit ...
-  low_dis_limit = 0.6*units::cm;
-  end_point_limit = 0.3*units::cm;
-  
-  /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
-  /*   WCPPID::ProtoSegment *sg = it->first; */
-  /*   std::cout << sg->get_wcpt_vec().size() << " A " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
-  /* } */
-  
-  // organize path
-  organize_segments_path_2nd(map_vertex_segments, map_segment_vertices, low_dis_limit, end_point_limit);    
-  
   if (flag_2nd_tracking){
+    // second round trajectory fit ...
+    low_dis_limit = 0.6*units::cm;
+    end_point_limit = 0.3*units::cm;
+    
+    /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
+    /*   WCPPID::ProtoSegment *sg = it->first; */
+    /*   std::cout << sg->get_wcpt_vec().size() << " A " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
+    /* } */
+    // organize path
+    organize_segments_path_2nd(map_vertex_segments, map_segment_vertices, low_dis_limit, end_point_limit);    
+    
+    
     
     map_3D_2DU_set.clear();
     map_3D_2DV_set.clear();
@@ -136,9 +135,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
 
   }
   
-  // organize path
-  low_dis_limit = 0.6*units::cm;
-  organize_segments_path_3rd(map_vertex_segments, map_segment_vertices, low_dis_limit);
+  
 
   /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
   /*   WCPPID::ProtoSegment *sg = it->first; */
@@ -160,6 +157,10 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
   
 
   if (flag_dQ_dx){
+    // organize path
+    low_dis_limit = 0.6*units::cm;
+    organize_segments_path_3rd(map_vertex_segments, map_segment_vertices, low_dis_limit);
+    
     for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
       if (it->first->get_cluster_id() != cluster_id) continue;
       WCPPID::ProtoVertex *vtx = it->first;
