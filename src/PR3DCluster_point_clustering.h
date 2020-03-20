@@ -12,16 +12,11 @@ void WCPPID::PR3DCluster::clustering_points(Map_Proto_Vertex_Segments& map_verte
     temp_point_cloud = point_cloud_steiner;
     temp_points_ids = &point_steiner_sub_cluster_ids;
   }
+
+  
   temp_points_ids->resize(temp_point_cloud->get_num_points(),0);
   WCP::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
   
-  // define steiner terminal for vertices ...
-  // for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
-  //  if (it->first->get_cluster_id()!=cluster_id) continue;
-  //  Point tmp_p = it->first->get_fit_pt();
-  //  
-  //}
-
   std::map<size_t, WCPPID::ProtoSegment*> map_pindex_segment;
   
   // define steiner terminal for segments ...
@@ -39,12 +34,15 @@ void WCPPID::PR3DCluster::clustering_points(Map_Proto_Vertex_Segments& map_verte
     }
   }
 
+  
   // these are steiner terminals ...
   if (map_pindex_segment.size()>0){
     std::vector<int> terminals;
     for (auto it = map_pindex_segment.begin(); it!=map_pindex_segment.end(); it++){
+      //std::cout << it->first << std::endl;
       terminals.push_back(it->first);
     }
+
     
     const int N = temp_point_cloud->get_num_points();
     
@@ -62,14 +60,14 @@ void WCPPID::PR3DCluster::clustering_points(Map_Proto_Vertex_Segments& map_verte
     using EdgeTerminal =
       typename boost::graph_traits<TerminalGraph>::edge_descriptor;
     
-    EdgeWeightMap edge_weight = boost::choose_pmap(boost::get_param(boost::no_named_parameters(), boost::edge_weight), *graph, boost::edge_weight);
+    EdgeWeightMap edge_weight = boost::choose_pmap(boost::get_param(boost::no_named_parameters(), boost::edge_weight), *temp_graph, boost::edge_weight);
     
     // distance array used in the dijkstra runs
     std::vector<Weight> distance(N);
     std::vector<Vertex> nearest_terminal(num_vertices(*temp_graph));
     auto index = get(boost::vertex_index, *temp_graph);
     
-    auto nearest_terminal_map = boost::make_iterator_property_map(nearest_terminal.begin(), get(boost::vertex_index, *graph));
+    auto nearest_terminal_map = boost::make_iterator_property_map(nearest_terminal.begin(), get(boost::vertex_index, *temp_graph));
     for (auto terminal : terminals) {
       nearest_terminal_map[terminal] = terminal;
     }
@@ -77,8 +75,8 @@ void WCPPID::PR3DCluster::clustering_points(Map_Proto_Vertex_Segments& map_verte
     // path to nearest terminal
     auto distance_map = make_iterator_property_map(distance.begin(), index);
     std::vector<Edge> vpred(N);
-    auto last_edge = boost::make_iterator_property_map(vpred.begin(), get(boost::vertex_index, *graph));
-    boost::dijkstra_shortest_paths(*graph, terminals.begin(), terminals.end(), boost::dummy_property_map(),
+    auto last_edge = boost::make_iterator_property_map(vpred.begin(), get(boost::vertex_index, *temp_graph));
+    boost::dijkstra_shortest_paths(*temp_graph, terminals.begin(), terminals.end(), boost::dummy_property_map(),
 				   distance_map, edge_weight, index, paal::utils::less(),
 				   boost::closed_plus<Weight>(), std::numeric_limits<Weight>::max(), 0,
 				   boost::make_dijkstra_visitor(paal::detail::make_nearest_recorder(
@@ -93,14 +91,16 @@ void WCPPID::PR3DCluster::clustering_points(Map_Proto_Vertex_Segments& map_verte
       }
       temp_points_ids->at(i) = map_pindex_segment[index]->get_id();
       //std::cout << i << " " << nearest_terminal.at(i) << std::endl;
-      //std::cout << nearest_terminal.size() << " " << N << std::endl;
+      //
     }
+    //  std::cout << nearest_terminal.size() << " " << N << std::endl;
     
     WCPPID::ProtoSegmentSelection temp_segments;
     for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
       if (it->first->get_cluster_id() != cluster_id) continue;
       temp_segments.push_back(it->first);
     }
+
     
     // now examine to remove ghost points ....
     for (size_t i=0;i!=N;i++){
@@ -108,14 +108,15 @@ void WCPPID::PR3DCluster::clustering_points(Map_Proto_Vertex_Segments& map_verte
       WCPPID::ProtoSegment *main_sg = map_pindex_segment[nearest_terminal.at(i)];
       // check against main_sg;
       bool flag_change = true;
+      
+      
       std::pair<double, WCP::Point> closest_dis_point = main_sg->get_closest_point(p);
       std::tuple<double, double, double> closest_2d_dis = main_sg->get_closest_2d_dis(p);
-      if (closest_dis_point.first < search_range || std::get<0>(closest_2d_dis) < scaling_2d * search_range && std::get<0>(closest_2d_dis) < scaling_2d * search_range && std::get<0>(closest_2d_dis) < scaling_2d * search_range)
+      if (closest_dis_point.first < search_range || std::get<0>(closest_2d_dis) < scaling_2d * search_range && std::get<0>(closest_2d_dis) < scaling_2d * search_range && std::get<0>(closest_2d_dis) < scaling_2d * search_range){
 	flag_change = false;
-      
+      }else{
       // check against all_sg;  These likely to be ghosts ...
-      if (flag_change){
-	double min_dis_u = 1e9, min_dis_v = 1e9, min_dis_w = 1e9;
+      	double min_dis_u = 1e9, min_dis_v = 1e9, min_dis_w = 1e9;
 	for (auto it = temp_segments.begin(); it!= temp_segments.end(); it++){
 	  WCPPID::ProtoSegment *sg1 = *it;
 	  //std::pair<double, WCP::Point> closest_dis_point = sg1->get_closest_point(p);
@@ -136,7 +137,7 @@ void WCPPID::PR3DCluster::clustering_points(Map_Proto_Vertex_Segments& map_verte
 	temp_points_ids->at(i) = -1;
     }
   }
-
+  
   
   //std::cout << nearest_terminal.size() << " " << temp_points_ids->size() << std::endl;
 }
