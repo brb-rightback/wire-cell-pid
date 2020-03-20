@@ -1,4 +1,21 @@
-void WCPPID::PR3DCluster::clustering_points(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, int choice, double search_range, double scaling_2d){
+void WCPPID::PR3DCluster::clustering_points_master(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, double search_range, double scaling_2d){
+  clustering_points(map_vertex_segments, map_segment_vertices, ct_point_cloud, 2);
+  ToyPointCloud *pcloud = new ToyPointCloud();
+  PointVector pts;
+  WCP::WCPointCloud<double>& cloud = point_cloud_steiner->get_cloud();
+  for (size_t i=0;i!=cloud.pts.size();i++){
+    if (point_steiner_sub_cluster_ids.at(i)!=-1){
+      Point p(cloud.pts[i].x,cloud.pts[i].y, cloud.pts[i].z);
+      pts.push_back(p);
+    }
+  }
+  pcloud->AddPoints(pts);
+  pcloud->build_kdtree_index();
+  clustering_points(map_vertex_segments, map_segment_vertices, ct_point_cloud, 1, pcloud);
+  delete pcloud;
+}
+
+  void WCPPID::PR3DCluster::clustering_points(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, int choice, WCP::ToyPointCloud* pcloud, double search_range, double scaling_2d){
 
   MCUGraph *temp_graph = 0;
   WCP::ToyPointCloud *temp_point_cloud = 0;
@@ -112,8 +129,26 @@ void WCPPID::PR3DCluster::clustering_points(Map_Proto_Vertex_Segments& map_verte
       
       std::pair<double, WCP::Point> closest_dis_point = main_sg->get_closest_point(p);
       std::tuple<double, double, double> closest_2d_dis = main_sg->get_closest_2d_dis(p);
-      if (closest_dis_point.first < search_range || std::get<0>(closest_2d_dis) < scaling_2d * search_range && std::get<0>(closest_2d_dis) < scaling_2d * search_range && std::get<0>(closest_2d_dis) < scaling_2d * search_range){
+      if (closest_dis_point.first < search_range){
 	flag_change = false;
+      }else if (std::get<0>(closest_2d_dis) < scaling_2d * search_range && std::get<0>(closest_2d_dis) < scaling_2d * search_range && std::get<0>(closest_2d_dis) < scaling_2d * search_range){
+	flag_change = false;
+	
+	// need to be close to the steiner tree somehow ...
+	if(!flag_change  && pcloud != 0){
+	  std::pair<int,double> test_u = pcloud->get_closest_2d_dis(p, 0);
+	  std::pair<int,double> test_v = pcloud->get_closest_2d_dis(p, 1);
+	  std::pair<int,double> test_w = pcloud->get_closest_2d_dis(p, 2);
+	  double dis = pcloud->get_closest_dis(p);
+	  int ncount = 0;
+	  if (test_u.second > search_range * scaling_2d) ncount++;
+	  if (test_v.second > search_range * scaling_2d) ncount++;
+	  if (test_w.second > search_range * scaling_2d) ncount++;
+	  if (dis > search_range) ncount ++;
+	  if (ncount > 0){
+	    flag_change = true;
+	  }
+	}
       }else{
       // check against all_sg;  These likely to be ghosts ...
       	double min_dis_u = 1e9, min_dis_v = 1e9, min_dis_w = 1e9;
@@ -131,7 +166,25 @@ void WCPPID::PR3DCluster::clustering_points(Map_Proto_Vertex_Segments& map_verte
 	  flag_change = true;
 	else
 	  flag_change = false;
+
+	// need to be close to the steiner tree somehow ...
+	if(!flag_change  && pcloud != 0){
+	  std::pair<int,double> test_u = pcloud->get_closest_2d_dis(p, 0);
+	  std::pair<int,double> test_v = pcloud->get_closest_2d_dis(p, 1);
+	  std::pair<int,double> test_w = pcloud->get_closest_2d_dis(p, 2);
+	  double dis = pcloud->get_closest_dis(p);
+	  int ncount = 0;
+	  if (test_u.second > search_range * scaling_2d) ncount++;
+	  if (test_v.second > search_range * scaling_2d) ncount++;
+	  if (test_w.second > search_range * scaling_2d) ncount++;
+	  if (dis > search_range) ncount ++;
+	  if (ncount > 0){
+	    flag_change = true;
+	  }
+	}
       }
+      
+     
       
       if (flag_change)
 	temp_points_ids->at(i) = -1;
