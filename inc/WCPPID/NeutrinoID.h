@@ -11,7 +11,21 @@
 
 #include "WCPPID/Map_Proto_Vertex_Segment.h"
 
+#include "Minuit2/FCNBase.h"
+
 namespace WCPPID{
+  class MyFCN : public ROOT::Minuit2::FCNBase {
+
+  public: 
+    double Up() const { return 1.;}
+    
+    
+  private:
+    ProtoVertex *vtx;
+    
+  };
+  
+  
   class NeutrinoID{
   public:
     NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis,	WCP::ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double flash_time);
@@ -43,6 +57,8 @@ namespace WCPPID{
 
     // improve vertex ...
     void improve_vertex(WCPPID::PR3DCluster* temp_cluster);
+    void fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set);
+
     
     Map_Proto_Vertex_Segments& get_map_vertex_segments(){return map_vertex_segments;};
     Map_Proto_Segment_Vertices& get_map_segment_verteices(){return map_segment_vertices;};
