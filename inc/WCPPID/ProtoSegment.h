@@ -55,7 +55,10 @@ namespace WCPPID{
 
     // search for kinks ...  return  position, direction ...
     std::tuple<WCP::Point, TVector3, bool> search_kink(WCP::Point& start_p);
-    
+
+    void clear_associate_points();
+    void add_associate_point(WCP::Point p);
+    std::vector<WCP::Point >& get_associate_points(){return associated_points;};
   protected:
     int id;
     int cluster_id;
@@ -76,6 +79,8 @@ namespace WCPPID{
     
     // point cloud ...
     WCP::ToyPointCloud* pcloud_fit;
+
+    std::vector<WCP::Point > associated_points;
     
     bool flag_fit;
   };

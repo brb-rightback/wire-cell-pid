@@ -269,6 +269,15 @@ void WCPPID::ProtoSegment::clear_fit(){
 
   fit_index_vec.clear();
   fit_flag_skip.clear();
+  associated_points.clear();
+}
+
+void WCPPID::ProtoSegment::clear_associate_points(){
+  associated_points.clear();
+}
+
+void WCPPID::ProtoSegment::add_associate_point(WCP::Point p){
+  associated_points.push_back(p);
 }
 
 void WCPPID::ProtoSegment::print_dis(){
