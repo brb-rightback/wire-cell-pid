@@ -13,7 +13,7 @@
 using namespace WCP;
 
 #include "NeutrinoID_proto_vertex.h"
-
+#include "NeutrinoID_improve_vertex.h"
 
 WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time)
   : acc_vertex_id(0)
@@ -30,15 +30,14 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   find_proto_vertex(main_cluster);
   main_cluster->clustering_points_master(map_vertex_segments, map_segment_vertices, *ct_point_cloud);
   
+  
   //deal with the other clusters ...
   for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
     (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
     find_proto_vertex(*it, false, 1);
     (*it)->clustering_points_master(map_vertex_segments, map_segment_vertices, *ct_point_cloud);
   }
-
-
-
+  
   
   // deal with main cluster
   //  process_main_cluster();

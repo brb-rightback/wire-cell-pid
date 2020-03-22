@@ -1410,7 +1410,7 @@ int main(int argc, char* argv[])
 	if (point_sub_cluster_ids.size() == cloud.pts.size()){
 	  if (point_sub_cluster_ids.at(i)==-1){
 	    real_cluster_id = -1;
-	    continue;
+	    continue; // skip -1 points ... deghosting ...
 	  }else{
 	    real_cluster_id =new_cluster->get_cluster_id()*1000 + point_sub_cluster_ids.at(i);
 	  }

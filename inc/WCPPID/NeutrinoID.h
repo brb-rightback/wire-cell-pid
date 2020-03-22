@@ -40,6 +40,9 @@ namespace WCPPID{
 
     void find_other_segments(WCPPID::PR3DCluster* temp_cluster, bool flag_break_track = true, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
     ProtoVertex* find_vertex_other_segment(WCPPID::PR3DCluster *temp_cluster, bool flag_forward, WCP::WCPointCloud<double>::WCPoint& wcp);
+
+    // improve vertex ...
+    void improve_vertex(WCPPID::PR3DCluster* temp_cluster);
     
     Map_Proto_Vertex_Segments& get_map_vertex_segments(){return map_vertex_segments;};
     Map_Proto_Segment_Vertices& get_map_segment_verteices(){return map_segment_vertices;};
