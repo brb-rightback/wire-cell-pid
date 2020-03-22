@@ -33,12 +33,19 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   main_cluster->clustering_points_master(map_vertex_segments, map_segment_vertices, *ct_point_cloud);
   improve_vertex(main_cluster);
   
+  // prepare output ...
+  organize_vertices_segments();
+  main_cluster->set_fit_parameters(proto_vertices, proto_segments);
+  
   if (flag_other_clusters){
     //deal with the other clusters ...
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
       (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
       find_proto_vertex(*it, false, 1);
       (*it)->clustering_points_master(map_vertex_segments, map_segment_vertices, *ct_point_cloud);
+
+      organize_vertices_segments();
+      (*it)->set_fit_parameters(proto_vertices, proto_segments);
     }
   }
   
@@ -141,9 +148,7 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
     }
   }
   
-  // prepare output ...
-  organize_vertices_segments();
-  temp_cluster->set_fit_parameters(proto_vertices, proto_segments);
+
   
 
   // for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){

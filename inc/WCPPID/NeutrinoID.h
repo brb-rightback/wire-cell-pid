@@ -29,7 +29,11 @@ namespace WCPPID{
     bool get_flag_vtx_constraint(){return flag_vtx_constraint;};
     void set_flag_vtx_constraint(bool val){flag_vtx_constraint = val;};
     void set_vtx_constraint_range(double val){vtx_constraint_range = val;};
-    
+
+    std::vector<ProtoSegment*>& get_segments(){return segments;};
+    std::vector<WCP::PointVector>& get_vec_points(){return vec_points;};
+
+    void print_points();
     
     double operator() (const std::vector<double> & xx) const;
     double get_chi2(const std::vector<double> & xx) const;
@@ -78,7 +82,7 @@ namespace WCPPID{
 
     // improve vertex ...
     void improve_vertex(WCPPID::PR3DCluster* temp_cluster);
-    void fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set);
+    void fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster);
 
     
     Map_Proto_Vertex_Segments& get_map_vertex_segments(){return map_vertex_segments;};
