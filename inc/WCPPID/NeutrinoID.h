@@ -19,7 +19,7 @@ namespace WCPPID{
   public: 
     double Up() const { return 1.;}
 
-    MyFCN(ProtoVertex* vtx, bool flag_vtx_constraint = false, double vertex_protect_dis = 1.5*units::cm, double point_track_dis = 2.0*units::cm, double fit_dis = 6 * units::cm);    
+    MyFCN(ProtoVertex* vtx, bool flag_vtx_constraint = false, double vtx_constraint_range = 1*units::cm, double vertex_protect_dis = 1.5*units::cm, double point_track_dis = 2.0*units::cm, double fit_dis = 6 * units::cm);    
     ~MyFCN();
 
     void update_fit_range(double tmp_vertex_protect_dis = 1.5*units::cm, double tmp_point_track_dis = 2.0*units::cm, double tmp_fit_dis = 6 * units::cm);
@@ -28,6 +28,7 @@ namespace WCPPID{
     int get_fittable_tracks();
     bool get_flag_vtx_constraint(){return flag_vtx_constraint;};
     void set_flag_vtx_constraint(bool val){flag_vtx_constraint = val;};
+    void set_vtx_constraint_range(double val){vtx_constraint_range = val;};
     
     
     double operator() (const std::vector<double> & xx) const;
@@ -36,6 +37,7 @@ namespace WCPPID{
   private:
     ProtoVertex *vtx;
     bool flag_vtx_constraint;
+    double vtx_constraint_range;
     double vertex_protect_dis;
     double point_track_dis;
     double fit_dis;

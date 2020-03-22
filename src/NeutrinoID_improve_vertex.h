@@ -40,10 +40,11 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
   }
 }
 
-WCPPID::MyFCN::MyFCN(WCPPID::ProtoVertex* vtx, bool flag_vtx_constraint, double vertex_protect_dis, double point_track_dis, double fit_dis) 
+WCPPID::MyFCN::MyFCN(WCPPID::ProtoVertex* vtx, bool flag_vtx_constraint, double vtx_constraint_range, double vertex_protect_dis, double point_track_dis, double fit_dis) 
 : vtx(vtx)
 , flag_vtx_constraint(flag_vtx_constraint)
-, vertex_protect_dis(vertex_protect_dis)
+  , vtx_constraint_range(vtx_constraint_range) 
+  , vertex_protect_dis(vertex_protect_dis)
   , point_track_dis(point_track_dis)
   , fit_dis(fit_dis)
 {
