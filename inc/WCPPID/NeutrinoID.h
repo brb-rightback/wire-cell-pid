@@ -18,10 +18,29 @@ namespace WCPPID{
 
   public: 
     double Up() const { return 1.;}
+
+    MyFCN(ProtoVertex* vtx, bool flag_vtx_constraint = false, double vertex_protect_dis = 1.5*units::cm, double point_track_dis = 2.0*units::cm, double fit_dis = 6 * units::cm);    
+    ~MyFCN();
+
+    void update_fit_range(double tmp_vertex_protect_dis = 1.5*units::cm, double tmp_point_track_dis = 2.0*units::cm, double tmp_fit_dis = 6 * units::cm);
+    void AddSegment(ProtoSegment *sg);
+    std::pair<ProtoSegment*, int> get_seg_info(int i);
+    int get_fittable_tracks();
+    bool get_flag_vtx_constraint(){return flag_vtx_constraint;};
+    void set_flag_vtx_constraint(bool val){flag_vtx_constraint = val;};
     
+    
+    double operator() (const std::vector<double> & xx) const;
+    double get_chi2(const std::vector<double> & xx) const;
     
   private:
     ProtoVertex *vtx;
+    bool flag_vtx_constraint;
+    double vertex_protect_dis;
+    double point_track_dis;
+    double fit_dis;
+    std::vector<ProtoSegment* > segments;
+    std::vector<WCP::PointVector> vec_points;
     
   };
   
