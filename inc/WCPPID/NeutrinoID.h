@@ -11,13 +11,14 @@
 
 #include "WCPPID/Map_Proto_Vertex_Segment.h"
 
-#include "Minuit2/FCNBase.h"
+//#include "Minuit2/FCNBase.h"
 
 namespace WCPPID{
-  class MyFCN : public ROOT::Minuit2::FCNBase {
-
+  //  class MyFCN : public ROOT::Minuit2::FCNBase {
+  class MyFCN {
+  
   public: 
-    double Up() const { return 1.;}
+    //    double Up() const { return 1.;}
 
     MyFCN(ProtoVertex* vtx, bool flag_vtx_constraint = false, double vtx_constraint_range = 1*units::cm, double vertex_protect_dis = 1.5*units::cm, double point_track_dis = 2.0*units::cm, double fit_dis = 6 * units::cm);    
     ~MyFCN();
@@ -35,8 +36,8 @@ namespace WCPPID{
 
     void print_points();
     
-    double operator() (const std::vector<double> & xx) const;
-    double get_chi2(const std::vector<double> & xx) const;
+    //  double operator() (const std::vector<double> & xx) const;
+    //  double get_chi2(const std::vector<double> & xx) const;
     
   private:
     ProtoVertex *vtx;

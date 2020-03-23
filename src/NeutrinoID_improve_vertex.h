@@ -1,7 +1,7 @@
-#include "Minuit2/FunctionMinimum.h"
-#include "Minuit2/MnUserParameterState.h"
-#include "Minuit2/MnMigrad.h"
-#include "WCPData/Line.h"
+//#include "Minuit2/FunctionMinimum.h"
+//#include "Minuit2/MnUserParameterState.h"
+//#include "Minuit2/MnMigrad.h"
+//#include "WCPData/Line.h"
 
 #include "WCPData/TPCParams.h"
 #include "WCPData/Singleton.h"
@@ -107,7 +107,6 @@ int WCPPID::MyFCN::get_fittable_tracks(){
   return ncount;
 }
 
-
 std::pair<WCPPID::ProtoSegment*, int> WCPPID::MyFCN::get_seg_info(int i){
   if (i < segments.size()){
     return std::make_pair(segments.at(i), vec_points.at(i).size());
@@ -115,10 +114,12 @@ std::pair<WCPPID::ProtoSegment*, int> WCPPID::MyFCN::get_seg_info(int i){
   return std::make_pair((WCPPID::ProtoSegment*)0, 0);
 }
 
-double WCPPID::MyFCN::operator() (const std::vector<double> & xx) const{
-  return get_chi2(xx);
-}
 
+//double WCPPID::MyFCN::operator() (const std::vector<double> & xx) const{
+//  return get_chi2(xx);
+//}
+
+/*
 double WCPPID::MyFCN::get_chi2(const std::vector<double> & xx) const{
   double chi2 = 0;
   const int ntracks = segments.size();
@@ -147,6 +148,7 @@ double WCPPID::MyFCN::get_chi2(const std::vector<double> & xx) const{
   
   return chi2;
 }
+*/
 
 
 
@@ -182,24 +184,25 @@ void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
     }
   }
 
-  ROOT::Minuit2::MnUserParameters upar;
-  for (int i=0;i!=3;i++){
-    upar.Add(Form("x_%d",i),xx.at(i),0.01*units::cm);
-  }
-  for (int i=3;i!=npar;i++){
-    upar.Add(Form("x_%d",i),xx.at(i),0.01);
-  }
+  //  ROOT::Minuit2::MnUserParameters upar;
+  //for (int i=0;i!=3;i++){
+  // upar.Add(Form("x_%d",i),xx.at(i),0.01*units::cm);
+  //}
+  //for (int i=3;i!=npar;i++){
+  // upar.Add(Form("x_%d",i),xx.at(i),0.01);
+  //}
   // create MIGRAD minimizer
-  ROOT::Minuit2::MnMigrad migrad(fcn, upar);
+  //ROOT::Minuit2::MnMigrad migrad(fcn, upar);
 
   // minimize
-  ROOT::Minuit2::FunctionMinimum min = migrad();
-  const ROOT::Minuit2::MnUserParameterState& state = min.UserState();
+  //ROOT::Minuit2::FunctionMinimum min = migrad();
+  //const ROOT::Minuit2::MnUserParameterState& state = min.UserState();
 
-  Point fit_vtx_p(vtx->get_fit_pt().x + state.Value(0), vtx->get_fit_pt().y + state.Value(1), vtx->get_fit_pt().z + state.Value(2));
+  //  Point fit_vtx_p(vtx->get_fit_pt().x + state.Value(0), vtx->get_fit_pt().y + state.Value(1), vtx->get_fit_pt().z + state.Value(2));
+  //  std::cout << vtx->get_fit_pt() << " " << fit_vtx_p << std::endl;
 
-  std::cout << vtx->get_fit_pt() << " " << fit_vtx_p << std::endl;
-  
+
+  /*
   // convertion to the u, v, w, z ...
   TPCParams& mp = Singleton<TPCParams>::Instance();
   double pitch_u = mp.get_pitch_u();
@@ -256,8 +259,10 @@ void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
     }
   }
   vtx->set_fit(fit_vtx_p, vtx->get_dQ(), vtx->get_dx(), offset_u + 0.5 + (slope_yu * fit_vtx_p.y + slope_zu * fit_vtx_p.z), offset_v + 0.5 + (slope_yv * fit_vtx_p.y + slope_zv * fit_vtx_p.z)+2400, offset_w + 0.5 + (slope_yw * fit_vtx_p.y + slope_zw * fit_vtx_p.z)+4800, offset_t + 0.5 + slope_x * fit_vtx_p.x, vtx->get_reduced_chi2());
+
+  */
   
-  std::cout << min.IsValid() << " " << min.Fval() << " " << fcn.get_chi2(xx) << std::endl;
+  //  std::cout << min.IsValid() << " " << min.Fval() << " " << fcn.get_chi2(xx) << std::endl;
 
   // std::cout << std::endl;
 
