@@ -46,8 +46,12 @@ namespace WCPPID{
     double vertex_protect_dis;
     double point_track_dis;
     double fit_dis;
+    
     std::vector<ProtoSegment* > segments;
     std::vector<WCP::PointVector> vec_points;
+
+    std::vector<std::tuple<TVector3, TVector3, TVector3> > vec_PCA_dirs;
+    std::vector<std::tuple<double, double, double> > vec_PCA_vals;
     
   };
   

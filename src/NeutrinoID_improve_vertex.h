@@ -158,50 +158,12 @@ void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
   for (auto it = sg_set.begin(); it!=sg_set.end(); it++){
     fcn.AddSegment(*it);
   }
-  std::vector<WCP::PointVector>& vec_points = fcn.get_vec_points();
 
-  int npar = 3 + sg_set.size()*2;
-  std::vector<double> xx(npar);
   
   
-  xx[0] = 0;
-  xx[1] = 0;
-  xx[2] = 0;
-  for (size_t i=0;i!=vec_points.size();i++){
-    double theta = 0, phi = 0;
-    if (vec_points.at(i).size()>0){
-      Point p(0,0,0);
-      for (size_t j=0;j!=vec_points.at(i).size();j++){
-	p.x += vec_points.at(i).at(j).x - vtx->get_fit_pt().x;
-	p.y += vec_points.at(i).at(j).y - vtx->get_fit_pt().y;
-	p.z += vec_points.at(i).at(j).z - vtx->get_fit_pt().z;
-      }
-      TVector3 dir(p.x, p.y, p.z);
-      theta = dir.Theta();
-      phi = dir.Phi();
-      xx[3 + 2*i] = theta;
-      xx[3 + 2*i + 1] = phi;
-    }
-  }
-
-  //  ROOT::Minuit2::MnUserParameters upar;
-  //for (int i=0;i!=3;i++){
-  // upar.Add(Form("x_%d",i),xx.at(i),0.01*units::cm);
-  //}
-  //for (int i=3;i!=npar;i++){
-  // upar.Add(Form("x_%d",i),xx.at(i),0.01);
-  //}
-  // create MIGRAD minimizer
-  //ROOT::Minuit2::MnMigrad migrad(fcn, upar);
-
-  // minimize
-  //ROOT::Minuit2::FunctionMinimum min = migrad();
-  //const ROOT::Minuit2::MnUserParameterState& state = min.UserState();
 
   //  Point fit_vtx_p(vtx->get_fit_pt().x + state.Value(0), vtx->get_fit_pt().y + state.Value(1), vtx->get_fit_pt().z + state.Value(2));
   //  std::cout << vtx->get_fit_pt() << " " << fit_vtx_p << std::endl;
-
-
   /*
   // convertion to the u, v, w, z ...
   TPCParams& mp = Singleton<TPCParams>::Instance();
@@ -262,11 +224,7 @@ void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
 
   */
   
-  //  std::cout << min.IsValid() << " " << min.Fval() << " " << fcn.get_chi2(xx) << std::endl;
-
-  // std::cout << std::endl;
-
-  //  fcn.print_points();
+   //  fcn.print_points();
 }
 
 
