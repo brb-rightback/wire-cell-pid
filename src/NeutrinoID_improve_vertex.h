@@ -3,6 +3,8 @@
 //#include "Minuit2/MnMigrad.h"
 //#include "WCPData/Line.h"
 
+#include "TMatrixDEigen.h"
+
 #include "WCPData/TPCParams.h"
 #include "WCPData/Singleton.h"
 
@@ -83,7 +85,85 @@ void WCPPID::MyFCN::AddSegment(ProtoSegment *sg){
     vec_points.back().push_back(pts.at(i));
   }
 
-  std::cout << vec_points.size() << " " << vec_points.back().size() << std::endl;
+  // calculate the PCA ...
+  if (vec_points.back().size()>1){
+
+    // calculate center ...
+    WCP::Point center(0,0,0);
+    int nsum = 0;
+    for (auto it = vec_points.back().begin(); it!=vec_points.back().end();it++){
+      center.x += (*it).x;
+      center.y += (*it).y;
+      center.z += (*it).z;
+      nsum ++;
+    }
+    center.x /= nsum; center.y /= nsum; center.z /= nsum;
+
+    // Eigen vectors ...
+    PointVector PCA_axis(3);
+    for (int i=0;i!=3;i++){
+      PCA_axis[i].x = 0;       PCA_axis[i].y = 0;       PCA_axis[i].z = 0;
+    }
+    double PCA_values[3]={0,0,0};
+    
+    TMatrixD cov_matrix(3,3);
+    for (int i=0;i!=3;i++){
+      for (int j=0;j!=3;j++){
+	for (size_t k=0;k!=vec_points.back().size();k++){
+	  if (i==0 && j==0){
+	    cov_matrix(i,j) += (vec_points.back().at(k).x - center.x) * (vec_points.back().at(k).x - center.x);
+	  }else if (i==0 && j==1){
+	    cov_matrix(i,j) += (vec_points.back().at(k).x - center.x) * (vec_points.back().at(k).y - center.y);
+	  }else if (i==0 && j==2){
+	    cov_matrix(i,j) += (vec_points.back().at(k).x - center.x) * (vec_points.back().at(k).z - center.z);
+	  }else if (i==1 && j==1){
+	    cov_matrix(i,j) += (vec_points.back().at(k).y - center.y) * (vec_points.back().at(k).y - center.y);
+	  }else if (i==1 && j==2){
+	    cov_matrix(i,j) += (vec_points.back().at(k).y - center.y) * (vec_points.back().at(k).z - center.z);
+	  }else if (i==2 && j==2){
+	    cov_matrix(i,j) += (vec_points.back().at(k).z - center.z) * (vec_points.back().at(k).z - center.z);
+	  }
+	}
+      }
+    }
+    cov_matrix(1,0) = cov_matrix(0,1);
+    cov_matrix(2,0) = cov_matrix(0,2);
+    cov_matrix(2,1) = cov_matrix(1,2);
+    for (int i=0;i!=3;i++){
+      for (int j=0;j!=3;j++){
+	cov_matrix(i,j) = cov_matrix(i,j)/nsum;// + pow(1.0*units::cm,2); // add a value ...
+      }
+    }
+    
+    TMatrixDEigen eigen(cov_matrix);
+    TMatrixD eigen_values = eigen.GetEigenValues();
+    TMatrixD eigen_vectors = eigen.GetEigenVectors();
+
+    PCA_values[0] = eigen_values(0,0) + pow(0.06*units::cm,2);
+    PCA_values[1] = eigen_values(1,1) + pow(0.06*units::cm,2);
+    PCA_values[2] = eigen_values(2,2) + pow(0.06*units::cm,2);
+
+    for (int i=0;i!=3;i++){
+      PCA_axis[i].x = eigen_vectors(0,i)/sqrt(eigen_vectors(0,i)*eigen_vectors(0,i) + eigen_vectors(1,i)*eigen_vectors(1,i) + eigen_vectors(2,i)*eigen_vectors(2,i));
+      PCA_axis[i].y = eigen_vectors(1,i)/sqrt(eigen_vectors(0,i)*eigen_vectors(0,i) + eigen_vectors(1,i)*eigen_vectors(1,i) + eigen_vectors(2,i)*eigen_vectors(2,i));
+      PCA_axis[i].z = eigen_vectors(2,i)/sqrt(eigen_vectors(0,i)*eigen_vectors(0,i) + eigen_vectors(1,i)*eigen_vectors(1,i) + eigen_vectors(2,i)*eigen_vectors(2,i));
+    }
+
+    //    TVector3 v1(vec_points.back().front().x - vec_points.back().back().x, vec_points.back().front().y - vec_points.back().back().y, vec_points.back().front().z - vec_points.back().back().z);
+    //TVector3 v2(PCA_axis[0].x, PCA_axis[0].y, PCA_axis[0].z);
+    //std::cout << vec_points.back().size() << " " << sqrt(PCA_values[0])/units::cm << " " << sqrt(PCA_values[1])/units::cm << " " << sqrt(PCA_values[2])/units::cm << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
+
+    vec_PCA_dirs.push_back(std::make_tuple(PCA_axis[0], PCA_axis[1], PCA_axis[2]));
+    vec_PCA_vals.push_back(std::make_tuple(PCA_values[0], PCA_values[1], PCA_values[2]));
+    
+  }else{
+    Point a(0,0,0);
+    vec_PCA_dirs.push_back(std::make_tuple(a,a,a));
+    vec_PCA_vals.push_back(std::make_tuple(0, 0, 0));
+  }
+  
+
+  //std::cout << vec_points.size() << " " << vec_points.back().size() << std::endl;
 }
 
 void WCPPID::MyFCN::update_fit_range(double tmp_vertex_protect_dis, double tmp_point_track_dis, double tmp_fit_dis){
@@ -115,40 +195,6 @@ std::pair<WCPPID::ProtoSegment*, int> WCPPID::MyFCN::get_seg_info(int i){
 }
 
 
-//double WCPPID::MyFCN::operator() (const std::vector<double> & xx) const{
-//  return get_chi2(xx);
-//}
-
-/*
-double WCPPID::MyFCN::get_chi2(const std::vector<double> & xx) const{
-  double chi2 = 0;
-  const int ntracks = segments.size();
-  Point p(vtx->get_fit_pt().x + xx[0] ,vtx->get_fit_pt().y + xx[1] , vtx->get_fit_pt().z + xx[2] );
-
-  std::vector<TVector3 > dir(ntracks);
-  for (size_t i=0;i!=ntracks;i++){
-    double theta = xx[3+2*i];
-    double phi = xx[3+2*i+1];
-    dir.at(i).SetXYZ(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
-  }
-
-
-  double fit_res = 0.1*units::cm;
-  for (size_t i=0;i!=ntracks;i++){
-    WCP::Line l1(p, dir.at(i));
-    //    double tmp_chi2 = 0;
-    for (size_t j=0;j!=vec_points.at(i).size();j++){
-      WCP::Point p1 =vec_points[i].at(j); 
-      chi2 += pow(l1.closest_dis(p1),2)/pow(fit_res,2);
-    }
-    // if (vec_points.at(i).size()>0)
-    // chi2 += tmp_chi2/vec_points.at(i).size();
-     
-  }
-  
-  return chi2;
-}
-*/
 
 
 
@@ -229,3 +275,40 @@ void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
 
 
 
+
+
+
+//double WCPPID::MyFCN::operator() (const std::vector<double> & xx) const{
+//  return get_chi2(xx);
+//}
+
+/*
+double WCPPID::MyFCN::get_chi2(const std::vector<double> & xx) const{
+  double chi2 = 0;
+  const int ntracks = segments.size();
+  Point p(vtx->get_fit_pt().x + xx[0] ,vtx->get_fit_pt().y + xx[1] , vtx->get_fit_pt().z + xx[2] );
+
+  std::vector<TVector3 > dir(ntracks);
+  for (size_t i=0;i!=ntracks;i++){
+    double theta = xx[3+2*i];
+    double phi = xx[3+2*i+1];
+    dir.at(i).SetXYZ(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
+  }
+
+
+  double fit_res = 0.1*units::cm;
+  for (size_t i=0;i!=ntracks;i++){
+    WCP::Line l1(p, dir.at(i));
+    //    double tmp_chi2 = 0;
+    for (size_t j=0;j!=vec_points.at(i).size();j++){
+      WCP::Point p1 =vec_points[i].at(j); 
+      chi2 += pow(l1.closest_dis(p1),2)/pow(fit_res,2);
+    }
+    // if (vec_points.at(i).size()>0)
+    // chi2 += tmp_chi2/vec_points.at(i).size();
+     
+  }
+  
+  return chi2;
+}
+*/
