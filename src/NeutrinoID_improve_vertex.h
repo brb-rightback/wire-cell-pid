@@ -182,7 +182,7 @@ void WCPPID::MyFCN::update_fit_range(double tmp_vertex_protect_dis, double tmp_p
 int WCPPID::MyFCN::get_fittable_tracks(){
   int ncount = 0;
   for (size_t i=0;i!=vec_points.size();i++){
-    if (vec_points.at(i).size()>0) ncount++;
+    if (vec_points.at(i).size()>1) ncount++;
   }
   return ncount;
 }
@@ -195,7 +195,18 @@ std::pair<WCPPID::ProtoSegment*, int> WCPPID::MyFCN::get_seg_info(int i){
 }
 
 
+std::pair<bool, WCP::Point> WCPPID::MyFCN::FitVertex(){
+  Point fit_pos = vtx->get_fit_pt();
+  bool fit_flag = false;
 
+  int ntracks = get_fittable_tracks();
+
+  if (ntracks >1){
+    // start the fit ...
+  }
+  
+  return std::make_pair(fit_flag, fit_pos);
+}
 
 
 void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster){
@@ -204,7 +215,8 @@ void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
   for (auto it = sg_set.begin(); it!=sg_set.end(); it++){
     fcn.AddSegment(*it);
   }
-
+  
+  std::pair<bool, Point> results = fcn.FitVertex();
   
   
 

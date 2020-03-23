@@ -25,6 +25,8 @@ namespace WCPPID{
 
     void update_fit_range(double tmp_vertex_protect_dis = 1.5*units::cm, double tmp_point_track_dis = 2.0*units::cm, double tmp_fit_dis = 6 * units::cm);
     void AddSegment(ProtoSegment *sg);
+    std::pair<bool, WCP::Point> FitVertex();
+    
     std::pair<ProtoSegment*, int> get_seg_info(int i);
     int get_fittable_tracks();
     bool get_flag_vtx_constraint(){return flag_vtx_constraint;};
@@ -43,6 +45,7 @@ namespace WCPPID{
     ProtoVertex *vtx;
     bool flag_vtx_constraint;
     double vtx_constraint_range;
+    
     double vertex_protect_dis;
     double point_track_dis;
     double fit_dis;
