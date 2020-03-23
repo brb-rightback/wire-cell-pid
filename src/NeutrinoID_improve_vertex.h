@@ -83,7 +83,7 @@ void WCPPID::MyFCN::AddSegment(ProtoSegment *sg){
     vec_points.back().push_back(pts.at(i));
   }
 
-  //  std::cout << vec_points.size() << " " << vec_points.back().size() << std::endl;
+  std::cout << vec_points.size() << " " << vec_points.back().size() << std::endl;
 }
 
 void WCPPID::MyFCN::update_fit_range(double tmp_vertex_protect_dis, double tmp_point_track_dis, double tmp_fit_dis){
