@@ -72,17 +72,33 @@ void WCPPID::NeutrinoID::clustering_points(WCPPID::PR3DCluster* temp_cluster){
     
     map_id_seg[sg->get_id()] = sg;
     map_seg_id[sg] = sg->get_id();
-    sg->clear_associate_points();
+    
+    sg->reset_associate_points();
   }
   
   // find the relevant point clouds ...
   WCP::WCPointCloud<double>& cloud = temp_cluster->get_point_cloud()->get_cloud();
+  WCP::WC2DPointCloud<double>& cloud_u = temp_cluster->get_point_cloud()->get_cloud_u();
+  WCP::WC2DPointCloud<double>& cloud_v = temp_cluster->get_point_cloud()->get_cloud_v();
+  WCP::WC2DPointCloud<double>& cloud_w = temp_cluster->get_point_cloud()->get_cloud_w();
+  
   std::vector<int>& point_sub_cluster_ids = temp_cluster->get_point_sub_cluster_ids();
   for (size_t i=0;i!=point_sub_cluster_ids.size();i++){
     if (point_sub_cluster_ids.at(i) == -1) continue;
-    WCP::Point p(cloud.pts[i].x, cloud.pts[i].y, cloud.pts[i].z);
-    map_id_seg[point_sub_cluster_ids.at(i)]->add_associate_point(p);
+    
+    //    WCP::Point p(cloud.pts[i].x, cloud.pts[i].y, cloud.pts[i].z);
+
+    map_id_seg[point_sub_cluster_ids.at(i)]->add_associate_point(cloud.pts[i], cloud_u.pts[i], cloud_v.pts[i], cloud_w.pts[i]);
   }
+
+  // build kdtree
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+    ToyPointCloud *pcloud_associate = sg->get_associated_pcloud();
+    if (pcloud_associate !=0) pcloud_associate->build_kdtree_index();
+  }
+  
 }
 
 

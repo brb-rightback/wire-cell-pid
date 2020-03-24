@@ -159,8 +159,6 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
   
 
   if (flag_dQ_dx){
-    
-    
     for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
       if (it->first->get_cluster_id() != cluster_id) continue;
       WCPPID::ProtoVertex *vtx = it->first;

@@ -6,7 +6,8 @@ WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::
   : id(id)
   , cluster_id(cluster_id)
   , flag_fit(false)
-  , pcloud_fit(0) 
+  , pcloud_fit(0)
+  , pcloud_associated(0)
 {
   
   for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
@@ -28,7 +29,10 @@ WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::
 WCPPID::ProtoSegment::~ProtoSegment(){
   if (pcloud_fit != (ToyPointCloud*)0)
     delete pcloud_fit;
+  if (pcloud_associated != (ToyPointCloud*)0)
+    delete pcloud_associated;
 }
+
 
 double WCPPID::ProtoSegment::get_length(){
   double length = 0;
@@ -269,15 +273,20 @@ void WCPPID::ProtoSegment::clear_fit(){
 
   fit_index_vec.clear();
   fit_flag_skip.clear();
-  associated_points.clear();
 }
 
-void WCPPID::ProtoSegment::clear_associate_points(){
-  associated_points.clear();
+void WCPPID::ProtoSegment::reset_associate_points(){
+  if (pcloud_associated != (ToyPointCloud*)0)
+    delete pcloud_associated;
+  pcloud_associated = 0;
 }
 
-void WCPPID::ProtoSegment::add_associate_point(WCP::Point p){
-  associated_points.push_back(p);
+void WCPPID::ProtoSegment::add_associate_point(WCPointCloud<double>::WCPoint& wcp, WC2DPointCloud<double>::WC2DPoint& wcp_u, WC2DPointCloud<double>::WC2DPoint& wcp_v, WC2DPointCloud<double>::WC2DPoint& wcp_w){
+  if (pcloud_associated == (ToyPointCloud*)0)
+    pcloud_associated = new ToyPointCloud();
+  pcloud_associated->AddPoint(wcp, wcp_u, wcp_v, wcp_w);
+  
+  
 }
 
 void WCPPID::ProtoSegment::print_dis(){
