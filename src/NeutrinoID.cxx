@@ -31,13 +31,15 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
   // find the proto vertex ...
   find_proto_vertex(main_cluster);
+  // improve trajectory with clustered points
+  main_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
+  
+  // fit the vertex in 3D 
+  // improve_vertex(main_cluster);
+  // do the overall fit again
+
   // clustering points
   clustering_points(main_cluster);
-  // improve trajectory with clustered points
-
-  // fit the vertex in 3D 
-  improve_vertex(main_cluster);
-  // do the overall fit again
   
   // prepare output ...
   organize_vertices_segments();
@@ -62,34 +64,40 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
 
 void WCPPID::NeutrinoID::clustering_points(WCPPID::PR3DCluster* temp_cluster){
   temp_cluster->clustering_points_master(map_vertex_segments, map_segment_vertices, *ct_point_cloud);
-  std::map<int, WCPPID::ProtoSegment*> map_id_seg;
 
+  std::map<int, WCPPID::ProtoSegment*> map_id_seg;
   std::map<WCPPID::ProtoSegment*, int> map_seg_id;
-  
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
-    
     map_id_seg[sg->get_id()] = sg;
     map_seg_id[sg] = sg->get_id();
-    
     sg->reset_associate_points();
   }
-  
-  // find the relevant point clouds ...
-  WCP::WCPointCloud<double>& cloud = temp_cluster->get_point_cloud()->get_cloud();
-  WCP::WC2DPointCloud<double>& cloud_u = temp_cluster->get_point_cloud()->get_cloud_u();
-  WCP::WC2DPointCloud<double>& cloud_v = temp_cluster->get_point_cloud()->get_cloud_v();
-  WCP::WC2DPointCloud<double>& cloud_w = temp_cluster->get_point_cloud()->get_cloud_w();
-  
-  std::vector<int>& point_sub_cluster_ids = temp_cluster->get_point_sub_cluster_ids();
-  for (size_t i=0;i!=point_sub_cluster_ids.size();i++){
-    if (point_sub_cluster_ids.at(i) == -1) continue;
-    
-    //    WCP::Point p(cloud.pts[i].x, cloud.pts[i].y, cloud.pts[i].z);
 
-    map_id_seg[point_sub_cluster_ids.at(i)]->add_associate_point(cloud.pts[i], cloud_u.pts[i], cloud_v.pts[i], cloud_w.pts[i]);
+  {
+    // find the relevant point clouds ...
+    WCP::WCPointCloud<double>& cloud = temp_cluster->get_point_cloud()->get_cloud();
+    WCP::WC2DPointCloud<double>& cloud_u = temp_cluster->get_point_cloud()->get_cloud_u();
+    WCP::WC2DPointCloud<double>& cloud_v = temp_cluster->get_point_cloud()->get_cloud_v();
+    WCP::WC2DPointCloud<double>& cloud_w = temp_cluster->get_point_cloud()->get_cloud_w();
+    
+    std::vector<int>& point_sub_cluster_ids = temp_cluster->get_point_sub_cluster_ids();
+    for (size_t i=0;i!=point_sub_cluster_ids.size();i++){
+      if (point_sub_cluster_ids.at(i) == -1) continue;
+      map_id_seg[point_sub_cluster_ids.at(i)]->add_associate_point(cloud.pts[i], cloud_u.pts[i], cloud_v.pts[i], cloud_w.pts[i]);
+    }
   }
+
+  {
+    WCP::WCPointCloud<double>& cloud = temp_cluster->get_point_cloud_steiner()->get_cloud();
+    std::vector<int>& point_steiner_sub_cluster_ids = temp_cluster->get_point_steiner_sub_cluster_ids();
+    for (size_t i=0;i!=point_steiner_sub_cluster_ids.size();i++){
+      if (point_steiner_sub_cluster_ids.at(i) == -1) continue;
+      map_id_seg[point_steiner_sub_cluster_ids.at(i)]->add_associate_point_steiner(cloud.pts[i]);
+    }
+  }
+  
 
   // build kdtree
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
@@ -97,6 +105,8 @@ void WCPPID::NeutrinoID::clustering_points(WCPPID::PR3DCluster* temp_cluster){
     if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
     ToyPointCloud *pcloud_associate = sg->get_associated_pcloud();
     if (pcloud_associate !=0) pcloud_associate->build_kdtree_index();
+    ToyPointCloud *pcloud_associate_steiner = sg->get_associated_pcloud_steiner();
+    if (pcloud_associate_steiner !=0) pcloud_associate_steiner->build_kdtree_index();
   }
   
 }

@@ -52,13 +52,17 @@ namespace WCPPID{
     // get point
     std::pair<double, WCP::Point> get_closest_point(WCP::Point &p);
     std::tuple<double, double, double> get_closest_2d_dis(WCP::Point &p);
-
+    double get_closest_2d_dis(double x, double y, int plane);
+    
     // search for kinks ...  return  position, direction ...
     std::tuple<WCP::Point, TVector3, bool> search_kink(WCP::Point& start_p);
 
     void reset_associate_points();
     WCP::ToyPointCloud* get_associated_pcloud(){return pcloud_associated;};
+    WCP::ToyPointCloud* get_associated_pcloud_steiner(){return pcloud_associated_steiner;};
+    
     void add_associate_point(WCP::WCPointCloud<double>::WCPoint& wcp, WCP::WC2DPointCloud<double>::WC2DPoint& wcp_u, WCP::WC2DPointCloud<double>::WC2DPoint& wcp_v, WCP::WC2DPointCloud<double>::WC2DPoint& wcp_w);
+    void add_associate_point_steiner(WCP::WCPointCloud<double>::WCPoint& wcp);
     
 
 
@@ -85,6 +89,7 @@ namespace WCPPID{
     WCP::ToyPointCloud* pcloud_fit;
 
     WCP::ToyPointCloud* pcloud_associated;
+    WCP::ToyPointCloud* pcloud_associated_steiner;
     //    std::vector<WCP::Point > associated_points;
     
     bool flag_fit;

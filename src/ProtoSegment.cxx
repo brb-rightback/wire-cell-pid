@@ -8,6 +8,7 @@ WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::
   , flag_fit(false)
   , pcloud_fit(0)
   , pcloud_associated(0)
+  , pcloud_associated_steiner(0)
 {
   
   for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
@@ -31,6 +32,8 @@ WCPPID::ProtoSegment::~ProtoSegment(){
     delete pcloud_fit;
   if (pcloud_associated != (ToyPointCloud*)0)
     delete pcloud_associated;
+  if (pcloud_associated_steiner != (ToyPointCloud*)0)
+    delete pcloud_associated_steiner;
 }
 
 
@@ -279,6 +282,15 @@ void WCPPID::ProtoSegment::reset_associate_points(){
   if (pcloud_associated != (ToyPointCloud*)0)
     delete pcloud_associated;
   pcloud_associated = 0;
+  if (pcloud_associated_steiner != (ToyPointCloud*)0)
+    delete pcloud_associated_steiner;
+  pcloud_associated_steiner = 0;
+}
+
+void WCPPID::ProtoSegment::add_associate_point_steiner(WCP::WCPointCloud<double>::WCPoint& wcp){
+  if (pcloud_associated_steiner == (ToyPointCloud*)0)
+    pcloud_associated_steiner = new ToyPointCloud();
+  pcloud_associated_steiner->AddPoint(wcp);
 }
 
 void WCPPID::ProtoSegment::add_associate_point(WCPointCloud<double>::WCPoint& wcp, WC2DPointCloud<double>::WC2DPoint& wcp_u, WC2DPointCloud<double>::WC2DPoint& wcp_v, WC2DPointCloud<double>::WC2DPoint& wcp_w){
@@ -305,6 +317,10 @@ std::pair<double, WCP::Point> WCPPID::ProtoSegment::get_closest_point(WCP::Point
     WCP::Point p1(0,0,0);
     return std::make_pair(-1,p1);
   }
+}
+
+double WCPPID::ProtoSegment::get_closest_2d_dis(double x, double y, int plane){
+  return pcloud_fit->get_closest_2d_dis(x, y, plane);
 }
 
 std::tuple<double, double, double> WCPPID::ProtoSegment::get_closest_2d_dis(WCP::Point &p){

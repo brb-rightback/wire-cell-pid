@@ -689,10 +689,17 @@ void WCPPID::PR3DCluster::form_map_multi_segments(WCPPID::Map_Proto_Vertex_Segme
     WCPPID::ProtoVertex *vtx = it->first;
     vtx->reset_fit_prop();
   }
+  //  std::vector<ToyPointCloud* > associated_pclouds_steiner;
+  ProtoSegmentSelection segments;
+  
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end();it++){
     if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoSegment *seg = it->first;
     seg->reset_fit_prop();
+
+    //    WCP::ToyPointCloud *pcloud_associated_steiner =  seg->get_associated_pcloud_steiner();
+    //if (pcloud_associated_steiner != 0) associated_pclouds_steiner.push_back(pcloud_associated_steiner);
+    segments.push_back(seg);
   }
   
   
@@ -741,10 +748,19 @@ void WCPPID::PR3DCluster::form_map_multi_segments(WCPPID::Map_Proto_Vertex_Segme
 	dis_cut = std::min(std::max(distances.at(i-1)*mid_point_factor,distances.at(i)*mid_point_factor),4/3.*mid_point_factor*units::cm);
       }
 
+      
+      
       // not the first and last point
       if (i!=0 && i+1!=pts.size()){
 	std::set<std::pair<int,int> > temp_2dut, temp_2dvt, temp_2dwt;
 	form_point_association(pts.at(i), temp_2dut, temp_2dvt, temp_2dwt, ct_point_cloud, dis_cut, nlevel, time_cut);
+
+	// examine things ...
+	//	if (sg->get_associated_pcloud_steiner()!=0 ){
+	// std::cout << pts.at(i) << " " << sqrt(pow(pts.front().x-pts.back().x,2) + pow(pts.front().y-pts.back().y,2) + pow(pts.front().z-pts.back().z,2))/units::cm << std::endl;
+	//	update_association(temp_2dut, temp_2dvt, temp_2dwt, sg, segments);
+	//}
+
 	// examine ...
 	std::vector<int> temp_results = ct_point_cloud.convert_3Dpoint_time_ch(pts.at(i));
 	temp_results.at(2)-=2400;
@@ -873,6 +889,133 @@ void WCPPID::PR3DCluster::form_map_multi_segments(WCPPID::Map_Proto_Vertex_Segme
    
   }
 }
+
+void WCPPID::PR3DCluster::update_association(std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt, WCPPID::ProtoSegment* sg, WCPPID::ProtoSegmentSelection& segments){
+  
+  // get global information
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  double pitch_u = mp.get_pitch_u();
+  double pitch_v = mp.get_pitch_v();
+  double pitch_w = mp.get_pitch_w();
+  double angle_u = mp.get_angle_u();
+  double angle_v = mp.get_angle_v();
+  double angle_w = mp.get_angle_w();
+  double time_slice_width = mp.get_ts_width();
+  double first_u_dis = mp.get_first_u_dis();
+  double first_v_dis = mp.get_first_v_dis();
+  double first_w_dis = mp.get_first_w_dis();
+
+  /* for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){ */
+  /*   std::cout  << " " << it->mcell << std::endl; */
+  /* } */
+  
+  double slope_x = 1./time_slice_width;
+  //mcell
+  double first_t_dis = point_cloud->get_cloud().pts[0].mcell->GetTimeSlice()*time_slice_width - point_cloud->get_cloud().pts[0].x;
+    //  double first_t_dis = path_wcps.front().mcell->GetTimeSlice()*time_slice_width - path_wcps.front().x;
+  double offset_t = first_t_dis / time_slice_width;
+
+  //  convert Z to W ... 
+  double slope_zw = 1./pitch_w * cos(angle_w);
+  double slope_yw = 1./pitch_w * sin(angle_w);
+  
+  double slope_yu = -1./pitch_u * sin(angle_u);
+  double slope_zu = 1./pitch_u * cos(angle_u);
+  double slope_yv = -1./pitch_v * sin(angle_v);
+  double slope_zv = 1./pitch_v * cos(angle_v);
+  
+  //convert Y,Z to U,V
+  double offset_w = -first_w_dis/pitch_w;
+  double offset_u = -first_u_dis/pitch_u;
+  double offset_v = -first_v_dis/pitch_v;
+
+  std::set<std::pair<int,int> > save_2dut, save_2dvt, save_2dwt;
+  
+  for (auto it = temp_2dut.begin(); it!=temp_2dut.end(); it++){
+    double x = (it->second - offset_t)/slope_x;
+    double y = (it->first - offset_u)*pitch_u;
+    
+    //    double min_dis = sg->get_associated_pcloud_steiner()->get_closest_2d_dis(x,y,0);
+    double min_dis_track = sg->get_closest_2d_dis(x,y,0);
+
+    //    double min_dis1 = 1e9;
+    double min_dis1_track = 1e9;
+    
+    for (size_t i=0;i!=segments.size();i++){ 
+      if (segments.at(i)==sg) continue;
+      // if (segments.at(i)->get_associated_pcloud_steiner()!=0){
+      //	double temp_dis = segments.at(i)->get_associated_pcloud_steiner()->get_closest_2d_dis(x,y,0);
+      //	if (temp_dis < min_dis1) min_dis1 = temp_dis;
+      //}
+      double temp_dis = segments.at(i)->get_closest_2d_dis(x,y,0);
+      if (temp_dis < min_dis1_track)
+	min_dis1_track = temp_dis;
+    } 
+    bool flag_save = false;
+    
+    if (min_dis_track < min_dis1_track || // closer to the main track ...
+	min_dis_track < 0.3*units::cm 
+	//	|| 	min_dis_track < 0.6*units::cm && min_dis1_track > 0.45*units::cm
+	){
+      flag_save = true;
+      save_2dut.insert(*it);
+      //      std::cout << it->first << " " << it->second << " " << flag_save << " " << min_dis_track/units::cm <<  " " << min_dis1_track/units::cm << std::endl;
+    }
+  }
+
+  for (auto it = temp_2dvt.begin(); it!=temp_2dvt.end(); it++){
+    double x = (it->second - offset_t)/slope_x;
+    double y = (it->first - offset_v)*pitch_v;
+    
+    double min_dis_track = sg->get_closest_2d_dis(x,y,1);
+    double min_dis1_track = 1e9;
+    
+    for (size_t i=0;i!=segments.size();i++){ 
+      if (segments.at(i)==sg) continue;
+      double temp_dis = segments.at(i)->get_closest_2d_dis(x,y,1);
+      if (temp_dis < min_dis1_track)
+	min_dis1_track = temp_dis;
+    } 
+    
+    if (min_dis_track < min_dis1_track || // closer to the main track ...
+	min_dis_track < 0.3*units::cm 
+	//|| 	min_dis_track < 0.6*units::cm && min_dis1_track > 0.45*units::cm
+	){
+      save_2dvt.insert(*it);
+    }
+  }
+  
+  for (auto it = temp_2dwt.begin(); it!=temp_2dwt.end(); it++){
+    double x = (it->second - offset_t)/slope_x;
+    double y = (it->first - offset_w)*pitch_w;
+    
+    double min_dis_track = sg->get_closest_2d_dis(x,y,2);
+    double min_dis1_track = 1e9;
+    
+    for (size_t i=0;i!=segments.size();i++){ 
+      if (segments.at(i)==sg) continue;
+      double temp_dis = segments.at(i)->get_closest_2d_dis(x,y,2);
+      if (temp_dis < min_dis1_track)
+	min_dis1_track = temp_dis;
+    } 
+    
+    if (min_dis_track < min_dis1_track  // closer to the main track ...
+	|| min_dis_track < 0.3*units::cm 
+	// || min_dis_track < 0.6*units::cm && min_dis1_track > 0.45*units::cm
+	){
+      save_2dwt.insert(*it);
+    }
+  }
+
+  //  std::cout << temp_2dut.size() << " " << save_2dut.size() << " " << temp_2dvt.size() << " " << save_2dvt.size() << " " << temp_2dwt.size() << " " << save_2dwt.size() << std::endl;
+  
+  temp_2dut = save_2dut; 
+  temp_2dvt = save_2dvt; 
+  temp_2dwt = save_2dwt; 
+  
+}
+
+
 
 void WCPPID::PR3DCluster::organize_segments_path_3rd(WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments, WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices, double step_size){
   TPCParams& mp = Singleton<TPCParams>::Instance();
