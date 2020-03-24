@@ -243,16 +243,16 @@ std::pair<bool, WCP::Point> WCPPID::MyFCN::FitVertex(){
 	A += RT * R;
       }
     }
-
+    // 1.69 is a factor to be tuned ...
     
     //add constraint ...
     if (flag_vtx_constraint){
       Eigen::MatrixXd R = Eigen::MatrixXd::Zero(3,3);
-      R(0,0) = 1./vtx_constraint_range*sqrt(npoints);
-      R(1,1) = 1./vtx_constraint_range*sqrt(npoints);
-      R(2,2) = 1./vtx_constraint_range*sqrt(npoints);
+      R(0,0) = 1./vtx_constraint_range*sqrt(npoints*1.69);
+      R(1,1) = 1./vtx_constraint_range*sqrt(npoints*1.69);
+      R(2,2) = 1./vtx_constraint_range*sqrt(npoints*1.69);
       
-      Eigen::Vector3d data(fit_pos.x/vtx_constraint_range*sqrt(npoints), fit_pos.y/vtx_constraint_range*sqrt(npoints), fit_pos.z/vtx_constraint_range*sqrt(npoints));
+      Eigen::Vector3d data(fit_pos.x/vtx_constraint_range*sqrt(npoints*1.69), fit_pos.y/vtx_constraint_range*sqrt(npoints*1.69), fit_pos.z/vtx_constraint_range*sqrt(npoints*1.69));
       Eigen::MatrixXd RT = R.transpose();
       b += RT * data;
       A += RT * R;
