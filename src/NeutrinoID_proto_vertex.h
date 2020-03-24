@@ -72,7 +72,9 @@ WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster
     add_proto_connection(v2,sg1,temp_cluster);
 
     temp_cluster->collect_charge_trajectory(*ct_point_cloud);
-    temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false, true);
+
+    // fit dQ/dx and everything ...
+    temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true);
 
     //std::cout << temp_cluster->get_fine_tracking_path().size() << " " << temp_cluster->get_dx().size() << std::endl;
     
@@ -178,6 +180,7 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
 	//delete curr_sg;
 
 	flag_print = true;
+	// fit dQ/dx here, do not exclude others
 	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true);
 	
 	// temporary fit hack ...
@@ -591,8 +594,8 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     temp_cluster->cal_shortest_path(cloud.pts[(saved_cluster_points.at(*it)).second],2);
     std::list<WCP::WCPointCloud<double>::WCPoint> temp_path_list = temp_cluster->get_path_wcps();
     temp_cluster->collect_charge_trajectory(*ct_point_cloud);
-    // initial tracking test ...
-    temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, false);
+    // do not fit dQ/dx at beginning ...
+    temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false, false);
 
     if (temp_cluster->get_fine_tracking_path().size() >1){      
       WCPPID::ProtoVertex *v1 = find_vertex_other_segment(temp_cluster, true, cloud.pts[(saved_cluster_points.at(*it)).first]);
@@ -691,6 +694,8 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	add_proto_connection(v1,sg1,temp_cluster);
 	add_proto_connection(v2,sg1,temp_cluster);
 	if (sg1->get_length()/units::cm > 12*units::cm)	new_segments.push_back(sg1);
+
+	// do dQ/dx fitting and exclude others ...
 	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
 	// update output ...
 	std::cout << "Other tracks -- # of Vertices: " << map_vertex_segments.size() << "; # of Segments: " << map_segment_vertices.size() << std::endl;
