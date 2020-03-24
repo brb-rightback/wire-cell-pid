@@ -384,7 +384,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     std::list<WCP::WCPointCloud<double>::WCPoint> temp_path_list = temp_cluster->get_path_wcps();
     temp_cluster->collect_charge_trajectory(*ct_point_cloud);
     // initial tracking test ...
-    temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
+    temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, false);
 
     if (temp_cluster->get_fine_tracking_path().size() >1){      
       WCPPID::ProtoVertex *v1 = find_vertex_other_segment(temp_cluster, true, cloud.pts[(saved_cluster_points.at(*it)).first]);
@@ -483,7 +483,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	add_proto_connection(v1,sg1,temp_cluster);
 	add_proto_connection(v2,sg1,temp_cluster);
 	if (sg1->get_length()/units::cm > 12*units::cm)	new_segments.push_back(sg1);
-	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
+	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, false);
 	// update output ...
 	std::cout << "Other tracks -- # of Vertices: " << map_vertex_segments.size() << "; # of Segments: " << map_segment_vertices.size() << std::endl;
       }else{
@@ -768,7 +768,7 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
 	//delete curr_sg;
 
 	flag_print = true;
-	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
+	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, false);
 	
 	// temporary fit hack ...
 	/* temp_cluster->set_path_wcps(wcps_list1); */

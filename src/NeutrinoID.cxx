@@ -131,7 +131,6 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
 
   // hack test
   //temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
-
   // for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
   //   WCPPID::ProtoSegment *sg = it->first;
   //   std::cout << sg->get_point_vec().size() << " A " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl;

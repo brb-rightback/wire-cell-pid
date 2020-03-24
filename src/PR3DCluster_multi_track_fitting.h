@@ -1,5 +1,5 @@
 
-void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments, WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double time, bool flag_dQ_dx_fit_reg){
+void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments, WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double time, bool flag_dQ_dx_fit_reg, bool flag_dQ_dx_fit){
   // collect charge
   collect_charge_multi_trajectory(map_segment_vertices, ct_point_cloud);
 
@@ -15,7 +15,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
 
   bool flag_1st_tracking = true;
   bool flag_2nd_tracking = true;
-  bool flag_dQ_dx = true;
+  bool flag_dQ_dx = flag_dQ_dx_fit;
 
   // prepare the data for the fit, do not contain everything ...
   // form from the cluster ...
@@ -132,7 +132,9 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     /*   WCPPID::ProtoSegment *sg = it->first; */
     /*   std::cout << sg->get_wcpt_vec().size() << " D " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
     /* } */
-
+    // organize path
+    low_dis_limit = 0.6*units::cm;
+    organize_segments_path_3rd(map_vertex_segments, map_segment_vertices, low_dis_limit);
   }
   
   
@@ -157,9 +159,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
   
 
   if (flag_dQ_dx){
-    // organize path
-    low_dis_limit = 0.6*units::cm;
-    organize_segments_path_3rd(map_vertex_segments, map_segment_vertices, low_dis_limit);
+    
     
     for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
       if (it->first->get_cluster_id() != cluster_id) continue;

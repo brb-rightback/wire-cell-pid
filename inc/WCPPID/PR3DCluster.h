@@ -172,7 +172,7 @@ namespace WCPPID{
     
     // main function to do the overall tracking, 
     void do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double time = 4*units::microsecond, bool flag_dQ_dx_fit_reg = true, bool flag_dQ_dx_fit = true);
-    void do_multi_tracking(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double time = 4*units::microsecond, bool flag_dQ_dx_fit_reg = true);
+    void do_multi_tracking(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double time = 4*units::microsecond, bool flag_dQ_dx_fit_reg = true, bool flag_dQ_dx_fit = true);
     
     // organize path from the shortest path 
     WCP::PointVector organize_wcps_path(std::list<WCP::WCPointCloud<double>::WCPoint>& path_wcps_list,  double low_dis_limit, double end_point_limit);
