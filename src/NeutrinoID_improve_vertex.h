@@ -155,11 +155,17 @@ void WCPPID::MyFCN::AddSegment(ProtoSegment *sg){
 
     vec_PCA_dirs.push_back(std::make_tuple(PCA_axis[0], PCA_axis[1], PCA_axis[2]));
     vec_PCA_vals.push_back(std::make_tuple(PCA_values[0], PCA_values[1], PCA_values[2]));
+    vec_centers.push_back(center);
     
   }else{
     Point a(0,0,0);
     vec_PCA_dirs.push_back(std::make_tuple(a,a,a));
     vec_PCA_vals.push_back(std::make_tuple(0, 0, 0));
+    if (vec_points.back().size()==1){
+      vec_centers.push_back(vec_points.back().back());
+    }else{
+      vec_centers.push_back(a);
+    }
   }
   
 
@@ -203,26 +209,69 @@ std::pair<bool, WCP::Point> WCPPID::MyFCN::FitVertex(){
 
   if (ntracks >1){
     // start the fit ...
+    Eigen::VectorXd temp_pos_3D_init(3), temp_pos_3D(3); // to be fitted
+    temp_pos_3D_init(0) = fit_pos.x;
+    temp_pos_3D_init(1) = fit_pos.y;
+    temp_pos_3D_init(2) = fit_pos.z;
+
+    Eigen::Vector3d b(0,0,0);
+    Eigen::MatrixXd A = Eigen::MatrixXd::Zero(3,3);
+    
+    
+    for (size_t i=0;i!=vec_PCA_vals.size();i++){
+      if (std::get<0>(vec_PCA_vals.at(i))>0){
+	// fill the matrix ... first row, second column
+	Eigen::MatrixXd R(3,3);
+	R(0,0) = 0; R(0,1) = 0; R(0,2) = 0;
+	double val1 = sqrt(std::get<0>(vec_PCA_vals.at(i))/std::get<1>(vec_PCA_vals.at(i)));
+	R(1,0) = val1 * std::get<1>(vec_PCA_dirs.at(i)).x;
+	R(1,1) = val1 * std::get<1>(vec_PCA_dirs.at(i)).y;
+	R(1,2) = val1 * std::get<1>(vec_PCA_dirs.at(i)).z;
+	val1 = sqrt(std::get<0>(vec_PCA_vals.at(i))/std::get<2>(vec_PCA_vals.at(i)));
+	R(1,0) = val1 * std::get<2>(vec_PCA_dirs.at(i)).x;
+	R(1,1) = val1 * std::get<2>(vec_PCA_dirs.at(i)).y;
+	R(1,2) = val1 * std::get<2>(vec_PCA_dirs.at(i)).z;
+
+	Eigen::Vector3d data(vec_centers.at(i).x, vec_centers.at(i).y, vec_centers.at(i).z );
+	data = R * data;
+	Eigen::MatrixXd RT = R.transpose();
+
+	b += RT * data;
+	A += RT * R;
+      }
+    }
+
+    
+    //add constraint ...
+    if (flag_vtx_constraint){
+      Eigen::MatrixXd R = Eigen::MatrixXd::Zero(3,3);
+      R(0,0) = 1./vtx_constraint_range;
+      R(1,1) = 1./vtx_constraint_range;
+      R(2,2) = 1./vtx_constraint_range;
+      
+      Eigen::Vector3d data(fit_pos.x/vtx_constraint_range, fit_pos.y/vtx_constraint_range, fit_pos.z/vtx_constraint_range);
+      Eigen::MatrixXd RT = R.transpose();
+      b += RT * data;
+      A += RT * R;
+    }
+    
+    Eigen::BiCGSTAB<Eigen::MatrixXd> solver;
+    solver.compute(A);
+    temp_pos_3D = solver.solveWithGuess(b,temp_pos_3D_init);
+    if (!std::isnan(solver.error())){
+      fit_pos.x = temp_pos_3D(0);
+      fit_pos.y = temp_pos_3D(1);
+      fit_pos.z = temp_pos_3D(2);
+      fit_flag = true;
+    }
+    
+    std::cout << temp_pos_3D(0)/units::cm << " " << temp_pos_3D(1)/units::cm << " " << temp_pos_3D(2)/units::cm << " " << temp_pos_3D_init(0)/units::cm << " " << temp_pos_3D_init(1)/units::cm << " " << temp_pos_3D_init(2)/units::cm << std::endl;
   }
   
   return std::make_pair(fit_flag, fit_pos);
 }
 
-
-void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster){
-
-  WCPPID::MyFCN fcn(vtx, false, 1*units::cm, 1.0*units::cm, 2*units::cm, 6*units::cm);
-  for (auto it = sg_set.begin(); it!=sg_set.end(); it++){
-    fcn.AddSegment(*it);
-  }
-  
-  std::pair<bool, Point> results = fcn.FitVertex();
-  
-  
-
-  //  Point fit_vtx_p(vtx->get_fit_pt().x + state.Value(0), vtx->get_fit_pt().y + state.Value(1), vtx->get_fit_pt().z + state.Value(2));
-  //  std::cout << vtx->get_fit_pt() << " " << fit_vtx_p << std::endl;
-  /*
+void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_cluster){
   // convertion to the u, v, w, z ...
   TPCParams& mp = Singleton<TPCParams>::Instance();
   double pitch_u = mp.get_pitch_u();
@@ -239,7 +288,7 @@ void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
   //mcell
   double first_t_dis = temp_cluster->get_point_cloud()->get_cloud().pts[0].mcell->GetTimeSlice()*time_slice_width - temp_cluster->get_point_cloud()->get_cloud().pts[0].x;
   double offset_t = first_t_dis / time_slice_width;
-
+  
   //  convert Z to W ... 
   double slope_zw = 1./pitch_w * cos(angle_w);
   double slope_yw = 1./pitch_w * sin(angle_w);
@@ -255,7 +304,7 @@ void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
   
   
   // quick hack ...
-  for (auto it = sg_set.begin(); it!=sg_set.end(); it++){
+  for (auto it = segments.begin(); it!=segments.end(); it++){
     PointVector& pts = (*it)->get_point_vec();
     std::vector<double>& pu = (*it)->get_pu_vec();
     std::vector<double>& pv = (*it)->get_pv_vec();
@@ -264,23 +313,36 @@ void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
     
     double dis1 = pow(pts.front().x - vtx->get_fit_pt().x,2) + pow(pts.front().y - vtx->get_fit_pt().y,2) + pow(pts.front().z - vtx->get_fit_pt().z,2);
     double dis2 = pow(pts.back().x - vtx->get_fit_pt().x,2) + pow(pts.back().y - vtx->get_fit_pt().y,2) + pow(pts.back().z - vtx->get_fit_pt().z,2);
+
     if (dis1 < dis2){
-      pts.front() = fit_vtx_p;
-      pu.front() = offset_u + 0.5 + (slope_yu * fit_vtx_p.y + slope_zu * fit_vtx_p.z);
-      pv.front() = offset_v + 0.5 + (slope_yv * fit_vtx_p.y + slope_zv * fit_vtx_p.z)+2400;
-      pw.front() = offset_w + 0.5 + (slope_yw * fit_vtx_p.y + slope_zw * fit_vtx_p.z)+4800;
-      pt.front() = offset_t + 0.5 + slope_x * fit_vtx_p.x;
+      pts.front() = fit_pos;
+      pu.front() = offset_u + 0.5 + (slope_yu * fit_pos.y + slope_zu * fit_pos.z);
+      pv.front() = offset_v + 0.5 + (slope_yv * fit_pos.y + slope_zv * fit_pos.z)+2400;
+      pw.front() = offset_w + 0.5 + (slope_yw * fit_pos.y + slope_zw * fit_pos.z)+4800;
+      pt.front() = offset_t + 0.5 + slope_x * fit_pos.x;
     }else{
-      pts.back() = fit_vtx_p;
-      pu.back() = offset_u + 0.5 + (slope_yu * fit_vtx_p.y + slope_zu * fit_vtx_p.z);
-      pv.back() = offset_v + 0.5 + (slope_yv * fit_vtx_p.y + slope_zv * fit_vtx_p.z)+2400;
-      pw.back() = offset_w + 0.5 + (slope_yw * fit_vtx_p.y + slope_zw * fit_vtx_p.z)+4800;
-      pt.back() = offset_t + 0.5 + slope_x * fit_vtx_p.x;
+      pts.back() = fit_pos;
+      pu.back() = offset_u + 0.5 + (slope_yu * fit_pos.y + slope_zu * fit_pos.z);
+      pv.back() = offset_v + 0.5 + (slope_yv * fit_pos.y + slope_zv * fit_pos.z)+2400;
+      pw.back() = offset_w + 0.5 + (slope_yw * fit_pos.y + slope_zw * fit_pos.z)+4800;
+      pt.back() = offset_t + 0.5 + slope_x * fit_pos.x;
     }
   }
-  vtx->set_fit(fit_vtx_p, vtx->get_dQ(), vtx->get_dx(), offset_u + 0.5 + (slope_yu * fit_vtx_p.y + slope_zu * fit_vtx_p.z), offset_v + 0.5 + (slope_yv * fit_vtx_p.y + slope_zv * fit_vtx_p.z)+2400, offset_w + 0.5 + (slope_yw * fit_vtx_p.y + slope_zw * fit_vtx_p.z)+4800, offset_t + 0.5 + slope_x * fit_vtx_p.x, vtx->get_reduced_chi2());
+  vtx->set_fit(fit_pos, vtx->get_dQ(), vtx->get_dx(), offset_u + 0.5 + (slope_yu * fit_pos.y + slope_zu * fit_pos.z), offset_v + 0.5 + (slope_yv * fit_pos.y + slope_zv * fit_pos.z)+2400, offset_w + 0.5 + (slope_yw * fit_pos.y + slope_zw * fit_pos.z)+4800, offset_t + 0.5 + slope_x * fit_pos.x, vtx->get_reduced_chi2());
+}
 
-  */
+void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster){
+
+  WCPPID::MyFCN fcn(vtx, true, 1*units::cm, 1.0*units::cm, 2*units::cm, 6*units::cm);
+  for (auto it = sg_set.begin(); it!=sg_set.end(); it++){
+    fcn.AddSegment(*it);
+  }
+  
+  std::pair<bool, Point> results = fcn.FitVertex();
+
+  if (results.first) fcn.UpdateInfo(results.second, temp_cluster);
+  
+
   
    //  fcn.print_points();
 }
