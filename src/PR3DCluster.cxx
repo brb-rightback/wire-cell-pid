@@ -29,7 +29,7 @@ using namespace WCP;
 
 #include "PR3DCluster_point_clustering.h"
 
-void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double time, bool flag_dQ_dx_fit_reg){
+void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double time, bool flag_dQ_dx_fit_reg, bool flag_dQ_dx_fit){
   fine_tracking_path.clear();
   dQ.clear();
   dx.clear();
@@ -43,7 +43,7 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
   
   bool flag_1st_tracking = true;
   bool flag_2nd_tracking = true;
-  bool flag_dQ_dx = true;
+  bool flag_dQ_dx = flag_dQ_dx_fit;
  
    // prepare the data for the fit, do not contain everything ...
   // form from the cluster ...
@@ -160,6 +160,9 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
     // std::vector<int> indices;
     // indices.push_back(86);
     // fill_data_map_trajectory(indices, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,  map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+  }else{
+    // fill the data ...
+    dQ_dx_fill(end_point_limit);
   }
 }
 

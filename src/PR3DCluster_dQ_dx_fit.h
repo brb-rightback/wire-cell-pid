@@ -252,6 +252,104 @@ double WCPPID::PR3DCluster::cal_gaus_integral(int tbin, int wbin, double t_cente
   return result;
 }
 
+void WCPPID::PR3DCluster::dQ_dx_fill(double dis_end_point_ext){
+  if (fine_tracking_path.size()<=1) return;
+  pu.clear();
+  pv.clear();
+  pw.clear();
+  pt.clear();
+  dQ.clear();
+  dx.clear();
+
+  // Need to take into account the time, so one can properly calculate X value for diffusion ...
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  double time_slice_width = mp.get_ts_width();
+  int time_offset = mp.get_time_offset();
+  int nrebin = mp.get_nrebin();
+  double pitch_u = mp.get_pitch_u();
+  double pitch_v = mp.get_pitch_v();
+  double pitch_w = mp.get_pitch_w();
+  double first_u_dis = mp.get_first_u_dis();
+  double first_v_dis = mp.get_first_v_dis();
+  double first_w_dis = mp.get_first_w_dis();
+  double angle_u = mp.get_angle_u();
+  double angle_v = mp.get_angle_v();
+  double angle_w = mp.get_angle_w();
+  //  convert Z to W ... 
+  double slope_zw = 1./pitch_w * cos(angle_w);
+  double slope_yw = 1./pitch_w * sin(angle_w);
+  
+  double slope_yu = -1./pitch_u * sin(angle_u);
+  double slope_zu = 1./pitch_u * cos(angle_u);
+  double slope_yv = -1./pitch_v * sin(angle_v);
+  double slope_zv = 1./pitch_v * cos(angle_v);
+  //convert Y,Z to U,V
+  double offset_w = -first_w_dis/pitch_w + 0.5;
+  double offset_u = -first_u_dis/pitch_u + 0.5;
+  double offset_v = -first_v_dis/pitch_v + 0.5;
+  
+  double first_t_dis = point_cloud->get_cloud().pts[0].mcell->GetTimeSlice()*time_slice_width - point_cloud->get_cloud().pts[0].x;
+  double slope_xt = 1./time_slice_width;
+  double offset_t =  first_t_dis/time_slice_width + 0.5;
+
+  for (size_t i=0;i!=fine_tracking_path.size(); i++){
+    Point curr_rec_pos = fine_tracking_path.at(i);
+    Point prev_rec_pos, next_rec_pos;
+    if (i==0){
+      next_rec_pos.x = (fine_tracking_path.at(i).x+fine_tracking_path.at(i+1).x)/2.;
+      next_rec_pos.y = (fine_tracking_path.at(i).y+fine_tracking_path.at(i+1).y)/2.;
+      next_rec_pos.z = (fine_tracking_path.at(i).z+fine_tracking_path.at(i+1).z)/2.;
+      double length = sqrt(pow(fine_tracking_path.at(i+1).x-fine_tracking_path.at(i).x,2)
+			   +pow(fine_tracking_path.at(i+1).y-fine_tracking_path.at(i).y,2)
+			   +pow(fine_tracking_path.at(i+1).z-fine_tracking_path.at(i).z,2) );
+      
+      if (length ==0){
+	prev_rec_pos.x = fine_tracking_path.at(i).x;
+	prev_rec_pos.y = fine_tracking_path.at(i).y;
+	prev_rec_pos.z = fine_tracking_path.at(i).z;
+      }else{
+	prev_rec_pos.x = fine_tracking_path.at(i).x - (fine_tracking_path.at(i+1).x-fine_tracking_path.at(i).x)/length * dis_end_point_ext;
+	prev_rec_pos.y = fine_tracking_path.at(i).y - (fine_tracking_path.at(i+1).y-fine_tracking_path.at(i).y)/length * dis_end_point_ext;
+	prev_rec_pos.z = fine_tracking_path.at(i).z - (fine_tracking_path.at(i+1).z-fine_tracking_path.at(i).z)/length * dis_end_point_ext;
+      }
+    }else if (i+1==fine_tracking_path.size()){
+      prev_rec_pos.x = (fine_tracking_path.at(i).x+fine_tracking_path.at(i-1).x)/2.;
+      prev_rec_pos.y = (fine_tracking_path.at(i).y+fine_tracking_path.at(i-1).y)/2.;
+      prev_rec_pos.z = (fine_tracking_path.at(i).z+fine_tracking_path.at(i-1).z)/2.;
+      double length = sqrt(pow(fine_tracking_path.at(i-1).x-fine_tracking_path.at(i).x,2)
+			   +pow(fine_tracking_path.at(i-1).y-fine_tracking_path.at(i).y,2)
+			   +pow(fine_tracking_path.at(i-1).z-fine_tracking_path.at(i).z,2) );
+      if (length ==0){
+	next_rec_pos.x = fine_tracking_path.at(i).x;
+	next_rec_pos.y = fine_tracking_path.at(i).y;
+	next_rec_pos.z = fine_tracking_path.at(i).z;
+      }else{
+	next_rec_pos.x = fine_tracking_path.at(i).x - (fine_tracking_path.at(i-1).x-fine_tracking_path.at(i).x)/length * dis_end_point_ext;
+	next_rec_pos.y = fine_tracking_path.at(i).y - (fine_tracking_path.at(i-1).y-fine_tracking_path.at(i).y)/length * dis_end_point_ext;
+	next_rec_pos.z = fine_tracking_path.at(i).z - (fine_tracking_path.at(i-1).z-fine_tracking_path.at(i).z)/length * dis_end_point_ext;
+      }
+      
+    }else{
+      prev_rec_pos.x = (fine_tracking_path.at(i).x+fine_tracking_path.at(i-1).x)/2.;
+      prev_rec_pos.y = (fine_tracking_path.at(i).y+fine_tracking_path.at(i-1).y)/2.;
+      prev_rec_pos.z = (fine_tracking_path.at(i).z+fine_tracking_path.at(i-1).z)/2.;
+
+      next_rec_pos.x = (fine_tracking_path.at(i).x+fine_tracking_path.at(i+1).x)/2.;
+      next_rec_pos.y = (fine_tracking_path.at(i).y+fine_tracking_path.at(i+1).y)/2.;
+      next_rec_pos.z = (fine_tracking_path.at(i).z+fine_tracking_path.at(i+1).z)/2.;
+    }
+    
+    
+    dQ.push_back(0);
+    dx.push_back(sqrt(pow(curr_rec_pos.x-prev_rec_pos.x,2)+pow(curr_rec_pos.y-prev_rec_pos.y,2)+pow(curr_rec_pos.z-prev_rec_pos.z,2))
+		 +sqrt(pow(curr_rec_pos.x-next_rec_pos.x,2)+pow(curr_rec_pos.y-next_rec_pos.y,2)+pow(curr_rec_pos.z-next_rec_pos.z,2)));
+
+    pu.push_back(offset_u + (slope_yu * curr_rec_pos.y + slope_zu * curr_rec_pos.z));
+    pv.push_back(offset_v + (slope_yv * curr_rec_pos.y + slope_zv * curr_rec_pos.z)+2400);
+    pw.push_back(offset_w + (slope_yw * curr_rec_pos.y + slope_zw * curr_rec_pos.z)+4800);
+    pt.push_back(offset_t + slope_xt * curr_rec_pos.x );
+  }
+}
 
 void WCPPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,  std::tuple<double, double, int > >& map_2D_ut_charge, std::map<std::pair<int,int>, std::tuple<double, double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double, double, int> >& map_2D_wt_charge, double flash_time,double dis_end_point_ext, bool flag_dQ_dx_fit_reg){
   if (fine_tracking_path.size()<=1) return;
