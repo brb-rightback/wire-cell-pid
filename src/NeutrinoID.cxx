@@ -32,7 +32,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   // find the proto vertex ...
   find_proto_vertex(main_cluster);
   // improve trajectory with clustered points
-  main_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
+  main_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true);
   
   // fit the vertex in 3D 
   // improve_vertex(main_cluster);
@@ -147,7 +147,7 @@ WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster
     add_proto_connection(v2,sg1,temp_cluster);
 
     temp_cluster->collect_charge_trajectory(*ct_point_cloud);
-    temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false, false);
+    temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false, true);
 
     //std::cout << temp_cluster->get_fine_tracking_path().size() << " " << temp_cluster->get_dx().size() << std::endl;
     
@@ -181,58 +181,7 @@ WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster
 }
 
 
-void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bool flag_break_track, int nrounds_find_other_tracks){
-  
-  if (temp_cluster->get_point_cloud_steiner()==0) return;
-  if (temp_cluster->get_point_cloud_steiner()->get_num_points()<2) return;
-  
-  WCPPID::ProtoSegment* sg1 = init_first_segment(temp_cluster);
 
-  // hack test
-  //temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
-  // for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
-  //   WCPPID::ProtoSegment *sg = it->first;
-  //   std::cout << sg->get_point_vec().size() << " A " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl;
-  // }
-
-  if (sg1->get_wcpt_vec().size()>1){
-    // break tracks ...
-    if (flag_break_track){
-      std::vector<WCPPID::ProtoSegment*> remaining_segments;
-      remaining_segments.push_back(sg1);
-      break_segments(remaining_segments, temp_cluster);
-    }
-    
-    // find other segments ...
-    for (size_t i=0;i!=nrounds_find_other_tracks;i++){
-      find_other_segments(temp_cluster, flag_break_track);
-    }
-  }
-  
-
-  
-
-  // for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
-  //   WCPPID::ProtoSegment *sg = it->first;
-  //   std::cout << sg->get_id() << " " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl;
-  //   for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-  //     std::cout << (*it1)->get_id() << " " << (*it1) << std::endl;
-  //   }
-  // }
-  // for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
-  //   std::cout << (it->first)->get_id() << std::endl;
-  //   for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-  //     std::cout << (*it1)->get_id() << " " << (*it1) << std::endl;
-  //   }
-  // }
-  
-  //  temp_cluster->set_fit_parameters(map_vertex_segments, map_segment_vertices);
-  
-  
-  
-  
-  // practice other components ...
-}
 
 
 
