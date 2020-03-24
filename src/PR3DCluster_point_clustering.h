@@ -1,4 +1,5 @@
 void WCPPID::PR3DCluster::clustering_points_master(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, double search_range, double scaling_2d){
+  // steiner-inspired graph
   clustering_points(map_vertex_segments, map_segment_vertices, ct_point_cloud, 2);
   ToyPointCloud *pcloud = new ToyPointCloud();
   PointVector pts;
@@ -11,8 +12,13 @@ void WCPPID::PR3DCluster::clustering_points_master(Map_Proto_Vertex_Segments& ma
   }
   pcloud->AddPoints(pts);
   pcloud->build_kdtree_index();
+
+  // regular ...
   clustering_points(map_vertex_segments, map_segment_vertices, ct_point_cloud, 1, pcloud);
   delete pcloud;
+
+
+  
 }
 
   void WCPPID::PR3DCluster::clustering_points(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, int choice, WCP::ToyPointCloud* pcloud, double search_range, double scaling_2d){

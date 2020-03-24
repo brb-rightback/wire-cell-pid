@@ -29,20 +29,27 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   
   // create Steiner-inspired graph
   main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+  // find the proto vertex ...
   find_proto_vertex(main_cluster);
-  main_cluster->clustering_points_master(map_vertex_segments, map_segment_vertices, *ct_point_cloud);
+  // clustering points
+  clustering_points(main_cluster);
+  // improve trajectory with clustered points
+
+  // fit the vertex in 3D 
   improve_vertex(main_cluster);
+  // do the overall fit again
   
   // prepare output ...
   organize_vertices_segments();
   main_cluster->set_fit_parameters(proto_vertices, proto_segments);
+
   
   if (flag_other_clusters){
     //deal with the other clusters ...
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
       (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
       find_proto_vertex(*it, false, 1);
-      (*it)->clustering_points_master(map_vertex_segments, map_segment_vertices, *ct_point_cloud);
+      clustering_points(*it);
 
       organize_vertices_segments();
       (*it)->set_fit_parameters(proto_vertices, proto_segments);
@@ -52,6 +59,32 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   
   
 }
+
+void WCPPID::NeutrinoID::clustering_points(WCPPID::PR3DCluster* temp_cluster){
+  temp_cluster->clustering_points_master(map_vertex_segments, map_segment_vertices, *ct_point_cloud);
+  std::map<int, WCPPID::ProtoSegment*> map_id_seg;
+
+  std::map<WCPPID::ProtoSegment*, int> map_seg_id;
+  
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+    
+    map_id_seg[sg->get_id()] = sg;
+    map_seg_id[sg] = sg->get_id();
+    sg->clear_associate_points();
+  }
+  
+  // find the relevant point clouds ...
+  WCP::WCPointCloud<double>& cloud = temp_cluster->get_point_cloud()->get_cloud();
+  std::vector<int>& point_sub_cluster_ids = temp_cluster->get_point_sub_cluster_ids();
+  for (size_t i=0;i!=point_sub_cluster_ids.size();i++){
+    if (point_sub_cluster_ids.at(i) == -1) continue;
+    WCP::Point p(cloud.pts[i].x, cloud.pts[i].y, cloud.pts[i].z);
+    map_id_seg[point_sub_cluster_ids.at(i)]->add_associate_point(p);
+  }
+}
+
 
 
 WCPPID::NeutrinoID::~NeutrinoID(){
