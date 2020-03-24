@@ -254,13 +254,14 @@ double WCPPID::PR3DCluster::cal_gaus_integral(int tbin, int wbin, double t_cente
 
 void WCPPID::PR3DCluster::dQ_dx_fill(double dis_end_point_ext){
   if (fine_tracking_path.size()<=1) return;
-  pu.clear();
-  pv.clear();
-  pw.clear();
-  pt.clear();
-  dQ.clear();
-  dx.clear();
-
+  pu.resize(fine_tracking_path.size(),0);
+  pv.resize(fine_tracking_path.size(),0);
+  pw.resize(fine_tracking_path.size(),0);
+  pt.resize(fine_tracking_path.size(),0);
+  dQ.resize(fine_tracking_path.size(),0);
+  dx.resize(fine_tracking_path.size(),0);
+  reduced_chi2.resize(fine_tracking_path.size(),0);
+  
   // Need to take into account the time, so one can properly calculate X value for diffusion ...
   TPCParams& mp = Singleton<TPCParams>::Instance();
   double time_slice_width = mp.get_ts_width();
@@ -340,14 +341,16 @@ void WCPPID::PR3DCluster::dQ_dx_fill(double dis_end_point_ext){
     }
     
     
-    dQ.push_back(0);
-    dx.push_back(sqrt(pow(curr_rec_pos.x-prev_rec_pos.x,2)+pow(curr_rec_pos.y-prev_rec_pos.y,2)+pow(curr_rec_pos.z-prev_rec_pos.z,2))
-		 +sqrt(pow(curr_rec_pos.x-next_rec_pos.x,2)+pow(curr_rec_pos.y-next_rec_pos.y,2)+pow(curr_rec_pos.z-next_rec_pos.z,2)));
 
-    pu.push_back(offset_u + (slope_yu * curr_rec_pos.y + slope_zu * curr_rec_pos.z));
-    pv.push_back(offset_v + (slope_yv * curr_rec_pos.y + slope_zv * curr_rec_pos.z)+2400);
-    pw.push_back(offset_w + (slope_yw * curr_rec_pos.y + slope_zw * curr_rec_pos.z)+4800);
-    pt.push_back(offset_t + slope_xt * curr_rec_pos.x );
+    dx.at(i) = (sqrt(pow(curr_rec_pos.x-prev_rec_pos.x,2)+pow(curr_rec_pos.y-prev_rec_pos.y,2)+pow(curr_rec_pos.z-prev_rec_pos.z,2))
+		 +sqrt(pow(curr_rec_pos.x-next_rec_pos.x,2)+pow(curr_rec_pos.y-next_rec_pos.y,2)+pow(curr_rec_pos.z-next_rec_pos.z,2)));
+    dQ.at(i) = (5000 * dx.at(i));
+
+    pu.at(i) = (offset_u + (slope_yu * curr_rec_pos.y + slope_zu * curr_rec_pos.z));
+    pv.at(i) = (offset_v + (slope_yv * curr_rec_pos.y + slope_zv * curr_rec_pos.z)+2400);
+    pw.at(i) = (offset_w + (slope_yw * curr_rec_pos.y + slope_zw * curr_rec_pos.z)+4800);
+    pt.at(i) = (offset_t + slope_xt * curr_rec_pos.x );
+    reduced_chi2.at(i) = (0);
   }
 }
 
