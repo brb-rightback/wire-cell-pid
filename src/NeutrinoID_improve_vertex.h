@@ -21,7 +21,7 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
   // find the vertex
   for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end();it++){
     WCPPID::ProtoVertex *vtx = it->first;
-    if (vtx->get_cluster_id() != temp_cluster->get_cluster_id() || it->second.size()<=1) continue;
+    if (vtx->get_cluster_id() != temp_cluster->get_cluster_id() || it->second.size()<=2) continue;
     fit_vertex(vtx, it->second, temp_cluster);
   }
 }
@@ -73,19 +73,18 @@ void WCPPID::MyFCN::AddSegment(ProtoSegment *sg){
 
   // calculate the PCA ...
   if (vec_points.back().size()>1){
-
-    // calculate center ...
-    
     int nsum = vec_points.back().size();
     
-    //    for (auto it = vec_points.back().begin(); it!=vec_points.back().end();it++){
-    // }
+    /* // calculate center ... */
+    /* center.x = 0; center.y = 0; center.z = 0; */
+    /* for (auto it = vec_points.back().begin(); it!=vec_points.back().end();it++){ */
     /*   center.x += (*it).x; */
     /*   center.y += (*it).y; */
     /*   center.z += (*it).z; */
-    /*   nsum ++; */
-    /* center.x /= nsum; center.y /= nsum; center.z /= nsum; */
-
+    /* } */
+    /* center.x /= nsum; center.y /= nsum; center.z /= nsum;  */
+  
+    
     // Eigen vectors ...
     PointVector PCA_axis(3);
     for (int i=0;i!=3;i++){
@@ -126,19 +125,23 @@ void WCPPID::MyFCN::AddSegment(ProtoSegment *sg){
     TMatrixD eigen_values = eigen.GetEigenValues();
     TMatrixD eigen_vectors = eigen.GetEigenVectors();
 
-    PCA_values[0] = eigen_values(0,0) + pow(0.1*units::cm,2);
-    PCA_values[1] = eigen_values(1,1) + pow(0.1*units::cm,2);
-    PCA_values[2] = eigen_values(2,2) + pow(0.1*units::cm,2);
+    PCA_values[0] = eigen_values(0,0) + pow(0.15*units::cm,2);
+    PCA_values[1] = eigen_values(1,1) + pow(0.15*units::cm,2);
+    PCA_values[2] = eigen_values(2,2) + pow(0.15*units::cm,2);
 
+    //    std::cout << sqrt(eigen_values(0,0))/units::cm << " " << sqrt(eigen_values(1,1))/units::cm << " " << sqrt(eigen_values(2,2))/units::cm << " " << std::endl;
+    
     for (int i=0;i!=3;i++){
       PCA_axis[i].x = eigen_vectors(0,i)/sqrt(eigen_vectors(0,i)*eigen_vectors(0,i) + eigen_vectors(1,i)*eigen_vectors(1,i) + eigen_vectors(2,i)*eigen_vectors(2,i));
       PCA_axis[i].y = eigen_vectors(1,i)/sqrt(eigen_vectors(0,i)*eigen_vectors(0,i) + eigen_vectors(1,i)*eigen_vectors(1,i) + eigen_vectors(2,i)*eigen_vectors(2,i));
       PCA_axis[i].z = eigen_vectors(2,i)/sqrt(eigen_vectors(0,i)*eigen_vectors(0,i) + eigen_vectors(1,i)*eigen_vectors(1,i) + eigen_vectors(2,i)*eigen_vectors(2,i));
     }
 
-    //    TVector3 v1(vec_points.back().front().x - vec_points.back().back().x, vec_points.back().front().y - vec_points.back().back().y, vec_points.back().front().z - vec_points.back().back().z);
+    //TVector3 v1(vec_points.back().front().x - vec_points.back().back().x, vec_points.back().front().y - vec_points.back().back().y, vec_points.back().front().z - vec_points.back().back().z);
     //TVector3 v2(PCA_axis[0].x, PCA_axis[0].y, PCA_axis[0].z);
-    //std::cout << vec_points.back().size() << " " << sqrt(PCA_values[0])/units::cm << " " << sqrt(PCA_values[1])/units::cm << " " << sqrt(PCA_values[2])/units::cm << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
+    //TVector3 v3(PCA_axis[1].x, PCA_axis[1].y, PCA_axis[1].z);
+    // TVector3 v4(PCA_axis[2].x, PCA_axis[2].y, PCA_axis[2].z);
+    //    std::cout << vec_points.back().size() << " " << sqrt(PCA_values[0])/units::cm << " " << sqrt(PCA_values[1])/units::cm << " " << sqrt(PCA_values[2])/units::cm << " " << v1.Angle(v2)/3.1415926*180. << " " << v1.Angle(v3)/3.1415926*180. << " " << v1.Angle(v4)/3.1415926*180. << " " << v4.Mag() << " " << v2.Mag() << " " << v3.Mag() << std::endl;
 
     vec_PCA_dirs.push_back(std::make_tuple(PCA_axis[0], PCA_axis[1], PCA_axis[2]));
     vec_PCA_vals.push_back(std::make_tuple(PCA_values[0], PCA_values[1], PCA_values[2]));
@@ -195,7 +198,7 @@ std::pair<bool, WCP::Point> WCPPID::MyFCN::FitVertex(){
 
   int npoints = 0;
   
-  if (ntracks >1){
+  if (ntracks >2){
     // start the fit ...
     Eigen::VectorXd temp_pos_3D_init(3), temp_pos_3D(3); // to be fitted
     temp_pos_3D_init(0) = fit_pos.x;
@@ -205,21 +208,23 @@ std::pair<bool, WCP::Point> WCPPID::MyFCN::FitVertex(){
     Eigen::Vector3d b(0,0,0);
     Eigen::MatrixXd A = Eigen::MatrixXd::Zero(3,3);
     
+    double old_chi2 = 0;
     
     for (size_t i=0;i!=vec_PCA_vals.size();i++){
       if (std::get<0>(vec_PCA_vals.at(i))>0){
 	npoints += vec_points.at(i).size();
+	
 	// fill the matrix ... first row, second column
 	Eigen::MatrixXd R(3,3);
 	R(0,0) = 0; R(0,1) = 0; R(0,2) = 0;
 	double val1 = sqrt(std::get<0>(vec_PCA_vals.at(i))/std::get<1>(vec_PCA_vals.at(i)));
 	R(1,0) = val1 * std::get<1>(vec_PCA_dirs.at(i)).x;
 	R(1,1) = val1 * std::get<1>(vec_PCA_dirs.at(i)).y;
-	R(1,2) = val1 * std::get<1>(vec_PCA_dirs.at(i)).z;
+	R(1,2) = val1 * std::get<1>(vec_PCA_dirs.at(i)).z;	
 	val1 = sqrt(std::get<0>(vec_PCA_vals.at(i))/std::get<2>(vec_PCA_vals.at(i)));
-	R(1,0) = val1 * std::get<2>(vec_PCA_dirs.at(i)).x;
-	R(1,1) = val1 * std::get<2>(vec_PCA_dirs.at(i)).y;
-	R(1,2) = val1 * std::get<2>(vec_PCA_dirs.at(i)).z;
+	R(2,0) = val1 * std::get<2>(vec_PCA_dirs.at(i)).x;
+	R(2,1) = val1 * std::get<2>(vec_PCA_dirs.at(i)).y;
+	R(2,2) = val1 * std::get<2>(vec_PCA_dirs.at(i)).z;
 
 	Eigen::Vector3d data(vec_centers.at(i).x, vec_centers.at(i).y, vec_centers.at(i).z );
 	data = R * data;
@@ -227,6 +232,13 @@ std::pair<bool, WCP::Point> WCPPID::MyFCN::FitVertex(){
 
 	b += RT * data;
 	A += RT * R;
+
+	Eigen::Vector3d temp_data(fit_pos.x, fit_pos.y, fit_pos.z);
+	temp_data = R * temp_data - data;
+	//	double temp_dis = sqrt(pow(vec_centers.at(i).x-fit_pos.x,2) +pow(vec_centers.at(i).y-fit_pos.y,2) + pow(vec_centers.at(i).z-fit_pos.z,2));
+	//std::cout << temp_data(0) << " " << temp_data(1) << " " << temp_data(2) << " " << temp_dis/units::cm << std::endl;
+	
+	old_chi2 += pow(temp_data(0),2) + pow(temp_data(1),2) + pow(temp_data(2),2);
       }
     }
     // 1.69 is a factor to be tuned ...
@@ -234,11 +246,11 @@ std::pair<bool, WCP::Point> WCPPID::MyFCN::FitVertex(){
     //add constraint ...
     if (flag_vtx_constraint){
       Eigen::MatrixXd R = Eigen::MatrixXd::Zero(3,3);
-      R(0,0) = 1./vtx_constraint_range*sqrt(npoints*1.69);
-      R(1,1) = 1./vtx_constraint_range*sqrt(npoints*1.69);
-      R(2,2) = 1./vtx_constraint_range*sqrt(npoints*1.69);
+      R(0,0) = 1./vtx_constraint_range*sqrt(npoints);
+      R(1,1) = 1./vtx_constraint_range*sqrt(npoints);
+      R(2,2) = 1./vtx_constraint_range*sqrt(npoints);
       
-      Eigen::Vector3d data(fit_pos.x/vtx_constraint_range*sqrt(npoints*1.69), fit_pos.y/vtx_constraint_range*sqrt(npoints*1.69), fit_pos.z/vtx_constraint_range*sqrt(npoints*1.69));
+      Eigen::Vector3d data(fit_pos.x/vtx_constraint_range*sqrt(npoints), fit_pos.y/vtx_constraint_range*sqrt(npoints), fit_pos.z/vtx_constraint_range*sqrt(npoints));
       Eigen::MatrixXd RT = R.transpose();
       b += RT * data;
       A += RT * R;
@@ -247,14 +259,44 @@ std::pair<bool, WCP::Point> WCPPID::MyFCN::FitVertex(){
     Eigen::BiCGSTAB<Eigen::MatrixXd> solver;
     solver.compute(A);
     temp_pos_3D = solver.solveWithGuess(b,temp_pos_3D_init);
+
     if (!std::isnan(solver.error())){
       fit_pos.x = temp_pos_3D(0);
       fit_pos.y = temp_pos_3D(1);
       fit_pos.z = temp_pos_3D(2);
       fit_flag = true;
     }
+
+    double new_chi2 = 0;
+    for (size_t i=0;i!=vec_PCA_vals.size();i++){
+      if (std::get<0>(vec_PCA_vals.at(i))>0){
+		// fill the matrix ... first row, second column
+	Eigen::MatrixXd R(3,3);
+	R(0,0) = 0; R(0,1) = 0; R(0,2) = 0;
+	double val1 = sqrt(std::get<0>(vec_PCA_vals.at(i))/std::get<1>(vec_PCA_vals.at(i)));
+	R(1,0) = val1 * std::get<1>(vec_PCA_dirs.at(i)).x;
+	R(1,1) = val1 * std::get<1>(vec_PCA_dirs.at(i)).y;
+	R(1,2) = val1 * std::get<1>(vec_PCA_dirs.at(i)).z;	
+	val1 = sqrt(std::get<0>(vec_PCA_vals.at(i))/std::get<2>(vec_PCA_vals.at(i)));
+	R(2,0) = val1 * std::get<2>(vec_PCA_dirs.at(i)).x;
+	R(2,1) = val1 * std::get<2>(vec_PCA_dirs.at(i)).y;
+	R(2,2) = val1 * std::get<2>(vec_PCA_dirs.at(i)).z;
+
+	Eigen::Vector3d data(vec_centers.at(i).x, vec_centers.at(i).y, vec_centers.at(i).z );
+	data = R * data;
+	Eigen::MatrixXd RT = R.transpose();
+
+	b += RT * data;
+	A += RT * R;
+
+	Eigen::Vector3d temp_data = temp_pos_3D;
+	temp_data = R * temp_data - data;
+	
+	new_chi2 += pow(temp_data(0),2) + pow(temp_data(1),2) + pow(temp_data(2),2);
+      }
+    }
     
-    std::cout << temp_pos_3D(0)/units::cm << " " << temp_pos_3D(1)/units::cm << " " << temp_pos_3D(2)/units::cm << " " << temp_pos_3D_init(0)/units::cm << " " << temp_pos_3D_init(1)/units::cm << " " << temp_pos_3D_init(2)/units::cm << " " << sqrt(pow(temp_pos_3D(0) - temp_pos_3D_init(0),2) + pow(temp_pos_3D(1) - temp_pos_3D_init(1),2) + pow(temp_pos_3D(2) - temp_pos_3D_init(2),2))/units::cm << std::endl;
+    std::cout << temp_pos_3D(0)/units::cm << " " << temp_pos_3D(1)/units::cm << " " << temp_pos_3D(2)/units::cm << " " << temp_pos_3D_init(0)/units::cm << " " << temp_pos_3D_init(1)/units::cm << " " << temp_pos_3D_init(2)/units::cm << " " << sqrt(pow(temp_pos_3D(0) - temp_pos_3D_init(0),2) + pow(temp_pos_3D(1) - temp_pos_3D_init(1),2) + pow(temp_pos_3D(2) - temp_pos_3D_init(2),2))/units::cm << " " << old_chi2 << " " << new_chi2 << std::endl;
   }
   
   return std::make_pair(fit_flag, fit_pos);
@@ -322,16 +364,14 @@ void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_clu
 
 void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster){
 
-  WCPPID::MyFCN fcn(vtx, false, 0.58*units::cm, 1.0*units::cm, 2*units::cm, 6*units::cm);
+  // allow to move 1.5 cm ...
+  WCPPID::MyFCN fcn(vtx, true, 0.43*units::cm, 1.5*units::cm, 2*units::cm, 6*units::cm);
   for (auto it = sg_set.begin(); it!=sg_set.end(); it++){
     fcn.AddSegment(*it);
   }
-  
   std::pair<bool, Point> results = fcn.FitVertex();
-
   if (results.first) fcn.UpdateInfo(results.second, temp_cluster);
   
-
   
    //  fcn.print_points();
 }
