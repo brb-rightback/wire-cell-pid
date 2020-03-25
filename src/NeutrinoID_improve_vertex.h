@@ -149,8 +149,7 @@ void WCPPID::MyFCN::AddSegment(ProtoSegment *sg){
     }
   }
   
-
-  //std::cout << vec_points.size() << " " << vec_points.back().size() << std::endl;
+  std::cout << vec_points.size() << " " << vec_points.back().size() << std::endl;
 }
 
 void WCPPID::MyFCN::update_fit_range(double tmp_vertex_protect_dis, double tmp_point_track_dis, double tmp_fit_dis){
@@ -317,7 +316,7 @@ void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_clu
 
 void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster){
 
-  WCPPID::MyFCN fcn(vtx, true, 0.58*units::cm, 1.0*units::cm, 2*units::cm, 6*units::cm);
+  WCPPID::MyFCN fcn(vtx, false, 0.58*units::cm, 1.0*units::cm, 2*units::cm, 6*units::cm);
   for (auto it = sg_set.begin(); it!=sg_set.end(); it++){
     fcn.AddSegment(*it);
   }

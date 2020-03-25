@@ -13,7 +13,6 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
       Point p(vtx->get_wcpt().x, vtx->get_wcpt().y, vtx->get_wcpt().z);
       vtx->set_fit_pt(p);
     }
-    //    std::cout << "V: "  << vtx->get_fit_pt() << " " << vtx->get_wcpt().x << " " << vtx->get_wcpt().y << " " << vtx->get_wcpt().z << std::endl; 
   }
   //
   
@@ -42,13 +41,11 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
   std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_wt_charge;
   prepare_data(ct_point_cloud, global_wc_map, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
 
+  
   // first round of organizing the path from the path_wcps (shortest path)
   double low_dis_limit = 1.2*units::cm;
   double end_point_limit = 0.6*units::cm;
   organize_segments_path(map_vertex_segments, map_segment_vertices, low_dis_limit, end_point_limit);
-
- 
-
   
   /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
   /*   WCPPID::ProtoSegment *sg = it->first; */
@@ -1089,7 +1086,6 @@ void WCPPID::PR3DCluster::organize_segments_path_3rd(WCPPID::Map_Proto_Vertex_Se
     
     start_p = curr_pts.front();
     end_p = curr_pts.back();
-
            
     // middle points
     pts.push_back(start_p);
@@ -1255,46 +1251,53 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCPPID::Map_Proto_Vertex_Se
     PointVector pts;
     PointVector curr_pts = sg->get_point_vec();
     Point start_p, end_p;
-    
-    // start_ point
-    start_p = curr_pts.front();
-    
-    if (flag_startv_end){
-      Point p2 = curr_pts.front();
-      double dis1 = 0;
-      for (auto it = curr_pts.begin(); it!= curr_pts.end(); it++){
-	p2 = (*it);
-	dis1 = sqrt(pow(start_p.x-p2.x,2)+pow(start_p.y-p2.y,2)+pow(start_p.z-p2.z,2));
-	if (dis1 > low_dis_limit) break;
+
+    if (!start_v->get_flag_fit_fix()){
+      // start_ point
+      start_p = curr_pts.front();
+      
+      if (flag_startv_end){
+	Point p2 = curr_pts.front();
+	double dis1 = 0;
+	for (auto it = curr_pts.begin(); it!= curr_pts.end(); it++){
+	  p2 = (*it);
+	  dis1 = sqrt(pow(start_p.x-p2.x,2)+pow(start_p.y-p2.y,2)+pow(start_p.z-p2.z,2));
+	  if (dis1 > low_dis_limit) break;
+	}
+	if (dis1!=0){
+	  start_p.x += (start_p.x-p2.x)/dis1*end_point_limit;
+	  start_p.y += (start_p.y-p2.y)/dis1*end_point_limit;
+	  start_p.z += (start_p.z-p2.z)/dis1*end_point_limit;
+	}
       }
-      if (dis1!=0){
-	start_p.x += (start_p.x-p2.x)/dis1*end_point_limit;
-	start_p.y += (start_p.y-p2.y)/dis1*end_point_limit;
-	start_p.z += (start_p.z-p2.z)/dis1*end_point_limit;
-      }
+      start_v->set_fit_pt(start_p);
+    }else{
+      start_p = start_v->get_fit_pt();
     }
 
-    
-    // end_point
-    end_p = curr_pts.back();
-
-    if (flag_endv_end){
-      Point p2 = curr_pts.back();
-      double dis1 = 0;
-      for (auto it = curr_pts.rbegin(); it!=curr_pts.rend(); it++){
-	p2 = (*it);
-	dis1 = sqrt(pow(end_p.x-p2.x,2)+pow(end_p.y-p2.y,2)+pow(end_p.z-p2.z,2));
-	if (dis1 > low_dis_limit) break;
+    if (!end_v->get_flag_fit_fix()){
+      // end_point
+      end_p = curr_pts.back();
+      
+      if (flag_endv_end){
+	Point p2 = curr_pts.back();
+	double dis1 = 0;
+	for (auto it = curr_pts.rbegin(); it!=curr_pts.rend(); it++){
+	  p2 = (*it);
+	  dis1 = sqrt(pow(end_p.x-p2.x,2)+pow(end_p.y-p2.y,2)+pow(end_p.z-p2.z,2));
+	  if (dis1 > low_dis_limit) break;
+	}
+	if (dis1!=0){
+	  end_p.x += (end_p.x - p2.x)/dis1 * end_point_limit;
+	  end_p.y += (end_p.y - p2.y)/dis1 * end_point_limit;
+	  end_p.z += (end_p.z - p2.z)/dis1 * end_point_limit;
+	}
       }
-      if (dis1!=0){
-	end_p.x += (end_p.x - p2.x)/dis1 * end_point_limit;
-	end_p.y += (end_p.y - p2.y)/dis1 * end_point_limit;
-	end_p.z += (end_p.z - p2.z)/dis1 * end_point_limit;
-      }
+      
+      end_v->set_fit_pt(end_p);
+    }else{
+      end_p = end_v->get_fit_pt();
     }
-    start_v->set_fit_pt(start_p);
-    end_v->set_fit_pt(end_p);
-
     
     // middle points
     pts.push_back(start_p);
@@ -1396,52 +1399,60 @@ void WCPPID::PR3DCluster::organize_segments_path(WCPPID::Map_Proto_Vertex_Segmen
     PointVector pts;
     std::vector<WCPointCloud<double>::WCPoint> temp_wcps_vec = sg->get_wcpt_vec();
     Point start_p, end_p;
-    
-    // start_ point
-    start_p.x = temp_wcps_vec.front().x;
-    start_p.y = temp_wcps_vec.front().y;
-    start_p.z = temp_wcps_vec.front().z;
 
-    if (flag_startv_end){
-      Point p2(temp_wcps_vec.front().x, temp_wcps_vec.front().y, temp_wcps_vec.front().z);
-      double dis1 = 0;
-      for (auto it = temp_wcps_vec.begin(); it!=temp_wcps_vec.end(); it++){
-	p2.x = (*it).x;
-	p2.y = (*it).y;
-	p2.z = (*it).z;
-	dis1 = sqrt(pow(start_p.x-p2.x,2)+pow(start_p.y-p2.y,2)+pow(start_p.z-p2.z,2));
-	if (dis1 > low_dis_limit) break;
+    if (!start_v->get_flag_fit_fix()){
+      // start_point
+      start_p.x = temp_wcps_vec.front().x;
+      start_p.y = temp_wcps_vec.front().y;
+      start_p.z = temp_wcps_vec.front().z;
+      
+      if (flag_startv_end){
+	Point p2(temp_wcps_vec.front().x, temp_wcps_vec.front().y, temp_wcps_vec.front().z);
+	double dis1 = 0;
+	for (auto it = temp_wcps_vec.begin(); it!=temp_wcps_vec.end(); it++){
+	  p2.x = (*it).x;
+	  p2.y = (*it).y;
+	  p2.z = (*it).z;
+	  dis1 = sqrt(pow(start_p.x-p2.x,2)+pow(start_p.y-p2.y,2)+pow(start_p.z-p2.z,2));
+	  if (dis1 > low_dis_limit) break;
+	}
+	if (dis1!=0){
+	  start_p.x += (start_p.x-p2.x)/dis1*end_point_limit;
+	  start_p.y += (start_p.y-p2.y)/dis1*end_point_limit;
+	  start_p.z += (start_p.z-p2.z)/dis1*end_point_limit;
+	}
       }
-      if (dis1!=0){
-	start_p.x += (start_p.x-p2.x)/dis1*end_point_limit;
-	start_p.y += (start_p.y-p2.y)/dis1*end_point_limit;
-	start_p.z += (start_p.z-p2.z)/dis1*end_point_limit;
+      start_v->set_fit_pt(start_p);
+    }else{
+      start_p = start_v->get_fit_pt();
+    }
+
+    if (!end_v->get_flag_fit_fix()){
+      // end_point
+      end_p.x = temp_wcps_vec.back().x;
+      end_p.y = temp_wcps_vec.back().y;
+      end_p.z = temp_wcps_vec.back().z;
+      if (flag_endv_end){
+	Point p2(temp_wcps_vec.back().x, temp_wcps_vec.back().y, temp_wcps_vec.back().z);
+	double dis1 = 0;
+	for (auto it = temp_wcps_vec.rbegin(); it!=temp_wcps_vec.rend(); it++){
+	  p2.x = (*it).x;
+	  p2.y = (*it).y;
+	  p2.z = (*it).z;
+	  dis1 = sqrt(pow(end_p.x-p2.x,2)+pow(end_p.y-p2.y,2)+pow(end_p.z-p2.z,2));
+	  if (dis1 > low_dis_limit) break;
+	}
+	if (dis1!=0){
+	  end_p.x += (end_p.x - p2.x)/dis1 * end_point_limit;
+	  end_p.y += (end_p.y - p2.y)/dis1 * end_point_limit;
+	  end_p.z += (end_p.z - p2.z)/dis1 * end_point_limit;
+	}
       }
+      end_v->set_fit_pt(end_p);
+    }else{
+      end_p = start_v->get_fit_pt();
     }
     
-    // end_point
-    end_p.x = temp_wcps_vec.back().x;
-    end_p.y = temp_wcps_vec.back().y;
-    end_p.z = temp_wcps_vec.back().z;
-    if (flag_endv_end){
-      Point p2(temp_wcps_vec.back().x, temp_wcps_vec.back().y, temp_wcps_vec.back().z);
-      double dis1 = 0;
-      for (auto it = temp_wcps_vec.rbegin(); it!=temp_wcps_vec.rend(); it++){
-	p2.x = (*it).x;
-	p2.y = (*it).y;
-	p2.z = (*it).z;
-	dis1 = sqrt(pow(end_p.x-p2.x,2)+pow(end_p.y-p2.y,2)+pow(end_p.z-p2.z,2));
-	if (dis1 > low_dis_limit) break;
-      }
-      if (dis1!=0){
-	end_p.x += (end_p.x - p2.x)/dis1 * end_point_limit;
-	end_p.y += (end_p.y - p2.y)/dis1 * end_point_limit;
-	end_p.z += (end_p.z - p2.z)/dis1 * end_point_limit;
-      }
-    }
-    start_v->set_fit_pt(start_p);
-    end_v->set_fit_pt(end_p);
-
     // middle points
     pts.push_back(start_p);
     for (size_t i=0;i!=temp_wcps_vec.size(); i++){
