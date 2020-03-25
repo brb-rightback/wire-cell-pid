@@ -20,10 +20,10 @@ namespace WCPPID{
   public: 
     //    double Up() const { return 1.;}
 
-    MyFCN(ProtoVertex* vtx, bool flag_vtx_constraint = false, double vtx_constraint_range = 1*units::cm, double vertex_protect_dis = 1.5*units::cm, double point_track_dis = 2.0*units::cm, double fit_dis = 6 * units::cm);    
+    MyFCN(ProtoVertex* vtx, bool flag_vtx_constraint = false, double vtx_constraint_range = 1*units::cm, double vertex_protect_dis = 1.5*units::cm, double vertex_protect_dis_short_track = 0.9*units::cm, double fit_dis = 6 * units::cm);    
     ~MyFCN();
 
-    void update_fit_range(double tmp_vertex_protect_dis = 1.5*units::cm, double tmp_point_track_dis = 2.0*units::cm, double tmp_fit_dis = 6 * units::cm);
+    void update_fit_range(double tmp_vertex_protect_dis = 1.5*units::cm, double  tmp_vertex_protect_dis_short_track = 0.9*units::cm, double tmp_fit_dis = 6 * units::cm);
     void AddSegment(ProtoSegment *sg);
     std::pair<bool, WCP::Point> FitVertex();
     void UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_cluster);
@@ -48,7 +48,7 @@ namespace WCPPID{
     double vtx_constraint_range;
     
     double vertex_protect_dis;
-    double point_track_dis;
+    double vertex_protect_dis_short_track;
     double fit_dis;
     
     std::vector<ProtoSegment* > segments;
