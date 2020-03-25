@@ -31,15 +31,16 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
   // find the proto vertex ...
   find_proto_vertex(main_cluster);
-  // improve trajectory with clustered points
-  main_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true);
+
+  // improve trajectory excluding other stuff ...
+  main_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
   
   // fit the vertex in 3D 
   // improve_vertex(main_cluster);
   // do the overall fit again
 
-  // clustering points
-  clustering_points(main_cluster);
+  // // clustering points
+  // clustering_points(main_cluster);
   
   // prepare output ...
   organize_vertices_segments();

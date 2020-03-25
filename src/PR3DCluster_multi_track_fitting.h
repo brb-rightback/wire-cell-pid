@@ -1,5 +1,23 @@
 
 void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments, WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double time, bool flag_dQ_dx_fit_reg, bool flag_dQ_dx_fit, bool flag_exclusion){
+
+
+  // reset situations ...
+  /* for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){ */
+  /*   WCPPID::ProtoSegment *sg = it->first; */
+  /*   std::cout << "T: " << sg->get_point_vec().front() << " " << sg->get_point_vec().at(1) << " " << sg->get_point_vec().back() << sg->get_point_vec().at(sg->get_point_vec().size()-2) << std::endl; */
+  /* } */
+  for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
+    WCPPID::ProtoVertex *vtx = it->first;
+    if (!vtx->get_flag_fit_fix()){
+      Point p(vtx->get_wcpt().x, vtx->get_wcpt().y, vtx->get_wcpt().z);
+      vtx->set_fit_pt(p);
+    }
+    //    std::cout << "V: "  << vtx->get_fit_pt() << " " << vtx->get_wcpt().x << " " << vtx->get_wcpt().y << " " << vtx->get_wcpt().z << std::endl; 
+  }
+  //
+  
+
   // collect charge
   collect_charge_multi_trajectory(map_segment_vertices, ct_point_cloud);
 
@@ -29,6 +47,9 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
   double end_point_limit = 0.6*units::cm;
   organize_segments_path(map_vertex_segments, map_segment_vertices, low_dis_limit, end_point_limit);
 
+ 
+
+  
   /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
   /*   WCPPID::ProtoSegment *sg = it->first; */
   /*   std::cout << sg->get_wcpt_vec().size() << " B " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
@@ -311,6 +332,9 @@ void WCPPID::PR3DCluster::multi_trajectory_fit(WCPPID::Map_Proto_Vertex_Segments
     int i = vtx->get_fit_index();
     bool flag_fit_fix = vtx->get_flag_fit_fix();
     Point init_p = vtx->get_fit_pt();
+
+    //std::cout << flag_fit_fix << std::endl;
+
     if (!flag_fit_fix){ // not fix the fit ...
       init_p = fit_point(init_p, i, map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set,
 			 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
