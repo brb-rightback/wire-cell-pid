@@ -656,7 +656,7 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
   }
   
   // adjust regularization strength
-  double lambda = 0.001;
+  double lambda = 0.0008;
   FMatrix *= lambda;
   
   if (!flag_dQ_dx_fit_reg)

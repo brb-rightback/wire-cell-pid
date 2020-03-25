@@ -395,9 +395,7 @@ void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_clu
     }
 
     // establish the shortest path ...
-    //temp_cluster->dijkstra_shortest_paths(vtx_new_wcp, 2);
-    //temp_cluster->cal_shortest_path(min_wcp, 2);
-    std::list<WCP::WCPointCloud<double>::WCPoint> new_list;// = temp_cluster->get_path_wcps();
+    std::list<WCP::WCPointCloud<double>::WCPoint> new_list;
 
     new_list.push_back(vtx_new_wcp);
     {

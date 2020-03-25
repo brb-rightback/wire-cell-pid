@@ -31,11 +31,11 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
   // find the proto vertex ...
   find_proto_vertex(main_cluster);
-   // clustering points
-  clustering_points(main_cluster);
   // fit the vertex in 3D 
   improve_vertex(main_cluster);
   
+  // clustering points
+  clustering_points(main_cluster);
   
  
   
