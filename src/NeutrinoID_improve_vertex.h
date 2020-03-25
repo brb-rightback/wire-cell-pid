@@ -57,28 +57,34 @@ void WCPPID::MyFCN::AddSegment(ProtoSegment *sg){
     vec_points.push_back(pts);
   }
 
-  //WCP::PointVector& pts = sg->get_associate_points();
+  WCP::Point center;
+  double min_dis = 1e9;
   WCP::PointVector& pts = sg->get_point_vec();
   for (size_t i=0;i!=pts.size();i++){
     double dis_to_vertex = sqrt(pow(pts.at(i).x - vtx->get_fit_pt().x,2) + pow(pts.at(i).y - vtx->get_fit_pt().y,2) + pow(pts.at(i).z - vtx->get_fit_pt().z,2));
   if (dis_to_vertex < vertex_protect_dis || dis_to_vertex > fit_dis) continue;
   if (sg->get_closest_point(pts.at(i)).first > point_track_dis) continue;
     vec_points.back().push_back(pts.at(i));
+    if (dis_to_vertex < min_dis){
+      center = pts.at(i);
+      min_dis = dis_to_vertex;
+    }
   }
 
   // calculate the PCA ...
   if (vec_points.back().size()>1){
 
     // calculate center ...
-    WCP::Point center(0,0,0);
-    int nsum = 0;
-    for (auto it = vec_points.back().begin(); it!=vec_points.back().end();it++){
-      center.x += (*it).x;
-      center.y += (*it).y;
-      center.z += (*it).z;
-      nsum ++;
-    }
-    center.x /= nsum; center.y /= nsum; center.z /= nsum;
+    
+    int nsum = vec_points.back().size();
+    
+    //    for (auto it = vec_points.back().begin(); it!=vec_points.back().end();it++){
+    // }
+    /*   center.x += (*it).x; */
+    /*   center.y += (*it).y; */
+    /*   center.z += (*it).z; */
+    /*   nsum ++; */
+    /* center.x /= nsum; center.y /= nsum; center.z /= nsum; */
 
     // Eigen vectors ...
     PointVector PCA_axis(3);
