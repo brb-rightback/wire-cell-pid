@@ -8,22 +8,41 @@
 #include "WCPData/TPCParams.h"
 #include "WCPData/Singleton.h"
 
+bool WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster){
+  // allow to move 1.5 cm ...
+  WCPPID::MyFCN fcn(vtx, true, 0.43*units::cm, 1.5*units::cm, 0.9*units::cm, 6*units::cm);
+  for (auto it = sg_set.begin(); it!=sg_set.end(); it++){
+    fcn.AddSegment(*it);
+  }
+  std::pair<bool, Point> results = fcn.FitVertex();
+  if (results.first){
+    fcn.UpdateInfo(results.second, temp_cluster);
+    return true;
+  }
+
+  return false;
+}
+
 void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
-  
+  /* for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){ */
+  /*  WCPPID::ProtoSegment *sg = it->first; */
+  /*  if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue; */
+  /*  std::cout << sg->get_associate_points().size() << std::endl; */
+  /* } */
 
-   /* for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){ */
-   /*  WCPPID::ProtoSegment *sg = it->first; */
-   /*  if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue; */
-   /*  std::cout << sg->get_associate_points().size() << std::endl; */
-   /* } */
-
-
+  bool flag_update_fit = false;
   // find the vertex
   for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end();it++){
     WCPPID::ProtoVertex *vtx = it->first;
     if (vtx->get_cluster_id() != temp_cluster->get_cluster_id() || it->second.size()<=2) continue;
-    fit_vertex(vtx, it->second, temp_cluster);
+    bool flag_update = fit_vertex(vtx, it->second, temp_cluster);
+    if (flag_update) flag_update_fit = true;
   }
+  
+  if (flag_update_fit)
+    // do the overall fit again
+    temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+  
 }
 
 WCPPID::MyFCN::MyFCN(WCPPID::ProtoVertex* vtx, bool flag_vtx_constraint, double vtx_constraint_range, double vertex_protect_dis, double vertex_protect_dis_short_track, double fit_dis) 
@@ -91,7 +110,6 @@ void WCPPID::MyFCN::AddSegment(ProtoSegment *sg){
     /*   center.z += (*it).z; */
     /* } */
     /* center.x /= nsum; center.y /= nsum; center.z /= nsum;  */
-  
     
     // Eigen vectors ...
     PointVector PCA_axis(3);
@@ -308,7 +326,12 @@ std::pair<bool, WCP::Point> WCPPID::MyFCN::FitVertex(){
   return std::make_pair(fit_flag, fit_pos);
 }
 
+
+
 void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_cluster){
+
+ 
+
   // convertion to the u, v, w, z ...
   TPCParams& mp = Singleton<TPCParams>::Instance();
   double pitch_u = mp.get_pitch_u();
@@ -339,49 +362,53 @@ void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_clu
   double offset_u = -first_u_dis/pitch_u;
   double offset_v = -first_v_dis/pitch_v;
 
-
   std::cout << "Fit Vertex: (" << offset_u + (slope_yu * fit_pos.y + slope_zu * fit_pos.z) << ", " << offset_v + (slope_yv * fit_pos.y + slope_zv * fit_pos.z)+2400 << ", " << offset_w + (slope_yw * fit_pos.y + slope_zw * fit_pos.z)+4800 <<", " << offset_t + slope_x * fit_pos.x << ") <- (" << offset_u + (slope_yu * vtx->get_fit_pt().y + slope_zu * vtx->get_fit_pt().z) << ", " << offset_v + (slope_yv * vtx->get_fit_pt().y + slope_zv * vtx->get_fit_pt().z)+2400 << ", " << offset_w + (slope_yw * vtx->get_fit_pt().y + slope_zw * vtx->get_fit_pt().z)+4800 <<", " << offset_t + slope_x * vtx->get_fit_pt().x << ")" << std::endl;
+  
+  // find the new wcps point for the vertex ...
+  WCP::ToyPointCloud *pcloud = temp_cluster->get_point_cloud_steiner();
+  WCP::WCPointCloud<double>::WCPoint& vtx_new_wcp = pcloud->get_closest_wcpoint(fit_pos);
+
+  //std::cout << sqrt(pow(vtx_new_wcp.x - fit_pos.x,2) + pow(vtx_new_wcp.y - fit_pos.y,2) + pow(vtx_new_wcp.z - fit_pos.z,2))/units::cm << std::endl;
   
   // quick hack ...
   for (auto it = segments.begin(); it!=segments.end(); it++){
     PointVector& pts = (*it)->get_point_vec();
-    std::vector<double>& pu = (*it)->get_pu_vec();
-    std::vector<double>& pv = (*it)->get_pv_vec();
-    std::vector<double>& pw = (*it)->get_pw_vec();
-    std::vector<double>& pt = (*it)->get_pt_vec();
-    
     double dis1 = pow(pts.front().x - vtx->get_fit_pt().x,2) + pow(pts.front().y - vtx->get_fit_pt().y,2) + pow(pts.front().z - vtx->get_fit_pt().z,2);
     double dis2 = pow(pts.back().x - vtx->get_fit_pt().x,2) + pow(pts.back().y - vtx->get_fit_pt().y,2) + pow(pts.back().z - vtx->get_fit_pt().z,2);
+    std::vector<WCP::WCPointCloud<double>::WCPoint >& vec_wcps = (*it)->get_wcpt_vec();
 
-    if (dis1 < dis2){
-      pts.front() = fit_pos;
-      pu.front() = offset_u + 0.5 + (slope_yu * fit_pos.y + slope_zu * fit_pos.z);
-      pv.front() = offset_v + 0.5 + (slope_yv * fit_pos.y + slope_zv * fit_pos.z)+2400;
-      pw.front() = offset_w + 0.5 + (slope_yw * fit_pos.y + slope_zw * fit_pos.z)+4800;
-      pt.front() = offset_t + 0.5 + slope_x * fit_pos.x;
-    }else{
-      pts.back() = fit_pos;
-      pu.back() = offset_u + 0.5 + (slope_yu * fit_pos.y + slope_zu * fit_pos.z);
-      pv.back() = offset_v + 0.5 + (slope_yv * fit_pos.y + slope_zv * fit_pos.z)+2400;
-      pw.back() = offset_w + 0.5 + (slope_yw * fit_pos.y + slope_zw * fit_pos.z)+4800;
-      pt.back() = offset_t + 0.5 + slope_x * fit_pos.x;
-    }
+    bool flag_front = false;
+    if (dis1 < dis2) flag_front = true;
+    
+    /* std::vector<double>& pu = (*it)->get_pu_vec(); */
+    /* std::vector<double>& pv = (*it)->get_pv_vec(); */
+    /* std::vector<double>& pw = (*it)->get_pw_vec(); */
+    /* std::vector<double>& pt = (*it)->get_pt_vec(); */
+    /* if (dis1 < dis2){ */
+    /*   pts.front() = fit_pos; */
+    /*   pu.front() = offset_u + 0.5 + (slope_yu * fit_pos.y + slope_zu * fit_pos.z); */
+    /*   pv.front() = offset_v + 0.5 + (slope_yv * fit_pos.y + slope_zv * fit_pos.z)+2400; */
+    /*   pw.front() = offset_w + 0.5 + (slope_yw * fit_pos.y + slope_zw * fit_pos.z)+4800; */
+    /*   pt.front() = offset_t + 0.5 + slope_x * fit_pos.x; */
+    /* }else{ */
+    /*   pts.back() = fit_pos; */
+    /*   pu.back() = offset_u + 0.5 + (slope_yu * fit_pos.y + slope_zu * fit_pos.z); */
+    /*   pv.back() = offset_v + 0.5 + (slope_yv * fit_pos.y + slope_zv * fit_pos.z)+2400; */
+    /*   pw.back() = offset_w + 0.5 + (slope_yw * fit_pos.y + slope_zw * fit_pos.z)+4800; */
+    /*   pt.back() = offset_t + 0.5 + slope_x * fit_pos.x; */
+    /* } */
+    (*it)->clear_fit();
   }
+
+
   vtx->set_fit(fit_pos, vtx->get_dQ(), vtx->get_dx(), offset_u + 0.5 + (slope_yu * fit_pos.y + slope_zu * fit_pos.z), offset_v + 0.5 + (slope_yv * fit_pos.y + slope_zv * fit_pos.z)+2400, offset_w + 0.5 + (slope_yw * fit_pos.y + slope_zw * fit_pos.z)+4800, offset_t + 0.5 + slope_x * fit_pos.x, vtx->get_reduced_chi2());
-}
-
-void WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster){
-
-  // allow to move 1.5 cm ...
-  WCPPID::MyFCN fcn(vtx, true, 0.43*units::cm, 1.5*units::cm, 0.9*units::cm, 6*units::cm);
-  for (auto it = sg_set.begin(); it!=sg_set.end(); it++){
-    fcn.AddSegment(*it);
-  }
-  std::pair<bool, Point> results = fcn.FitVertex();
-  if (results.first) fcn.UpdateInfo(results.second, temp_cluster);
+  //  vtx->set_wcpt(vtx_new_wcp);
+  vtx->set_flag_fit_fix(true);
   
-   //  fcn.print_points();
+  
 }
+
+
 
 
 

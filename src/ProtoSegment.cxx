@@ -263,11 +263,24 @@ void WCPPID::ProtoSegment::reset_fit_prop(){
 
 void WCPPID::ProtoSegment::clear_fit(){
   flag_fit = false;
+
   fit_pt_vec.clear();
+  fit_pt_vec.resize(wcpt_vec.size());
+  for (size_t i=0;i!=wcpt_vec.size();i++){
+    fit_pt_vec.at(i).x = wcpt_vec.at(i).x;
+    fit_pt_vec.at(i).y = wcpt_vec.at(i).y;
+    fit_pt_vec.at(i).z = wcpt_vec.at(i).z;
+  }
+  if (pcloud_fit != (ToyPointCloud*)0) delete pcloud_fit;
+  pcloud_fit = new ToyPointCloud();
+  pcloud_fit->AddPoints(fit_pt_vec);
+  pcloud_fit->build_kdtree_index();
+  
+  
+  
   dQ_vec.clear();
   dx_vec.clear();
   dQ_dx_vec.clear();
-
   pu_vec.clear();
   pv_vec.clear();
   pw_vec.clear();

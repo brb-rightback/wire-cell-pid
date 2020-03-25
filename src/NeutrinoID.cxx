@@ -33,8 +33,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   find_proto_vertex(main_cluster);
   // fit the vertex in 3D 
   improve_vertex(main_cluster);
-  // do the overall fit again
-
+  
+  
   // clustering points
   clustering_points(main_cluster);
   
