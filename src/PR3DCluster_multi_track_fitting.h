@@ -2,11 +2,14 @@
 void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments, WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double time, bool flag_dQ_dx_fit_reg, bool flag_dQ_dx_fit, bool flag_exclusion){
 
 
-  // reset situations ...
-  /* for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){ */
-  /*   WCPPID::ProtoSegment *sg = it->first; */
-  /*   std::cout << "T: " << sg->get_point_vec().front() << " " << sg->get_point_vec().at(1) << " " << sg->get_point_vec().back() << sg->get_point_vec().at(sg->get_point_vec().size()-2) << std::endl; */
-  /* } */
+  bool flag_special = false;
+  /* for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){  */
+  /*   WCPPID::ProtoSegment *sg = it->first;  */
+  /* /\*   std::cout << "T: " << sg->get_point_vec().front() << " " << sg->get_point_vec().at(1) << " " << sg->get_point_vec().back() << sg->get_point_vec().at(sg->get_point_vec().size()-2) << std::endl; *\/ */
+  /*   if (sg->get_associated_pcloud_steiner()!=0 ) flag_special = true; */
+  /* }  */
+
+    
   for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
     WCPPID::ProtoVertex *vtx = it->first;
     if (!vtx->get_flag_fit_fix()){
@@ -68,11 +71,13 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
 			    map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
 			    map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
 			    map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set, flag_exclusion);
-    multi_trajectory_fit(map_vertex_segments, map_segment_vertices,
-			 map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
-			 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
-			 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
-   
+
+    if (!flag_special)
+      multi_trajectory_fit(map_vertex_segments, map_segment_vertices,
+			   map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
+			   map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
+			   map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+    
     
     /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
     /*   WCPPID::ProtoSegment *sg = it->first; */
@@ -106,7 +111,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     map_2DU_3D_set.clear();
     map_2DV_3D_set.clear();
     map_2DW_3D_set.clear();
-    
+
     form_map_multi_segments(map_vertex_segments, map_segment_vertices, ct_point_cloud,
 			    map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,
 			    map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
@@ -130,11 +135,12 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     /*   } */
     /*   std::cout << map_2DU_3D_set.size() << " " << map_2DV_3D_set.size() << " " << map_2DW_3D_set.size() << " " << sum[0] << " " << sum[1] << " " << sum[2] << std::endl; */
     /* } */
-     
-    multi_trajectory_fit(map_vertex_segments, map_segment_vertices,
-			 map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
-			 map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
-			 map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
+
+    if (!flag_special)
+      multi_trajectory_fit(map_vertex_segments, map_segment_vertices,
+			   map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
+			   map_2DU_3D_set, map_2DV_3D_set, map_2DW_3D_set,
+			   map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
 
     /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
     /*   WCPPID::ProtoSegment *sg = it->first; */
@@ -777,11 +783,12 @@ void WCPPID::PR3DCluster::form_map_multi_segments(WCPPID::Map_Proto_Vertex_Segme
 	form_point_association(pts.at(i), temp_2dut, temp_2dvt, temp_2dwt, ct_point_cloud, dis_cut, nlevel, time_cut);
 
 	// examine things ...
-	//	if (sg->get_associated_pcloud_steiner()!=0 ){
-	// std::cout << pts.at(i) << " " << sqrt(pow(pts.front().x-pts.back().x,2) + pow(pts.front().y-pts.back().y,2) + pow(pts.front().z-pts.back().z,2))/units::cm << std::endl;
+	//if (sg->get_associated_pcloud_steiner()!=0 )
+	//std::cout << pts.at(i) << " " << sqrt(pow(pts.front().x-pts.back().x,2) + pow(pts.front().y-pts.back().y,2) + pow(pts.front().z-pts.back().z,2))/units::cm << std::endl;
+
 	if (flag_exclusion)
 	  update_association(temp_2dut, temp_2dvt, temp_2dwt, sg, segments);
-	//}
+	
 
 	// examine ...
 	std::vector<int> temp_results = ct_point_cloud.convert_3Dpoint_time_ch(pts.at(i));
@@ -981,7 +988,10 @@ void WCPPID::PR3DCluster::update_association(std::set<std::pair<int,int> >& temp
 	){
       flag_save = true;
       save_2dut.insert(*it);
-      //      std::cout << it->first << " " << it->second << " " << flag_save << " " << min_dis_track/units::cm <<  " " << min_dis1_track/units::cm << std::endl;
+      
+      //  if (sg->get_associated_pcloud_steiner()!=0)
+      //std::cout << it->first << " " << it->second << " " << flag_save << " " << min_dis_track/units::cm <<  " " << min_dis1_track/units::cm << std::endl;
+      
     }
   }
 

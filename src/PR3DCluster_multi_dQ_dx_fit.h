@@ -624,8 +624,8 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
   double dead_ind_weight = 0.3;
   double dead_col_weight = 0.9;
   
-  double close_ind_weight = 0.15;
-  double close_col_weight = 0.45;
+  double close_ind_weight = 0.25;
+  double close_col_weight = 0.75;
   
   for (size_t i=0; i!=n_3D_pos; i++){
     bool flag_u = reg_flag_u.at(i);
@@ -655,8 +655,8 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
     
   }
   
-  
-  double lambda = 0.0005;
+  // adjust regularization strength
+  double lambda = 0.001;
   FMatrix *= lambda;
   
   if (!flag_dQ_dx_fit_reg)
