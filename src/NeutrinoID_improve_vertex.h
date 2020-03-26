@@ -445,7 +445,6 @@ void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_clu
     /*   std::cout << i << " " << sqrt(pow(vec_wcps.at(i).x - vec_wcps.at(i+1).x,2)+pow(vec_wcps.at(i).y - vec_wcps.at(i+1).y,2) + pow(vec_wcps.at(i).z - vec_wcps.at(i+1).z,2))/units::cm << std::endl; */
     /* } */
     
-    
     segments.at(i)->clear_fit();
     
     /* std::vector<double>& pu = (*it)->get_pu_vec(); */
