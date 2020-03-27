@@ -1034,33 +1034,260 @@ bool WCPPID::NeutrinoID::del_proto_segment(WCPPID::ProtoSegment *ps){
 }
 
 void WCPPID::NeutrinoID::examine_vertices(WCPPID::PR3DCluster* temp_cluster){
-
-  std::map<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> map_vertex_replace;
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  double time_slice_width = mp.get_ts_width();
+  int time_offset = mp.get_time_offset();
+  int nrebin = mp.get_nrebin();
+  double pitch_u = mp.get_pitch_u();
+  double pitch_v = mp.get_pitch_v();
+  double pitch_w = mp.get_pitch_w();
+  double first_u_dis = mp.get_first_u_dis();
+  double first_v_dis = mp.get_first_v_dis();
+  double first_w_dis = mp.get_first_w_dis();
+  double angle_u = mp.get_angle_u();
+  double angle_v = mp.get_angle_v();
+  double angle_w = mp.get_angle_w();
+  //  convert Z to W ... 
+  double slope_zw = 1./pitch_w * cos(angle_w);
+  double slope_yw = 1./pitch_w * sin(angle_w);
   
-  for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
-    WCPPID::ProtoVertex *vtx = it->first;
-    if (it->second.size()==2){ // potential check
-      for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
-	WCPPID::ProtoSegment* sg = (*it1);
-	if (sg->get_length() > 4*units::cm) continue;
-	for (auto it2 = map_segment_vertices[sg].begin(); it2 != map_segment_vertices[sg].end(); it2++){
-	  WCPPID::ProtoVertex *vtx1 = (*it2);
-	  if (vtx1 == vtx) continue;
-	  if (map_vertex_segments[vtx1].size() > 2){
-	    if (examine_vertices(vtx, vtx1))
-	      map_vertex_replace[vtx] = vtx1;
+  double slope_yu = -1./pitch_u * sin(angle_u);
+  double slope_zu = 1./pitch_u * cos(angle_u);
+  double slope_yv = -1./pitch_v * sin(angle_v);
+  double slope_zv = 1./pitch_v * cos(angle_v);
+  //convert Y,Z to U,V
+  double offset_w = -first_w_dis/pitch_w + 0.5;
+  double offset_u = -first_u_dis/pitch_u + 0.5;
+  double offset_v = -first_v_dis/pitch_v + 0.5;
+  
+  double first_t_dis = temp_cluster->get_point_cloud()->get_cloud().pts[0].mcell->GetTimeSlice()*time_slice_width - temp_cluster->get_point_cloud()->get_cloud().pts[0].x;
+  double slope_xt = 1./time_slice_width;
+  double offset_t =  first_t_dis/time_slice_width + 0.5;
+  
+  bool flag_continue = true;
+
+  while (flag_continue){
+    flag_continue = false;
+    std::map<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> map_vertex_replace;
+  
+    for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
+      WCPPID::ProtoVertex *vtx = it->first;
+      if (it->second.size()==2){ // potential check
+	for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+	  WCPPID::ProtoSegment* sg = (*it1);
+	  if (sg->get_length() > 4*units::cm) continue;
+	  for (auto it2 = map_segment_vertices[sg].begin(); it2 != map_segment_vertices[sg].end(); it2++){
+	    WCPPID::ProtoVertex *vtx1 = (*it2);
+	    if (vtx1 == vtx) continue;
+	    if (map_vertex_segments[vtx1].size() > 2){ // the other track needs to be larger than 2
+	      if (examine_vertices(vtx, vtx1, offset_t, slope_xt, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw)){
+		map_vertex_replace[vtx] = vtx1;
+		flag_continue = true;
+		break;
+	      }
+	    }
 	  }
+	  if (flag_continue) break;
 	}
+	if (flag_continue) break;
       }
     }
-  }
 
-  std::cout << map_vertex_replace.size() << std::endl;
+    std::cout << map_vertex_replace.size() << std::endl;
+
+
+    // hack for now
+    flag_continue = false;
+  }
+ 
+  // replace ...
   
 }
 
-bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2){
+bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2, double offset_t, double slope_xt, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw){
+  // U, V, W ...
+  Point& v1_p = v1->get_fit_pt();
+  double v1_t = offset_t + slope_xt * v1_p.x;
+  double v1_u = offset_u + slope_yu * v1_p.y + slope_zu * v1_p.z;
+  double v1_v = offset_v + slope_yv * v1_p.y + slope_zv * v1_p.z;
+  double v1_w = offset_w + slope_yw * v1_p.y + slope_zw * v1_p.z;
+  
+  Point& v2_p = v2->get_fit_pt();
+  double v2_t = offset_t + slope_xt * v2_p.x;
+  double v2_u = offset_u + slope_yu * v2_p.y + slope_zu * v2_p.z;
+  double v2_v = offset_v + slope_yv * v2_p.y + slope_zv * v2_p.z;
+  double v2_w = offset_w + slope_yw * v2_p.y + slope_zw * v2_p.z;
+
+  // find the track segment in between
+  WCPPID::ProtoSegment *sg = find_segment(v1,v2);
+  if (sg == 0 || map_vertex_segments[v1].size()!=2) return false;
   
   
-  return true;
+  int ncount_close = 0;
+  int ncount_dead = 0;
+  int ncount_line = 0;
+
+  // one view must be close
+  if (sqrt(pow(v1_u - v2_u, 2) + pow(v1_t - v2_t,2)) < 2.0){
+    ncount_close ++;
+  }else{
+    // one view must be dead? or shorter distance
+    bool flag_dead = true;
+    for (size_t i=0;i!=sg->get_point_vec().size();i++){
+      if (!ct_point_cloud->get_closest_dead_chs(sg->get_point_vec().at(i),0))
+	flag_dead = false;
+    }
+    if (flag_dead) ncount_dead++;
+    else{
+      // third view must be like a line
+      PointVector& pts_1 = sg->get_point_vec();
+      WCPPID::ProtoSegment *sg1 = 0;
+      for (auto it1 = map_vertex_segments[v1].begin(); it1 != map_vertex_segments[v1].end(); it1++){
+	// sg is one track
+	if (*it1 == sg) continue;
+	sg1 = *it1;
+      }
+
+      PointVector& pts_2 = sg1->get_point_vec();
+      TVector3 v1(v2_u-v1_u, v2_t-v1_t, 0);
+      TVector3 v2(0,0,0);
+      double min_dis = 1e9;
+      
+      for (size_t i=0;i!=pts_2.size();i++){
+	double p_t = offset_t + slope_xt * pts_2.at(i).x;
+	double p_u = offset_u + slope_yu * pts_2.at(i).y + slope_zu * pts_2.at(i).z;
+	TVector3 v3(p_u-v1_u, p_t-v1_t,0);
+	double dis = fabs(v3.Mag()-9);
+	if (dis < min_dis){
+	  min_dis = dis;
+	  v2 = v3;
+	}
+      }
+
+      if (180-v1.Angle(v2)/3.1415926*180. < 30) ncount_line++;
+      // std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
+    }
+  }
+
+  //  std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
+  
+   // one view must be close
+  if (sqrt(pow(v1_v - v2_v, 2) + pow(v1_t - v2_t,2)) < 2.0){
+    ncount_close ++;
+  }else{
+    // one view must be dead? or shorter distance
+    bool flag_dead = true;
+    for (size_t i=0;i!=sg->get_point_vec().size();i++){
+      if (!ct_point_cloud->get_closest_dead_chs(sg->get_point_vec().at(i),1))
+	flag_dead = false;
+    }
+    if (flag_dead) ncount_dead++;
+    else{
+      // third view must be like a line
+      PointVector& pts_1 = sg->get_point_vec();
+      WCPPID::ProtoSegment *sg1 = 0;
+      for (auto it1 = map_vertex_segments[v1].begin(); it1 != map_vertex_segments[v1].end(); it1++){
+	// sg is one track
+	if (*it1 == sg) continue;
+	sg1 = *it1;
+      }
+
+      PointVector& pts_2 = sg1->get_point_vec();
+      TVector3 v1(v2_v-v1_v, v2_t-v1_t, 0);
+      TVector3 v2(0,0,0);
+      double min_dis = 1e9;
+      
+      for (size_t i=0;i!=pts_2.size();i++){
+	double p_t = offset_t + slope_xt * pts_2.at(i).x;
+	double p_v = offset_v + slope_yv * pts_2.at(i).y + slope_zv * pts_2.at(i).z;
+	TVector3 v3(p_v-v1_v, p_t-v1_t,0);
+	double dis = fabs(v3.Mag()-9);
+	if (dis < min_dis){
+	  min_dis = dis;
+	  v2 = v3;
+	}
+      }
+
+      if (180-v1.Angle(v2)/3.1415926*180. < 30) ncount_line++;
+      //      std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
+    }
+  }
+
+  //std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
+
+   // one view must be close
+  if (sqrt(pow(v1_w - v2_w, 2) + pow(v1_t - v2_t,2)) < 2.0){
+    //    std::cout << "haha " << std::endl;
+    ncount_close ++;
+  }else{
+    // one view must be dead? or shorter distance
+    bool flag_dead = true;
+    for (size_t i=0;i!=sg->get_point_vec().size();i++){
+      if (!ct_point_cloud->get_closest_dead_chs(sg->get_point_vec().at(i),2))
+	flag_dead = false;
+    }
+
+    
+    
+    if (flag_dead) ncount_dead++;
+    else{
+      // third view must be like a line
+      PointVector& pts_1 = sg->get_point_vec();
+      WCPPID::ProtoSegment *sg1 = 0;
+      for (auto it1 = map_vertex_segments[v1].begin(); it1 != map_vertex_segments[v1].end(); it1++){
+	// sg is one track
+	if (*it1 == sg) continue;
+	sg1 = *it1;
+      }
+
+      PointVector& pts_2 = sg1->get_point_vec();
+      TVector3 v1(v2_w-v1_w, v2_t-v1_t, 0);
+      TVector3 v2(0,0,0);
+      double min_dis = 1e9;
+      
+      for (size_t i=0;i!=pts_2.size();i++){
+	double p_t = offset_t + slope_xt * pts_2.at(i).x;
+	double p_w = offset_w + slope_yw * pts_2.at(i).y + slope_zw * pts_2.at(i).z;
+	TVector3 v3(p_w-v1_w, p_t-v1_t,0);
+	double dis = fabs(v3.Mag()-9);
+	if (dis < min_dis){
+	  min_dis = dis;
+	  v2 = v3;
+	}
+      }
+
+      if (180-v1.Angle(v2)/3.1415926*180. < 30) ncount_line++;
+
+      //      std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
+    }
+  }
+
+  
+  
+  if (ncount_close >=2 ||
+      ncount_close ==1 && ncount_dead ==1 & ncount_line==1 ||
+      ncount_close ==1 && ncount_dead == 2)
+    return true;
+
+  //  std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
+  //  std::cout <<  << " " << sqrt(pow(v1_u - v2_u, 2) + pow(v1_t - v2_t,2)) << " " << sqrt(pow(v1_v - v2_v, 2) + pow(v1_t - v2_t,2)) << std::endl;
+
+  
+  return false;
+}
+
+
+
+WCPPID::ProtoSegment* WCPPID::NeutrinoID::find_segment(WCPPID::ProtoVertex *v1, WCPPID::ProtoVertex *v2){
+
+  WCPPID::ProtoSegment* sg = 0;
+  for (auto it1 = map_vertex_segments[v1].begin(); it1 != map_vertex_segments[v1].end(); it1++){
+    sg = *it1;
+    if (map_segment_vertices[sg].find(v2) == map_segment_vertices[sg].end()){
+      sg = 0;
+    }else{
+      break;
+    }
+  }
+  return sg;
 }

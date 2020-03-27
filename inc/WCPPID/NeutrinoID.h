@@ -86,7 +86,7 @@ namespace WCPPID{
     WCPPID::ProtoSegment* init_first_segment(WCPPID::PR3DCluster *cluster);
     void break_segments(std::vector<WCPPID::ProtoSegment*>& remaining_segments, WCPPID::PR3DCluster* temp_cluster);
     void examine_vertices(WCPPID::PR3DCluster* temp_cluster);
-    bool examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2);
+    bool examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2, double offset_t, double slope_xt, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw);
     
     void find_other_segments(WCPPID::PR3DCluster* temp_cluster, bool flag_break_track = true, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
     ProtoVertex* find_vertex_other_segment(WCPPID::PR3DCluster *temp_cluster, bool flag_forward, WCP::WCPointCloud<double>::WCPoint& wcp);
@@ -98,6 +98,8 @@ namespace WCPPID{
 
     // clustering points
     void clustering_points(WCPPID::PR3DCluster* temp_cluster);
+
+    WCPPID::ProtoSegment* find_segment(WCPPID::ProtoVertex *v1, WCPPID::ProtoVertex *v2);
     
     
     Map_Proto_Vertex_Segments& get_map_vertex_segments(){return map_vertex_segments;};
