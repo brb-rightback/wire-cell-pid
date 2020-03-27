@@ -175,20 +175,47 @@ std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_ki
     Point next_p(0,0,0);
     int num_p = 0;
     int num_p1 = 0;
+
+    double length1 = 0;
+    double length2 = 0;
+    Point last_p1, last_p2;
     for (size_t i=1;i!=10;i++){
       if (save_i>=i){
+	length1 += sqrt(pow(fit_pt_vec.at(save_i-i).x -fit_pt_vec.at(save_i-i+1).x,2) + pow(fit_pt_vec.at(save_i-i).y -fit_pt_vec.at(save_i-i+1).y,2) + pow(fit_pt_vec.at(save_i-i).z -fit_pt_vec.at(save_i-i+1).z,2));
+	  
 	prev_p.x += fit_pt_vec.at(save_i-i).x;
 	prev_p.y += fit_pt_vec.at(save_i-i).y;
 	prev_p.z += fit_pt_vec.at(save_i-i).z;
+
+	last_p1 = fit_pt_vec.at(save_i-i);
+	
 	num_p ++;
       }
       if (save_i+i<fit_pt_vec.size()){
+	length2 += sqrt(pow(fit_pt_vec.at(save_i+i).x - fit_pt_vec.at(save_i+i-1).x,2)+pow(fit_pt_vec.at(save_i+i).y - fit_pt_vec.at(save_i+i-1).y,2)+pow(fit_pt_vec.at(save_i+i).z - fit_pt_vec.at(save_i+i-1).z,2));
 	next_p.x += fit_pt_vec.at(save_i+i).x;
 	next_p.y += fit_pt_vec.at(save_i+i).y;
 	next_p.z += fit_pt_vec.at(save_i+i).z;
+	
+	last_p2 = fit_pt_vec.at(save_i+i);
 	num_p1 ++;
       }
     }
+    double length1_1 = sqrt(pow(last_p1.x - fit_pt_vec.at(save_i).x,2) + pow(last_p1.y - fit_pt_vec.at(save_i).y,2) + pow(last_p1.z - fit_pt_vec.at(save_i).z,2));
+    double length2_1 = sqrt(pow(last_p2.x - fit_pt_vec.at(save_i).x,2) + pow(last_p2.y - fit_pt_vec.at(save_i).y,2) + pow(last_p2.z - fit_pt_vec.at(save_i).z,2));
+
+    bool flag_switch = false;
+    bool flag_search = false;
+    if (fabs(length2 - length2_1)< 0.03 * length2_1 && length1 * length2_1 > 1.06 * length2 * length1_1){
+      flag_switch = true;
+      flag_search = true;
+    }else if (fabs(length1 - length1_1)< 0.03 * length1_1 && length2 * length1_1 > 1.06 * length1 * length2_1){
+      flag_search = true;
+    }
+    
+    
+    //    std::cout << length1/length1_1 << " " << length2/length2_1 << " " << flag_switch << std::endl;
+    
     prev_p.x /= num_p;
     prev_p.y /= num_p;
     prev_p.z /= num_p;
@@ -199,8 +226,7 @@ std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_ki
     
     TVector3 dir(p.x - prev_p.x, p.y - prev_p.y, p.z - prev_p.z);
     dir = dir.Unit();
-
-    TVector3 dir1(next_p.x - p.x, next_p.y - p.y, next_p.z - p.z);
+    TVector3 dir1(p.x - next_p.x, p.y - next_p.y, p.z - next_p.z);
     dir1 = dir1.Unit();
     
     double sum_dQ = 0, sum_dx = 0;
@@ -210,11 +236,29 @@ std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_ki
 	sum_dx += dx_vec.at(save_i+i);
       }
     }
-    //    std::cout << sum_dQ/(sum_dx+1e-9) << std::endl;
-    if (sum_dQ/(sum_dx+1e-9) > 2500){
-      return std::make_tuple(p, dir, dir1, false);
+
+    if (flag_search){
+      if (flag_switch){
+	std::cout << "Continue Search True Kink in Backward" << std::endl;
+	return std::make_tuple(p, dir1, dir, true);
+      }else{
+	std::cout << "Continue Search True Kink in Forward" << std::endl;
+	return std::make_tuple(p, dir, dir1, true);
+      }
+    }else if (sum_dQ/(sum_dx+1e-9) > 2500 ){
+      if (flag_switch){
+	return std::make_tuple(p, dir1, dir, false);
+      }else{
+	return std::make_tuple(p, dir, dir1, false);
+      }
     }else{
-      return std::make_tuple(p, dir, dir1, true);
+      if (flag_switch){
+	std::cout << "Continue Search True Kink in Backward" << std::endl;
+	return std::make_tuple(p, dir1, dir, true);
+      }else{
+	std::cout << "Continue Search True Kink in Forward" << std::endl;
+	return std::make_tuple(p, dir, dir1, true);
+      }
     }
 
   }else{

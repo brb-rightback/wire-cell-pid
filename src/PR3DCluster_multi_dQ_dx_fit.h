@@ -732,10 +732,14 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
   for (int i=0;i!=n_3D_pos;i++){
     //    std::cout << i << " " << pos_3D(i) << " " << traj_pts.at(i) << std::endl;
     double central_U = offset_u + (slope_yu * traj_pts.at(i).y + slope_zu * traj_pts.at(i).z);
+    //    std::cout << offset_u << " " << slope_yu << " " << slope_zu << std::endl;
+    //    std::cout << offset_w << " " << slope_yw << " " << slope_zw << std::endl;
+
+    // does not seems to be a uniform correction ... 
     if (central_U >=296 && central_U <=327 ||
-	central_U >=336 && central_U <=337 ||
-	central_U >=343 && central_U <=351 ||
-	central_U >=376 && central_U <=400 ||
+	// no charge collection in U	central_U >=336 && central_U <=337 ||
+	// no charge collection in U    central_U >=343 && central_U <=351 ||
+	// no charge collection in U	central_U >=376 && central_U <=400 ||
 	central_U >=410 && central_U <=484 ||
 	central_U >=501 && central_U <=524 ||
 	central_U >=536 && central_U <=671)

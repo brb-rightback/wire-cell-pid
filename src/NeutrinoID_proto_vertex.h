@@ -142,8 +142,8 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
       std::tuple<Point, TVector3, TVector3, bool> kink_tuple = curr_sg->search_kink(test_start_p);
       if (std::get<1>(kink_tuple).Mag()!=0 ){
 	// find the extreme point ... PR3DCluster function
-	break_wcp = temp_cluster->proto_extend_point(std::get<0>(kink_tuple), std::get<1>(kink_tuple), std::get<3>(kink_tuple));
-	std::cout << "Break point: " << remaining_segments.size() << " " << std::get<0>(kink_tuple) << " " << std::get<1>(kink_tuple).Mag() << " " << std::get<3>(kink_tuple) << " " << break_wcp.x/units::cm << " " << break_wcp.y/units::cm << " " << break_wcp.z/units::cm << " " << break_wcp.index << std::endl;
+	break_wcp = temp_cluster->proto_extend_point(std::get<0>(kink_tuple), std::get<1>(kink_tuple), std::get<2>(kink_tuple), std::get<3>(kink_tuple));
+	//	std::cout << "Break point: " << remaining_segments.size() << " " << std::get<0>(kink_tuple) << " " << std::get<1>(kink_tuple).Mag() << " " << std::get<3>(kink_tuple) << " " << break_wcp.x/units::cm << " " << break_wcp.y/units::cm << " " << break_wcp.z/units::cm << " " << break_wcp.index << std::endl;
         if (sqrt(pow(start_v->get_wcpt().x - break_wcp.x,2) +
 	       pow(start_v->get_wcpt().y - break_wcp.y,2) +
 	       pow(start_v->get_wcpt().z - break_wcp.z,2)) <= 1*units::cm &&

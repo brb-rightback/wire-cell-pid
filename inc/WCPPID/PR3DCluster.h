@@ -247,7 +247,7 @@ namespace WCPPID{
 
 
     // prepare for the multiple track fitting ...
-    WCP::WCPointCloud<double>::WCPoint proto_extend_point(WCP::Point& p, TVector3& dir, bool flag_extend=true);
+    WCP::WCPointCloud<double>::WCPoint proto_extend_point(WCP::Point& p, TVector3& dir, TVector3& dir1, bool flag_extend=true);
     bool proto_break_tracks(WCP::WCPointCloud<double>::WCPoint& start_wcp, WCP::WCPointCloud<double>::WCPoint& break_wcp, WCP::WCPointCloud<double>::WCPoint& end_wcp, std::list<WCP::WCPointCloud<double>::WCPoint>& wcp_list1, std::list<WCP::WCPointCloud<double>::WCPoint>& wcp_list2, bool flag_pass_check = false);
 
     void set_fit_parameters(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices);

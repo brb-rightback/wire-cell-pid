@@ -40,15 +40,17 @@ bool WCPPID::PR3DCluster::proto_break_tracks(WCP::WCPointCloud<double>::WCPoint&
 
 
 
-WCP::WCPointCloud<double>::WCPoint WCPPID::PR3DCluster::proto_extend_point(WCP::Point& p, TVector3& dir, bool flag_continue){
+WCP::WCPointCloud<double>::WCPoint WCPPID::PR3DCluster::proto_extend_point(WCP::Point& p, TVector3& dir, TVector3& dir_other, bool flag_continue){
 
   float step_dis = 1*units::cm;
   
   WCP::WCPointCloud<double>::WCPoint curr_wcp = point_cloud_steiner->get_closest_wcpoint(p);
   WCP::WCPointCloud<double>::WCPoint next_wcp = curr_wcp;
 
-  WCP::Point test_p;
+  WCP::WCPointCloud<double>::WCPoint saved_start_wcp = curr_wcp; // saved start position
+  TVector3 saved_dir = dir; // saved start direction
   
+  WCP::Point test_p;
   while(flag_continue){
     flag_continue = false;
     
@@ -56,12 +58,9 @@ WCP::WCPointCloud<double>::WCPoint WCPPID::PR3DCluster::proto_extend_point(WCP::
       test_p.x = curr_wcp.x + dir.X() * step_dis * (i+1);
       test_p.y = curr_wcp.y + dir.Y() * step_dis * (i+1);
       test_p.z = curr_wcp.z + dir.Z() * step_dis * (i+1);
-
-
+      
       next_wcp = point_cloud_steiner->get_closest_wcpoint(test_p);
       TVector3 dir2(next_wcp.x - curr_wcp.x, next_wcp.y - curr_wcp.y, next_wcp.z - curr_wcp.z);
-      
-      // std::cout << dir2.Angle(dir)/3.1415926*180. << " " << i << " " << std::endl;
       
       if (dir2.Mag()!=0 && (dir2.Angle(dir)/3.1415926*180. < 25)){
 	//|| (fabs(drift_dir.Angle(dir)/3.1415926*180.-90.)<10. && fabs(drift_dir.Angle(dir2)/3.1415926*180.-90.)<10.) && dir2.Angle(dir)/3.1415926*180. < 60)){
@@ -89,14 +88,57 @@ WCP::WCPointCloud<double>::WCPoint WCPPID::PR3DCluster::proto_extend_point(WCP::
     }
   }
 
-  
+  /* if (curr_wcp.index != saved_start_wcp.index || sqrt(pow(curr_wcp.x - saved_start_wcp.x,2) + pow(curr_wcp.y - saved_start_wcp.y,2) + pow(curr_wcp.z - saved_start_wcp.z,2)) > 0.01*units::cm){ */
+    // forward point ...
+    //    std::cout << "Forward search" << std::endl;
   test_p.x = curr_wcp.x;
   test_p.y = curr_wcp.y;
   test_p.z = curr_wcp.z;
   curr_wcp = point_cloud_steiner->get_closest_wcpoint(test_p);
-
-  return curr_wcp;
+  /* }else{ */
+  /*   // backward search ... */
+  /*   //std::cout << "Backward search" << std::endl; */
+    
+  /*   while(flag_continue){ */
+  /*     flag_continue = false; */
+      
+  /*     for (int i=0; i!=3; i++){ */
+  /* 	test_p.x = curr_wcp.x + dir_other.X() * step_dis * (i+1); */
+  /* 	test_p.y = curr_wcp.y + dir_other.Y() * step_dis * (i+1); */
+  /* 	test_p.z = curr_wcp.z + dir_other.Z() * step_dis * (i+1); */
+      
+  /* 	next_wcp = point_cloud_steiner->get_closest_wcpoint(test_p); */
+  /* 	TVector3 dir2(next_wcp.x - curr_wcp.x, next_wcp.y - curr_wcp.y, next_wcp.z - curr_wcp.z); */
+  /* 	TVector3 dir3(saved_start_wcp.x - next_wcp.x, saved_start_wcp.y - next_wcp.y, saved_start_wcp.z - next_wcp.z);   */
+  /* 	if (dir2.Mag()!=0 && (dir2.Angle(dir_other)/3.1415926*180. < 25) && (dir3.Angle(saved_dir)/3.1415926*180.) > 10.) { */
+  /* 	  flag_continue = true; */
+  /* 	  curr_wcp = next_wcp; */
+  /* 	  dir_other = dir2 + dir_other * 5 * units::cm; // momentum trick ... */
+  /* 	  dir_other = dir_other.Unit(); */
+  /* 	  break; */
+  /* 	} */
+	
+  /* 	next_wcp = point_cloud->get_closest_wcpoint(test_p); */
+  /* 	TVector3 dir1(next_wcp.x - curr_wcp.x, next_wcp.y - curr_wcp.y, next_wcp.z - curr_wcp.z); */
+            
+  /* 	if (dir1.Mag()!=0 && (dir1.Angle(dir_other)/3.1415926*180. < 17.5) && (dir3.Angle(saved_dir)/3.1415926*180.) > 10.){ */
+  /* 	  flag_continue = true; */
+  /* 	  curr_wcp = next_wcp; */
+  /* 	  dir_other = dir1 + dir_other * 5 * units::cm; // momentum trick ... */
+  /* 	  dir_other = dir_other.Unit(); */
+  /* 	  break; */
+  /* 	} */
+  /*     } */
+  /*   } */
+  /*   test_p.x = curr_wcp.x; */
+  /*   test_p.y = curr_wcp.y; */
+  /*   test_p.z = curr_wcp.z; */
+  /*   curr_wcp = point_cloud_steiner->get_closest_wcpoint(test_p); */
+  /* } */
   
+  
+  
+  return curr_wcp;
 }
     
 

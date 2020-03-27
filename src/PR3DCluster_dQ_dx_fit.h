@@ -853,9 +853,9 @@ void WCPPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WCP::GeomWire*, 
     /* std::cout << i << " "<< pos_3D(i) << " " << dx.at(i)/units::cm << " " << pos_3D(i)/dx.at(i)*units::cm << std::endl; */
     double central_U = offset_u + (slope_yu * fine_tracking_path.at(i).y + slope_zu * fine_tracking_path.at(i).z);
     if (central_U >=296 && central_U <=327 ||
-	central_U >=336 && central_U <=337 ||
-	central_U >=343 && central_U <=351 ||
-	central_U >=376 && central_U <=400 ||
+	//	central_U >=336 && central_U <=337 ||
+	//      central_U >=343 && central_U <=351 ||
+	//      central_U >=376 && central_U <=400 ||
 	central_U >=410 && central_U <=484 ||
 	central_U >=501 && central_U <=524 ||
 	central_U >=536 && central_U <=671)
