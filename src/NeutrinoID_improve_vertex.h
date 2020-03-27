@@ -34,10 +34,27 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
   // find the vertex
   for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end();it++){
     WCPPID::ProtoVertex *vtx = it->first;
+
+    // hack for now ...
     if (vtx->get_cluster_id() != temp_cluster->get_cluster_id() || it->second.size()<=2) continue;
     bool flag_update = fit_vertex(vtx, it->second, temp_cluster);
     if (flag_update) flag_update_fit = true;
   }
+  
+  if (flag_update_fit)
+    // do the overall fit again
+    temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+
+  flag_update_fit = false;
+  for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end();it++){
+    WCPPID::ProtoVertex *vtx = it->first;
+    // hack for now ...
+    if (vtx->get_cluster_id() != temp_cluster->get_cluster_id() || it->second.size()<=2) continue;
+    bool flag_update = search_for_vertex_activities(vtx, it->second, temp_cluster);
+    if (flag_update) flag_update_fit = true;
+  }
+
+  //  std::cout << flag_update_fit << std::endl;
   
   if (flag_update_fit)
     // do the overall fit again
@@ -223,7 +240,7 @@ std::pair<bool, WCP::Point> WCPPID::MyFCN::FitVertex(){
   int ntracks = get_fittable_tracks();
 
   int npoints = 0;
-  
+
   if (ntracks >2){
     // start the fit ...
     Eigen::VectorXd temp_pos_3D_init(3), temp_pos_3D(3); // to be fitted
@@ -514,3 +531,56 @@ double WCPPID::MyFCN::get_chi2(const std::vector<double> & xx) const{
   return chi2;
 }
 */
+
+
+bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster){
+  
+  ToyPointCloud* pcloud = temp_cluster->get_point_cloud_steiner();
+  std::vector<bool>& flag_terminals = temp_cluster->get_flag_steiner_terminal();
+
+  //  std::cout << pcloud->get_num_points() << " " << flag_terminals.size() << std::endl;
+  
+  std::vector<WCP::WCPointCloud<double>::WCPoint > candidate_wcps = pcloud->get_closest_wcpoints(vtx->get_fit_pt(), 1.5*units::cm);
+  double max_dis = 0;
+  WCP::WCPointCloud<double>::WCPoint max_wcp;
+  for (size_t i=0; i!=candidate_wcps.size(); i++){
+    double dis = sqrt(pow(candidate_wcps.at(i).x - vtx->get_fit_pt().x ,2) + pow(candidate_wcps.at(i).y - vtx->get_fit_pt().y,2) + pow(candidate_wcps.at(i).z - vtx->get_fit_pt().z,2));
+    double min_dis = 1e9;
+    Point test_p(candidate_wcps.at(i).x, candidate_wcps.at(i).y, candidate_wcps.at(i).z);
+    
+    //    for (auto it = sg_set.begin(); it != sg_set.end(); it++){
+    for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+      WCPPID::ProtoSegment *sg = it->first;
+      std::pair<double, WCP::Point> results = sg->get_closest_point(test_p);
+      //      std::cout << results.first << " " << results.second << std::endl;
+      if (results.first < min_dis) min_dis = results.first;
+    }
+    if (min_dis > 0.75*units::cm && flag_terminals.at(candidate_wcps.at(i).index) ){
+      // std::cout << i << " " << dis/units::cm << " " << min_dis/units::cm << " " << flag_terminals.at(candidate_wcps.at(i).index) << std::endl;
+      if (dis > max_dis){
+	max_dis = dis;
+	max_wcp = candidate_wcps.at(i);
+      }
+    }
+  }
+  if (max_dis !=0){
+    WCPPID::ProtoVertex *v1 = new WCPPID::ProtoVertex(acc_vertex_id, max_wcp, temp_cluster->get_cluster_id()); acc_vertex_id++;
+    std::list<WCP::WCPointCloud<double>::WCPoint> wcp_list;
+    wcp_list.push_back(vtx->get_wcpt());
+    Point tmp_p((vtx->get_wcpt().x+max_wcp.x)/2., (vtx->get_wcpt().y + max_wcp.y)/2., (vtx->get_wcpt().z + max_wcp.z)/2. );
+    WCP::WCPointCloud<double>::WCPoint& tmp_wcp = temp_cluster->get_point_cloud_steiner()->get_closest_wcpoint(tmp_p);
+    if (tmp_wcp.index != wcp_list.back().index)
+      wcp_list.push_back(tmp_wcp);
+
+    if (max_wcp.index != wcp_list.back().index)
+      wcp_list.push_back(max_wcp);
+    std::cout << "Vertex Activity Found" << std::endl;
+    WCPPID::ProtoSegment* sg1 = new WCPPID::ProtoSegment(acc_segment_id, wcp_list, temp_cluster->get_cluster_id()); acc_segment_id++;
+    add_proto_connection(v1,sg1,temp_cluster);
+    add_proto_connection(vtx,sg1,temp_cluster);
+    
+    return true;
+  }
+  
+  return false;
+}
