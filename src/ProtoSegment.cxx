@@ -45,7 +45,7 @@ double WCPPID::ProtoSegment::get_length(){
   return length;
 }
 
-std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& start_p){
+std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& start_p){
   // find the first point ...
   //  Point start_p = fit_pt_vec.front();
   std::pair<double, WCP::Point> tmp_results = get_closest_point(start_p);
@@ -168,11 +168,13 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& 
   }
 
   // return the results ...
-  if (save_i>=0){
+  if (save_i>0 && save_i+1 < fit_pt_vec.size() ){
     Point p = fit_pt_vec.at(save_i);
     
     Point prev_p(0,0,0);
+    Point next_p(0,0,0);
     int num_p = 0;
+    int num_p1 = 0;
     for (size_t i=1;i!=10;i++){
       if (save_i>=i){
 	prev_p.x += fit_pt_vec.at(save_i-i).x;
@@ -180,14 +182,27 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& 
 	prev_p.z += fit_pt_vec.at(save_i-i).z;
 	num_p ++;
       }
+      if (save_i+i<fit_pt_vec.size()){
+	next_p.x += fit_pt_vec.at(save_i+i).x;
+	next_p.y += fit_pt_vec.at(save_i+i).y;
+	next_p.z += fit_pt_vec.at(save_i+i).z;
+	num_p1 ++;
+      }
     }
     prev_p.x /= num_p;
     prev_p.y /= num_p;
     prev_p.z /= num_p;
+
+    next_p.x /= num_p1;
+    next_p.y /= num_p1;
+    next_p.z /= num_p1;
     
     TVector3 dir(p.x - prev_p.x, p.y - prev_p.y, p.z - prev_p.z);
     dir = dir.Unit();
 
+    TVector3 dir1(next_p.x - p.x, next_p.y - p.y, next_p.z - p.z);
+    dir1 = dir1.Unit();
+    
     double sum_dQ = 0, sum_dx = 0;
     for (int i=-2;i!=3;i++){
       if (save_i+i>=0&&save_i+i<fit_pt_vec.size()){
@@ -197,16 +212,16 @@ std::tuple<WCP::Point, TVector3, bool> WCPPID::ProtoSegment::search_kink(Point& 
     }
     //    std::cout << sum_dQ/(sum_dx+1e-9) << std::endl;
     if (sum_dQ/(sum_dx+1e-9) > 2500){
-      return std::make_tuple(p, dir, false);
+      return std::make_tuple(p, dir, dir1, false);
     }else{
-      return std::make_tuple(p, dir, true);
+      return std::make_tuple(p, dir, dir1, true);
     }
 
   }else{
 
     Point p1 = fit_pt_vec.back();
     TVector3 dir(0,0,0);
-    return std::make_tuple(p1,dir, false);
+    return std::make_tuple(p1,dir, dir,false);
 
   }
   //  std::cout << save_i << std::endl;

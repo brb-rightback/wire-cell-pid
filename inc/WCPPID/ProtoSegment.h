@@ -55,7 +55,7 @@ namespace WCPPID{
     double get_closest_2d_dis(double x, double y, int plane);
     
     // search for kinks ...  return  position, direction ...
-    std::tuple<WCP::Point, TVector3, bool> search_kink(WCP::Point& start_p);
+    std::tuple<WCP::Point, TVector3, TVector3, bool> search_kink(WCP::Point& start_p);
 
     void reset_associate_points();
     WCP::ToyPointCloud* get_associated_pcloud(){return pcloud_associated;};
