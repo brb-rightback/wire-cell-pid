@@ -85,9 +85,12 @@ namespace WCPPID{
     void find_proto_vertex(WCPPID::PR3DCluster *cluster, bool flag_break_trak = true, int nrounds_find_other_tracks = 2);
     WCPPID::ProtoSegment* init_first_segment(WCPPID::PR3DCluster *cluster);
     void break_segments(std::vector<WCPPID::ProtoSegment*>& remaining_segments, WCPPID::PR3DCluster* temp_cluster);
-
+    void examine_vertices(WCPPID::PR3DCluster* temp_cluster);
+    bool examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2);
+    
     void find_other_segments(WCPPID::PR3DCluster* temp_cluster, bool flag_break_track = true, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
     ProtoVertex* find_vertex_other_segment(WCPPID::PR3DCluster *temp_cluster, bool flag_forward, WCP::WCPointCloud<double>::WCPoint& wcp);
+
 
     // improve vertex ...
     void improve_vertex(WCPPID::PR3DCluster* temp_cluster);

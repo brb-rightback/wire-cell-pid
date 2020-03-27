@@ -19,12 +19,13 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
       std::vector<WCPPID::ProtoSegment*> remaining_segments;
       remaining_segments.push_back(sg1);
       break_segments(remaining_segments, temp_cluster);
-    }
-    
+    }    
     // find other segments ...
     for (size_t i=0;i!=nrounds_find_other_tracks;i++){
       find_other_segments(temp_cluster, flag_break_track);
     }
+    // examine the vertices ...
+    examine_vertices(temp_cluster);
   }
   
 
@@ -1030,4 +1031,36 @@ bool WCPPID::NeutrinoID::del_proto_segment(WCPPID::ProtoSegment *ps){
     return false;
   }
   
+}
+
+void WCPPID::NeutrinoID::examine_vertices(WCPPID::PR3DCluster* temp_cluster){
+
+  std::map<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> map_vertex_replace;
+  
+  for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
+    WCPPID::ProtoVertex *vtx = it->first;
+    if (it->second.size()==2){ // potential check
+      for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+	WCPPID::ProtoSegment* sg = (*it1);
+	if (sg->get_length() > 4*units::cm) continue;
+	for (auto it2 = map_segment_vertices[sg].begin(); it2 != map_segment_vertices[sg].end(); it2++){
+	  WCPPID::ProtoVertex *vtx1 = (*it2);
+	  if (vtx1 == vtx) continue;
+	  if (map_vertex_segments[vtx1].size() > 2){
+	    if (examine_vertices(vtx, vtx1))
+	      map_vertex_replace[vtx] = vtx1;
+	  }
+	}
+      }
+    }
+  }
+
+  std::cout << map_vertex_replace.size() << std::endl;
+  
+}
+
+bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2){
+  
+  
+  return true;
 }
