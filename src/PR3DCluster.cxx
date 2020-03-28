@@ -62,8 +62,17 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
   double end_point_limit = 0.6*units::cm;
   //std::cout << path_wcps.size() << std::endl;
   PointVector pts = organize_wcps_path(path_wcps,low_dis_limit, end_point_limit); 
-  if (pts.size()<=1) return;
-  
+  if (pts.size()==0) return;
+  else if (pts.size()==1){
+    if (sqrt(pow(path_wcps.back().x - pts.back().x,2)+pow(path_wcps.back().y - pts.back().y,2)+pow(path_wcps.back().z - pts.back().z,2))<0.01*units::cm ){
+      return;
+    }else{
+      Point p2(path_wcps.back().x, path_wcps.back().y, path_wcps.back().z);
+      pts.push_back(p2);
+    }
+  }
+
+  //std::cout << pts.size() << " " << pts.front() << " " << pts.back() << std::endl;
   // for (size_t i=0;i+1!=pts.size();i++){
   //   std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
   // }
@@ -98,7 +107,17 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
   //   std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
   // }
   //  std::cout << "Second round fit " << std::endl;
+  if (pts.size()==2){
+    if (sqrt(pow(pts.front().x - pts.back().x,2) + pow(pts.front().y - pts.back().y,2) + pow(pts.front().z - pts.back().z,2)) < 0.1*units::cm){
+      pts.clear();
+      Point p1(path_wcps.front().x, path_wcps.front().y, path_wcps.front().z);
+      pts.push_back(p1);
+      Point p2(path_wcps.back().x, path_wcps.back().y, path_wcps.back().z);
+      pts.push_back(p2);
+    }
+  }
 
+  
   //  std::cout << pts.back() << std::endl;
   if (flag_2nd_tracking){
     // second round trajectory fit ...
@@ -146,7 +165,17 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
   // for (size_t i=0;i+1!=pts.size();i++){
   //   std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
   // }
-
+   if (pts.size()==2){
+    if (sqrt(pow(pts.front().x - pts.back().x,2) + pow(pts.front().y - pts.back().y,2) + pow(pts.front().z - pts.back().z,2)) < 0.1*units::cm){
+      pts.clear();
+      Point p1(path_wcps.front().x, path_wcps.front().y, path_wcps.front().z);
+      pts.push_back(p1);
+      Point p2(path_wcps.back().x, path_wcps.back().y, path_wcps.back().z);
+      pts.push_back(p2);
+    }
+  }
+   //  std::cout << pts.size() << " " << pts.front() << " " << pts.back() << std::endl;
+  
   if (flag_dQ_dx){
     fine_tracking_path = pts;
     

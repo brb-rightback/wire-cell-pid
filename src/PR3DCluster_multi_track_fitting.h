@@ -1199,6 +1199,35 @@ void WCPPID::PR3DCluster::organize_segments_path_3rd(WCPPID::Map_Proto_Vertex_Se
   double offset_u = -first_u_dis/pitch_u;
   double offset_v = -first_v_dis/pitch_v;
 
+   // examine things
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != cluster_id) continue;
+    WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
+    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
+      WCPPID::ProtoVertex *vt = *it1;
+      if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	start_v = vt;
+      }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
+	end_v = vt;
+      }
+    }
+    // check the distance between the two vertices ...
+    if (sqrt(pow(start_v->get_fit_pt().x - end_v->get_fit_pt().x,2) + pow(start_v->get_fit_pt().y - end_v->get_fit_pt().y,2) + pow(start_v->get_fit_pt().z - end_v->get_fit_pt().z,2)) < 0.01*units::cm){
+      //      std::cout << "too close" << std::endl;
+      if (map_vertex_segments[start_v].size()==1){
+	Point tmp_p(start_v->get_wcpt().x, start_v->get_wcpt().y, start_v->get_wcpt().z);
+	start_v->set_fit_pt(tmp_p);
+      }
+      if (map_vertex_segments[end_v].size()==1){
+	Point tmp_p(end_v->get_wcpt().x, end_v->get_wcpt().y, end_v->get_wcpt().z);
+	end_v->set_fit_pt(tmp_p);
+      }
+    }
+  }
+
+
+  
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != cluster_id) continue;
@@ -1284,6 +1313,9 @@ void WCPPID::PR3DCluster::organize_segments_path_3rd(WCPPID::Map_Proto_Vertex_Se
       pts.push_back(end_p);
     }
 
+    // ensure there is no single point ...
+    if (pts.size()==1) pts.push_back(end_p);
+
     //    for (size_t i=1;i<pts.size();i++){
     //  std::cout << i << " " << sqrt(pow(pts.at(i).x-pts.at(i-1).x,2) + pow(pts.at(i).y-pts.at(i-1).y,2) + pow(pts.at(i).z-pts.at(i-1).z,2))/units::cm << std::endl;
     //}
@@ -1352,7 +1384,34 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCPPID::Map_Proto_Vertex_Se
   double offset_v = -first_v_dis/pitch_v;
 
 
+  // examine things
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != cluster_id) continue;
+    WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
+    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
+      WCPPID::ProtoVertex *vt = *it1;
+      if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	start_v = vt;
+      }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
+	end_v = vt;
+      }
+    }
+    // check the distance between the two vertices ...
+    if (sqrt(pow(start_v->get_fit_pt().x - end_v->get_fit_pt().x,2) + pow(start_v->get_fit_pt().y - end_v->get_fit_pt().y,2) + pow(start_v->get_fit_pt().z - end_v->get_fit_pt().z,2)) < 0.01*units::cm){
+      //      std::cout << "too close" << std::endl;
+      if (map_vertex_segments[start_v].size()==1){
+	Point tmp_p(start_v->get_wcpt().x, start_v->get_wcpt().y, start_v->get_wcpt().z);
+	start_v->set_fit_pt(tmp_p);
+      }
+      if (map_vertex_segments[end_v].size()==1){
+	Point tmp_p(end_v->get_wcpt().x, end_v->get_wcpt().y, end_v->get_wcpt().z);
+	end_v->set_fit_pt(tmp_p);
+      }
+    }
+  }
   
+  // start organization 
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != cluster_id) continue;
@@ -1477,6 +1536,7 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCPPID::Map_Proto_Vertex_Se
       }
       pts.push_back(end_p);
     }
+    
     if (pts.size()==1) pts.push_back(end_p);
     
     
@@ -1500,7 +1560,6 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCPPID::Map_Proto_Vertex_Se
     //std::cout << sg << " " << start_p << " " << end_p << " " << temp_wcps_vec.size() << " " << pts.size() << std::endl;
     //    std::cout << sg << flag_startv_end << " " << flag_endv_end << std::endl;
     //    std::cout << sg << " " << start_v << " " << end_v << std::endl;
-    
   }
 }
 

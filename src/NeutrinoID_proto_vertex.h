@@ -1,6 +1,7 @@
 
 void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bool flag_break_track, int nrounds_find_other_tracks){
-  
+
+  //std::cout << temp_cluster->get_point_cloud_steiner()->get_num_points() << std::endl;
   if (temp_cluster->get_point_cloud_steiner()==0) return;
   if (temp_cluster->get_point_cloud_steiner()->get_num_points()<2) return;
 
@@ -80,7 +81,7 @@ WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster
     // fit dQ/dx and everything ...
     temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true);
 
-    //  std::cout << temp_cluster->get_fine_tracking_path().size() << " " << temp_cluster->get_dx().size() << std::endl;
+    //    std::cout << temp_cluster->get_fine_tracking_path().size() << " " << temp_cluster->get_dx().size() << " " << temp_cluster->get_fine_tracking_path().front() << " " << temp_cluster->get_fine_tracking_path().back() << std::endl;
     
     v1->set_fit(temp_cluster->get_fine_tracking_path().front(), temp_cluster->get_dQ().front(), temp_cluster->get_dx().front(), temp_cluster->get_pu().front(), temp_cluster->get_pv().front(), temp_cluster->get_pw().front(), temp_cluster->get_pt().front(), temp_cluster->get_reduced_chi2().front());
     v2->set_fit(temp_cluster->get_fine_tracking_path().back(), temp_cluster->get_dQ().back(), temp_cluster->get_dx().back(), temp_cluster->get_pu().back(), temp_cluster->get_pv().back(), temp_cluster->get_pw().back(), temp_cluster->get_pt().back(), temp_cluster->get_reduced_chi2().back());
