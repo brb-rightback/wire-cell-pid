@@ -239,10 +239,10 @@ std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_ki
 
     if (flag_search){
       if (flag_switch){
-	std::cout << "Continue Search True Kink in Backward" << std::endl;
+	std::cout << "Cluster: " << cluster_id << " Continue Search True Kink in Backward" << std::endl;
 	return std::make_tuple(p, dir1, dir, true);
       }else{
-	std::cout << "Continue Search True Kink in Forward" << std::endl;
+	std::cout << "Cluster: " << cluster_id<< " Continue Search True Kink in Forward" << std::endl;
 	return std::make_tuple(p, dir, dir1, true);
       }
     }else if (sum_dQ/(sum_dx+1e-9) > 2500 ){
@@ -253,10 +253,10 @@ std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_ki
       }
     }else{
       if (flag_switch){
-	std::cout << "Continue Search True Kink in Backward" << std::endl;
+	std::cout << "Cluster: " << cluster_id<< " Continue Search True Kink in Backward" << std::endl;
 	return std::make_tuple(p, dir1, dir, true);
       }else{
-	std::cout << "Continue Search True Kink in Forward" << std::endl;
+	std::cout << "Cluster: " << cluster_id << " Continue Search True Kink in Forward" << std::endl;
 	return std::make_tuple(p, dir, dir1, true);
       }
     }

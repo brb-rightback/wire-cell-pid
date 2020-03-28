@@ -315,7 +315,7 @@ std::pair<bool, WCP::Point> WCPPID::MyFCN::FitVertex(){
 
       //      std::cout << "Fit Vertex: " << sqrt(pow(temp_pos_3D(0) - temp_pos_3D_init(0),2) + pow(temp_pos_3D(1) - temp_pos_3D_init(1),2) + pow(temp_pos_3D(2) - temp_pos_3D_init(2),2))/units::cm << " " << std::endl;
     }else{
-      std::cout << "Fit Vertex Failed!" << std::endl;
+      std::cout << "Cluster: " << vtx->get_cluster_id() << " Fit Vertex Failed!" << std::endl;
     }
 
     /* double new_chi2 = 0; */
@@ -383,7 +383,7 @@ void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_clu
   double offset_u = -first_u_dis/pitch_u;
   double offset_v = -first_v_dis/pitch_v;
 
-  std::cout << "Fit Vertex: (" << offset_u + (slope_yu * fit_pos.y + slope_zu * fit_pos.z) << ", " << offset_v + (slope_yv * fit_pos.y + slope_zv * fit_pos.z)+2400 << ", " << offset_w + (slope_yw * fit_pos.y + slope_zw * fit_pos.z)+4800 <<", " << offset_t + slope_x * fit_pos.x << ") <- (" << offset_u + (slope_yu * vtx->get_fit_pt().y + slope_zu * vtx->get_fit_pt().z) << ", " << offset_v + (slope_yv * vtx->get_fit_pt().y + slope_zv * vtx->get_fit_pt().z)+2400 << ", " << offset_w + (slope_yw * vtx->get_fit_pt().y + slope_zw * vtx->get_fit_pt().z)+4800 <<", " << offset_t + slope_x * vtx->get_fit_pt().x << ")" << std::endl;
+  std::cout << "Cluster: " << vtx->get_cluster_id() << " Fit Vertex: (" << offset_u + (slope_yu * fit_pos.y + slope_zu * fit_pos.z) << ", " << offset_v + (slope_yv * fit_pos.y + slope_zv * fit_pos.z)+2400 << ", " << offset_w + (slope_yw * fit_pos.y + slope_zw * fit_pos.z)+4800 <<", " << offset_t + slope_x * fit_pos.x << ") <- (" << offset_u + (slope_yu * vtx->get_fit_pt().y + slope_zu * vtx->get_fit_pt().z) << ", " << offset_v + (slope_yv * vtx->get_fit_pt().y + slope_zv * vtx->get_fit_pt().z)+2400 << ", " << offset_w + (slope_yw * vtx->get_fit_pt().y + slope_zw * vtx->get_fit_pt().z)+4800 <<", " << offset_t + slope_x * vtx->get_fit_pt().x << ")" << std::endl;
   
   // find the new wcps point for the vertex ...
   WCP::ToyPointCloud *pcloud = temp_cluster->get_point_cloud_steiner();
@@ -635,7 +635,7 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
 
     if (max_wcp.index != wcp_list.back().index)
       wcp_list.push_back(max_wcp);
-    std::cout << "Vertex Activity Found" << std::endl;
+    std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Vertex Activity Found" << std::endl;
     WCPPID::ProtoSegment* sg1 = new WCPPID::ProtoSegment(acc_segment_id, wcp_list, temp_cluster->get_cluster_id()); acc_segment_id++;
     add_proto_connection(v1,sg1,temp_cluster);
     add_proto_connection(vtx,sg1,temp_cluster);

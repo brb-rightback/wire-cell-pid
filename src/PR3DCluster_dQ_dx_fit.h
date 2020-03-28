@@ -865,7 +865,7 @@ void WCPPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WCP::GeomWire*, 
     
     sum += dQ.back();
   }
-  std::cout << "total: " << sum << std::endl;
+  std::cout << "Cluster: " << cluster_id << " " << "total: " << sum << std::endl;
 
 
   // prediction ...

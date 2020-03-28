@@ -17,8 +17,7 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
   // }
 
   if (sg1->get_wcpt_vec().size()>1){
-    // break tracks ...
-   
+    // break tracks ... 
     if (flag_break_track){
       std::vector<WCPPID::ProtoSegment*> remaining_segments;
       remaining_segments.push_back(sg1);
@@ -30,7 +29,7 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
     for (size_t i=0;i!=nrounds_find_other_tracks;i++){
       find_other_segments(temp_cluster, flag_break_track);
     }
-   
+    
     // examine the vertices ...
     examine_vertices(temp_cluster);
   }
@@ -169,7 +168,7 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
       std::list<WCP::WCPointCloud<double>::WCPoint> wcps_list2;
       bool flag_break = temp_cluster->proto_break_tracks(start_v->get_wcpt(), break_wcp, end_v->get_wcpt(), wcps_list1, wcps_list2);
 
-      std::cout << "breaking point: " << flag_break << " " << wcps_list1.front().index << " " << wcps_list1.back().index << " " << wcps_list2.front().index << " " << wcps_list2.back().index << std::endl;
+      std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " breaking point: " << flag_break << " " << wcps_list1.front().index << " " << wcps_list1.back().index << " " << wcps_list2.front().index << " " << wcps_list2.back().index << std::endl;
 	  
       if (flag_break){
 	WCPPID::ProtoVertex *v3 = new WCPPID::ProtoVertex(acc_vertex_id, break_wcp, temp_cluster->get_cluster_id()); acc_vertex_id ++;
@@ -208,7 +207,7 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
   }
 
   if (flag_print)
-    std::cout << "Break tracks  -- # of Vertices: " << map_vertex_segments.size() << "; # of Segments: " << map_segment_vertices.size() << std::endl;
+    std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Break tracks  -- # of Vertices: " << map_vertex_segments.size() << "; # of Segments: " << map_segment_vertices.size() << std::endl;
 }
 
 
@@ -732,7 +731,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
 	flag_final_fit = false;
 	// update output ...
-	std::cout << "Other tracks -- # of Vertices: " << map_vertex_segments.size() << "; # of Segments: " << map_segment_vertices.size() << std::endl;
+	std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Other tracks -- # of Vertices: " << map_vertex_segments.size() << "; # of Segments: " << map_segment_vertices.size() << std::endl;
       }else{
 	// hack
 	/* WCPPID::ProtoSegment *sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++; */
@@ -1037,6 +1036,81 @@ bool WCPPID::NeutrinoID::del_proto_segment(WCPPID::ProtoSegment *ps){
 }
 
 void WCPPID::NeutrinoID::examine_vertices(WCPPID::PR3DCluster* temp_cluster){
+  // merge vertex if the kink is not at right location
+  examine_vertices_1(temp_cluster);
+
+  if (find_vertices(temp_cluster).size() > 2)
+    // merge vertices if they are too close ...
+    examine_vertices_2(temp_cluster);
+}
+
+void WCPPID::NeutrinoID::examine_vertices_2(WCPPID::PR3DCluster* temp_cluster){
+  // search for merge ...
+  bool flag_continue = true;
+  
+  while (flag_continue){
+    flag_continue = false;
+    //std::map<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> map_vertex_replace;
+    WCPPID::ProtoVertex *v1 = 0;
+    WCPPID::ProtoVertex *v2 = 0;
+    WCPPID::ProtoSegment *sg = 0;
+    for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+      sg = it->first;
+      auto tmp_vertices = find_vertices(sg);
+      v1 = tmp_vertices.first;
+      v2 = tmp_vertices.second;
+      if (v1 !=0 &&  v2 !=0)
+	if (sqrt(pow(v1->get_fit_pt().x-v2->get_fit_pt().x,2) + pow(v1->get_fit_pt().y-v2->get_fit_pt().y,2) + pow(v1->get_fit_pt().z-v2->get_fit_pt().z,2)) < 0.45*units::cm){
+	  flag_continue = true;
+	  break;
+	}else{
+	  v1 = 0;
+	  v2 = 0;
+	  sg = 0;
+	}
+    }
+
+    // merge and clean up map ...
+    if (v1!=0 && v2!=0){
+      std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Merge Vertices Type II" << std::endl;
+      // delete the segment in between
+      del_proto_segment(sg);
+      WCPPID::ProtoSegmentSelection tmp_segments;
+      for (auto it1 = map_vertex_segments[v2].begin(); it1 != map_vertex_segments[v2].end(); it1++){
+	tmp_segments.push_back(*it1);
+      }
+      for (auto it1 = tmp_segments.begin(); it1!=tmp_segments.end(); it1++){
+	WCPPID::ProtoVertex *v3 = find_other_vertex(*it1, v2);
+        temp_cluster->dijkstra_shortest_paths(v3->get_wcpt(),2);  
+	temp_cluster->cal_shortest_path(v1->get_wcpt(),2);
+	ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++; 
+	del_proto_segment(*it1);
+	add_proto_connection(v3, sg2, temp_cluster);
+	add_proto_connection(v1, sg2, temp_cluster);
+      }
+      del_proto_vertex(v2); 
+
+      WCPPID::ProtoVertexSelection tmp_vertices;
+      for (auto it1 = map_vertex_segments.begin(); it1!=map_vertex_segments.end(); it1++){
+      	if (it1->second.size()==0) tmp_vertices.push_back(it1->first);
+      }
+      for (auto it1 = tmp_vertices.begin(); it1!=tmp_vertices.end(); it1++){
+      	del_proto_vertex(*it1);
+      }
+      
+      temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+    }
+
+
+    
+  }
+
+
+  // refit ..
+  
+}
+
+void WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
   TPCParams& mp = Singleton<TPCParams>::Instance();
   double time_slice_width = mp.get_ts_width();
   int time_offset = mp.get_time_offset();
@@ -1112,7 +1186,7 @@ void WCPPID::NeutrinoID::examine_vertices(WCPPID::PR3DCluster* temp_cluster){
     //    std::cout << map_vertex_replace.size() << std::endl;
     // replace ...
     if (v1!=0 && v2!=0){
-      std::cout << "Merge vertices" << std::endl;
+      std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Merge Vertices Type I" << std::endl;
       
       ProtoSegment *sg = find_segment(v1,v2);
       ProtoSegment *sg1 = find_segment(v1,v3);
@@ -1314,7 +1388,34 @@ bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::Proto
   return false;
 }
 
+std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> WCPPID::NeutrinoID::find_vertices(WCPPID::ProtoSegment* sg){
+  if (map_segment_vertices.find(sg) == map_segment_vertices.end())
+    return std::make_pair( (WCPPID::ProtoVertex*)0, (WCPPID::ProtoVertex*)0);
 
+  WCPPID::ProtoVertex *v1 = 0;
+  WCPPID::ProtoVertex *v2 = 0;
+  
+  for (auto it = map_segment_vertices[sg].begin(); it != map_segment_vertices[sg].end(); it++){
+    if (v1==0) {
+      v1 = *it;
+    }else{
+      v2 = *it;
+    }
+  }
+
+  return std::make_pair(v1,v2);
+}
+
+WCPPID::ProtoVertex* WCPPID::NeutrinoID::find_other_vertex(WCPPID::ProtoSegment *sg, WCPPID::ProtoVertex* v1){
+  auto results = find_vertices(sg);
+  if (v1 == results.first){
+    return results.second;
+  }else if (v1 == results.second){
+    return results.first;
+  }else{
+    return (WCPPID::ProtoVertex*)0;
+  }
+}
 
 WCPPID::ProtoSegment* WCPPID::NeutrinoID::find_segment(WCPPID::ProtoVertex *v1, WCPPID::ProtoVertex *v2){
 
@@ -1328,4 +1429,21 @@ WCPPID::ProtoSegment* WCPPID::NeutrinoID::find_segment(WCPPID::ProtoVertex *v1, 
     }
   }
   return sg;
+}
+
+
+WCPPID::ProtoVertexSelection WCPPID::NeutrinoID::find_vertices(WCPPID::PR3DCluster* temp_cluster){
+  WCPPID::ProtoVertexSelection tmp_vertices;
+  for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
+    if (temp_cluster->get_cluster_id() == (it->first)->get_cluster_id()) tmp_vertices.push_back(it->first);
+  }
+  return tmp_vertices;
+}
+
+WCPPID::ProtoSegmentSelection WCPPID::NeutrinoID::find_segmentss(WCPPID::PR3DCluster* temp_cluster){
+  WCPPID::ProtoSegmentSelection tmp_segments;
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    if (temp_cluster->get_cluster_id() == (it->first)->get_cluster_id()) tmp_segments.push_back(it->first);
+  }
+  return tmp_segments;
 }
