@@ -96,6 +96,9 @@ namespace WCPPID{
     void improve_vertex(WCPPID::PR3DCluster* temp_cluster);
     bool fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster);
     bool search_for_vertex_activities(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster);
+
+    // get direction 
+    TVector3 get_dir(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, double dis = 2*units::cm);
     
     // clustering points
     void clustering_points(WCPPID::PR3DCluster* temp_cluster);
