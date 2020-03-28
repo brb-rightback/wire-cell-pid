@@ -1829,7 +1829,7 @@ void WCPPID::PR3DCluster::prepare_data(WCP::ToyCTPointCloud& ct_point_cloud, std
 
   for (auto it = map_w_tcc.begin(); it!=map_w_tcc.end(); it++){
     if (map_2D_wt_charge.find(std::make_pair(it->first.second-4800, it->first.first))==map_2D_wt_charge.end()){
-      map_2D_wt_charge[std::make_pair(it->first.second, it->first.first)] = std::make_tuple(it->second.first, it->second.second, 3);
+      map_2D_wt_charge[std::make_pair(it->first.second-4800, it->first.first)] = std::make_tuple(it->second.first, it->second.second, 3);
       //      std::cout << it->first.first << " " << it->first.second << std::endl;
     }else{
       //      std::cout << it->first.first << " " << it->first.second << std::endl;

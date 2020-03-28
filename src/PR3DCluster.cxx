@@ -52,7 +52,10 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
   std::map<std::pair<int,int>,std::tuple<double,double, int> > map_2D_wt_charge;
   prepare_data(ct_point_cloud, global_wc_map, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge);
 
- 
+  //  for (auto it = map_2D_wt_charge.begin(); it!=map_2D_wt_charge.end(); it++){
+  //  if (it->first.first + 4800 > 8256) std::cout << "abc " << it->first.first + 4800 << std::endl;
+  // }
+  
 
   // first round of organizing the path from the path_wcps (shortest path)
   double low_dis_limit = 1.2*units::cm;

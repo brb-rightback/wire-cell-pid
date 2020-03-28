@@ -1567,6 +1567,8 @@ int main(int argc, char* argv[])
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_u_map = cluster->get_proj_data_u_map();
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_v_map = cluster->get_proj_data_v_map();
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_w_map = cluster->get_proj_data_w_map();
+
+    
     
     proj_data_cluster_id->push_back(ndf_save);
     std::vector<int> temp_channel;
@@ -1575,6 +1577,8 @@ int main(int argc, char* argv[])
     std::vector<int> temp_charge_err;
     std::vector<int> temp_charge_pred;
     for (auto it = proj_data_u_map.begin(); it!=proj_data_u_map.end(); it++){
+      // if (it->first.first > 8256) std::cout << cluster->get_cluster_id() << " U " << it->first.first << std::endl;
+
       temp_channel.push_back(it->first.first);
       temp_timeslice.push_back(it->first.second);
       temp_charge.push_back(std::get<0>(it->second));
@@ -1582,6 +1586,8 @@ int main(int argc, char* argv[])
       temp_charge_pred.push_back(std::get<2>(it->second));
     }
     for (auto it = proj_data_v_map.begin(); it!=proj_data_v_map.end(); it++){
+      // if (it->first.first > 8256) std::cout << cluster->get_cluster_id() << " V " << it->first.first << std::endl;
+      
       temp_channel.push_back(it->first.first);
       temp_timeslice.push_back(it->first.second);
       temp_charge.push_back(std::get<0>(it->second));
@@ -1589,6 +1595,8 @@ int main(int argc, char* argv[])
       temp_charge_pred.push_back(std::get<2>(it->second));
     }
     for (auto it = proj_data_w_map.begin(); it!=proj_data_w_map.end(); it++){
+      //  if (it->first.first > 8256) std::cout << cluster->get_cluster_id() << " W " << it->first.first << std::endl;
+      
       temp_channel.push_back(it->first.first);
       temp_timeslice.push_back(it->first.second);
       temp_charge.push_back(std::get<0>(it->second));

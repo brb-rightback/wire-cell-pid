@@ -694,6 +694,8 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
   }
   int n_w = 0;
   for (auto it = map_2D_wt_charge.begin(); it!=map_2D_wt_charge.end(); it++){
+    // if (it->first.first+4800 > 8256) std::cout << "problem " << it->first.first+4800 << std::endl;
+    
     proj_data_w_map[std::make_pair(it->first.first+4800, it->first.second)] = std::make_tuple(std::get<0>(it->second), std::get<1>(it->second), pred_data_w_2D(n_w) * sqrt(pow(std::get<1>(it->second),2)+pow(std::get<0>(it->second)*rel_uncer_col,2)+pow(add_uncer_col,2)));
     n_w++;
   }
