@@ -3,27 +3,33 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
   
   if (temp_cluster->get_point_cloud_steiner()==0) return;
   if (temp_cluster->get_point_cloud_steiner()->get_num_points()<2) return;
+
   
   WCPPID::ProtoSegment* sg1 = init_first_segment(temp_cluster);
-
+  if (sg1 == 0 ) return;
+  
   // hack test
   //temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
   // for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
   //   WCPPID::ProtoSegment *sg = it->first;
-  //   std::cout << sg->get_point_vec().size() << " A " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl;
+  // std::cout << sg1->get_point_vec().size() << " A " << sg1->get_point_vec().front() << " " << sg1->get_point_vec().back() << std::endl;
   // }
 
   if (sg1->get_wcpt_vec().size()>1){
     // break tracks ...
+   
     if (flag_break_track){
       std::vector<WCPPID::ProtoSegment*> remaining_segments;
       remaining_segments.push_back(sg1);
       break_segments(remaining_segments, temp_cluster);
-    }
+    }else{
+      temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+    }    
     // find other segments ...
     for (size_t i=0;i!=nrounds_find_other_tracks;i++){
       find_other_segments(temp_cluster, flag_break_track);
     }
+   
     // examine the vertices ...
     examine_vertices(temp_cluster);
   }
@@ -46,10 +52,6 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
   // }
   
   //  temp_cluster->set_fit_parameters(map_vertex_segments, map_segment_vertices);
-  
-  
-  
-  
   // practice other components ...
 }
 
@@ -78,17 +80,17 @@ WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster
     // fit dQ/dx and everything ...
     temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true);
 
-    //std::cout << temp_cluster->get_fine_tracking_path().size() << " " << temp_cluster->get_dx().size() << std::endl;
+    //  std::cout << temp_cluster->get_fine_tracking_path().size() << " " << temp_cluster->get_dx().size() << std::endl;
     
     v1->set_fit(temp_cluster->get_fine_tracking_path().front(), temp_cluster->get_dQ().front(), temp_cluster->get_dx().front(), temp_cluster->get_pu().front(), temp_cluster->get_pv().front(), temp_cluster->get_pw().front(), temp_cluster->get_pt().front(), temp_cluster->get_reduced_chi2().front());
     v2->set_fit(temp_cluster->get_fine_tracking_path().back(), temp_cluster->get_dQ().back(), temp_cluster->get_dx().back(), temp_cluster->get_pu().back(), temp_cluster->get_pv().back(), temp_cluster->get_pw().back(), temp_cluster->get_pt().back(), temp_cluster->get_reduced_chi2().back());
     sg1->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
-  }else{
-     v1 = new WCPPID::ProtoVertex(acc_vertex_id, wcps.first, temp_cluster->get_cluster_id()); acc_vertex_id++;
-     sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
-     add_proto_connection(v1,sg1,temp_cluster);
   }
-  
+  //else{
+  //  v1 = new WCPPID::ProtoVertex(acc_vertex_id, wcps.first, temp_cluster->get_cluster_id()); acc_vertex_id++;
+  //  sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
+  //   add_proto_connection(v1,sg1,temp_cluster);
+  //}  
   
   // std::cout << proto_vertices.size() << " " << map_vertex_segments.size() << " " << map_segment_vertices[sg1].size() << " " << map_cluster_vertices[main_cluster].size() << " " << map_vertex_cluster.size()  << std::endl;
   //  del_proto_vertex(v1); // del_proto_vertex(v1);

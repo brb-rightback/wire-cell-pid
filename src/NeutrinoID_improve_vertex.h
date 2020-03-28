@@ -614,7 +614,7 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
       if (ncount!=0) sum_charge /= ncount;
       
       // std::cout << i << " " << dis/units::cm << " " << min_dis/units::cm << " " << flag_terminals.at(candidate_wcps.at(i).index)  << sum_angle << " " << sum_charge << " " << (sum_angle)  * (sum_charge+1e-9) << std::endl;
-	//" " << min_dis_u << " " << min_dis_v << " " << min_dis_w << " " << min_dis_u + min_dis_v + min_dis_w << std::endl; 
+      //" " << min_dis_u << " " << min_dis_v << " " << min_dis_w << " " << min_dis_u + min_dis_v + min_dis_w << std::endl; 
 
       if ((sum_angle)  * (sum_charge+1e-9) > max_dis){
 	max_dis = (sum_angle)  * (sum_charge+1e-9);

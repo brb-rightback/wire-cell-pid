@@ -1,22 +1,34 @@
 void WCPPID::PR3DCluster::clustering_points_master(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, double search_range, double scaling_2d){
-  // steiner-inspired graph
-  clustering_points(map_vertex_segments, map_segment_vertices, ct_point_cloud, 2);
-  ToyPointCloud *pcloud = new ToyPointCloud();
-  PointVector pts;
-  WCP::WCPointCloud<double>& cloud = point_cloud_steiner->get_cloud();
-  for (size_t i=0;i!=cloud.pts.size();i++){
-    if (point_steiner_sub_cluster_ids.at(i)!=-1){
-      Point p(cloud.pts[i].x,cloud.pts[i].y, cloud.pts[i].z);
-      pts.push_back(p);
-    }
+
+  int ntrack = 0;
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    if (it->first->get_cluster_id()==cluster_id) ntrack++;
   }
-  pcloud->AddPoints(pts);
-  pcloud->build_kdtree_index();
-
-  // regular ...
-  clustering_points(map_vertex_segments, map_segment_vertices, ct_point_cloud, 1, pcloud);
-  delete pcloud;
-
+  
+  if (ntrack > 0){
+    // steiner-inspired graph
+    clustering_points(map_vertex_segments, map_segment_vertices, ct_point_cloud, 2);
+    
+    //  for (size_t i=0;i!=point_steiner_sub_cluster_ids.size();i++){
+    // std::cout << point_steiner_sub_cluster_ids.at(i) << std::endl;
+    //}
+    
+    ToyPointCloud *pcloud = new ToyPointCloud();
+    PointVector pts;
+    WCP::WCPointCloud<double>& cloud = point_cloud_steiner->get_cloud();
+    for (size_t i=0;i!=cloud.pts.size();i++){
+      if (point_steiner_sub_cluster_ids.at(i)!=-1){
+	Point p(cloud.pts[i].x,cloud.pts[i].y, cloud.pts[i].z);
+	pts.push_back(p);
+      }
+    }
+    pcloud->AddPoints(pts);
+    pcloud->build_kdtree_index();
+    
+    // regular ...
+    clustering_points(map_vertex_segments, map_segment_vertices, ct_point_cloud, 1, pcloud);
+    delete pcloud;
+  }
 
   
 }
@@ -37,6 +49,7 @@ void WCPPID::PR3DCluster::clustering_points_master(Map_Proto_Vertex_Segments& ma
   }
 
   
+  
   temp_points_ids->resize(temp_point_cloud->get_num_points(),0);
   WCP::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
   
@@ -46,8 +59,20 @@ void WCPPID::PR3DCluster::clustering_points_master(Map_Proto_Vertex_Segments& ma
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
     if (it->first->get_cluster_id()!=cluster_id) continue;
     std::vector<WCP::Point >& pts = it->first->get_point_vec();
-    for (size_t i=1;i+1<pts.size();i++){
-      std::vector<std::pair<size_t, double> > temp_results = temp_point_cloud->get_closest_index(pts.at(i),5);
+
+    if (pts.size()>2){
+      for (size_t i=1;i+1<pts.size();i++){
+	std::vector<std::pair<size_t, double> > temp_results = temp_point_cloud->get_closest_index(pts.at(i),5);
+	for (auto it1 = temp_results.begin(); it1!=temp_results.end(); it1++){
+	  if (map_pindex_segment.find(it1->first)==map_pindex_segment.end()){
+	    map_pindex_segment[it1->first] = it->first;
+	    break;
+	  }
+	}
+      }
+    }else{
+      Point p((pts.front().x+pts.back().x)/2., (pts.front().y+pts.back().y)/2., (pts.front().z+pts.back().z)/2.);
+      std::vector<std::pair<size_t, double> > temp_results = temp_point_cloud->get_closest_index(p,5);
       for (auto it1 = temp_results.begin(); it1!=temp_results.end(); it1++){
 	if (map_pindex_segment.find(it1->first)==map_pindex_segment.end()){
 	  map_pindex_segment[it1->first] = it->first;
@@ -57,6 +82,7 @@ void WCPPID::PR3DCluster::clustering_points_master(Map_Proto_Vertex_Segments& ma
     }
   }
 
+ 
   
   // these are steiner terminals ...
   if (map_pindex_segment.size()>0){

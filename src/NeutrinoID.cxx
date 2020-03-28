@@ -28,7 +28,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   , flash_time(flash_time)
   , type(0)
 {
-  bool flag_other_clusters = false;
+  bool flag_other_clusters = true;
   
   // create Steiner-inspired graph
   main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
@@ -36,11 +36,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   find_proto_vertex(main_cluster);
   // fit the vertex in 3D 
   improve_vertex(main_cluster);
-  
   // clustering points
   clustering_points(main_cluster);
-  
- 
   
   // prepare output ...
   organize_vertices_segments();
@@ -50,9 +47,15 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   if (flag_other_clusters){
     //deal with the other clusters ...
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
+      // if ((*it)->get_cluster_id()!=134) continue;
       (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+
+      // std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
       find_proto_vertex(*it, false, 1);
+      //std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;     
       clustering_points(*it);
+
+
 
       organize_vertices_segments();
       (*it)->set_fit_parameters(proto_vertices, proto_segments);
@@ -73,6 +76,7 @@ void WCPPID::NeutrinoID::clustering_points(WCPPID::PR3DCluster* temp_cluster){
     if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
     map_id_seg[sg->get_id()] = sg;
     map_seg_id[sg] = sg->get_id();
+    // std::cout << "A: " << sg->get_id() << std::endl;
     sg->reset_associate_points();
   }
 
@@ -84,7 +88,10 @@ void WCPPID::NeutrinoID::clustering_points(WCPPID::PR3DCluster* temp_cluster){
     WCP::WC2DPointCloud<double>& cloud_w = temp_cluster->get_point_cloud()->get_cloud_w();
     
     std::vector<int>& point_sub_cluster_ids = temp_cluster->get_point_sub_cluster_ids();
+    
+    
     for (size_t i=0;i!=point_sub_cluster_ids.size();i++){
+      //      std::cout << point_sub_cluster_ids.at(i) << std::endl;
       if (point_sub_cluster_ids.at(i) == -1) continue;
       map_id_seg[point_sub_cluster_ids.at(i)]->add_associate_point(cloud.pts[i], cloud_u.pts[i], cloud_v.pts[i], cloud_w.pts[i]);
     }

@@ -366,6 +366,8 @@ void WCPPID::ProtoSegment::add_associate_point_steiner(WCP::WCPointCloud<double>
 }
 
 void WCPPID::ProtoSegment::add_associate_point(WCPointCloud<double>::WCPoint& wcp, WC2DPointCloud<double>::WC2DPoint& wcp_u, WC2DPointCloud<double>::WC2DPoint& wcp_v, WC2DPointCloud<double>::WC2DPoint& wcp_w){
+  //  std::cout << pcloud_associated << std::endl;
+  
   if (pcloud_associated == (ToyPointCloud*)0)
     pcloud_associated = new ToyPointCloud();
   pcloud_associated->AddPoint(wcp, wcp_u, wcp_v, wcp_w);

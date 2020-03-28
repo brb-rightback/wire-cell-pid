@@ -41,7 +41,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
   /*   } */
   /* } */
 
-  
+  //  std::cout << "haha1 " << std::endl;
 
   // collect charge
   collect_charge_multi_trajectory(map_segment_vertices, ct_point_cloud);
@@ -95,7 +95,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
   std::map<std::pair<int,int>,std::set<int>> map_2DW_3D_set;
 
  
-
+  //  std::cout << "haha2 " << std::endl;
   
   if (flag_1st_tracking){
     form_map_multi_segments(map_vertex_segments, map_segment_vertices, ct_point_cloud,
@@ -171,7 +171,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
    /*    } */
    /*  } */
    /* } */
-
+  //  std::cout << "haha3 " << std::endl;
   
   if (flag_2nd_tracking){
     // second round trajectory fit ...
@@ -185,7 +185,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     // organize path
     organize_segments_path_2nd(map_vertex_segments, map_segment_vertices, low_dis_limit, end_point_limit);    
     
-    
+    //    std::cout << "haha3_1 " << std::endl;
     
     map_3D_2DU_set.clear();
     map_3D_2DV_set.clear();
@@ -219,7 +219,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     /*   } */
     /*   std::cout << map_2DU_3D_set.size() << " " << map_2DV_3D_set.size() << " " << map_2DW_3D_set.size() << " " << sum[0] << " " << sum[1] << " " << sum[2] << std::endl; */
     /* } */
-
+    //    std::cout << "haha3_2 " << std::endl;
 
     multi_trajectory_fit(map_vertex_segments, map_segment_vertices,
 			 map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
@@ -240,12 +240,13 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     /*   WCPPID::ProtoSegment *sg = it->first; */
     /*   std::cout << sg->get_wcpt_vec().size() << " D " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
     /* } */
+    //    std::cout << "haha3_3 " << std::endl;
     // organize path
     low_dis_limit = 0.6*units::cm;
     organize_segments_path_3rd(map_vertex_segments, map_segment_vertices, low_dis_limit);
   }
   
- 
+  //  std::cout << "haha4 " << std::endl;
 
   /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
   /*   WCPPID::ProtoSegment *sg = it->first; */
@@ -1286,8 +1287,7 @@ void WCPPID::PR3DCluster::organize_segments_path_3rd(WCPPID::Map_Proto_Vertex_Se
     //    for (size_t i=1;i<pts.size();i++){
     //  std::cout << i << " " << sqrt(pow(pts.at(i).x-pts.at(i-1).x,2) + pow(pts.at(i).y-pts.at(i-1).y,2) + pow(pts.at(i).z-pts.at(i-1).z,2))/units::cm << std::endl;
     //}
-
-
+    
     
     std::vector<double> tmp_dQ_vec(pts.size(),0);
     std::vector<double> tmp_dx_vec(pts.size(),-1);
@@ -1420,6 +1420,9 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCPPID::Map_Proto_Vertex_Se
     }else{
       end_p = end_v->get_fit_pt();
     }
+
+    
+
     
     // middle points
     pts.push_back(start_p);
@@ -1474,9 +1477,10 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCPPID::Map_Proto_Vertex_Se
       }
       pts.push_back(end_p);
     }
-
+    if (pts.size()==1) pts.push_back(end_p);
+    
+    
     // sg->set_point_vec(pts);
-
     std::vector<double> tmp_dQ_vec(pts.size(),0);
     std::vector<double> tmp_dx_vec(pts.size(),-1);
     std::vector<double> tmp_pu_vec(pts.size(),0);
@@ -1491,7 +1495,7 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCPPID::Map_Proto_Vertex_Se
       tmp_pt_vec.at(i) = offset_t + 0.5 + slope_x * pts.at(i).x ;
     }
     sg->set_fit_vec(pts, tmp_dQ_vec, tmp_dx_vec, tmp_pu_vec, tmp_pv_vec, tmp_pw_vec, tmp_pt_vec, tmp_reduced_chi2_vec);
-
+    
     
     //std::cout << sg << " " << start_p << " " << end_p << " " << temp_wcps_vec.size() << " " << pts.size() << std::endl;
     //    std::cout << sg << flag_startv_end << " " << flag_endv_end << std::endl;
@@ -1629,7 +1633,6 @@ void WCPPID::PR3DCluster::organize_segments_path(WCPPID::Map_Proto_Vertex_Segmen
       }
       pts.push_back(end_p);
     }
-    
 
     sg->set_point_vec(pts);
     //std::cout << sg << " " << start_p << " " << end_p << " " << temp_wcps_vec.size() << " " << pts.size() << std::endl;
