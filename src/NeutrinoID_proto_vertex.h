@@ -1198,7 +1198,7 @@ bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::Proto
       }
 
       if (180-v1.Angle(v2)/3.1415926*180. < 30) ncount_line++;
-      // std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
+      //      std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
     }
   }
 
@@ -1246,7 +1246,7 @@ bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::Proto
     }
   }
 
-  //std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
+  //  std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
 
    // one view must be close
   if (sqrt(pow(v1_w - v2_w, 2) + pow(v1_t - v2_t,2)) < 2.0){
@@ -1295,14 +1295,16 @@ bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::Proto
     }
   }
 
-  
+
+  //  std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
   
   if (ncount_close >=2 ||
       ncount_close ==1 && ncount_dead ==1 & ncount_line==1 ||
-      ncount_close ==1 && ncount_dead == 2)
+      ncount_close ==1 && ncount_dead == 2 ||
+      ncount_line == 3)
     return true;
 
-  //  std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
+  
   //  std::cout <<  << " " << sqrt(pow(v1_u - v2_u, 2) + pow(v1_t - v2_t,2)) << " " << sqrt(pow(v1_v - v2_v, 2) + pow(v1_t - v2_t,2)) << std::endl;
 
   

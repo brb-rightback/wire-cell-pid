@@ -40,11 +40,15 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
     bool flag_update = fit_vertex(vtx, it->second, temp_cluster);
     if (flag_update) flag_update_fit = true;
   }
+
   
-  if (flag_update_fit)
+  
+  if (flag_update_fit){
     // do the overall fit again
     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
-
+    examine_vertices(temp_cluster);
+  }
+    
   flag_update_fit = false;
   for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end();it++){
     WCPPID::ProtoVertex *vtx = it->first;
@@ -53,12 +57,12 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
     bool flag_update = search_for_vertex_activities(vtx, it->second, temp_cluster);
     if (flag_update) flag_update_fit = true;
   }
-
   //  std::cout << flag_update_fit << std::endl;
-  
   if (flag_update_fit)
     // do the overall fit again
     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+
+  
   
 }
 
@@ -556,7 +560,7 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
       if (results.first < min_dis) min_dis = results.first;
     }
     if (min_dis > 0.75*units::cm && flag_terminals.at(candidate_wcps.at(i).index) ){
-      // std::cout << i << " " << dis/units::cm << " " << min_dis/units::cm << " " << flag_terminals.at(candidate_wcps.at(i).index) << std::endl;
+      std::cout << i << " " << dis/units::cm << " " << min_dis/units::cm << " " << flag_terminals.at(candidate_wcps.at(i).index) << std::endl;
       if (dis > max_dis){
 	max_dis = dis;
 	max_wcp = candidate_wcps.at(i);
