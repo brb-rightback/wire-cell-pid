@@ -17,6 +17,7 @@ using namespace WCP;
 
 #include "NeutrinoID_proto_vertex.h"
 #include "NeutrinoID_improve_vertex.h"
+#include "NeutrinoID_deghost.h"
 
 WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time)
   : acc_vertex_id(0)
@@ -29,6 +30,12 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   , type(0)
 {
   bool flag_other_clusters = true;
+
+  // form id vs. cluster ...
+  map_id_cluster[main_cluster->get_cluster_id()] = main_cluster;
+  for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
+    map_id_cluster[(*it)->get_cluster_id()] = *it;
+  }
   
   // create Steiner-inspired graph
   main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
@@ -43,7 +50,6 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   organize_vertices_segments();
   main_cluster->set_fit_parameters(proto_vertices, proto_segments);
 
-  
   if (flag_other_clusters){
     //deal with the other clusters ...
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
@@ -56,7 +62,12 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
       organize_vertices_segments();
       (*it)->set_fit_parameters(proto_vertices, proto_segments);
     }
+
+    deghost_clusters();
+    
   }
+
+
   
   
   

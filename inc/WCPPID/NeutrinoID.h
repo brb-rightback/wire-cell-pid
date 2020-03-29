@@ -113,7 +113,10 @@ namespace WCPPID{
     
     Map_Proto_Vertex_Segments& get_map_vertex_segments(){return map_vertex_segments;};
     Map_Proto_Segment_Vertices& get_map_segment_verteices(){return map_segment_vertices;};
-    
+
+    // deghost
+    void deghost_clusters();
+    void order_clusters(WCPPID::PR3DClusterSelection& ordered_clusters, std::map<int, WCPPID::ProtoSegmentSelection>& map_cluster_id_segments, std::map<WCPPID::PR3DCluster*, double>& map_cluster_max_length);
     
   protected:
     int acc_vertex_id;
@@ -121,6 +124,9 @@ namespace WCPPID{
     // input ...
     WCPPID::PR3DCluster *main_cluster;
     std::vector<WCPPID::PR3DCluster*> other_clusters;
+
+    std::map<int, WCPPID::PR3DCluster*> map_id_cluster;
+    
     WCP::ToyCTPointCloud* ct_point_cloud;
     std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > > global_wc_map;
     double flash_time;
