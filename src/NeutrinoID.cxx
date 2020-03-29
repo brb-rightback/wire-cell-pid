@@ -33,9 +33,12 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
 
   // form id vs. cluster ...
   map_id_cluster[main_cluster->get_cluster_id()] = main_cluster;
+  //std::cout << main_cluster->get_cluster_id() << " " << main_cluster << std::endl;
   for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
     map_id_cluster[(*it)->get_cluster_id()] = *it;
+    //    std::cout << (*it)->get_cluster_id() <<  " " << *it << std::endl;
   }
+  //  std::cout << map_id_cluster.size() << std::endl;
   
   // create Steiner-inspired graph
   main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
@@ -46,9 +49,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   // clustering points
   clustering_points(main_cluster);
   
-  // prepare output ...
-  organize_vertices_segments();
-  main_cluster->set_fit_parameters(proto_vertices, proto_segments);
+
 
   if (flag_other_clusters){
     //deal with the other clusters ...
@@ -58,19 +59,29 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
       // do not break track and find other tracks ...
       find_proto_vertex(*it, false, 1);
       clustering_points(*it);
-
-      organize_vertices_segments();
-      (*it)->set_fit_parameters(proto_vertices, proto_segments);
     }
-
+    //  deghost ...
     deghost_clusters();
     
   }
 
+  
+  // prepare output ...
+  fill_fit_parameters();
+}
 
-  
-  
-  
+
+void WCPPID::NeutrinoID::fill_fit_parameters(){
+  organize_vertices_segments();
+  std::set<WCPPID::PR3DCluster*> clusters_set;
+  for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    WCPPID::PR3DCluster *cluster = map_id_cluster[sg->get_cluster_id()];
+    clusters_set.insert(cluster);
+  }
+  for (auto it = clusters_set.begin(); it!=clusters_set.end(); it++){
+    (*it)->set_fit_parameters(proto_vertices, proto_segments);
+  }
 }
 
 void WCPPID::NeutrinoID::clustering_points(WCPPID::PR3DCluster* temp_cluster){
