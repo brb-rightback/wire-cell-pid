@@ -60,9 +60,9 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
       find_proto_vertex(*it, false, 1);
       clustering_points(*it);
     }
+    
     //  deghost ...
     deghost_clusters();
-    
   }
 
   

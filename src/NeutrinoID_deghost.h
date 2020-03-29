@@ -1,3 +1,5 @@
+#include "WCPData/DynamicToyPointCloud.h"
+
 bool sortbysec(const std::pair<WCPPID::PR3DCluster*,double> &a,
 	       const std::pair<WCPPID::PR3DCluster*,double> &b){
   return (a.second > b.second);
@@ -5,14 +7,33 @@ bool sortbysec(const std::pair<WCPPID::PR3DCluster*,double> &a,
 
 
 void WCPPID::NeutrinoID::deghost_clusters(){
-  std::map<int, WCPPID::ProtoSegmentSelection> map_cluster_id_segments;
-  std::map<WCPPID::PR3DCluster*, double> map_cluster_total_length;
+  std::map<int, WCPPID::ProtoSegmentSelection> map_cluster_id_segments;  // ID segments
+  std::map<WCPPID::PR3DCluster*, double> cluster_length_map;
   WCPPID::PR3DClusterSelection ordered_clusters;
+  order_clusters(ordered_clusters, map_cluster_id_segments, cluster_length_map);
   
-  order_clusters(ordered_clusters, map_cluster_id_segments, map_cluster_total_length);
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  double pitch_u = mp.get_pitch_u();
+  double pitch_v = mp.get_pitch_v();
+  double pitch_w = mp.get_pitch_w();
+  double angle_u = mp.get_angle_u();
+  double angle_v = mp.get_angle_v();
+  double angle_w = mp.get_angle_w();
+  double time_slice_width = mp.get_ts_width();
   
- 
-  
+  DynamicToyPointCloud global_point_cloud(angle_u,angle_v,angle_w);
+  DynamicToyPointCloud global_steiner_point_cloud(angle_u,angle_v,angle_w);
+  DynamicToyPointCloud global_skeleton_cloud(angle_u,angle_v,angle_w);
+
+  std::vector<WCPPID::PR3DCluster*> to_be_removed_clusters;
+
+  for (size_t i=0;i!= ordered_clusters.size(); i++){
+    if (i==0){
+      // fill anyway ...
+    }else{
+      
+    }
+  }
 }
 
 
