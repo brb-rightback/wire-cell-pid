@@ -30,10 +30,158 @@ void WCPPID::NeutrinoID::deghost_clusters(){
   for (size_t i=0;i!= ordered_clusters.size(); i++){
     if (i==0){
       // fill anyway ...
+      global_point_cloud.AddPoints(ordered_clusters.at(i)->get_point_cloud());
+      global_steiner_point_cloud.AddPoints(ordered_clusters.at(i)->get_point_cloud_steiner());
+      auto it = map_cluster_id_segments.find(ordered_clusters.at(i)->get_cluster_id());
+      if (it != map_cluster_id_segments.end()){
+	for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+	  global_skeleton_cloud.AddPoints((*it1)->get_point_vec());
+	}
+      }
     }else{
+      WCPPID::PR3DCluster *cluster = ordered_clusters.at(i);
+      int num_dead[3]={0,0,0};
+      int num_unique[3]={0,0,0};
+      int num_total_points = 0;
+      // dist cut ...
+      double dis_cut = 1.2*units::cm;
+      auto it = map_cluster_id_segments.find(ordered_clusters.at(i)->get_cluster_id());
+
+      if (it != map_cluster_id_segments.end()){
+	for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+	  PointVector& pts = (*it1)->get_point_vec();
+	  num_total_points += pts.size();
+	  for (size_t j=0;j!=pts.size();j++){
+	    Point test_point = pts.at(j);
+	    bool flag_dead = ct_point_cloud->get_closest_dead_chs(test_point,0);
+	    if (!flag_dead){
+	      std::tuple<double, WCP::PR3DCluster*, size_t> results = global_point_cloud.get_closest_2d_point_info(test_point, 0);
+	      if (std::get<0>(results)<=dis_cut/2.){
+	      }else{
+		results = global_steiner_point_cloud.get_closest_2d_point_info(test_point, 0);
+		if (std::get<0>(results)<=dis_cut/3.*2.){
+		}else{
+		  results = global_skeleton_cloud.get_closest_2d_point_info(test_point, 0);
+		  if (std::get<0>(results)<=dis_cut*5/4.){
+		  }else{
+		    num_unique[0]++;
+		  }
+		}
+	      }
+	    }else{
+	      num_dead[0]++;
+	    }
+
+	  
+	    // V plane ...
+	    flag_dead = ct_point_cloud->get_closest_dead_chs(test_point,1);
+	    if (!flag_dead){
+	      std::tuple<double, WCP::PR3DCluster*, size_t> results = global_point_cloud.get_closest_2d_point_info(test_point, 1);
+	      if (std::get<0>(results)<=dis_cut/2.){
+	      }else{
+		results = global_steiner_point_cloud.get_closest_2d_point_info(test_point, 1);
+		if (std::get<0>(results)<=dis_cut/3.*2.){
+		}else{
+		  results = global_skeleton_cloud.get_closest_2d_point_info(test_point, 1);
+		  if (std::get<0>(results)<=dis_cut*5/4.){
+		  }else{
+		    num_unique[1]++;
+		  }
+		}
+	      }
+	    }else{
+	      num_dead[1]++;
+	    }
+
+	    // W plane ...
+	    flag_dead = ct_point_cloud->get_closest_dead_chs(test_point,2);
+	    if (!flag_dead){
+	      std::tuple<double, WCP::PR3DCluster*, size_t> results = global_point_cloud.get_closest_2d_point_info(test_point, 2);
+	      if (std::get<0>(results)<=dis_cut/2.){
+	      }else{
+		results = global_steiner_point_cloud.get_closest_2d_point_info(test_point, 2);
+		if (std::get<0>(results)<=dis_cut/3.*2.){
+		}else{
+		  results = global_skeleton_cloud.get_closest_2d_point_info(test_point, 2);
+		  if (std::get<0>(results)<=dis_cut*5/4.){
+		  }else{
+		    num_unique[2]++;
+		  }
+		}
+	      }
+	    }else{
+	      num_dead[2]++;
+	    }
+	    
+	    
+	  }
+	} // loop over segments
+      }else{
+	// no segments ...
+	
+      }
       
+      bool flag_add = true;
+      
+      
+
+      double unique_percent_u = num_unique[0]*1.0/num_total_points;
+      double unique_percent_v = num_unique[1]*1.0/num_total_points;
+      double unique_percent_w = num_unique[2]*1.0/num_total_points;
+
+      double dead_percent_u = num_dead[0]*1.0/num_total_points;
+      double dead_percent_v = num_dead[1]*1.0/num_total_points;
+      double dead_percent_w = num_dead[2]*1.0/num_total_points;
+      
+      double max_unique_percent = std::max(unique_percent_u, unique_percent_v);
+      max_unique_percent = std::max(max_unique_percent, unique_percent_w);
+      double min_unique_percent = std::min(unique_percent_u, unique_percent_v);
+      min_unique_percent = std::min(min_unique_percent, unique_percent_w);
+      double ave_unique_percent = (unique_percent_u + unique_percent_v + unique_percent_w)/3.;
+      double max_dead_percent = std::max(dead_percent_u, dead_percent_v);
+      max_dead_percent = std::max(max_dead_percent, dead_percent_w);
+      
+      
+      
+      if (max_dead_percent > 0.8 && max_unique_percent < 0.35 && ave_unique_percent < 0.16 && min_unique_percent < 0.08 ||
+	  max_unique_percent < 0.1 && ave_unique_percent < 0.05 && min_unique_percent < 0.025)
+	flag_add = false;
+
+      //      std::cout << flag_add << " " << cluster->get_cluster_id() << " " << num_total_points << " " << num_dead[0] << " " << num_dead[1] << " " << num_dead[2] << " " << num_unique[0] << " " << num_unique[1] << " " << num_unique[2] << " " << max_unique_percent << " " << min_unique_percent << " " << ave_unique_percent << " " << max_dead_percent << std::endl;
+      
+      if (flag_add){
+	global_point_cloud.AddPoints(ordered_clusters.at(i)->get_point_cloud());
+	global_steiner_point_cloud.AddPoints(ordered_clusters.at(i)->get_point_cloud_steiner());
+	auto it = map_cluster_id_segments.find(ordered_clusters.at(i)->get_cluster_id());
+	if (it != map_cluster_id_segments.end()){
+	  for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+	    global_skeleton_cloud.AddPoints((*it1)->get_point_vec());
+	  }
+	}
+      }else{
+	to_be_removed_clusters.push_back(cluster);
+      }
+    }
+  } // loop over cluster
+
+
+  for (auto it = to_be_removed_clusters.begin(); it!= to_be_removed_clusters.end(); it++){
+    auto it2 = map_cluster_id_segments.find((*it)->get_cluster_id());
+    if (it2 != map_cluster_id_segments.end()){
+      for (auto it1 = it2->second.begin(); it1 != it2->second.end(); it1++){
+    	del_proto_segment(*it1);
+      }
     }
   }
+  
+  WCPPID::ProtoVertexSelection tmp_vertices;
+  for (auto it1 = map_vertex_segments.begin(); it1!=map_vertex_segments.end(); it1++){
+    if (it1->second.size()==0) tmp_vertices.push_back(it1->first);
+  }
+  for (auto it1 = tmp_vertices.begin(); it1!=tmp_vertices.end(); it1++){
+    del_proto_vertex(*it1);
+  }
+  
 }
 
 
