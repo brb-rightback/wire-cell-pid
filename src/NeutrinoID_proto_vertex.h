@@ -1,21 +1,12 @@
 
-void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bool flag_break_track, int nrounds_find_other_tracks){
+bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bool flag_break_track, int nrounds_find_other_tracks){
 
-  //std::cout << temp_cluster->get_point_cloud_steiner()->get_num_points() << std::endl;
-  if (temp_cluster->get_point_cloud_steiner()==0) return;
-  if (temp_cluster->get_point_cloud_steiner()->get_num_points()<2) return;
-
+  if (temp_cluster->get_point_cloud_steiner()==0) return false;
+  if (temp_cluster->get_point_cloud_steiner()->get_num_points()<2) return false;
   
   WCPPID::ProtoSegment* sg1 = init_first_segment(temp_cluster);
-  if (sg1 == 0 ) return;
+  if (sg1 == 0) return false;
   
-  // hack test
-  //temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true);
-  // for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
-  //   WCPPID::ProtoSegment *sg = it->first;
-  // std::cout << sg1->get_point_vec().size() << " A " << sg1->get_point_vec().front() << " " << sg1->get_point_vec().back() << std::endl;
-  // }
-
   if (sg1->get_wcpt_vec().size()>1){
     // break tracks ... 
     if (flag_break_track){
@@ -29,11 +20,12 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
     for (size_t i=0;i!=nrounds_find_other_tracks;i++){
       find_other_segments(temp_cluster, flag_break_track);
     }
-    
     // examine the vertices ...
     examine_vertices(temp_cluster);
+    return true;
   }
   
+  return false;
 
   
 
@@ -55,7 +47,26 @@ void WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
   // practice other components ...
 }
 
+void WCPPID::NeutrinoID::init_point_segment(WCPPID::PR3DCluster *temp_cluster){
+  // do the first search of the trajectory ...
+  std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_two_boundary_wcps(1);
+  // good for the first track
+  temp_cluster->dijkstra_shortest_paths(wcps.first,1); 
+  temp_cluster->cal_shortest_path(wcps.second,1);
+  WCPPID::ProtoVertex *v1=0;
+  WCPPID::ProtoVertex *v2=0;
+  WCPPID::ProtoSegment *sg1=0;
+  
+  if (temp_cluster->get_path_wcps().size()>1){
+    v1 = new WCPPID::ProtoVertex(acc_vertex_id, wcps.first, temp_cluster->get_cluster_id()); acc_vertex_id++;
+    v2 = new WCPPID::ProtoVertex(acc_vertex_id, wcps.second, temp_cluster->get_cluster_id()); acc_vertex_id++;
+    sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
+    add_proto_connection(v1,sg1,temp_cluster);
+    add_proto_connection(v2,sg1,temp_cluster);
 
+    temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+  }
+}
 
 WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster *temp_cluster){
   // do the first search of the trajectory ...

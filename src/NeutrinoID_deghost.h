@@ -147,7 +147,7 @@ void WCPPID::NeutrinoID::deghost_clusters(){
 	  max_unique_percent < 0.1 && ave_unique_percent < 0.05 && min_unique_percent < 0.025)
 	flag_add = false;
 
-      //      std::cout << flag_add << " " << cluster->get_cluster_id() << " " << num_total_points << " " << num_dead[0] << " " << num_dead[1] << " " << num_dead[2] << " " << num_unique[0] << " " << num_unique[1] << " " << num_unique[2] << " " << max_unique_percent << " " << min_unique_percent << " " << ave_unique_percent << " " << max_dead_percent << std::endl;
+      //std::cout << flag_add << " " << cluster->get_cluster_id() << " " << num_total_points << " " << num_dead[0] << " " << num_dead[1] << " " << num_dead[2] << " " << num_unique[0] << " " << num_unique[1] << " " << num_unique[2] << " " << max_unique_percent << " " << min_unique_percent << " " << ave_unique_percent << " " << max_dead_percent << std::endl;
       
       if (flag_add){
 	global_point_cloud.AddPoints(ordered_clusters.at(i)->get_point_cloud());
@@ -186,12 +186,12 @@ void WCPPID::NeutrinoID::deghost_clusters(){
 
 
 void WCPPID::NeutrinoID::order_clusters(WCPPID::PR3DClusterSelection& ordered_clusters, std::map<int, WCPPID::ProtoSegmentSelection>& map_cluster_id_segments, std::map<WCPPID::PR3DCluster*, double>& map_cluster_total_length){
-
-
   
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     double length = sg->get_length();
+
+    //std::cout << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl;
     
     if (map_cluster_total_length.find(map_id_cluster[sg->get_cluster_id()])==map_cluster_total_length.end()){
       WCPPID::ProtoSegmentSelection segments;
@@ -213,6 +213,6 @@ void WCPPID::NeutrinoID::order_clusters(WCPPID::PR3DClusterSelection& ordered_cl
   sort(temp_pair_vec.begin(), temp_pair_vec.end(), sortbysec);
   for (auto it = temp_pair_vec.begin(); it!=temp_pair_vec.end();it++){
     ordered_clusters.push_back(it->first);
-    //    std::cout << map_cluster_total_length[it->first] << std::endl;
+    //    std::cout << it->first->get_cluster_id() << " " << map_cluster_total_length[it->first] << " " << map_cluster_id_segments[it->first->get_cluster_id()].size() << std::endl;
   }
 }
