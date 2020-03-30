@@ -61,7 +61,7 @@ bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
     else length_ratio = direct_length / integrated_length;
     
     if (tmp_dQ_dx*0.11 + 2*length_ratio < 2 && tmp_dQ_dx < 2 && length_ratio < 0.95) n_shower_like ++;
-    //    std::cout << "Xin: " << j << " " << sections.at(j).first << " " << sections.at(j).second << " " << length_ratio << " " << tmp_dQ_dx << " " << direct_length << std::endl;
+    // std::cout << "Xin: " << j << " " << sections.at(j).first << " " << sections.at(j).second << " " << length_ratio << " " << tmp_dQ_dx << " " << direct_length << std::endl;
   }
   //std::cout << "BB " << sections.size() << " " << get_length()/units::cm << " " << n_shower_like << std::endl;
 

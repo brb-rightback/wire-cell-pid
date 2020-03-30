@@ -30,7 +30,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   , flash_time(flash_time)
   , type(0)
 {
-  bool flag_other_clusters = false;
+  bool flag_other_clusters = true;
 
   // form id vs. cluster ...
   map_id_cluster[main_cluster->get_cluster_id()] = main_cluster;
@@ -57,11 +57,13 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   if (flag_other_clusters){
     //deal with the other clusters ...
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
-      // if ((*it)->get_cluster_id()!=132) continue;
+      //   if ((*it)->get_cluster_id()>38) continue;
       (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+      //std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
       // do not break track and find other tracks ...
       if (!find_proto_vertex(*it, false, 1)) init_point_segment(*it);
       clustering_points(*it);
+      //      std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
     }
     //  deghost ...
     deghost_clusters();
@@ -113,7 +115,7 @@ void WCPPID::NeutrinoID::clustering_points(WCPPID::PR3DCluster* temp_cluster){
     WCP::WC2DPointCloud<double>& cloud_w = temp_cluster->get_point_cloud()->get_cloud_w();
     
     std::vector<int>& point_sub_cluster_ids = temp_cluster->get_point_sub_cluster_ids();
-    
+
     
     for (size_t i=0;i!=point_sub_cluster_ids.size();i++){
       //      std::cout << point_sub_cluster_ids.at(i) << std::endl;

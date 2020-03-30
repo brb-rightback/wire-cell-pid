@@ -1361,10 +1361,8 @@ int main(int argc, char* argv[])
       T_vtx->Fill();
     }
   }
-
-  
-  
-  
+ 
+   
   TTree *T_cluster ;
   Double_t x,y,z,q,nq;
   Int_t ncluster;
@@ -1385,28 +1383,22 @@ int main(int argc, char* argv[])
   T_cluster->Branch("ch_v",&ch_v,"ch_v/I");
   T_cluster->Branch("ch_w",&ch_w,"ch_w/I");
   T_cluster->SetDirectory(file1);
+
+  
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     WCPPID::PR3DCluster* new_cluster = *it;  
     ncluster = map_cluster_parent_id[new_cluster];
-    
     real_cluster_id = new_cluster->get_cluster_id();
-    //
-    
     ToyPointCloud *pcloud = new_cluster->get_point_cloud();
-    
-
-      
+          
     if (pcloud!=0){
       WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
-
       std::vector<int>& point_sub_cluster_ids = new_cluster->get_point_sub_cluster_ids();
-      
       for (size_t i=0;i!=cloud.pts.size();i++){
 	x = cloud.pts[i].x/units::cm;
 	y = cloud.pts[i].y/units::cm;
 	z = cloud.pts[i].z/units::cm;
-
 	if (point_sub_cluster_ids.size() == cloud.pts.size()){
 	  if (point_sub_cluster_ids.at(i)==-1){
 	    real_cluster_id = -1;
@@ -1462,13 +1454,18 @@ int main(int argc, char* argv[])
   t_rec_charge->Branch("real_cluster_id",&real_cluster_id,"real_cluster_id/I");
   t_rec_charge->Branch("sub_cluster_id",&sub_cluster_id,"sub_cluster_id/I");
 
+ 
   // extra save ...
   TTree *t_rec_simple = new TTree("T_rec","T_rec");
   t_rec_simple->SetDirectory(file1);
   t_rec_simple->Branch("x",&x,"x/D");
   t_rec_simple->Branch("y",&y,"y/D");
   t_rec_simple->Branch("z",&z,"z/D");
+  t_rec_simple->Branch("cluster_id",&ncluster,"cluster_id/I");
+  t_rec_simple->Branch("real_cluster_id",&real_cluster_id,"real_cluster_id/I");
+  t_rec_simple->Branch("sub_cluster_id",&sub_cluster_id,"sub_cluster_id/I");
   t_rec_simple->SetDirectory(file1);
+  
   // extra save ...
   TTree *t_rec_deblob = new TTree("T_rec_charge_blob","T_rec_charge_blob");
   t_rec_deblob->SetDirectory(file1);
@@ -1479,7 +1476,10 @@ int main(int argc, char* argv[])
   t_rec_deblob->Branch("nq",&ncharge_save,"nq/D");
   t_rec_deblob->Branch("chi2",&chi2_save,"chi2/D");
   t_rec_deblob->Branch("ndf",&ndf_save,"ndf/D");
-
+  t_rec_deblob->Branch("cluster_id",&ncluster,"cluster_id/I");
+  t_rec_deblob->Branch("real_cluster_id",&real_cluster_id,"real_cluster_id/I");
+  t_rec_deblob->Branch("sub_cluster_id",&sub_cluster_id,"sub_cluster_id/I");
+  
   
   TTree *T_proj_data = new TTree("T_proj_data","T_proj_data");
   std::vector<int> *proj_data_cluster_id = new std::vector<int>;
@@ -1497,30 +1497,30 @@ int main(int argc, char* argv[])
   T_proj_data->Branch("charge_pred",&proj_data_cluster_charge_pred);
   T_proj_data->SetDirectory(file1);
 
-  // save the Steiner-inspired Graph ...
-  for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-    WCPPID::PR3DCluster* cluster = *it;
-    ndf_save = cluster->get_cluster_id();
-    if (cluster->get_point_cloud_steiner()!=0){
-      WCP::WCPointCloud<double>& cloud = cluster->get_point_cloud_steiner()->get_cloud();
-      std::vector<bool>& flag_tagged = cluster->get_flag_tagged_steiner_graph();
-      for (size_t i=0;i!=cloud.pts.size();i++){
-	x = cloud.pts[i].x/units::cm;
-	y = cloud.pts[i].y/units::cm;
-	z = cloud.pts[i].z/units::cm;
-	t_rec_simple->Fill();
+  // // save the Steiner-inspired Graph ...
+  // for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
+  //   WCPPID::PR3DCluster* cluster = *it;
+  //   ndf_save = cluster->get_cluster_id();
+  //   if (cluster->get_point_cloud_steiner()!=0){
+  //     WCP::WCPointCloud<double>& cloud = cluster->get_point_cloud_steiner()->get_cloud();
+  //     std::vector<bool>& flag_tagged = cluster->get_flag_tagged_steiner_graph();
+  //     for (size_t i=0;i!=cloud.pts.size();i++){
+  // 	x = cloud.pts[i].x/units::cm;
+  // 	y = cloud.pts[i].y/units::cm;
+  // 	z = cloud.pts[i].z/units::cm;
+  // 	t_rec_simple->Fill();
 
-	charge_save = 1;
-	ncharge_save = 1;
-	chi2_save = 1;
+  // 	charge_save = 1;
+  // 	ncharge_save = 1;
+  // 	chi2_save = 1;
   
-	if (flag_tagged.size()>0){
-	  if (!flag_tagged.at(i)) t_rec_deblob->Fill();
-	}
-      }
+  // 	if (flag_tagged.size()>0){
+  // 	  if (!flag_tagged.at(i)) t_rec_deblob->Fill();
+  // 	}
+  //     }
       
-    }
-  }
+  //   }
+  // }
 
   
 
@@ -1541,6 +1541,7 @@ int main(int argc, char* argv[])
     std::vector<double>& Vreduced_chi2 = cluster->get_reduced_chi2();
     std::vector<bool>& Vflag_vertex = cluster->get_flag_vertex();
     std::vector<int>& Vsub_cluster_id = cluster->get_sub_cluster_id();
+    std::vector<bool>& Vflag_shower = cluster->get_flag_shower();
     
     if (pts.size()!=dQ.size() || pts.size()==0) continue;
     
@@ -1559,9 +1560,39 @@ int main(int argc, char* argv[])
       ncluster = ndf_save;
       real_cluster_id = Vsub_cluster_id.at(i);
       sub_cluster_id = Vsub_cluster_id.at(i);
-
-      //      if (real_cluster_id!=-1)
       t_rec_charge->Fill();
+
+      if (Vflag_shower.at(i))
+	real_cluster_id = 1;
+      else
+	real_cluster_id = 4;
+      
+      t_rec_deblob->Fill();
+    }
+
+    ToyPointCloud *pcloud = cluster->get_point_cloud();          
+    if (pcloud!=0){
+      WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
+      std::vector<int>& point_sub_cluster_ids = cluster->get_point_sub_cluster_ids();
+      std::vector<bool>& point_flag_showers = cluster->get_point_flag_showers();
+      for (size_t i=0;i!=cloud.pts.size();i++){
+	x = cloud.pts[i].x/units::cm;
+	y = cloud.pts[i].y/units::cm;
+	z = cloud.pts[i].z/units::cm;
+	if (point_sub_cluster_ids.size() == cloud.pts.size()){
+	  if (point_sub_cluster_ids.at(i)==-1){
+	    real_cluster_id = -1;
+	    continue; // skip -1 points ... deghosting ...
+	  }else{
+	    if (point_flag_showers.at(i))
+	      real_cluster_id = 1;
+	    else
+	      real_cluster_id = 4;
+	  }
+	}
+	sub_cluster_id =  cluster->get_cluster_id();
+	t_rec_simple->Fill();
+      }
     }
 
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_u_map = cluster->get_proj_data_u_map();

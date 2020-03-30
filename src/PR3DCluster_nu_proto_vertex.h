@@ -151,6 +151,9 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::Map_Proto_Vertex_Segments& 
   pw.clear();
   pt.clear();
   reduced_chi2.clear();
+  flag_vertex.clear();
+  sub_cluster_id.clear();
+  flag_shower.clear();
 
   for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
     if (it->first->get_cluster_id()!=cluster_id) continue;
@@ -165,6 +168,7 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::Map_Proto_Vertex_Segments& 
 
     flag_vertex.push_back(true);
     sub_cluster_id.push_back(-1);
+    flag_shower.push_back(false);
   }
 
   //  int tmp_id = cluster_id*1000 + 1; // hack ...
@@ -178,9 +182,11 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::Map_Proto_Vertex_Segments& 
     pw.insert(pw.end(),(it->first)->get_pw_vec().begin(), (it->first)->get_pw_vec().end());
     pt.insert(pt.end(),(it->first)->get_pt_vec().begin(), (it->first)->get_pt_vec().end());
     reduced_chi2.insert(reduced_chi2.end(),(it->first)->get_reduced_chi2_vec().begin(), (it->first)->get_reduced_chi2_vec().end());
+    bool is_shower = it->first->get_flag_shower();
     for (size_t i=0;i!=(it->first)->get_point_vec().size();i++){
       flag_vertex.push_back(false);
       sub_cluster_id.push_back(cluster_id*1000 + it->first->get_id());
+      flag_shower.push_back(is_shower);
     }
     //    tmp_id ++;
   }
@@ -198,6 +204,9 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::ProtoVertexSelection& temp_
   pw.clear();
   pt.clear();
   reduced_chi2.clear();
+  flag_vertex.clear();
+  sub_cluster_id.clear();
+  flag_shower.clear();
 
   for (auto it = temp_vertices.begin(); it!=temp_vertices.end(); it++){
     if ((*it)->get_cluster_id()!=cluster_id) continue;
@@ -212,7 +221,9 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::ProtoVertexSelection& temp_
 
     flag_vertex.push_back(true);
     sub_cluster_id.push_back(-1);
+    flag_shower.push_back(false);
   }
+  
 
   //  int tmp_id = cluster_id*1000 + 1;
   for (auto it=temp_segments.begin(); it!=temp_segments.end(); it++){
@@ -225,9 +236,11 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::ProtoVertexSelection& temp_
     pw.insert(pw.end(),(*it)->get_pw_vec().begin(), (*it)->get_pw_vec().end());
     pt.insert(pt.end(),(*it)->get_pt_vec().begin(), (*it)->get_pt_vec().end());
     reduced_chi2.insert(reduced_chi2.end(),(*it)->get_reduced_chi2_vec().begin(), (*it)->get_reduced_chi2_vec().end());
+    bool is_shower = (*it)->get_flag_shower();
     for (size_t i=0;i!=(*it)->get_point_vec().size();i++){
       flag_vertex.push_back(false);
       sub_cluster_id.push_back(cluster_id*1000 + (*it)->get_id());
+      flag_shower.push_back(is_shower);
     }
     //   tmp_id ++;
   }
