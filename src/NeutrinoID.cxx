@@ -18,6 +18,7 @@ using namespace WCP;
 #include "NeutrinoID_proto_vertex.h"
 #include "NeutrinoID_improve_vertex.h"
 #include "NeutrinoID_deghost.h"
+#include "NeutrinoID_track_shower.h"
 
 WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time)
   : acc_vertex_id(0)
@@ -29,7 +30,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   , flash_time(flash_time)
   , type(0)
 {
-  bool flag_other_clusters = true;
+  bool flag_other_clusters = false;
 
   // form id vs. cluster ...
   map_id_cluster[main_cluster->get_cluster_id()] = main_cluster;
@@ -65,7 +66,9 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
     //  deghost ...
     deghost_clusters();
   }
-
+  // track shower separation
+  separate_track_shower();
+  
   // for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
   //   std::cout << it->first->get_fit_pt() << std::endl;
   // }

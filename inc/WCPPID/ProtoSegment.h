@@ -30,6 +30,10 @@ namespace WCPPID{
     std::vector<bool>& get_fit_flag_skip(){return fit_flag_skip;};
 
     double get_length();
+    
+    double get_direct_length(int n1, int n2);
+    double get_length(int n1, int n2);
+    double get_medium_dQ_dx(int n1, int n2);
 
     WCP::WCPointCloud<double>::WCPoint get_closest_wcpt(WCP::Point& test_p);
 
@@ -64,8 +68,12 @@ namespace WCPPID{
     void add_associate_point(WCP::WCPointCloud<double>::WCPoint& wcp, WCP::WC2DPointCloud<double>::WC2DPoint& wcp_u, WCP::WC2DPointCloud<double>::WC2DPoint& wcp_v, WCP::WC2DPointCloud<double>::WC2DPoint& wcp_w);
     void add_associate_point_steiner(WCP::WCPointCloud<double>::WCPoint& wcp);
     
-
-
+    //
+    bool is_shower_trajectory(double step_size =10.*units::cm);
+    bool get_flag_shower(){return flag_shower_trajectory || flag_shower_topology;};
+    bool get_flag_shower_trajectory(){return flag_shower_trajectory;};
+    bool get_flag_shower_topology(){return flag_shower_topology;};
+    
     
   protected:
     int id;
@@ -91,6 +99,9 @@ namespace WCPPID{
     WCP::ToyPointCloud* pcloud_associated;
     WCP::ToyPointCloud* pcloud_associated_steiner;
     //    std::vector<WCP::Point > associated_points;
+
+    bool flag_shower_trajectory;
+    bool flag_shower_topology;
     
     bool flag_fit;
   };
