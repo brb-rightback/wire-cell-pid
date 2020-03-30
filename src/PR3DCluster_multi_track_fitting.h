@@ -10,6 +10,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
   /* } */
   for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
     WCPPID::ProtoVertex *vtx = it->first;
+    if (vtx->get_cluster_id() !=cluster_id) continue;
     if (!vtx->get_flag_fit_fix()){
       Point p(vtx->get_wcpt().x, vtx->get_wcpt().y, vtx->get_wcpt().z);
       vtx->set_fit_pt(p);

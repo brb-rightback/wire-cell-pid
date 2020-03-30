@@ -573,9 +573,9 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
   for (size_t i=0; i!=candidate_wcps.size(); i++){
     double dis = sqrt(pow(candidate_wcps.at(i).x - vtx->get_fit_pt().x ,2) + pow(candidate_wcps.at(i).y - vtx->get_fit_pt().y,2) + pow(candidate_wcps.at(i).z - vtx->get_fit_pt().z,2));
     double min_dis = 1e9;
-    //double min_dis_u = 1e9;
-    //double min_dis_v = 1e9;
-    //double min_dis_w = 1e9;
+    double min_dis_u = 1e9;
+    double min_dis_v = 1e9;
+    double min_dis_w = 1e9;
     Point test_p(candidate_wcps.at(i).x, candidate_wcps.at(i).y, candidate_wcps.at(i).z);
     
     //    for (auto it = sg_set.begin(); it != sg_set.end(); it++){
@@ -584,18 +584,21 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
       std::pair<double, WCP::Point> results = sg->get_closest_point(test_p);
       if (results.first < min_dis) min_dis = results.first;
       
-      /* std::tuple<double, double, double> results_2d = sg->get_closest_2d_dis(test_p); */
-      /* if (std::get<0>(results_2d) < min_dis_u) min_dis_u = std::get<0>(results_2d); */
-      /* if (std::get<1>(results_2d) < min_dis_v) min_dis_v = std::get<1>(results_2d); */
-      /* if (std::get<2>(results_2d) < min_dis_w) min_dis_w = std::get<2>(results_2d); */
+      std::tuple<double, double, double> results_2d = sg->get_closest_2d_dis(test_p);
+      if (std::get<0>(results_2d) < min_dis_u) min_dis_u = std::get<0>(results_2d);
+      if (std::get<1>(results_2d) < min_dis_v) min_dis_v = std::get<1>(results_2d);
+      if (std::get<2>(results_2d) < min_dis_w) min_dis_w = std::get<2>(results_2d);
     }
     
-    if (min_dis > 0.6*units::cm  && flag_terminals.at(candidate_wcps.at(i).index)){
+    if (min_dis > 0.6*units::cm  && flag_terminals.at(candidate_wcps.at(i).index) && min_dis_u + min_dis_v + min_dis_w > 1.2*units::cm){
       TVector3 dir(test_p.x - vtx->get_fit_pt().x, test_p.y - vtx->get_fit_pt().y, test_p.z - vtx->get_fit_pt().z);
       double sum_angle = 0;
+      double min_angle = 1e9;
       for (size_t j=0;j!=saved_dirs.size();j++){
 	//	std::cout << dir.Angle(saved_dirs.at(j))/3.1415926*180. << std::endl;
-      	sum_angle += dir.Angle(saved_dirs.at(j));
+	double angle = dir.Angle(saved_dirs.at(j))/3.1415926*180.;
+	sum_angle += angle;
+	if (angle < min_angle) min_angle = angle;
       }
       double sum_charge=0;
       int ncount = 0;
@@ -613,8 +616,7 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
       }
       if (ncount!=0) sum_charge /= ncount;
       
-      // std::cout << i << " " << dis/units::cm << " " << min_dis/units::cm << " " << flag_terminals.at(candidate_wcps.at(i).index)  << sum_angle << " " << sum_charge << " " << (sum_angle)  * (sum_charge+1e-9) << std::endl;
-      //" " << min_dis_u << " " << min_dis_v << " " << min_dis_w << " " << min_dis_u + min_dis_v + min_dis_w << std::endl; 
+      //      std::cout << i << " " << dis/units::cm << " " << min_dis/units::cm << " " << flag_terminals.at(candidate_wcps.at(i).index)  << min_angle << " " << sum_angle << " " << sum_charge << " " << (sum_angle)  * (sum_charge+1e-9) << " " << min_dis_u << " " << min_dis_v << " " << min_dis_w << " " << min_dis_u + min_dis_v + min_dis_w << std::endl; 
 
       if ((sum_angle)  * (sum_charge+1e-9) > max_dis){
 	max_dis = (sum_angle)  * (sum_charge+1e-9);
