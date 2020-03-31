@@ -38,6 +38,128 @@ WCPPID::ProtoSegment::~ProtoSegment(){
     delete pcloud_associated_steiner;
 }
 
+bool WCPPID::ProtoSegment::is_shower_topology(){
+  // look at the points ...
+  std::vector<PointVector > local_points_vec(fit_pt_vec.size());
+  std::vector<std::tuple<double, double, double> > vec_rms_vals(fit_pt_vec.size(), std::make_tuple(0,0,0));
+  
+  WCP::WCPointCloud<double>& cloud = pcloud_associated->get_cloud();
+
+  for (size_t i = 0; i!= cloud.pts.size(); i++){
+    Point test_p(cloud.pts.at(i).x, cloud.pts.at(i).y, cloud.pts.at(i).z);
+    std::vector<std::pair<size_t,double>> results = pcloud_fit->get_closest_index(test_p,1);
+    local_points_vec.at(results.front().first).push_back(test_p);
+  }
+
+  TVector3 drift_dir(1,0,0); // drift direction
+  
+  for (size_t i=0;i!=local_points_vec.size();i++){
+    TVector3 dir_1, dir_2, dir_3;
+    Point v1(0,0,0);
+    for (size_t j=1;j!=3;j++){
+      if (i+j<local_points_vec.size()){
+	v1.x += fit_pt_vec.at(i+j).x - fit_pt_vec.at(i).x;
+	v1.y += fit_pt_vec.at(i+j).y - fit_pt_vec.at(i).y;
+	v1.z += fit_pt_vec.at(i+j).z - fit_pt_vec.at(i).z;
+      }
+      if (i>=j){
+	v1.x += fit_pt_vec.at(i).x - fit_pt_vec.at(i-j).x;
+	v1.y += fit_pt_vec.at(i).y - fit_pt_vec.at(i-j).y;
+	v1.z += fit_pt_vec.at(i).z - fit_pt_vec.at(i-j).z;
+      }
+    }
+    dir_1.SetXYZ(v1.x, v1.y, v1.z);
+    dir_1 = dir_1.Unit();
+
+    if (dir_1.Angle(drift_dir)/3.1415926*180. < 7.5){
+      dir_1.SetXYZ(1,0,0);
+      dir_2.SetXYZ(0,1,0);
+      dir_3.SetXYZ(0,0,1);
+    }else{
+      dir_2 = drift_dir.Cross(dir_1);
+      dir_2 = dir_2.Unit();
+      dir_3 = dir_1.Cross(dir_2);
+    }
+    
+    std::vector<std::tuple<double, double, double> > vec_projs;
+    for (size_t j=0;j!=local_points_vec.at(i).size();j++){
+      double proj_1 = dir_1.X() * local_points_vec.at(i).at(j).x + dir_1.Y() * local_points_vec.at(i).at(j).y + dir_1.Z() * local_points_vec.at(i).at(j).z;
+      double proj_2 = dir_2.X() * local_points_vec.at(i).at(j).x + dir_2.Y() * local_points_vec.at(i).at(j).y + dir_2.Z() * local_points_vec.at(i).at(j).z;
+      double proj_3 = dir_3.X() * local_points_vec.at(i).at(j).x + dir_3.Y() * local_points_vec.at(i).at(j).y + dir_3.Z() * local_points_vec.at(i).at(j).z;
+      vec_projs.push_back(std::make_tuple(proj_1, proj_2, proj_3));
+    }
+    std::tuple<double, double, double> means = std::make_tuple(0,0,0);
+    int ncount = local_points_vec.at(i).size();
+    //for (size_t j=0;j!=local_points_vec.at(i).size();j++){
+    //  std::get<0>(means) += std::get<0>(vec_projs.at(j));
+    //  std::get<1>(means) += std::get<1>(vec_projs.at(j));
+    //  std::get<2>(means) += std::get<2>(vec_projs.at(j));
+    //  ncount ++;
+    //}
+    if (ncount >1){
+      //std::get<0>(means) /= 1.*ncount;
+      //std::get<1>(means) /= 1.*ncount;
+      //std::get<2>(means) /= 1.*ncount;
+
+      std::get<0>(means) = dir_1.X() * fit_pt_vec.at(i).x + dir_1.Y() * fit_pt_vec.at(i).y + dir_1.Z() * fit_pt_vec.at(i).z;
+      std::get<1>(means) = dir_2.X() * fit_pt_vec.at(i).x + dir_2.Y() * fit_pt_vec.at(i).y + dir_2.Z() * fit_pt_vec.at(i).z;
+      std::get<2>(means) = dir_3.X() * fit_pt_vec.at(i).x + dir_3.Y() * fit_pt_vec.at(i).y + dir_3.Z() * fit_pt_vec.at(i).z;
+      
+      for (size_t j=0;j!=local_points_vec.at(i).size();j++){
+	std::get<0>(vec_rms_vals.at(i)) += pow(std::get<0>(vec_projs.at(j)) - std::get<0>(means),2);
+	std::get<1>(vec_rms_vals.at(i)) += pow(std::get<1>(vec_projs.at(j)) - std::get<1>(means),2);
+	std::get<2>(vec_rms_vals.at(i)) += pow(std::get<2>(vec_projs.at(j)) - std::get<2>(means),2);
+      }
+
+      std::get<0>(vec_rms_vals.at(i)) = sqrt(std::get<0>(vec_rms_vals.at(i))*1./(ncount));
+      std::get<1>(vec_rms_vals.at(i)) = sqrt(std::get<1>(vec_rms_vals.at(i))*1./(ncount));
+      std::get<2>(vec_rms_vals.at(i)) = sqrt(std::get<2>(vec_rms_vals.at(i))*1./(ncount));
+    }
+    //std::cout << dir_1.Angle(drift_dir)/3.1415926*180. << " " << dir_1.Mag() << " " << v1 << std::endl;
+    /// std::cout << std::get<0>(vec_rms_vals.at(i))/units::cm << " " << std::get<1>(vec_rms_vals.at(i))/units::cm << " " << std::get<2>(vec_rms_vals.at(i))/units::cm << std::endl;
+  }
+
+  double max_spread = 0;
+  double large_spread_length = 0;
+  double total_effective_length = 0;
+
+  double max_cont_length = 0;
+  double max_cont_weighted_length = 0;
+  
+  double cont_length = 0;
+  double cont_weighted_length = 0;
+
+  bool flag_prev = false;
+  
+  for (size_t i=0;i+1<local_points_vec.size();i++){
+    double length = sqrt(pow(fit_pt_vec.at(i+1).x - fit_pt_vec.at(i).x,2) + pow(fit_pt_vec.at(i+1).y - fit_pt_vec.at(i).y,2) + pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
+    if (std::get<2>(vec_rms_vals.at(i))!=0){
+      total_effective_length += length;
+      if (std::get<2>(vec_rms_vals.at(i)) > 0.4*units::cm) {
+	large_spread_length += length;
+
+	cont_length += length;
+	cont_weighted_length += length * std::get<2>(vec_rms_vals.at(i));
+	flag_prev = true;
+      }else{
+	if (flag_prev && cont_length > max_cont_length){
+	  max_cont_length = cont_length;
+	  max_cont_weighted_length = cont_weighted_length;
+	}
+	cont_length = 0;
+	cont_weighted_length = 0;
+	flag_prev = false;
+      }
+      if (std::get<2>(vec_rms_vals.at(i)) > max_spread) max_spread = std::get<2>(vec_rms_vals.at(i));
+    }
+  }
+  
+  if (max_spread > 0.7*units::cm && large_spread_length > 0.2 * total_effective_length && total_effective_length > 3*units::cm || max_spread > 1.0*units::cm && large_spread_length > 0.4 * total_effective_length) flag_shower_topology = true;
+  
+  std::cout << cluster_id << " "  << id << " " << max_spread/units::cm << " " << large_spread_length/total_effective_length << " " << max_cont_length/units::cm << " " << total_effective_length/units::cm << " " << flag_shower_trajectory << " " << flag_shower_topology << std::endl;
+  return flag_shower_topology;
+}
+
 bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
   double length = get_length();
   int ncount = std::round(length/step_size);
@@ -69,6 +191,7 @@ bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
   
   // calculate direct length, accumulated length, medium dQ/dx in each section ...
   //  std::cout << length/units::cm << " " << ncount << std::endl;
+  return flag_shower_trajectory;
 }
 
 double WCPPID::ProtoSegment::get_direct_length(int n1, int n2){
@@ -415,11 +538,15 @@ void WCPPID::ProtoSegment::clear_fit(){
 }
 
 void WCPPID::ProtoSegment::reset_associate_points(){
-  if (pcloud_associated != (ToyPointCloud*)0)
+  if (pcloud_associated != (ToyPointCloud*)0){
     delete pcloud_associated;
+    //    flag_good_associated.clear();
+  }
   pcloud_associated = 0;
-  if (pcloud_associated_steiner != (ToyPointCloud*)0)
+  if (pcloud_associated_steiner != (ToyPointCloud*)0){
     delete pcloud_associated_steiner;
+    //    flag_good_associated_steiner.clear();
+  }
   pcloud_associated_steiner = 0;
 }
 
@@ -427,6 +554,7 @@ void WCPPID::ProtoSegment::add_associate_point_steiner(WCP::WCPointCloud<double>
   if (pcloud_associated_steiner == (ToyPointCloud*)0)
     pcloud_associated_steiner = new ToyPointCloud();
   pcloud_associated_steiner->AddPoint(wcp);
+  //  flag_good_associated_steiner.push_back(true);
 }
 
 void WCPPID::ProtoSegment::add_associate_point(WCPointCloud<double>::WCPoint& wcp, WC2DPointCloud<double>::WC2DPoint& wcp_u, WC2DPointCloud<double>::WC2DPoint& wcp_v, WC2DPointCloud<double>::WC2DPoint& wcp_w){
@@ -435,7 +563,7 @@ void WCPPID::ProtoSegment::add_associate_point(WCPointCloud<double>::WCPoint& wc
   if (pcloud_associated == (ToyPointCloud*)0)
     pcloud_associated = new ToyPointCloud();
   pcloud_associated->AddPoint(wcp, wcp_u, wcp_v, wcp_w);
-  
+  // flag_good_associated.push_back(true);
   
 }
 

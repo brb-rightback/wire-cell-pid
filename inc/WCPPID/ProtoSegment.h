@@ -70,6 +70,8 @@ namespace WCPPID{
     
     //
     bool is_shower_trajectory(double step_size =10.*units::cm);
+    bool is_shower_topology();
+    
     bool get_flag_shower(){return flag_shower_trajectory || flag_shower_topology;};
     bool get_flag_shower_trajectory(){return flag_shower_trajectory;};
     bool get_flag_shower_topology(){return flag_shower_topology;};
@@ -97,7 +99,9 @@ namespace WCPPID{
     WCP::ToyPointCloud* pcloud_fit;
 
     WCP::ToyPointCloud* pcloud_associated;
+    //std::vector<bool> flag_good_associated;
     WCP::ToyPointCloud* pcloud_associated_steiner;
+    //std::vector<bool> flag_good_associated_steiner;
     //    std::vector<WCP::Point > associated_points;
 
     bool flag_shower_trajectory;
