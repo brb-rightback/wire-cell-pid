@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
   mp.set_angle_v(angle_v);
   mp.set_angle_w(angle_w);
   mp.set_ts_width(time_slice_width);
-
+  mp.init_corr_files();
 
    // test geometry ...
   const GeomWire *uwire = gds.by_planeindex(WirePlaneType_t(0),0);
