@@ -31,7 +31,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   , type(0)
 {
   bool flag_other_clusters = true;
-
+  bool flag_main_cluster = true;
+  
   // form id vs. cluster ...
   map_id_cluster[main_cluster->get_cluster_id()] = main_cluster;
   //std::cout << main_cluster->get_cluster_id() << " " << main_cluster << std::endl;
@@ -40,14 +41,14 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
     //    std::cout << (*it)->get_cluster_id() <<  " " << *it << std::endl;
   }
   //  std::cout << map_id_cluster.size() << std::endl;
-  
-  // create Steiner-inspired graph
-  main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-  // find the proto vertex ...
-  find_proto_vertex(main_cluster);
-  // fit the vertex in 3D 
-  improve_vertex(main_cluster);
-  
+  if (flag_main_cluster){
+    // create Steiner-inspired graph
+    main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+    // find the proto vertex ...
+    find_proto_vertex(main_cluster);
+    // fit the vertex in 3D 
+    improve_vertex(main_cluster);
+  }
   
   // for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
   //   std::cout << it->first->get_fit_pt() << std::endl;
@@ -68,7 +69,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   }
   
   // clustering points
-  clustering_points(main_cluster);
+  if (flag_main_cluster)
+    clustering_points(main_cluster);
   if (flag_other_clusters){
     //deal with the other clusters ...
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
