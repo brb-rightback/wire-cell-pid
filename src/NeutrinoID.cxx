@@ -30,7 +30,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   , flash_time(flash_time)
   , type(0)
 {
-  bool flag_other_clusters = false;
+  bool flag_other_clusters = true;
 
   // form id vs. cluster ...
   map_id_cluster[main_cluster->get_cluster_id()] = main_cluster;
@@ -47,8 +47,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   find_proto_vertex(main_cluster);
   // fit the vertex in 3D 
   improve_vertex(main_cluster);
-  // clustering points
-  clustering_points(main_cluster);
+  
   
   // for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
   //   std::cout << it->first->get_fit_pt() << std::endl;
@@ -62,19 +61,27 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
       //std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
       // do not break track and find other tracks ...
       if (!find_proto_vertex(*it, false, 1)) init_point_segment(*it);
-      clustering_points(*it);
       //      std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
     }
     //  deghost ...
     deghost_clusters();
   }
+  
+  // clustering points
+  clustering_points(main_cluster);
+  if (flag_other_clusters){
+    //deal with the other clusters ...
+    for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
+      clustering_points(*it);
+    }
+  }
+  
   // track shower separation
   separate_track_shower();
   
   // for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
   //   std::cout << it->first->get_fit_pt() << std::endl;
   // }
-  
   // prepare output ...
   fill_fit_parameters();
 }
@@ -90,6 +97,16 @@ void WCPPID::NeutrinoID::fill_fit_parameters(){
   }
   for (auto it = clusters_set.begin(); it!=clusters_set.end(); it++){
     (*it)->set_fit_parameters(proto_vertices, proto_segments);
+  }
+
+  PR3DClusterSelection all_clusters = other_clusters;
+  all_clusters.push_back(main_cluster);
+  for (auto it = all_clusters.begin(); it!=all_clusters.end(); it++){
+    WCPPID::PR3DCluster* temp_cluster = *it;
+    std::vector<int>& point_sub_cluster_ids = temp_cluster->get_point_sub_cluster_ids();
+    std::vector<bool>& point_flag_showers = temp_cluster->get_point_flag_showers();
+    if (point_flag_showers.size()==0)
+      point_flag_showers.resize(point_sub_cluster_ids.size(), false);
   }
 }
 
@@ -120,6 +137,7 @@ void WCPPID::NeutrinoID::clustering_points(WCPPID::PR3DCluster* temp_cluster){
     for (size_t i=0;i!=point_sub_cluster_ids.size();i++){
       //      std::cout << point_sub_cluster_ids.at(i) << std::endl;
       if (point_sub_cluster_ids.at(i) == -1) continue;
+      if (map_id_seg.find(point_sub_cluster_ids.at(i))==map_id_seg.end()) continue;
       map_id_seg[point_sub_cluster_ids.at(i)]->add_associate_point(cloud.pts[i], cloud_u.pts[i], cloud_v.pts[i], cloud_w.pts[i]);
     }
   }
@@ -129,6 +147,7 @@ void WCPPID::NeutrinoID::clustering_points(WCPPID::PR3DCluster* temp_cluster){
     std::vector<int>& point_steiner_sub_cluster_ids = temp_cluster->get_point_steiner_sub_cluster_ids();
     for (size_t i=0;i!=point_steiner_sub_cluster_ids.size();i++){
       if (point_steiner_sub_cluster_ids.at(i) == -1) continue;
+      if (map_id_seg.find(point_steiner_sub_cluster_ids.at(i))==map_id_seg.end()) continue;
       map_id_seg[point_steiner_sub_cluster_ids.at(i)]->add_associate_point_steiner(cloud.pts[i]);
     }
   }

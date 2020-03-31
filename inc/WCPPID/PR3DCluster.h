@@ -254,8 +254,8 @@ namespace WCPPID{
     void set_fit_parameters(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices);
     void set_fit_parameters(ProtoVertexSelection& temp_vertices, ProtoSegmentSelection& temp_segments);
 
-    void clustering_points_master(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
-    void clustering_points(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, int choice = 1, WCP::ToyPointCloud* pcloud = 0, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
+    void clustering_points_master(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, double search_range = 1.2*units::cm, double scaling_2d = 0.7);
+    void clustering_points(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, int choice = 1, WCP::ToyPointCloud* pcloud = 0, double search_range = 1.2*units::cm, double scaling_2d = 0.7);
 
     std::vector<int>& get_point_sub_cluster_ids(){return point_sub_cluster_ids;};
     std::vector<bool>& get_point_flag_showers(){return point_flag_showers;};
