@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
   bool flag_main_cluster_only = true; // default to run only on the main cluster
   bool flag_debug_output = true; // output
   int datatier = 0; // data=0, overlay=1, full mc=2
-
+  int flag_calib_corr = 1;
   
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
@@ -50,6 +50,9 @@ int main(int argc, char* argv[])
       break;
     case 'o':
       flag_debug_output = atoi(&argv[i][2]);
+      break;
+    case 'q':
+      flag_calib_corr = atoi(&argv[i][2]);
       break;
     }
   }
@@ -137,7 +140,7 @@ int main(int argc, char* argv[])
   mp.set_angle_v(angle_v);
   mp.set_angle_w(angle_w);
   mp.set_ts_width(time_slice_width);
-  mp.init_corr_files();
+  if (flag_calib_corr==1) mp.init_corr_files();
 
    // test geometry ...
   const GeomWire *uwire = gds.by_planeindex(WirePlaneType_t(0),0);

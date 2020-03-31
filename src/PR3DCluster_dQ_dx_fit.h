@@ -797,8 +797,8 @@ void WCPPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WCP::GeomWire*, 
 	if (overlap_v.at(i).second > 0.5) weight += close_ind_weight * pow(2*overlap_v.at(i).second-1,2);
 	if (overlap_w.at(i).second > 0.5) weight += close_col_weight * pow(2*overlap_w.at(i).second-1,2);
 	
-	FMatrix.insert(0,0) = -weight/(dx.at(0)/(0.6*units::cm)); 
-	FMatrix.insert(0,1) = weight/(dx.at(1)/(0.6*units::cm));
+	FMatrix.insert(0,0) = -weight/((dx.at(0)+0.001*units::cm)/(0.6*units::cm)); 
+	FMatrix.insert(0,1) = weight/((dx.at(1)+0.001*units::cm)/(0.6*units::cm));
       }else if (i==n_3D_pos-1){
 	double weight = 0;
 	if (flag_u) weight += dead_ind_weight;
@@ -809,8 +809,8 @@ void WCPPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WCP::GeomWire*, 
 	if (overlap_v.at(i).first > 0.5) weight += close_ind_weight * pow(2*overlap_v.at(i).first-1,2);
 	if (overlap_w.at(i).first > 0.5) weight += close_col_weight * pow(2*overlap_w.at(i).first-1,2);
 	
-	FMatrix.insert(i,i) = -weight/(dx.at(i)/(0.6*units::cm)); 
-	FMatrix.insert(i,i-1) = weight/(dx.at(i-1)/(0.6*units::cm));
+	FMatrix.insert(i,i) = -weight/((dx.at(i)+0.001*units::cm)/(0.6*units::cm)); 
+	FMatrix.insert(i,i-1) = weight/((dx.at(i-1)+0.001*units::cm)/(0.6*units::cm));
       }else{
 	double weight = 0;
 	if (flag_u) weight += dead_ind_weight;
@@ -821,9 +821,9 @@ void WCPPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WCP::GeomWire*, 
 	if (overlap_v.at(i).first + overlap_v.at(i).second > 1) weight += close_ind_weight * pow(overlap_v.at(i).first + overlap_v.at(i).second - 1,2);
 	if (overlap_w.at(i).first + overlap_w.at(i).second > 1) weight += close_col_weight * pow(overlap_w.at(i).first + overlap_w.at(i).second - 1,2);
 	
-	FMatrix.insert(i,i)=-2.*weight/(dx.at(i)/(0.6*units::cm)); 
-	FMatrix.insert(i,i+1)=weight/(dx.at(i+1)/(0.6*units::cm)); 
-	FMatrix.insert(i,i-1)=weight/(dx.at(i-1)/(0.6*units::cm));
+	FMatrix.insert(i,i)=-2.*weight/((dx.at(i)+0.001*units::cm)/(0.6*units::cm)); 
+	FMatrix.insert(i,i+1)=weight/((dx.at(i+1)+0.001*units::cm)/(0.6*units::cm)); 
+	FMatrix.insert(i,i-1)=weight/((dx.at(i-1)+0.001*units::cm)/(0.6*units::cm));
       }
     }
   }

@@ -663,8 +663,8 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
       if (overlap_v.at(i).at(j) > 0.5) weight1 += close_ind_weight * pow(overlap_v.at(i).at(j)-0.5,2);
       if (overlap_w.at(i).at(j) > 0.5) weight1 += close_col_weight * pow(overlap_w.at(i).at(j)-0.5,2);
 
-      FMatrix.coeffRef(row,row) += -weight1 * scaling/( local_dx.at(row)/(0.6*units::cm) );
-      FMatrix.coeffRef(row,col) += weight1 * scaling/( local_dx.at(col)/(0.6*units::cm) );
+      FMatrix.coeffRef(row,row) += -weight1 * scaling/( (local_dx.at(row)+0.001*units::cm)/(0.6*units::cm) );
+      FMatrix.coeffRef(row,col) += weight1 * scaling/( (local_dx.at(col)+0.001*units::cm)/(0.6*units::cm) );
     }    
   }
   
