@@ -1268,6 +1268,12 @@ int main(int argc, char* argv[])
   // Trun1->Branch("timesliceChannel",&timesliceChannel);
   // Trun1->Branch("raw_charge",&raw_charge);
   // Trun1->Branch("raw_charge_err",&raw_charge_err);
+
+  Double_t dQdx_scale = 0.1;
+  Trun1->Branch("dQdx_scale",&dQdx_scale,"dQdx_scale/D");
+  Double_t dQdx_offset = -1000;
+  Trun1->Branch("dQdx_offset",&dQdx_offset,"dQdx_offset/D");
+  
   Trun1->Fill();
 
   if (T_bad_ch!=0)
@@ -1552,7 +1558,7 @@ int main(int argc, char* argv[])
       x = pts.at(i).x/units::cm;
       y = pts.at(i).y/units::cm;
       z = pts.at(i).z/units::cm;
-      charge_save = dQ.at(i)/10.; // for display purpose ...
+      charge_save = dQ.at(i) * dQdx_scale + dQdx_offset; // for display purpose ...
       ncharge_save = dx.at(i)/units::cm;
       pu = tpu.at(i);
       pv = tpv.at(i);
