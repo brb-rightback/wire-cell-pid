@@ -739,9 +739,9 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
 
     // does not seems to be a uniform correction ... 
     if (central_U >=296 && central_U <=327 ||
-	// no charge collection in U	central_U >=336 && central_U <=337 ||
-	// no charge collection in U    central_U >=343 && central_U <=351 ||
-	// no charge collection in U	central_U >=376 && central_U <=400 ||
+	central_U >=336 && central_U <=337 ||
+	central_U >=343 && central_U <=351 ||
+	central_U >=376 && central_U <=400 ||
 	central_U >=410 && central_U <=484 ||
 	central_U >=501 && central_U <=524 ||
 	central_U >=536 && central_U <=671)
@@ -754,27 +754,43 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
     if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoSegment *sg = it->first;
+
+    //std::cout << mp.get_flag_corr() << std::endl;
+    
     for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
       WCPPID::ProtoVertex *vtx = *it1;
       Point p = vtx->get_fit_pt();
+
+      double corr = 1.;
+      if (mp.get_flag_corr()){
+	corr = mp.get_corr_factor(p, offset_u,  slope_yu,  slope_zu,  offset_v,  slope_yv,  slope_zv,  offset_w,  slope_yw,  slope_zw);
+      }
+      
       int index = vtx->get_fit_index();
-      double tmp_dQ = pos_3D(index);
+      double tmp_dQ = pos_3D(index) * corr;
       double tmp_dx = vtx->get_dx();
       double tmp_reduced_chi2 = traj_reduced_chi2.at(index);
       double tmp_pu = vtx->get_pu();
       double tmp_pv = vtx->get_pv();
       double tmp_pw = vtx->get_pw();
       double tmp_pt = vtx->get_pt();
+
+      
+
       
       vtx->set_fit(p, tmp_dQ, tmp_dx, tmp_pu, tmp_pv, tmp_pw, tmp_pt, tmp_reduced_chi2);
     }
 
-    //    PointVector& pts = sg->get_point_vec();
+    PointVector& pts = sg->get_point_vec();
     std::vector<int>& indices = sg->get_fit_index_vec();
     std::vector<double>& dQ_vec = sg->get_dQ_vec();
     std::vector<double>& reduced_chi2_vec = sg->get_reduced_chi2_vec();
     for (size_t i=0;i!=dQ_vec.size();i++){
-      dQ_vec.at(i) = pos_3D(indices.at(i));
+      double corr = 1;
+      if (mp.get_flag_corr()){
+	corr = mp.get_corr_factor(pts.at(i), offset_u,  slope_yu,  slope_zu,  offset_v,  slope_yv,  slope_zv,  offset_w,  slope_yw,  slope_zw);
+      }
+      dQ_vec.at(i) = pos_3D(indices.at(i)) * corr;
       reduced_chi2_vec.at(i) = traj_reduced_chi2.at(indices.at(i));
     }
     
