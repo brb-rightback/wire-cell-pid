@@ -116,6 +116,7 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
   Eigen::SparseMatrix<double> RV(n_2D_v, n_3D_pos) ;
   Eigen::SparseMatrix<double> RW(n_2D_w, n_3D_pos) ;
   PointVector traj_pts(n_3D_pos);
+  std::vector<double> local_dx(n_3D_pos,0);
   std::vector<double> traj_reduced_chi2(n_3D_pos,0);
   
   // initial values ...
@@ -618,6 +619,19 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
   /*   std::cout << i << " " << connected_vec.at(i).size() << " " << overlap_u.at(i).size() << " " << overlap_v.at(i).size() << " " << overlap_w.at(i).size() << std::endl; */
   /* } */
 
+  for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+    if (it->first->get_cluster_id() != cluster_id) continue;
+    WCPPID::ProtoSegment *sg = it->first;
+    std::vector<int>& indices = sg->get_fit_index_vec();
+    std::vector<double>& dx_vec = sg->get_dx_vec();
+
+    for (size_t i=0;i!=indices.size();i++){
+      local_dx.at(indices.at(i)) = dx_vec.at(i);
+      //      std::cout << (local_dx.at(indices.at(i))/(0.6*units::cm)) << std::endl;
+    }
+  }
+  
+  
   // add regularization ...
   Eigen::SparseMatrix<double> FMatrix(n_3D_pos, n_3D_pos);
   
@@ -649,10 +663,9 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
       if (overlap_v.at(i).at(j) > 0.5) weight1 += close_ind_weight * pow(overlap_v.at(i).at(j)-0.5,2);
       if (overlap_w.at(i).at(j) > 0.5) weight1 += close_col_weight * pow(overlap_w.at(i).at(j)-0.5,2);
 
-      FMatrix.coeffRef(row,row) += -weight1 * scaling;
-      FMatrix.coeffRef(row,col) += weight1 * scaling;
-    }
-    
+      FMatrix.coeffRef(row,row) += -weight1 * scaling/( local_dx.at(row)/(0.6*units::cm) );
+      FMatrix.coeffRef(row,col) += weight1 * scaling/( local_dx.at(col)/(0.6*units::cm) );
+    }    
   }
   
   // adjust regularization strength
