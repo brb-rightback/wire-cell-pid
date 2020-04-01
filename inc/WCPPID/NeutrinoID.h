@@ -71,7 +71,7 @@ namespace WCPPID{
     bool add_proto_connection(ProtoVertex *pv, ProtoSegment *ps, WCPPID::PR3DCluster* cluster);
     void organize_vertices_segments();
     
-    std::tuple<ProtoVertex*, ProtoSegment*, WCP::Point> check_end_point(WCP::PointVector& tracking_path, bool flag_front = true);
+    std::tuple<ProtoVertex*, ProtoSegment*, WCP::Point> check_end_point(WCP::PointVector& tracking_path, bool flag_front = true, double vtx_cut1 = 0.9*units::cm, double vtx_cut2 = 2.0*units::cm, double sg_cut1 = 2.0 * units::cm, double sg_cut2 = 1.2*units::cm);
     
     // get segments
     int get_num_segments(ProtoVertex *pv);

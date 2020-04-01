@@ -133,6 +133,8 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyCTPointCloud& ct_point_cloud, WC
   WCP::WC2DPointCloud<double>& cloud_v = point_cloud->get_cloud_v();
   WCP::WC2DPointCloud<double>& cloud_w = point_cloud->get_cloud_w();
 
+  TVector3 drift_dir(1,0,0);
+  
   // now form the connected components
   std::vector<int> component(num_vertices(*graph));
   const int num = connected_components(*graph,&component[0]);
@@ -210,67 +212,54 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyCTPointCloud& ct_point_cloud, WC
   	  Point p2(wp2.x,wp2.y,wp2.z);
 	  
   	  TVector3 dir1 = VHoughTrans(p1, 30*units::cm, pt_clouds.at(j));
-  	  TVector3 dir2 = VHoughTrans(p2, 30*units::cm, pt_clouds.at(k));
-  	  dir1 *= -1;
-  	  dir2 *= -1;
+	  dir1 *= -1;
+	  std::pair<int,double> result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+
+	  if (result1.first <0 && fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10.){
+	    if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<5.) dir1 = VHoughTrans(p1, 80*units::cm,pt_clouds.at(j));
+	    else if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10.) dir1 = VHoughTrans(p1, 50*units::cm,pt_clouds.at(j));
+	    dir1 *= -1;
+	    result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+	  }
+	  if (result1.first >=0){
+	    index_index_dis_dir1[j][k] = std::make_tuple(std::get<0>(index_index_dis[j][k]), result1.first, result1.second);
+  	  }
+	   
+	     
+  	 
+	    
+	  // search for iso connection ...
+	  /* if (result1.first < 0 && fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10. ){ */
+	  /*   if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<5.) dir1 = VHoughTrans(p1, 80*units::cm,pt_clouds.at(j)); */
+	  /*   else  dir1 = VHoughTrans(p1, 50*units::cm,pt_clouds.at(j)); */
+	  /*   dir1 *= -1; */
+	  /*   search_for_connection_isochronous(result1, p1, dir1, pt_clouds.at(j), pt_clouds.at(k), 80*units::cm, 10, 1.5*units::cm); */
+	  /* } */
 	  
-  	  std::pair<int,double> result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
 	  // if (result1.first <0)
 	  //   result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 6*units::cm, 1*units::cm, 25, 1.5*units::cm);
-	  
-	  // if (cluster_id==6)
+	  	  // if (cluster_id==6)
 	  //   std::cout << p1.x/units::cm << " " << p1.y/units::cm << " " << p1.z/units::cm << " " << dir1.X() << " " << dir1.Y() << " " << dir1.Z() << std::endl;
 
 	  
-  	  if (result1.first >=0){
-  	    // Point test_p1(cloud.pts.at(std::get<0>(index_index_dis[j][k])).x,cloud.pts.at(std::get<0>(index_index_dis[j][k])).y,cloud.pts.at(std::get<0>(index_index_dis[j][k])).z);
-  	    // Point test_p2(cloud.pts.at(result1.first).x,cloud.pts.at(result1.first).y,cloud.pts.at(result1.first).z);
-  	    // double dis = sqrt(pow(test_p2.x-test_p1.x,2)+pow(test_p2.y-test_p1.y,2)+pow(test_p2.z-test_p1.z,2));
-  	    // int num_points = dis/(1.5*units::cm)+1;
-  	    // int num_cut_points = 0;
-  	    // for (size_t k1=0; k1!=num_points-1; k1++){
-  	    //   Point test_p3(test_p1.x + (test_p2.x-test_p1.x) * (k1+1)/num_points ,
-  	    // 		    test_p1.y + (test_p2.y-test_p1.y) * (k1+1)/num_points ,
-  	    // 		    test_p1.z + (test_p2.z-test_p1.z) * (k1+1)/num_points );
-  	    //   double dis1 = point_cloud->get_closest_dis(test_p3);
-  	    //   if (dis1 < 1*units::cm)
-  	    // 	num_cut_points ++;
-  	    // }
-	    // // if (cluster_id==6)
-	    // //   std::cout << num_cut_points << " " << num_points << " " << dis/units::cm << std::endl;
-	    
-  	    // if (num_cut_points <=8 && num_cut_points< 0.25 * num_points + 2 && dis > 1*units::cm)
-	    index_index_dis_dir1[j][k] = std::make_tuple(std::get<0>(index_index_dis[j][k]), result1.first, result1.second);
-  	  }
-	  
-  	  std::pair<int,double> result2 = pt_clouds.at(j)->get_closest_point_along_vec(p2, dir2, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
-	  // if (result2.first <0)
-	  //   result2 = pt_clouds.at(j)->get_closest_point_along_vec(p2, dir2, 7*units::cm, 1*units::cm, 12.5, 1.5*units::cm);
+  	  
 
-  	  // if (cluster_id==6)
-	  //   std::cout << p2.x/units::cm << " " << p2.y/units::cm << " " << p2.z/units::cm << " " << dir2.X() << " " << dir2.Y() << " " << dir2.Z() << std::endl;
+	  TVector3 dir2 = VHoughTrans(p2, 30*units::cm, pt_clouds.at(k));
+	  dir2 *= -1;
+  	  std::pair<int,double> result2 = pt_clouds.at(j)->get_closest_point_along_vec(p2, dir2, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+
+	  if (result2.first <0 && fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<10.){
+	    if (fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<5.) dir2 = VHoughTrans(p2, 80*units::cm,pt_clouds.at(k));
+	    else if (fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<10.) dir2 = VHoughTrans(p2, 50*units::cm,pt_clouds.at(k));
+	    dir2 *= -1;
+	    result2 = pt_clouds.at(j)->get_closest_point_along_vec(p2, dir2, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+	  }
+	  
+  	  
+	
 	  
 	  
   	  if (result2.first >=0){
-	    
-  	    // Point test_p1(cloud.pts.at(std::get<1>(index_index_dis[j][k])).x,cloud.pts.at(std::get<1>(index_index_dis[j][k])).y,cloud.pts.at(std::get<1>(index_index_dis[j][k])).z);
-  	    // Point test_p2(cloud.pts.at(result2.first).x,cloud.pts.at(result2.first).y,cloud.pts.at(result2.first).z);
-  	    // double dis = sqrt(pow(test_p2.x-test_p1.x,2)+pow(test_p2.y-test_p1.y,2)+pow(test_p2.z-test_p1.z,2));
-  	    // int num_points = dis/(1.5*units::cm)+1;
-  	    // int num_cut_points = 0;
-  	    // for (size_t k1=0; k1!=num_points-1; k1++){
-  	    //   Point test_p3(test_p1.x + (test_p2.x-test_p1.x) * (k1+1)/num_points ,
-  	    // 		    test_p1.y + (test_p2.y-test_p1.y) * (k1+1)/num_points ,
-  	    // 		    test_p1.z + (test_p2.z-test_p1.z) * (k1+1)/num_points );
-  	    //   double dis1 = point_cloud->get_closest_dis(test_p3);
-  	    //   if ( dis1 < 1*units::cm)
-  	    // 	num_cut_points ++;
-  	    // }
-
-	    // // if (cluster_id==6)
-	    // //   std::cout << num_cut_points << " " << num_points << " " << dis/units::cm << std::endl;
-	    
-  	    // if (num_cut_points <=8 && num_cut_points < 0.25 * num_points + 2 && dis > 1*units::cm)
 	    index_index_dis_dir2[j][k] = std::make_tuple(result2.first, std::get<1>(index_index_dis[j][k]), result2.second);
   	  }
   	}
@@ -1161,6 +1150,7 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyPointCloud* ref_point_cloud){
   WCP::WC2DPointCloud<double>& cloud_v = point_cloud->get_cloud_v();
   WCP::WC2DPointCloud<double>& cloud_w = point_cloud->get_cloud_w();
 
+  TVector3 drift_dir(1,0,0);
   
   std::vector<int> component(num_vertices(*graph));
   const int num = connected_components(*graph,&component[0]);
@@ -1294,23 +1284,29 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyPointCloud* ref_point_cloud){
 	    Point p2(wp2.x,wp2.y,wp2.z);
 	    
 	    TVector3 dir1 = VHoughTrans(p1, 30*units::cm,pt_clouds.at(j));
-	    TVector3 dir2 = VHoughTrans(p2, 30*units::cm,pt_clouds.at(k));
 	    dir1 *= -1;
-	    dir2 *= -1;
-
-	    
-	    
 	    std::pair<int,double> result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
-
-	    //	    if (j==0 && k==1){
-	    //std::cout << "Xin5_2: " << wp1.index << " " << wp1.index << " " << p1 << " " << dir1.X() << " " << dir1.Y() << " " << dir1.Z() << " " << result1.first << " " << std::endl;
-	    //	    }
-	    
+	    if (result1.first < 0 && fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10.){
+	      if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10.) dir1 = VHoughTrans(p1, 80*units::cm,pt_clouds.at(j)); 
+	      else if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10.) dir1 = VHoughTrans(p1, 50*units::cm,pt_clouds.at(j));
+	      dir1 *= -1;
+	      result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+	    }
 	    if (result1.first >=0){
 	      index_index_dis_dir1[j][k] = std::make_tuple(std::get<0>(index_index_dis[j][k]), result1.first, result1.second);
 	    }
 	    
+	   
+
+	    TVector3 dir2 = VHoughTrans(p2, 30*units::cm,pt_clouds.at(k));
+	    dir2 *= -1;
 	    std::pair<int,double> result2 = pt_clouds.at(j)->get_closest_point_along_vec(p2, dir2, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+	    if (result2.first <0 && fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<10.){
+	      if (fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<10.) dir2 = VHoughTrans(p2, 80*units::cm,pt_clouds.at(k));
+	      else if (fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<10.) dir2 = VHoughTrans(p2, 50*units::cm,pt_clouds.at(k));
+	      dir2 *= -1;
+	      result2 = pt_clouds.at(j)->get_closest_point_along_vec(p2, dir2, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+	    }
 	    
 	    if (result2.first >=0){
 	      index_index_dis_dir2[j][k] = std::make_tuple(result2.first, std::get<1>(index_index_dis[j][k]), result2.second);
@@ -1398,7 +1394,7 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyPointCloud* ref_point_cloud){
 	    }else{
 	      auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),WCPPID::EdgeProp(std::get<2>(index_index_dis_dir1[j][k])),*graph);
 	    }
-	    //	    std::cout << "Xin5: " << std::get<0>(index_index_dis_dir1[j][k]) << " " << std::get<1>(index_index_dis_dir1[j][k]) << " " << std::get<2>(index_index_dis_dir1[j][k]) << std::endl;
+	    //std::cout << "Xin5: " << std::get<0>(index_index_dis_dir1[j][k]) << " " << std::get<1>(index_index_dis_dir1[j][k]) << " " << std::get<2>(index_index_dis_dir1[j][k])/units::cm << " " << cloud.pts[std::get<0>(index_index_dis_dir1[j][k])].x << " " << cloud.pts[std::get<0>(index_index_dis_dir1[j][k])].y << " " << cloud.pts[std::get<0>(index_index_dis_dir1[j][k])].z << " -> " << cloud.pts[std::get<1>(index_index_dis_dir1[j][k])].x << " " << cloud.pts[std::get<1>(index_index_dis_dir1[j][k])].y << " " << cloud.pts[std::get<1>(index_index_dis_dir1[j][k])].z <<std::endl;
 	  }
 	  if (std::get<0>(index_index_dis_dir2[j][k])>=0){
 	    if (std::get<2>(index_index_dis_dir2[j][k])>5*units::cm){
@@ -1426,3 +1422,78 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyPointCloud* ref_point_cloud){
   
 }
 
+
+void WCPPID::PR3DCluster::search_for_connection_isochronous(std::pair<int,double>& result1, WCP::Point& p1, TVector3& dir1, ToyPointCloud* pcloud1, ToyPointCloud* pcloud2, double search_distance, double angle_cut, double tran_dis_cut){
+  TVector3 drift_dir(1,0,0);
+  if (result1.first <0 && fabs(drift_dir.Angle(dir1)/3.1415926*180.-90.) < angle_cut){ 
+    // isochrounous track situation ... 
+    dir1 = dir1.Unit();
+    TVector3 dir2 = dir1.Cross(drift_dir);
+    dir2 = dir2.Unit(); // in plane
+    TVector3 dir3 = dir1.Cross(dir2);
+
+    // calculate RMS values
+    double rms[3]={0,0,0};
+    double mean[3]={0,0,0};
+    std::vector<std::pair<WCP::SlimMergeGeomCell*,Point>>pts = pcloud1->get_closest_points(p1,30*units::cm);
+
+    if (pts.size()<=1) return;
+    
+    for (size_t i=0;i!=pts.size();i++){
+      TVector3 dir(pts.at(i).second.x - p1.x, pts.at(i).second.y - p1.y, pts.at(i).second.z - p1.z);
+      double tmp1 = dir.Dot(dir1);
+      double tmp2 = dir.Dot(dir2);
+      double tmp3 = dir.Dot(dir3);
+
+      mean[0] += tmp1;
+      rms[0] += pow(tmp1,2);
+
+      mean[1] += tmp2;
+      rms[1] += pow(tmp2,2);
+
+      mean[2] += tmp3;
+      rms[2] += pow(tmp3,2);
+    }
+    rms[0] = sqrt( (rms[0] - pow(mean[0],2)/pts.size())/(pts.size()-1.));
+    rms[1] = sqrt( (rms[1] - pow(mean[1],2)/pts.size())/(pts.size()-1.));
+    rms[2] = sqrt( (rms[2] - pow(mean[2],2)/pts.size())/(pts.size()-1.));
+    mean[0] /= pts.size();
+    mean[1] /= pts.size();
+    mean[2] /= pts.size();
+    double orig_dis = sqrt(pow(mean[0],2) + pow(mean[1],2) + pow(mean[2],2));
+    //    std::cout << rms[0]/units::cm << " " << rms[1]/units::cm << " " << rms[2]/units::cm << std::endl;
+    /* 	      std::cout << dir1.X() << " " << dir1.Y() << " " << dir1.Z() << " " << dir1_2.X() << " " << dir1_2.Y() << " " << dir1_2.Z() << " " << dir1_3.X() << " " << dir1_3.Y() << " " << dir1_3.Z() << std::endl; */
+    WCP::WCPointCloud<double>& tmp_cloud = pcloud2->get_cloud(); 
+    double min_dis = 1e9; int min_index = -1; 
+    double min_dis1, min_dis2, min_dis3; 
+    for (size_t qx = 0; qx!= tmp_cloud.pts.size(); qx++){ 
+      TVector3 tmp_dir(tmp_cloud.pts.at(qx).x - p1.x, tmp_cloud.pts.at(qx).y - p1.y, tmp_cloud.pts.at(qx).z - p1.z); 
+      double tmp_dis = tmp_dir.Mag();
+      double tmp_dis1 = tmp_dir.Dot(dir1); 
+      double tmp_dis2 = tmp_dir.Dot(dir2); 
+      double tmp_dis3 = tmp_dir.Dot(dir3); 
+      if (fabs(tmp_dis3)<tran_dis_cut && fabs(tmp_dis3) < rms[2]/orig_dis * tmp_dis || fabs(tmp_dis3) < 0.9*units::cm){ 
+	double value = pow(2*tmp_dis1/search_distance,2) + pow(tmp_dis2*orig_dis,2)/(pow(rms[0]*tmp_dis,2)+pow(rms[1]*tmp_dis,2))
+	  + pow(tmp_dis3*orig_dis,2)/pow(rms[2]*tmp_dis,2);
+	if (value < min_dis){ 
+	  min_dis = value;
+	  min_index = qx; 
+	  min_dis1 = tmp_dis1; 
+	  min_dis2 = tmp_dis2;
+	  min_dis3 = tmp_dis3;
+	} 
+
+      }
+    }
+    if (min_index >=0){
+      result1.first = tmp_cloud.pts[min_index].index;
+      result1.second = sqrt(pow(tmp_cloud.pts[min_index].x-p1.x,2)+pow(tmp_cloud.pts[min_index].y-p1.y,2)+pow(tmp_cloud.pts[min_index].z-p1.z,2));
+      std::cout << p1 << " " << min_dis1/units::cm << " " << min_dis2/units::cm << " " << min_dis3/units::cm << " " << sqrt(pow(min_dis1,2) + pow(min_dis2,2) + pow(min_dis3,2))/units::cm << " " << tmp_cloud.pts[min_index].x << " " << tmp_cloud.pts[min_index].y << " " << tmp_cloud.pts[min_index].z << std::endl;
+    }
+      
+    
+ 
+  } 
+
+
+}

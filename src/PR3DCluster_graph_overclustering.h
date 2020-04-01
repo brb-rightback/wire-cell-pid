@@ -51,6 +51,7 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
   WCP::WC2DPointCloud<double>& cloud_v = point_cloud->get_cloud_v();
   WCP::WC2DPointCloud<double>& cloud_w = point_cloud->get_cloud_w();
 
+  TVector3 drift_dir(1,0,0);
   
   // now form the connected components
   std::vector<int> component(num_vertices(*graph));
@@ -120,19 +121,32 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
   	  Point p2(wp2.x,wp2.y,wp2.z);
 	  
   	  TVector3 dir1 = VHoughTrans(p1, 30*units::cm, pt_clouds.at(j));
-  	  TVector3 dir2 = VHoughTrans(p2, 30*units::cm, pt_clouds.at(k));
-  	  dir1 *= -1;
-  	  dir2 *= -1;
+	  dir1 *= -1;
+	  std::pair<int,double> result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+  	  if (result1.first < 0 && fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10.){
+	    if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10.) dir1 = VHoughTrans(p1, 80*units::cm,pt_clouds.at(j)); 
+	    else if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10.) dir1 = VHoughTrans(p1, 50*units::cm,pt_clouds.at(j));
+	    dir1 *= -1;
+	    result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+	  }
 	  
-  	  std::pair<int,double> result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+  	  
 	  if (result1.first >=0){
 	    index_index_dis_dir1[j][k] = std::make_tuple(std::get<0>(index_index_dis[j][k]), result1.first, result1.second);
 	    bool flag = check_connectivity(index_index_dis_dir1[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k));
 	    if (!flag) index_index_dis_dir1[j][k] = std::make_tuple(-1,-1,1e9);
 	    index_index_dis_dir1[k][j] = index_index_dis_dir1[j][k];
 	  }
-  	  
+	  
+  	  TVector3 dir2 = VHoughTrans(p2, 30*units::cm, pt_clouds.at(k));
+  	  dir2 *= -1;
 	  std::pair<int,double> result2 = pt_clouds.at(j)->get_closest_point_along_vec(p2, dir2, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+	  if (result2.first <0 && fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<10.){
+	    if (fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<10.) dir2 = VHoughTrans(p2, 80*units::cm,pt_clouds.at(k));
+	    else if (fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<10.) dir2 = VHoughTrans(p2, 50*units::cm,pt_clouds.at(k));
+	    dir2 *= -1;
+	    result2 = pt_clouds.at(j)->get_closest_point_along_vec(p2, dir2, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+	  }
 	  if (result2.first >=0){
 	    index_index_dis_dir2[j][k] = std::make_tuple(result2.first, std::get<1>(index_index_dis[j][k]), result2.second);
 	    bool flag = check_connectivity(index_index_dis_dir2[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k));

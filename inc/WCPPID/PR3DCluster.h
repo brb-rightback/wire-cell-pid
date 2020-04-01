@@ -88,6 +88,7 @@ namespace WCPPID{
     void Connect_graph(WCP::ToyPointCloud* ref_point_cloud = 0);
     void Connect_graph(WCP::ToyCTPointCloud& ct_point_cloud, WCP::ToyPointCloud* ref_point_cloud = 0);
     void Del_graph();
+    void search_for_connection_isochronous(std::pair<int,double>& result1, WCP::Point& p1, TVector3& dir1, WCP::ToyPointCloud* pcloud1, WCP::ToyPointCloud* pcloud2, double search_distance, double angle_cut, double tran_dis_cut);
 
     // protect against over clustering
     std::vector<WCP::SMGCSelection> Examine_graph(WCP::ToyCTPointCloud& ct_point_cloud);
