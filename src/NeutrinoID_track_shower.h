@@ -3,7 +3,7 @@ void WCPPID::NeutrinoID::separate_track_shower(){
     WCPPID::ProtoSegment *sg = it->first;
     sg->is_shower_trajectory();
     sg->is_shower_topology();
-    //    std::cout <<" C: " << sg->get_cluster_id() << " " << sg->get_id() << std::endl;
+    //  std::cout <<" C: " << sg->get_cluster_id() << " " << sg->get_id() << " " << sg->get_flag_shower_trajectory() << " " << sg->get_flag_shower_topology() << std::endl;
   }
   PR3DClusterSelection all_clusters = other_clusters;
   all_clusters.push_back(main_cluster);
