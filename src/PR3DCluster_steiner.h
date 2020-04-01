@@ -15,6 +15,7 @@ void WCPPID::PR3DCluster::create_steiner_graph(WCP::ToyCTPointCloud& ct_point_cl
     
     WCPPID::calc_sampling_points(gds,new_cluster,nrebin, frame_length, unit_dis,false);
     
+    
     new_cluster->Create_point_cloud(); 
     new_cluster->Create_graph(ct_point_cloud, point_cloud);
 

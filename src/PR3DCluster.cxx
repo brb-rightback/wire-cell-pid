@@ -603,16 +603,16 @@ TVector3 WCPPID::PR3DCluster::calc_PCA_dir(Point& p, double dis){
 
 
 //Hough Transformation 
-TVector3 WCPPID::PR3DCluster::VHoughTrans(Point&p, double dis, ToyPointCloud *point_cloud1){
+TVector3 WCPPID::PR3DCluster::VHoughTrans(Point&p, double dis, ToyPointCloud *point_cloud1, bool flag_print){
   double theta, phi;
-  std::pair<double,double> angles_1 = HoughTrans(p,dis, point_cloud1);
+  std::pair<double,double> angles_1 = HoughTrans(p,dis, point_cloud1, flag_print);
   theta = angles_1.first;
   phi = angles_1.second;
   TVector3 temp(sin(theta)*cos(phi),sin(theta)*sin(phi),cos(theta));
   return temp;
 }
 
-std::pair<double,double> WCPPID::PR3DCluster::HoughTrans(Point&p , double dis, ToyPointCloud *point_cloud1){
+std::pair<double,double> WCPPID::PR3DCluster::HoughTrans(Point&p , double dis, ToyPointCloud *point_cloud1, bool flag_print){
   double theta, phi;
   TH2F *hough = new TH2F("","",180,0.,3.1415926,360,-3.1415926,3.1415926);
   double x0 = p.x;
@@ -621,7 +621,7 @@ std::pair<double,double> WCPPID::PR3DCluster::HoughTrans(Point&p , double dis, T
   
   std::vector<std::pair<WCP::SlimMergeGeomCell*,Point>>pts = point_cloud1->get_closest_points(p,dis);
 
-  // std::cout << "Num " <<  pts.size() << std::endl;
+  
     
   double x,y,z,q;
   for (size_t i=0; i!=pts.size(); i++){
@@ -629,6 +629,10 @@ std::pair<double,double> WCPPID::PR3DCluster::HoughTrans(Point&p , double dis, T
     y = pts.at(i).second.y;
     z = pts.at(i).second.z;
     q = pts.at(i).first->get_q()/pts.at(i).first->get_sampling_points().size();
+
+    // if (flag_print)
+    //   std::cout << i << " " << pts.at(i).first->get_q() << " " << pts.at(i).first->get_sampling_points().size() << std::endl;
+
     if (q<=0) continue;
 
     //  for (int i1=0; i1!=5; i1++){
@@ -636,10 +640,15 @@ std::pair<double,double> WCPPID::PR3DCluster::HoughTrans(Point&p , double dis, T
     //	for (int k1=0; k1!=5; k1++){
     TVector3 vec(x-x0 ,y-y0 ,z-z0 );
     hough->Fill(vec.Theta(),vec.Phi(), q );
+    
   }
   int maxbin = hough->GetMaximumBin();
   int a,b,c;
   hough->GetBinXYZ(maxbin,a,b,c);
+
+  if (flag_print)
+    std::cout << "Num " <<  pts.size() << " " << maxbin << " " << a << " " << b << " " << c << " " << hough->GetSum() << std::endl;
+  
   theta = hough->GetXaxis()->GetBinCenter(a);
   phi = hough->GetYaxis()->GetBinCenter(b);
 

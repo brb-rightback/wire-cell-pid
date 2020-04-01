@@ -472,16 +472,12 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyCTPointCloud& ct_point_cloud, WC
 	
   	// establish the path ... 
   	if (std::get<0>(index_index_dis_mst[j][k])>=0){
-	  // auto edge = add_edge(std::get<0>(index_index_dis_mst[j][k]),std::get<1>(index_index_dis_mst[j][k]),*graph);
-	  // if (edge.second){
 	  if (std::get<2>(index_index_dis_mst[j][k])>5*units::cm){
 	    auto edge = add_edge(std::get<0>(index_index_dis_mst[j][k]),std::get<1>(index_index_dis_mst[j][k]),std::get<2>(index_index_dis_mst[j][k]),*graph);
-	    //	    (*graph)[edge.first].dist = std::get<2>(index_index_dis_mst[j][k]);
 	  }else{
 	    auto edge = add_edge(std::get<0>(index_index_dis_mst[j][k]),std::get<1>(index_index_dis_mst[j][k]),std::get<2>(index_index_dis_mst[j][k]),*graph);
-	    //	    (*graph)[edge.first].dist = std::get<2>(index_index_dis_mst[j][k]);
 	  }
-	    //}
+	  //	  std::cout << "Xin1: " << std::get<0>(index_index_dis_mst[j][k]) << " " << std::get<1>(index_index_dis_mst[j][k]) << " " << std::get<2>(index_index_dis_mst[j][k]) << std::endl;
   	}
 
 	// if (std::get<0>(index_index_dis[j][k])>=0){
@@ -496,28 +492,20 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyCTPointCloud& ct_point_cloud, WC
   	// }
 	if (std::get<0>(index_index_dis_dir_mst[j][k])>=0){
 	  if (std::get<0>(index_index_dis_dir1[j][k])>=0){
-	    //auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),*graph);
-	    //if (edge.second){
 	    if (std::get<2>(index_index_dis_dir1[j][k])>5*units::cm){
 	      auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),std::get<2>(index_index_dis_dir1[j][k])*1.1,*graph);
-	      // (*graph)[edge.first].dist = std::get<2>(index_index_dis_dir1[j][k])*1.1;
 	    }else{
 	      auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),std::get<2>(index_index_dis_dir1[j][k]),*graph);
-	      // (*graph)[edge.first].dist = std::get<2>(index_index_dis_dir1[j][k]);
 	    }
-	      //}
+	    //	    std::cout << "Xin2: " << std::get<0>(index_index_dis_dir1[j][k]) << " " << std::get<1>(index_index_dis_dir1[j][k]) << " " << std::get<2>(index_index_dis_dir1[j][k]) << std::endl;
 	  }
 	  if (std::get<0>(index_index_dis_dir2[j][k])>=0){
-	    //auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]),*graph);
-	    //if (edge.second){
-	      if (std::get<2>(index_index_dis_dir2[j][k])>5*units::cm){
+	    if (std::get<2>(index_index_dis_dir2[j][k])>5*units::cm){
 		auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]), std::get<2>(index_index_dis_dir2[j][k])*1.1,*graph);
-		//	(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir2[j][k])*1.1;
-	      }else{
+	    }else{
 		auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]),std::get<2>(index_index_dis_dir2[j][k]),*graph);
-		//(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir2[j][k]);
-	      }
-	      //}
+	    }
+	    //	    std::cout << "Xin3: " << std::get<0>(index_index_dis_dir2[j][k]) << " " << std::get<1>(index_index_dis_dir2[j][k]) << " " << std::get<2>(index_index_dis_dir2[j][k]) << std::endl;
 	  }
 	}
 	
@@ -546,12 +534,13 @@ void WCPPID::PR3DCluster::Create_graph(WCP::ToyCTPointCloud& ct_point_cloud, WCP
   const int N = point_cloud->get_num_points();
   graph = new MCUGraph(N);
 
-  std::cout <<"Create Graph! " << cluster_id  << " " << N << std::endl;
+
   
   Establish_close_connected_graph();
   Connect_graph(ct_point_cloud, ref_point_cloud);
   Connect_graph(ref_point_cloud);
-    
+
+  std::cout <<"Create Graph! " << cluster_id  << " " << N << " " << num_edges(*graph) << std::endl;
 }
 
 
@@ -1308,52 +1297,40 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyPointCloud* ref_point_cloud){
 	    TVector3 dir2 = VHoughTrans(p2, 30*units::cm,pt_clouds.at(k));
 	    dir1 *= -1;
 	    dir2 *= -1;
+
+	    
 	    
 	    std::pair<int,double> result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
+
+	    //	    if (j==0 && k==1){
+	    //std::cout << "Xin5_2: " << wp1.index << " " << wp1.index << " " << p1 << " " << dir1.X() << " " << dir1.Y() << " " << dir1.Z() << " " << result1.first << " " << std::endl;
+	    //	    }
 	    
 	    if (result1.first >=0){
-	      // Point test_p1(cloud.pts.at(std::get<0>(index_index_dis[j][k])).x,cloud.pts.at(std::get<0>(index_index_dis[j][k])).y,cloud.pts.at(std::get<0>(index_index_dis[j][k])).z);
-	      // Point test_p2(cloud.pts.at(result1.first).x,cloud.pts.at(result1.first).y,cloud.pts.at(result1.first).z);
-	      // double dis = sqrt(pow(test_p2.x-test_p1.x,2)+pow(test_p2.y-test_p1.y,2)+pow(test_p2.z-test_p1.z,2));
-	      // int num_points = dis/(1.5*units::cm)+1;
-	      // int num_cut_points = 0;
-	      // for (size_t k1=0; k1!=num_points-1; k1++){
-	      // 	Point test_p3(test_p1.x + (test_p2.x-test_p1.x) * (k1+1)/num_points ,
-	      // 		      test_p1.y + (test_p2.y-test_p1.y) * (k1+1)/num_points ,
-	      // 		      test_p1.z + (test_p2.z-test_p1.z) * (k1+1)/num_points );
-	      // 	double dis1 = point_cloud->get_closest_dis(test_p3);
-	      // 	if (dis1 < 1*units::cm)
-	      // 	  num_cut_points ++;
-	      // }
-	      // if (num_cut_points <=8 && num_cut_points< 0.25 * num_points + 2 && dis > 5*units::cm)
 	      index_index_dis_dir1[j][k] = std::make_tuple(std::get<0>(index_index_dis[j][k]), result1.first, result1.second);
 	    }
 	    
 	    std::pair<int,double> result2 = pt_clouds.at(j)->get_closest_point_along_vec(p2, dir2, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
 	    
 	    if (result2.first >=0){
-	      
-	      // Point test_p1(cloud.pts.at(std::get<1>(index_index_dis[j][k])).x,cloud.pts.at(std::get<1>(index_index_dis[j][k])).y,cloud.pts.at(std::get<1>(index_index_dis[j][k])).z);
-	      // Point test_p2(cloud.pts.at(result2.first).x,cloud.pts.at(result2.first).y,cloud.pts.at(result2.first).z);
-	      // double dis = sqrt(pow(test_p2.x-test_p1.x,2)+pow(test_p2.y-test_p1.y,2)+pow(test_p2.z-test_p1.z,2));
-	      // int num_points = dis/(1.5*units::cm)+1;
-	      // int num_cut_points = 0;
-	      // for (size_t k1=0; k1!=num_points-1; k1++){
-	      // 	Point test_p3(test_p1.x + (test_p2.x-test_p1.x) * (k1+1)/num_points ,
-	      // 		      test_p1.y + (test_p2.y-test_p1.y) * (k1+1)/num_points ,
-	      // 		      test_p1.z + (test_p2.z-test_p1.z) * (k1+1)/num_points );
-	      // 	double dis1 = point_cloud->get_closest_dis(test_p3);
-	      // 	if ( dis1 < 1*units::cm)
-	      // 	  num_cut_points ++;
-	      // }
-	      
-	      // if (num_cut_points <=8 && num_cut_points < 0.25 * num_points + 2 && dis > 5*units::cm)
 	      index_index_dis_dir2[j][k] = std::make_tuple(result2.first, std::get<1>(index_index_dis[j][k]), result2.second);
 	    }
 	  }
       }
     }
 
+    // test ...
+    /* for (int j=0;j!=num;j++){ */
+    /*   for (int k=j+1;k!=num;k++){ */
+    /* 	if (std::get<0>(index_index_dis_dir1[j][k])>=0){ */
+    /* 	  std::cout << "Xin5_1: " << j << " " << k << " " << std::get<0>(index_index_dis_dir1[j][k]) << " " << std::get<1>(index_index_dis_dir1[j][k]) << " " << std::get<2>(index_index_dis_dir1[j][k]) << std::endl; */
+    /* 	} */
+    /* 	if (std::get<0>(index_index_dis_dir2[j][k])>=0){ */
+    /* 	  std::cout << "Xin6_1: " << std::get<0>(index_index_dis_dir2[j][k]) << " " << std::get<1>(index_index_dis_dir2[j][k]) << " " << std::get<2>(index_index_dis_dir2[j][k]) << std::endl; */
+    /* 	} */
+    /*   } */
+    /* } */
+    
     // MST for the directionality ...
     {
       const int N = num;
@@ -1407,42 +1384,29 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyPointCloud* ref_point_cloud){
 	  
 	  if (std::get<2>(index_index_dis_mst[j][k])>5*units::cm){
 	    auto edge = add_edge(std::get<0>(index_index_dis_mst[j][k]),std::get<1>(index_index_dis_mst[j][k]),WCPPID::EdgeProp(std::get<2>(index_index_dis_mst[j][k])),*graph);
-	    // (*graph)[edge.first].dist = std::get<2>(index_index_dis_mst[j][k]);
 	  }else{
 	    auto edge = add_edge(std::get<0>(index_index_dis_mst[j][k]),std::get<1>(index_index_dis_mst[j][k]),WCPPID::EdgeProp(std::get<2>(index_index_dis_mst[j][k])),*graph);
-	    // (*graph)[edge.first].dist = std::get<2>(index_index_dis_mst[j][k]);
 	  }
+	  // std::cout << "Xin4: " << std::get<0>(index_index_dis_mst[j][k]) << " " << std::get<1>(index_index_dis_mst[j][k]) << " " << std::get<2>(index_index_dis_mst[j][k]) << std::endl;
 	  
 	}
 
 	if (std::get<0>(index_index_dis_dir_mst[j][k])>=0){
 	  if (std::get<0>(index_index_dis_dir1[j][k])>=0){
-	    //auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),*graph);
-	    //if (edge.second){
 	    if (std::get<2>(index_index_dis_dir1[j][k])>5*units::cm){
 	      auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),WCPPID::EdgeProp(std::get<2>(index_index_dis_dir1[j][k])*1.2),*graph);
-	       //(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir1[j][k])*1.2;
-		// }else if (std::get<2>(index_index_dis_dir1[j][k])>2*units::cm){
-		// 	(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir1[j][k])*1.1;
 	    }else{
 	      auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]),WCPPID::EdgeProp(std::get<2>(index_index_dis_dir1[j][k])),*graph);
-	      //(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir1[j][k]);
 	    }
-	      // }
+	    //	    std::cout << "Xin5: " << std::get<0>(index_index_dis_dir1[j][k]) << " " << std::get<1>(index_index_dis_dir1[j][k]) << " " << std::get<2>(index_index_dis_dir1[j][k]) << std::endl;
 	  }
 	  if (std::get<0>(index_index_dis_dir2[j][k])>=0){
-	    //auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]),*graph);
-	    // if (edge.second){
-	      if (std::get<2>(index_index_dis_dir2[j][k])>5*units::cm){
+	    if (std::get<2>(index_index_dis_dir2[j][k])>5*units::cm){
 		auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]),WCPPID::EdgeProp(std::get<2>(index_index_dis_dir2[j][k])*1.2),*graph);
-		//	(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir2[j][k])*1.2;
-		// }else if(std::get<2>(index_index_dis_dir2[j][k])>2*units::cm){
-		// 	(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir2[j][k])*1.1;
-	      }else{
+	    }else{
 		auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]),WCPPID::EdgeProp(std::get<2>(index_index_dis_dir2[j][k])),*graph);
-		//		(*graph)[edge.first].dist = std::get<2>(index_index_dis_dir2[j][k]);
-	      }
-	      // }
+	    }
+	    //	    std::cout << "Xin6: " << std::get<0>(index_index_dis_dir2[j][k]) << " " << std::get<1>(index_index_dis_dir2[j][k]) << " " << std::get<2>(index_index_dis_dir2[j][k]) << std::endl;
 	  }
 	}
 	

@@ -32,6 +32,20 @@ WCPPID::PR3DCluster* WCPPID::Improve_PR3DCluster_2(WCPPID::PR3DCluster* cluster,
   cluster->remove_same_mcell_steiner_edges();
   cluster->Del_graph();
 
+
+  // {
+  //   PointVector tmp_pts;
+  //   for (auto it = cluster->get_path_wcps().begin(); it!= cluster->get_path_wcps().end(); it++){
+  //     Point tmp_p((*it).x, (*it).y, (*it).z);
+  //     tmp_pts.push_back(tmp_p);
+  //   }
+  //   double tmp_length = 0;
+  //   for (size_t i=0;i+1<tmp_pts.size();i++){
+  //     tmp_length += sqrt(pow(tmp_pts.at(i+1).x - tmp_pts.at(i).x,2)+pow(tmp_pts.at(i+1).y - tmp_pts.at(i).y,2)+pow(tmp_pts.at(i+1).z - tmp_pts.at(i).z,2));
+  //   }
+    
+  //   std::cout << wcps1.first.x << " " << wcps1.first.y << " " << wcps1.first.z << "; " <<  wcps1.second.x << " " << wcps1.second.y << " " << wcps1.second.z << "; " << fabs(wcps1.first.x - wcps1.second.x)/(2.22*units::mm) + fabs(wcps1.first.index_u - wcps1.second.index_u)  + fabs(wcps1.first.index_v - wcps1.second.index_v) + fabs(wcps1.first.index_w - wcps1.second.index_w) << " " << cluster->get_path_wcps().size() << " " << tmp_length/units::cm << std::endl;
+  // }
   
   
   // include dead channels ...
@@ -42,6 +56,7 @@ WCPPID::PR3DCluster* WCPPID::Improve_PR3DCluster_2(WCPPID::PR3DCluster* cluster,
   ToyPointCloud* ref_point_cloud = cluster->get_point_cloud();
   temp_cluster->Create_point_cloud();
   temp_cluster->Create_graph(ct_point_cloud, ref_point_cloud);
+  
 
   // {
   //   MCUGraph *graph = temp_cluster->get_graph();
@@ -53,18 +68,37 @@ WCPPID::PR3DCluster* WCPPID::Improve_PR3DCluster_2(WCPPID::PR3DCluster* cluster,
   
   //std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_highest_lowest_wcps();
   std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_two_boundary_wcps();
-  //std::cout << wcps.first.x << " " << wcps.first.y << " " << wcps.first.z << "; " <<
-  // wcps.second.x << " " << wcps.second.y << " " << wcps.second.z << "; " << fabs(wcps.first.x - wcps.second.x)/(2.22*units::mm) + fabs(wcps.first.index_u - wcps.second.index_u)  + fabs(wcps.first.index_v - wcps.second.index_v) + fabs(wcps.first.index_w - wcps.second.index_w) << std::endl;
+
+  
   temp_cluster->establish_same_mcell_steiner_edges(gds,false);
   temp_cluster->dijkstra_shortest_paths(wcps.first);
   temp_cluster->cal_shortest_path(wcps.second);
   temp_cluster->remove_same_mcell_steiner_edges();
   temp_cluster->Del_graph();
   temp_cluster->Del_point_cloud();
+
+
   //WCPPID::PR3DCluster *new_cluster = Improve_PR3DCluster(temp_cluster, ct_point_cloud, gds, holder);
+
+  // {
+  //   PointVector tmp_pts;
+  //   for (auto it = temp_cluster->get_path_wcps().begin(); it!= temp_cluster->get_path_wcps().end(); it++){
+  //     Point tmp_p((*it).x, (*it).y, (*it).z);
+  //     tmp_pts.push_back(tmp_p);
+  //     //std::cout << "{" << tmp_p.x << ", " << tmp_p.y << ", " << tmp_p.z << ", " << (*it).index << "}, " << std::endl;
+  //   }
+  //   double tmp_length = 0;
+  //   for (size_t i=0;i+1<tmp_pts.size();i++){
+  //     tmp_length += sqrt(pow(tmp_pts.at(i+1).x - tmp_pts.at(i).x,2)+pow(tmp_pts.at(i+1).y - tmp_pts.at(i).y,2)+pow(tmp_pts.at(i+1).z - tmp_pts.at(i).z,2));
+  //   }
+  
+  //   std::cout << wcps.first.x << " " << wcps.first.y << " " << wcps.first.z << " " << wcps.first.index << "; " <<  wcps.second.x << " " << wcps.second.y << " " << wcps.second.z << " " << wcps.second.index << "; "  << temp_cluster->get_path_wcps().size() << " " << tmp_length/units::cm << std::endl;
+  // }
+
    
-   
-   
+
+
+      
    // include original inefficient channels ... 
    WCPPID::PR3DCluster *new_cluster = Improve_PR3DCluster(cluster, temp_cluster, ct_point_cloud, gds, holder);
 
@@ -598,6 +632,7 @@ WCPPID::PR3DCluster* WCPPID::Improve_PR3DCluster_1(WCPPID::PR3DCluster* cluster,
     for (auto it1 = temp_mcells.begin(); it1!=temp_mcells.end(); it1++){
       SlimMergeGeomCell *mcell = (*it1);
       new_cluster->AddCell(mcell,time_slice);
+      //      std::cout << time_slice << " " << mcell->get_q() << std::endl;
     }
   }
   

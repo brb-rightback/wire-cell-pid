@@ -75,8 +75,8 @@ namespace WCPPID{
     //Hough Transformation ...
     std::pair<double,double> HoughTrans(WCP::Point& p, double dis);
     TVector3 VHoughTrans(WCP::Point& p, double dis);
-    std::pair<double,double> HoughTrans(WCP::Point& p, double dis, WCP::ToyPointCloud *point_cloud1);
-    TVector3 VHoughTrans(WCP::Point& p, double dis, WCP::ToyPointCloud *point_cloud1);
+    std::pair<double,double> HoughTrans(WCP::Point& p, double dis, WCP::ToyPointCloud *point_cloud1, bool flag_print = false);
+    TVector3 VHoughTrans(WCP::Point& p, double dis, WCP::ToyPointCloud *point_cloud1, bool flag_print = false);
 
     TVector3 calc_PCA_dir(WCP::Point& p, double dis);
     TVector3 calc_PCA_dir(WCP::Point& p, WCP::PointVector& pts);

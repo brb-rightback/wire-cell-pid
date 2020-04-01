@@ -1418,7 +1418,7 @@ int main(int argc, char* argv[])
 	    real_cluster_id =new_cluster->get_cluster_id()*1000 + point_sub_cluster_ids.at(i);
 	  }
 	}
-	
+	//	real_cluster_id =new_cluster->get_cluster_id();
 	
 	sub_cluster_id =  new_cluster->get_cluster_id();//*1000;	  
 	

@@ -180,8 +180,13 @@ void WCPPID::calc_sampling_points(WCP::GeomDataSource& gds, WCP::SlimMergeGeomCe
 	    index_u = wire_other->index();
 	  }
 	}
+
+	//if (charge1+charge2+charge3<=0) continue;
+
 	sampling_points.push_back(point);
 	sampling_points_wires.push_back(std::make_tuple(index_u, index_v, index_w));
+
+	
 	//std::cout << index_u << " " << index_v << " " <<index_w << std::endl;
       }
       //std::cout << "A: " <<dis_limit[0] << " " << dis << " " << dis_limit[1] << std::endl; 
