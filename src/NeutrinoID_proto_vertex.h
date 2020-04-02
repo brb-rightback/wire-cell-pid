@@ -621,7 +621,9 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 
     if (temp_cluster->get_fine_tracking_path().size() >1){      
       WCPPID::ProtoVertex *v1 = find_vertex_other_segment(temp_cluster, true, cloud.pts[(saved_cluster_points.at(*it)).first]);
-      WCPPID::ProtoVertex *v2 = find_vertex_other_segment(temp_cluster, false, cloud.pts[(saved_cluster_points.at(*it)).second]);   
+      WCPPID::ProtoVertex *v2 = find_vertex_other_segment(temp_cluster, false, cloud.pts[(saved_cluster_points.at(*it)).second]);
+      
+      
       if (v1->get_wcpt().index == cloud.pts[(saved_cluster_points.at(*it)).first].index && v2->get_wcpt().index == cloud.pts[(saved_cluster_points.at(*it)).second].index){
 	// this is between v1 and v2 ...
       }else{	
@@ -776,12 +778,15 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::find_vertex_other_segment(WCPPID::PR3DC
   WCPPID::ProtoVertex *v1 = 0;
   
   std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, Point> check_results = check_end_point(temp_cluster->get_fine_tracking_path(), flag_forward);
-  if (std::get<0>(check_results)==0 && std::get<1>(check_results)==0){ 
-    check_results = check_end_point(temp_cluster->get_fine_tracking_path(), flag_forward, 1.2*units::cm, 2.5*units::cm); 
+  //  std::cout << "A: " << flag_forward << " " << std::get<0>(check_results) << " " << std::get<1>(check_results) << " " << std::get<2>(check_results) << std::endl;
+  if (std::get<0>(check_results)==0 && std::get<1>(check_results)==0){
+    check_results = check_end_point(temp_cluster->get_fine_tracking_path(), flag_forward, 1.2*units::cm, 2.5*units::cm);
+    // std::cout << "B: " << flag_forward << " " <<  std::get<0>(check_results) << " " << std::get<1>(check_results) << " " << std::get<2>(check_results) << std::endl;
   }
-  if (std::get<0>(check_results)==0 && std::get<1>(check_results)==0){ 
-    check_results = check_end_point(temp_cluster->get_fine_tracking_path(), flag_forward, 1.5*units::cm, 3.0*units::cm); 
+  if (std::get<0>(check_results)==0 && std::get<1>(check_results)==0){
+    check_results = check_end_point(temp_cluster->get_fine_tracking_path(), flag_forward, 1.5*units::cm, 3.0*units::cm);
   }
+  
  // hack ...
  // std::get<0>(check_results) = 0;
  //std::get<1>(check_results) = 0;
@@ -889,13 +894,25 @@ std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::Neut
 			 + pow(test_p.y - p2.y,2)
 			 + pow(test_p.z - p2.z,2));
       double dis4 = temp_l.closest_dis(p2);
-      
+
+
       //      std::cout << i << " " << test_p << " " << temp_dir.X() << " " << temp_dir.Y() << " " << temp_dir.Z() << " " << dis1/units::cm << " " << dis2/units::cm << " " << dis3/units::cm << " " << dis4/units::cm << " " << it1->second.size() << " "  << std::endl;
       
-      if (std::min(dis1,dis2) < vtx_cut1 && std::max(dis1,dis2) < vtx_cut2 ||
-	  std::min(dis3,dis4) < vtx_cut1 && std::max(dis3,dis4) < vtx_cut2){
-	vtx = test_v;
-	break;
+      if (std::min(dis1,dis2) < vtx_cut1 && std::max(dis1,dis2) < vtx_cut2){
+	TVector3 test_dir(p1.x-test_p.x,p1.y-test_p.y,p1.z-test_p.z);
+	//std::cout << test_dir.Angle(temp_dir)/3.1415926*180. << std::endl;
+	if (test_dir.Angle(temp_dir)/3.1415926*180. < 90){
+	  vtx = test_v;
+	  break;
+	}
+      }
+      if (std::min(dis3,dis4) < vtx_cut1 && std::max(dis3,dis4) < vtx_cut2){
+	TVector3 test_dir(p2.x-test_p.x,p2.y-test_p.y,p2.z-test_p.z);
+	//std::cout << test_dir.Angle(temp_dir)/3.1415926*180. << std::endl;
+	if (test_dir.Angle(temp_dir)/3.1415926*180. < 90){
+	  vtx = test_v;
+	  break;
+	}
       }
     }
 
