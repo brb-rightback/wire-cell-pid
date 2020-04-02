@@ -32,6 +32,7 @@ namespace WCPPID{
     int get_fittable_tracks();
     bool get_flag_vtx_constraint(){return flag_vtx_constraint;};
     void set_flag_vtx_constraint(bool val){flag_vtx_constraint = val;};
+
     void set_vtx_constraint_range(double val){vtx_constraint_range = val;};
 
     std::vector<ProtoSegment*>& get_segments(){return segments;};

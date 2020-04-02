@@ -15,6 +15,22 @@ bool WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
     fcn.AddSegment(*it);
   }
   std::pair<bool, Point> results = fcn.FitVertex();
+  
+  double old_charge = ct_point_cloud->get_ave_3d_charge(vtx->get_fit_pt());
+  double new_charge = ct_point_cloud->get_ave_3d_charge(results.second);
+
+  // std::cout << old_charge << " " << new_charge << " " << results.second << std::endl;
+  if (new_charge < 5000 && new_charge < 0.4*old_charge){
+    results.second = vtx->get_fit_pt();
+  }else if (new_charge < 8000 && new_charge < 0.6 * old_charge){ 
+    // reduce the strength ...
+    fcn.set_vtx_constraint_range(0.11*units::cm); 
+    results = fcn.FitVertex(); 
+    new_charge = ct_point_cloud->get_ave_3d_charge(results.second); 
+    // std::cout << old_charge << " " << new_charge << " " << results.second << std::endl; 
+  } 
+   
+    
   if (results.first)
     fcn.UpdateInfo(results.second, temp_cluster);
 
@@ -445,9 +461,12 @@ void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_clu
       double dis_step = 2.0*units::cm;
       int ncount = std::round(sqrt(pow(vtx_new_wcp.x - min_wcp.x,2) + pow(vtx_new_wcp.y - min_wcp.y,2) + pow(vtx_new_wcp.z - min_wcp.z,2))/dis_step);
       if (ncount <2) ncount = 2;
+      
       for (int qx=1;qx<ncount;qx++){
 	Point tmp_p(vtx_new_wcp.x + (min_wcp.x-vtx_new_wcp.x)/ncount*qx, vtx_new_wcp.y + (min_wcp.y-vtx_new_wcp.y)/ncount*qx, vtx_new_wcp.z + (min_wcp.z-vtx_new_wcp.z)/ncount*qx);
 	WCP::WCPointCloud<double>::WCPoint& tmp_wcp = pcloud->get_closest_wcpoint(tmp_p);
+	//std::cout << qx << " " << sqrt(pow(tmp_wcp.x - tmp_p.x,2) + pow(tmp_wcp.y - tmp_p.y,2) + pow(tmp_wcp.z - tmp_p.z,2))/units::cm << std::endl;
+	if (sqrt(pow(tmp_wcp.x - tmp_p.x,2) + pow(tmp_wcp.y - tmp_p.y,2) + pow(tmp_wcp.z - tmp_p.z,2)) > 0.3*units::cm) continue;
 	if (tmp_wcp.index != new_list.back().index && tmp_wcp.index != min_wcp.index)
 	  new_list.push_back(tmp_wcp);
       }
