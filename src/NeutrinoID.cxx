@@ -31,7 +31,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   , type(0)
 {
   bool flag_other_clusters = false;
-  bool flag_main_cluster = true;
+  bool flag_main_cluster = false;
   
   // form id vs. cluster ...
   map_id_cluster[main_cluster->get_cluster_id()] = main_cluster;

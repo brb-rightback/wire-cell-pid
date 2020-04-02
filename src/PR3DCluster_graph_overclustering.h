@@ -110,9 +110,8 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	  
 	  bool flag = check_connectivity(index_index_dis[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k));
 	  if (!flag) index_index_dis[j][k] = std::make_tuple(-1,-1,1e9);
-	  
 	  index_index_dis[k][j] = index_index_dis[j][k];
-
+	  
 	  
 	  // direction ...
 	  WCPointCloud<double>::WCPoint wp1 = cloud.pts.at(std::get<0>(temp_index_index_dis));
@@ -124,7 +123,7 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	  dir1 *= -1;
 	  std::pair<int,double> result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
   	  if (result1.first < 0 && fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10.){
-	    if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10.) dir1 = VHoughTrans(p1, 80*units::cm,pt_clouds.at(j)); 
+	    if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<5.) dir1 = VHoughTrans(p1, 80*units::cm,pt_clouds.at(j)); 
 	    else if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10.) dir1 = VHoughTrans(p1, 50*units::cm,pt_clouds.at(j));
 	    dir1 *= -1;
 	    result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
@@ -142,7 +141,7 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
   	  dir2 *= -1;
 	  std::pair<int,double> result2 = pt_clouds.at(j)->get_closest_point_along_vec(p2, dir2, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
 	  if (result2.first <0 && fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<10.){
-	    if (fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<10.) dir2 = VHoughTrans(p2, 80*units::cm,pt_clouds.at(k));
+	    if (fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<5.) dir2 = VHoughTrans(p2, 80*units::cm,pt_clouds.at(k));
 	    else if (fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<10.) dir2 = VHoughTrans(p2, 50*units::cm,pt_clouds.at(k));
 	    dir2 *= -1;
 	    result2 = pt_clouds.at(j)->get_closest_point_along_vec(p2, dir2, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
@@ -441,14 +440,15 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
 
     // parallel case ...
     if (flag_parallel){ // parallel case ...
-      if (num_bad_details>1 || scores.at(2) + scores.at(5)==0) num_bad[3] ++;
+      if (num_bad_details>1 ) num_bad[3] ++;
     }else{
       if (num_bad_details>0) num_bad[3] ++;
     }
     //    std::cout << i << " " << num_bad_details << std::endl;
     //    std::cout << i << " " << scores.at(0) << " " << scores.at(1) << " " << scores.at(2) << " " << scores.at(3) << " " << scores.at(4) << " " << scores.at(5) << std::endl;
   }
-  //  std::cout << num_bad[0] << " " << num_bad[1] << " " << num_bad[2] << " " << num_bad[3] << " " << num_steps << std::endl;
+  //  if (flag_parallel && dis > 15*units::cm && dis < 25*units::cm && p1.y > 45*units::cm && p2.y > 45*units::cm && p1.y < 70*units::cm && p2.y < 70*units::cm)
+  // std::cout << p1 << " " << p2 << " " << num_bad[0] << " " << num_bad[1] << " " << num_bad[2] << " " << num_bad[3] << " " << num_steps << std::endl;
 
   
   

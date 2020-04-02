@@ -1287,7 +1287,7 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyPointCloud* ref_point_cloud){
 	    dir1 *= -1;
 	    std::pair<int,double> result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
 	    if (result1.first < 0 && fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10.){
-	      if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10.) dir1 = VHoughTrans(p1, 80*units::cm,pt_clouds.at(j)); 
+	      if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<5.) dir1 = VHoughTrans(p1, 80*units::cm,pt_clouds.at(j)); 
 	      else if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90)<10.) dir1 = VHoughTrans(p1, 50*units::cm,pt_clouds.at(j));
 	      dir1 *= -1;
 	      result1 = pt_clouds.at(k)->get_closest_point_along_vec(p1, dir1, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
@@ -1302,7 +1302,7 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyPointCloud* ref_point_cloud){
 	    dir2 *= -1;
 	    std::pair<int,double> result2 = pt_clouds.at(j)->get_closest_point_along_vec(p2, dir2, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
 	    if (result2.first <0 && fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<10.){
-	      if (fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<10.) dir2 = VHoughTrans(p2, 80*units::cm,pt_clouds.at(k));
+	      if (fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<5.) dir2 = VHoughTrans(p2, 80*units::cm,pt_clouds.at(k));
 	      else if (fabs(dir2.Angle(drift_dir)/3.1415926*180.-90)<10.) dir2 = VHoughTrans(p2, 50*units::cm,pt_clouds.at(k));
 	      dir2 *= -1;
 	      result2 = pt_clouds.at(j)->get_closest_point_along_vec(p2, dir2, 80*units::cm, 5*units::cm, 7.5, 3*units::cm);
