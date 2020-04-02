@@ -622,7 +622,21 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     if (temp_cluster->get_fine_tracking_path().size() >1){      
       WCPPID::ProtoVertex *v1 = find_vertex_other_segment(temp_cluster, true, cloud.pts[(saved_cluster_points.at(*it)).first]);
       WCPPID::ProtoVertex *v2 = find_vertex_other_segment(temp_cluster, false, cloud.pts[(saved_cluster_points.at(*it)).second]);
+
+      // protection against a corner case crashing the code
+      if (v1==v2){
+      	double tmp_dis1 = sqrt(pow(v1->get_wcpt().x - cloud.pts[(saved_cluster_points.at(*it)).first].x, 2) + pow(v1->get_wcpt().y - cloud.pts[(saved_cluster_points.at(*it)).first].y,2) + pow(v1->get_wcpt().z - cloud.pts[(saved_cluster_points.at(*it)).first].z,2));
+      	double tmp_dis2 = sqrt(pow(v1->get_wcpt().x - cloud.pts[(saved_cluster_points.at(*it)).second].x, 2) + pow(v1->get_wcpt().y - cloud.pts[(saved_cluster_points.at(*it)).second].y,2) + pow(v1->get_wcpt().z - cloud.pts[(saved_cluster_points.at(*it)).second].z,2));
+      	if (tmp_dis1 < tmp_dis2){
+      	  // change v2
+      	  v2 = new WCPPID::ProtoVertex(acc_vertex_id, cloud.pts[(saved_cluster_points.at(*it)).second], temp_cluster->get_cluster_id()); acc_vertex_id++;
+      	}else{
+      	  // change v1
+      	  v1 = new WCPPID::ProtoVertex(acc_vertex_id, cloud.pts[(saved_cluster_points.at(*it)).first], temp_cluster->get_cluster_id()); acc_vertex_id++;
+      	}
+      }
       
+      //      std::cout << v1 << " " << v2 << " " << sqrt(pow(cloud.pts[(saved_cluster_points.at(*it)).first].x - cloud.pts[(saved_cluster_points.at(*it)).second].x,2) + pow(cloud.pts[(saved_cluster_points.at(*it)).first].y - cloud.pts[(saved_cluster_points.at(*it)).second].y,2) + pow(cloud.pts[(saved_cluster_points.at(*it)).first].z - cloud.pts[(saved_cluster_points.at(*it)).second].z,2)) << std::endl;
       
       if (v1->get_wcpt().index == cloud.pts[(saved_cluster_points.at(*it)).first].index && v2->get_wcpt().index == cloud.pts[(saved_cluster_points.at(*it)).second].index){
 	// this is between v1 and v2 ...
@@ -787,7 +801,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::find_vertex_other_segment(WCPPID::PR3DC
     check_results = check_end_point(temp_cluster->get_fine_tracking_path(), flag_forward, 1.5*units::cm, 3.0*units::cm);
   }
 
-  //  std::cout << std::get<0>(check_results) << " " << std::get<1>(check_results) << std::endl;
+  //  std::cout << std::get<0>(check_results) << " " << std::get<1>(check_results) << " " << std::get<2>(check_results) << std::endl;
  // hack ...
  // std::get<0>(check_results) = 0;
  //std::get<1>(check_results) = 0;
@@ -904,7 +918,7 @@ std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::Neut
       if ( std::max(dis1,dis2) < 5*units::cm && (std::min(dis1,dis2) < vtx_cut1 && std::max(dis1,dis2) < vtx_cut2 ||
 						 std::min(dis3,dis4) < vtx_cut1 * 1.3 && std::max(dis1,dis2) < vtx_cut2 * 2 && it1->second.size()==1) ){
 	TVector3 test_dir(p1.x-test_p.x,p1.y-test_p.y,p1.z-test_p.z);
-	//std::cout << test_dir.Angle(temp_dir)/3.1415926*180. << std::endl;
+	//	std::cout << test_dir.Angle(temp_dir)/3.1415926*180. << std::endl;
 	if (test_dir.Angle(temp_dir)/3.1415926*180. < 90){
 	  vtx = test_v;
 	  break;
@@ -913,7 +927,7 @@ std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::Neut
       if ( std::max(dis3,dis4) < 5*units::cm && (std::min(dis3,dis4) < vtx_cut1 && std::max(dis3,dis4) < vtx_cut2 ||
 						 std::min(dis3,dis4) < vtx_cut1 * 1.3 && std::max(dis3,dis4) < vtx_cut2 * 2 && it1->second.size()==1 )){
 	TVector3 test_dir(p2.x-test_p.x,p2.y-test_p.y,p2.z-test_p.z);
-	//std::cout << test_dir.Angle(temp_dir)/3.1415926*180. << std::endl;
+	//	std::cout << test_dir.Angle(temp_dir)/3.1415926*180. << std::endl;
 	if (test_dir.Angle(temp_dir)/3.1415926*180. < 90){
 	  vtx = test_v;
 	  break;
@@ -966,9 +980,14 @@ std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::Neut
 	  for (size_t i= 0; i!=points.size();i++){
 	    double dis1 = temp_l.closest_dis(points.at(i) );
 	    if (dis1 < sg_cut2 && dis1 < min_dis){
-	      min_dis = dis1;
-	      min_point = points.at(i);
-	      min_sg = it->first;
+	      
+	      TVector3 test_dir(points.at(i).x-test_p.x,points.at(i).y-test_p.y,points.at(i).z-test_p.z);
+	      //std::cout << test_dir.Angle(temp_dir)/3.1415926*180. << std::endl;
+	      if (test_dir.Angle(temp_dir)/3.1415926*180. < 90){
+		min_dis = dis1;
+		min_point = points.at(i);
+		min_sg = it->first;
+	      }
 	    }
 	  }
 	}

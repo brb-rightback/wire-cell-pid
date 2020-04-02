@@ -434,14 +434,14 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
       if (!flag_prolonged_v) num_bad[1] ++;
       num_bad_details ++;
     }
-    if (scores.at(2) + scores.at(5)==0){
-      if (!flag_prolonged_w) num_bad[2] ++;
+    if (scores.at(2) + scores.at(5)==0){ // collection plane 
+      if (!flag_prolonged_w) num_bad[2] ++; // not a prolonged situation 
       num_bad_details ++;
     }
 
     // parallel case ...
-    if (flag_parallel){
-      if (num_bad_details>1) num_bad[3] ++;
+    if (flag_parallel){ // parallel case ...
+      if (num_bad_details>1 || scores.at(2) + scores.at(5)==0) num_bad[3] ++;
     }else{
       if (num_bad_details>0) num_bad[3] ++;
     }
