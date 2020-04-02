@@ -786,7 +786,8 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::find_vertex_other_segment(WCPPID::PR3DC
   if (std::get<0>(check_results)==0 && std::get<1>(check_results)==0){
     check_results = check_end_point(temp_cluster->get_fine_tracking_path(), flag_forward, 1.5*units::cm, 3.0*units::cm);
   }
-  
+
+  //  std::cout << std::get<0>(check_results) << " " << std::get<1>(check_results) << std::endl;
  // hack ...
  // std::get<0>(check_results) = 0;
  //std::get<1>(check_results) = 0;
@@ -895,10 +896,13 @@ std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::Neut
 			 + pow(test_p.z - p2.z,2));
       double dis4 = temp_l.closest_dis(p2);
 
+      //      if (dis1 < 5*units::cm && dis2 < 5*units::cm)
+      //	std::cout << i << " " << test_p << " " << temp_dir.X() << " " << temp_dir.Y() << " " << temp_dir.Z() << " " << dis1/units::cm << " " << dis2/units::cm << " " << dis3/units::cm << " " << dis4/units::cm << " " << it1->second.size() << " "  << std::endl;
 
-      //      std::cout << i << " " << test_p << " " << temp_dir.X() << " " << temp_dir.Y() << " " << temp_dir.Z() << " " << dis1/units::cm << " " << dis2/units::cm << " " << dis3/units::cm << " " << dis4/units::cm << " " << it1->second.size() << " "  << std::endl;
       
-      if (std::min(dis1,dis2) < vtx_cut1 && std::max(dis1,dis2) < vtx_cut2){
+      
+      if ( std::max(dis1,dis2) < 5*units::cm && (std::min(dis1,dis2) < vtx_cut1 && std::max(dis1,dis2) < vtx_cut2 ||
+						 std::min(dis3,dis4) < vtx_cut1 * 1.3 && std::max(dis1,dis2) < vtx_cut2 * 2 && it1->second.size()==1) ){
 	TVector3 test_dir(p1.x-test_p.x,p1.y-test_p.y,p1.z-test_p.z);
 	//std::cout << test_dir.Angle(temp_dir)/3.1415926*180. << std::endl;
 	if (test_dir.Angle(temp_dir)/3.1415926*180. < 90){
@@ -906,7 +910,8 @@ std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::Neut
 	  break;
 	}
       }
-      if (std::min(dis3,dis4) < vtx_cut1 && std::max(dis3,dis4) < vtx_cut2){
+      if ( std::max(dis3,dis4) < 5*units::cm && (std::min(dis3,dis4) < vtx_cut1 && std::max(dis3,dis4) < vtx_cut2 ||
+						 std::min(dis3,dis4) < vtx_cut1 * 1.3 && std::max(dis3,dis4) < vtx_cut2 * 2 && it1->second.size()==1 )){
 	TVector3 test_dir(p2.x-test_p.x,p2.y-test_p.y,p2.z-test_p.z);
 	//std::cout << test_dir.Angle(temp_dir)/3.1415926*180. << std::endl;
 	if (test_dir.Angle(temp_dir)/3.1415926*180. < 90){
