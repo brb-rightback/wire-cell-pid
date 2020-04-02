@@ -25,6 +25,12 @@ void WCPPID::NeutrinoID::deghost_clusters(){
   DynamicToyPointCloud global_steiner_point_cloud(angle_u,angle_v,angle_w);
   DynamicToyPointCloud global_skeleton_cloud(angle_u,angle_v,angle_w);
 
+  for (size_t i=0;i!=all_clusters.size();i++){
+    if (cluster_length_map.find(all_clusters.at(i)) != cluster_length_map.end()) continue;
+    global_point_cloud.AddPoints(all_clusters.at(i)->get_point_cloud());
+  }
+  
+  
   std::vector<WCPPID::PR3DCluster*> to_be_removed_clusters;
 
   for (size_t i=0;i!= ordered_clusters.size(); i++){
@@ -143,11 +149,13 @@ void WCPPID::NeutrinoID::deghost_clusters(){
       
       
       
-      if (max_dead_percent > 0.8 && max_unique_percent < 0.35 && ave_unique_percent < 0.16 && min_unique_percent < 0.08 ||
-	  max_unique_percent < 0.1 && ave_unique_percent < 0.05 && min_unique_percent < 0.025)
+      if (max_dead_percent >= 0.8 && max_unique_percent <= 0.35 && ave_unique_percent <= 0.16 && min_unique_percent <= 0.08 ||
+	  max_unique_percent <= 0.1 && ave_unique_percent <= 0.05 && min_unique_percent <= 0.025 ||
+	  max_dead_percent < 0.8 && max_dead_percent >=0.7 && max_unique_percent <= 0.2 && ave_unique_percent <= 0.1 && min_unique_percent <= 0.05)
 	flag_add = false;
 
-      //std::cout << flag_add << " " << cluster->get_cluster_id() << " " << num_total_points << " " << num_dead[0] << " " << num_dead[1] << " " << num_dead[2] << " " << num_unique[0] << " " << num_unique[1] << " " << num_unique[2] << " " << max_unique_percent << " " << min_unique_percent << " " << ave_unique_percent << " " << max_dead_percent << std::endl;
+      //      if(!flag_add)
+      //	std::cout << flag_add << " " << cluster->get_cluster_id() << " " << num_total_points << " " << num_dead[0] << " " << num_dead[1] << " " << num_dead[2] << " " << num_unique[0] << " " << num_unique[1] << " " << num_unique[2] << " " << max_unique_percent << " " << min_unique_percent << " " << ave_unique_percent << " " << max_dead_percent << std::endl;
       
       if (flag_add){
 	global_point_cloud.AddPoints(ordered_clusters.at(i)->get_point_cloud());

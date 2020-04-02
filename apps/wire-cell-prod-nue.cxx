@@ -1243,7 +1243,7 @@ int main(int argc, char* argv[])
 
 
     
-    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time);
+    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time);
     neutrino_vec.push_back(neutrino);
     
   }
@@ -1410,15 +1410,15 @@ int main(int argc, char* argv[])
 	y = cloud.pts[i].y/units::cm;
 	z = cloud.pts[i].z/units::cm;
 	
-	// if (point_sub_cluster_ids.size() == cloud.pts.size()){
-	//   if (point_sub_cluster_ids.at(i)==-1){
-	//     real_cluster_id = -1;
-	//     continue; // skip -1 points ... deghosting ...
-	//   }else{
-	//     real_cluster_id =new_cluster->get_cluster_id()*1000 + point_sub_cluster_ids.at(i);
-	//   }
-	// }
-	real_cluster_id =new_cluster->get_cluster_id();
+	if (point_sub_cluster_ids.size() == cloud.pts.size()){
+	  if (point_sub_cluster_ids.at(i)==-1){
+	    real_cluster_id = -1;
+	    continue; // skip -1 points ... deghosting ...
+	  }else{
+	    real_cluster_id =new_cluster->get_cluster_id()*1000 + point_sub_cluster_ids.at(i);
+	  }
+	}
+	//	real_cluster_id =new_cluster->get_cluster_id();
 	
 	sub_cluster_id =  new_cluster->get_cluster_id();//*1000;	  
 	

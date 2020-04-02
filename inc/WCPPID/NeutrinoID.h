@@ -63,7 +63,7 @@ namespace WCPPID{
   
   class NeutrinoID{
   public:
-    NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis,	WCP::ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double flash_time);
+    NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, std::vector<WCPPID::PR3DCluster*>& all_clusters, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis,	WCP::ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double flash_time);
     ~NeutrinoID();
 
     // deal with the map ...
@@ -133,7 +133,9 @@ namespace WCPPID{
     // input ...
     WCPPID::PR3DCluster *main_cluster;
     std::vector<WCPPID::PR3DCluster*> other_clusters;
+    std::vector<WCPPID::PR3DCluster*> all_clusters;
 
+    
     std::map<int, WCPPID::PR3DCluster*> map_id_cluster;
     
     WCP::ToyCTPointCloud* ct_point_cloud;
