@@ -24,8 +24,9 @@ bool WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
     results.second = vtx->get_fit_pt();
   }else if (new_charge < 8000 && new_charge < 0.6 * old_charge){ 
     // reduce the strength ...
-    fcn.set_vtx_constraint_range(0.11*units::cm); 
-    results = fcn.FitVertex(); 
+    //    fcn.set_vtx_constraint_range(0.11*units::cm); 
+    // results = fcn.FitVertex();
+    results.second = vtx->get_fit_pt();
     new_charge = ct_point_cloud->get_ave_3d_charge(results.second); 
     // std::cout << old_charge << " " << new_charge << " " << results.second << std::endl; 
   } 
@@ -439,7 +440,7 @@ void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_clu
     double min_dis = 1e9;
     double max_dis = std::max(sqrt(pow(vec_wcps.front().x -vtx->get_fit_pt().x,2)+pow(vec_wcps.front().y -vtx->get_fit_pt().y,2)+pow(vec_wcps.front().z -vtx->get_fit_pt().z,2)), sqrt(pow(vec_wcps.back().x -vtx->get_fit_pt().x,2)+pow(vec_wcps.back().y -vtx->get_fit_pt().y,2)+pow(vec_wcps.back().z -vtx->get_fit_pt().z,2)));
     double dis_cut = 0;
-    if (max_dis > default_dis_cut) dis_cut = default_dis_cut;
+    if (max_dis > 2 * default_dis_cut) dis_cut = default_dis_cut;
     
     for (size_t j=0;j!=vec_wcps.size();j++){
       double dis = sqrt(pow(vec_centers.at(i).x - vec_wcps.at(j).x,2) + pow(vec_centers.at(i).y - vec_wcps.at(j).y,2) + pow(vec_centers.at(i).z - vec_wcps.at(j).z,2));
@@ -466,7 +467,7 @@ void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_clu
 	Point tmp_p(vtx_new_wcp.x + (min_wcp.x-vtx_new_wcp.x)/ncount*qx, vtx_new_wcp.y + (min_wcp.y-vtx_new_wcp.y)/ncount*qx, vtx_new_wcp.z + (min_wcp.z-vtx_new_wcp.z)/ncount*qx);
 	WCP::WCPointCloud<double>::WCPoint& tmp_wcp = pcloud->get_closest_wcpoint(tmp_p);
 	//std::cout << qx << " " << sqrt(pow(tmp_wcp.x - tmp_p.x,2) + pow(tmp_wcp.y - tmp_p.y,2) + pow(tmp_wcp.z - tmp_p.z,2))/units::cm << std::endl;
-	if (sqrt(pow(tmp_wcp.x - tmp_p.x,2) + pow(tmp_wcp.y - tmp_p.y,2) + pow(tmp_wcp.z - tmp_p.z,2)) > 0.3*units::cm) continue;
+	if (sqrt(pow(tmp_wcp.x - tmp_p.x,2) + pow(tmp_wcp.y - tmp_p.y,2) + pow(tmp_wcp.z - tmp_p.z,2)) > 0.3*units::cm) continue; // too large ...
 	if (tmp_wcp.index != new_list.back().index && tmp_wcp.index != min_wcp.index)
 	  new_list.push_back(tmp_wcp);
       }
