@@ -1192,11 +1192,13 @@ void WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
       if (it->second.size()==2){ // potential check
 	for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
 	  WCPPID::ProtoSegment* sg = (*it1);
+	  
 	  if (sg->get_length() > 4*units::cm) continue;
 	  for (auto it2 = map_segment_vertices[sg].begin(); it2 != map_segment_vertices[sg].end(); it2++){
 	    WCPPID::ProtoVertex *vtx1 = (*it2);
 	    if (vtx1 == vtx) continue;
 	    if (map_vertex_segments[vtx1].size() > 2){ // the other track needs to be larger than 2
+	      //std::cout << sg->get_length() << std::endl;
 	      if (examine_vertices(vtx, vtx1, offset_t, slope_xt, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw)){
 		v1 = vtx;
 		v2 = vtx1;
@@ -1275,7 +1277,7 @@ bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::Proto
   int ncount_line = 0;
 
   // one view must be close
-  if (sqrt(pow(v1_u - v2_u, 2) + pow(v1_t - v2_t,2)) < 2.0){
+  if (sqrt(pow(v1_u - v2_u, 2) + pow(v1_t - v2_t,2)) < 2.5){
     ncount_close ++;
   }else{
     // one view must be dead? or shorter distance
@@ -1311,15 +1313,15 @@ bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::Proto
 	}
       }
 
-      if (180-v1.Angle(v2)/3.1415926*180. < 30) ncount_line++;
+      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()<5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
       //      std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
     }
   }
 
-  //  std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
+  // std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
   
    // one view must be close
-  if (sqrt(pow(v1_v - v2_v, 2) + pow(v1_t - v2_t,2)) < 2.0){
+  if (sqrt(pow(v1_v - v2_v, 2) + pow(v1_t - v2_t,2)) < 2.5){
     ncount_close ++;
   }else{
     // one view must be dead? or shorter distance
@@ -1355,16 +1357,16 @@ bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::Proto
 	}
       }
 
-      if (180-v1.Angle(v2)/3.1415926*180. < 30) ncount_line++;
+      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()<5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
       //      std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
     }
   }
 
-  //  std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
+  // std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
 
    // one view must be close
-  if (sqrt(pow(v1_w - v2_w, 2) + pow(v1_t - v2_t,2)) < 2.0){
-    //    std::cout << "haha " << std::endl;
+  if (sqrt(pow(v1_w - v2_w, 2) + pow(v1_t - v2_t,2)) < 2.5){
+    //    std::cout << "haha " << sqrt(pow(v1_w - v2_w, 2) + pow(v1_t - v2_t,2)) << std::endl;
     ncount_close ++;
   }else{
     // one view must be dead? or shorter distance
@@ -1403,18 +1405,19 @@ bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::Proto
 	}
       }
 
-      if (180-v1.Angle(v2)/3.1415926*180. < 30) ncount_line++;
+      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()<5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
 
       //      std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
     }
   }
 
 
-  //  std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
+  // std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
   
   if (ncount_close >=2 ||
       ncount_close ==1 && ncount_dead ==1 & ncount_line==1 ||
       ncount_close ==1 && ncount_dead == 2 ||
+      ncount_close ==1 && ncount_line==2 || 
       ncount_line == 3)
     return true;
 

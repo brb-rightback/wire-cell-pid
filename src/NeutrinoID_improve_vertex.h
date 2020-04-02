@@ -15,12 +15,10 @@ bool WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
     fcn.AddSegment(*it);
   }
   std::pair<bool, Point> results = fcn.FitVertex();
-  if (results.first){
+  if (results.first)
     fcn.UpdateInfo(results.second, temp_cluster);
-    return true;
-  }
 
-  return false;
+  return results.first;
 }
 
 void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
@@ -245,7 +243,22 @@ std::pair<bool, WCP::Point> WCPPID::MyFCN::FitVertex(){
 
   int npoints = 0;
 
-  if (ntracks >2){
+  int n_large_angles = 0;
+  for (size_t i=0;i!=vec_PCA_vals.size();i++){
+    TVector3 dir1(std::get<0>(vec_PCA_dirs.at(i)).x, std::get<0>(vec_PCA_dirs.at(i)).y, std::get<0>(vec_PCA_dirs.at(i)).z);
+    for (size_t j=i+1; j< vec_PCA_vals.size();j++){
+      TVector3 dir2(std::get<0>(vec_PCA_dirs.at(j)).x, std::get<0>(vec_PCA_dirs.at(j)).y, std::get<0>(vec_PCA_dirs.at(j)).z);
+      if (dir1.Angle(dir2)/3.1415926*180. > 15) n_large_angles ++;
+      // std::cout << i << " " << j << " " << dir1.Angle(dir2)/3.1415926*180. << std::endl;
+    }
+  }
+  //    std::cout << n_large_angles << std::endl;
+  
+  
+  if (ntracks >2 && n_large_angles > 1){
+
+   
+    
     // start the fit ...
     Eigen::VectorXd temp_pos_3D_init(3), temp_pos_3D(3); // to be fitted
     temp_pos_3D_init(0) = fit_pos.x;
@@ -349,7 +362,7 @@ std::pair<bool, WCP::Point> WCPPID::MyFCN::FitVertex(){
 
 
 
-void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_cluster){
+void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_cluster, double default_dis_cut){
 
  
 
@@ -383,7 +396,8 @@ void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_clu
   double offset_u = -first_u_dis/pitch_u;
   double offset_v = -first_v_dis/pitch_v;
 
-  std::cout << "Cluster: " << vtx->get_cluster_id() << " Fit Vertex: (" << offset_u + (slope_yu * fit_pos.y + slope_zu * fit_pos.z) << ", " << offset_v + (slope_yv * fit_pos.y + slope_zv * fit_pos.z)+2400 << ", " << offset_w + (slope_yw * fit_pos.y + slope_zw * fit_pos.z)+4800 <<", " << offset_t + slope_x * fit_pos.x << ") <- (" << offset_u + (slope_yu * vtx->get_fit_pt().y + slope_zu * vtx->get_fit_pt().z) << ", " << offset_v + (slope_yv * vtx->get_fit_pt().y + slope_zv * vtx->get_fit_pt().z)+2400 << ", " << offset_w + (slope_yw * vtx->get_fit_pt().y + slope_zw * vtx->get_fit_pt().z)+4800 <<", " << offset_t + slope_x * vtx->get_fit_pt().x << ")" << std::endl;
+  if (sqrt(pow(vtx->get_fit_pt().x - fit_pos.x,2)+pow(vtx->get_fit_pt().y - fit_pos.y,2)+pow(vtx->get_fit_pt().z - fit_pos.z,2)) > 0.01*units::cm)
+    std::cout << "Cluster: " << vtx->get_cluster_id() << " Update Vertex: (" << offset_u + (slope_yu * fit_pos.y + slope_zu * fit_pos.z) << ", " << offset_v + (slope_yv * fit_pos.y + slope_zv * fit_pos.z)+2400 << ", " << offset_w + (slope_yw * fit_pos.y + slope_zw * fit_pos.z)+4800 <<", " << offset_t + slope_x * fit_pos.x << ") <- (" << offset_u + (slope_yu * vtx->get_fit_pt().y + slope_zu * vtx->get_fit_pt().z) << ", " << offset_v + (slope_yv * vtx->get_fit_pt().y + slope_zv * vtx->get_fit_pt().z)+2400 << ", " << offset_w + (slope_yw * vtx->get_fit_pt().y + slope_zw * vtx->get_fit_pt().z)+4800 <<", " << offset_t + slope_x * vtx->get_fit_pt().x << ")" << std::endl;
   
   // find the new wcps point for the vertex ...
   WCP::ToyPointCloud *pcloud = temp_cluster->get_point_cloud_steiner();
@@ -407,23 +421,36 @@ void WCPPID::MyFCN::UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_clu
     // find the closest point
     WCP::WCPointCloud<double>::WCPoint min_wcp;
     double min_dis = 1e9;
+    double max_dis = std::max(sqrt(pow(vec_wcps.front().x -vtx->get_fit_pt().x,2)+pow(vec_wcps.front().y -vtx->get_fit_pt().y,2)+pow(vec_wcps.front().z -vtx->get_fit_pt().z,2)), sqrt(pow(vec_wcps.back().x -vtx->get_fit_pt().x,2)+pow(vec_wcps.back().y -vtx->get_fit_pt().y,2)+pow(vec_wcps.back().z -vtx->get_fit_pt().z,2)));
+    double dis_cut = 0;
+    if (max_dis > default_dis_cut) dis_cut = default_dis_cut;
+    
     for (size_t j=0;j!=vec_wcps.size();j++){
       double dis = sqrt(pow(vec_centers.at(i).x - vec_wcps.at(j).x,2) + pow(vec_centers.at(i).y - vec_wcps.at(j).y,2) + pow(vec_centers.at(i).z - vec_wcps.at(j).z,2));
-      if (dis < min_dis){
+      double dis1 = sqrt(pow(vec_wcps.at(j).x -vtx->get_fit_pt().x,2)+pow(vec_wcps.at(j).y -vtx->get_fit_pt().y,2)+pow(vec_wcps.at(j).z -vtx->get_fit_pt().z,2));
+      if (dis < min_dis && dis1 > dis_cut){
 	min_wcp = vec_wcps.at(j);
 	min_dis = dis;
       }
     }
+   
 
+    //    std::cout << i << " (" << offset_u + (slope_yu * min_wcp.y + slope_zu * min_wcp.z) << ", " << offset_v + (slope_yv * min_wcp.y + slope_zv * min_wcp.z)+2400 << ", " << offset_w + (slope_yw * min_wcp.y + slope_zw * min_wcp.z)+4800 <<", " << offset_t + slope_x * min_wcp.x << ")" << " " << segments.at(i)->get_length()/units::cm << " " << sqrt(pow(vtx->get_fit_pt().x - min_wcp.x,2) + pow(vtx->get_fit_pt().y - min_wcp.y,2) + pow(vtx->get_fit_pt().z - min_wcp.z,2))/units::cm << std::endl;
+    
     // establish the shortest path ...
     std::list<WCP::WCPointCloud<double>::WCPoint> new_list;
 
     new_list.push_back(vtx_new_wcp);
     {
-      Point tmp_p((vtx_new_wcp.x + min_wcp.x)/2., (vtx_new_wcp.y + min_wcp.y)/2., (vtx_new_wcp.z + min_wcp.z)/2.);
-      WCP::WCPointCloud<double>::WCPoint& tmp_wcp = pcloud->get_closest_wcpoint(tmp_p);
-      if (tmp_wcp.index != new_list.back().index && tmp_wcp.index != min_wcp.index)
-	new_list.push_back(tmp_wcp);
+      double dis_step = 2.0*units::cm;
+      int ncount = std::round(sqrt(pow(vtx_new_wcp.x - min_wcp.x,2) + pow(vtx_new_wcp.y - min_wcp.y,2) + pow(vtx_new_wcp.z - min_wcp.z,2))/dis_step);
+      if (ncount <2) ncount = 2;
+      for (int qx=1;qx<ncount;qx++){
+	Point tmp_p(vtx_new_wcp.x + (min_wcp.x-vtx_new_wcp.x)/ncount*qx, vtx_new_wcp.y + (min_wcp.y-vtx_new_wcp.y)/ncount*qx, vtx_new_wcp.z + (min_wcp.z-vtx_new_wcp.z)/ncount*qx);
+	WCP::WCPointCloud<double>::WCPoint& tmp_wcp = pcloud->get_closest_wcpoint(tmp_p);
+	if (tmp_wcp.index != new_list.back().index && tmp_wcp.index != min_wcp.index)
+	  new_list.push_back(tmp_wcp);
+      }
     }
     new_list.push_back(min_wcp);
 

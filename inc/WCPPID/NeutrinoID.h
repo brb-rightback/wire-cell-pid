@@ -26,7 +26,7 @@ namespace WCPPID{
     void update_fit_range(double tmp_vertex_protect_dis = 1.5*units::cm, double  tmp_vertex_protect_dis_short_track = 0.9*units::cm, double tmp_fit_dis = 6 * units::cm);
     void AddSegment(ProtoSegment *sg);
     std::pair<bool, WCP::Point> FitVertex();
-    void UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_cluster);
+    void UpdateInfo(WCP::Point fit_pos, WCPPID::PR3DCluster* temp_cluster, double default_dis_cut = 4.0*units::cm);
     
     std::pair<ProtoSegment*, int> get_seg_info(int i);
     int get_fittable_tracks();
