@@ -14,6 +14,21 @@
 //#include "Minuit2/FCNBase.h"
 
 namespace WCPPID{
+  struct WCRecoTree
+  {
+    int mc_Ntrack;  // number of tracks in MC
+    int mc_id[1000];  // track id; size == mc_Ntrack
+    int mc_pdg[1000];  // track particle pdg; size == mc_Ntrack
+    int mc_process[1000];  // track generation process code; size == mc_Ntrack
+    int mc_mother[1000];  // mother id of this track; size == mc_Ntrack
+    float mc_startXYZT[1000][4];  // start position of this track; size == mc_Ntrack
+    float mc_endXYZT[1000][4];  // end position of this track; size == mc_Ntrack
+    float mc_startMomentum[1000][4];  // start momentum of this track; size == mc_Ntrack
+    float mc_endMomentum[1000][4];  // end momentum of this track; size == mc_Ntrack
+    std::vector<std::vector<int> > *mc_daughters;
+  };
+
+  
   //  class MyFCN : public ROOT::Minuit2::FCNBase {
   class MyFCN {
   
@@ -81,6 +96,8 @@ namespace WCPPID{
     void process_main_cluster();
     void process_other_clusters();
 
+    // fill reco information
+    void fill_reco_simple_tree(WCRecoTree& rtree);
     
     
     // proto-vertex finder
@@ -104,6 +121,7 @@ namespace WCPPID{
 
     // get direction 
     TVector3 get_dir(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, double dis = 2*units::cm);
+    void determin_direction(WCPPID::PR3DCluster* temp_cluster);
     
     // clustering points
     void clustering_points(WCPPID::PR3DCluster* temp_cluster);

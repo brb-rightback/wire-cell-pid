@@ -274,3 +274,55 @@ void WCPPID::NeutrinoID::process_other_clusters(){
     }
   }
 }
+
+
+void WCPPID::NeutrinoID::fill_reco_simple_tree(WCPPID::WCRecoTree& rtree){
+  rtree.mc_daughters->clear();
+
+  rtree.mc_Ntrack = 0;
+  //start to fill
+  for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment* sg= it->first;
+    // only save the main cluster
+    if (sg->get_cluster_id() != main_cluster->get_cluster_id()) continue;
+    rtree.mc_id[rtree.mc_Ntrack]  = sg->get_cluster_id()*1000 + sg->get_id();
+
+    // particle code
+    // e- 11  e+ -11
+    // muon- 13  muon+ -13
+    // gamma 22
+    // pi+ 211, pi- 111, pi- -211
+    // kaon+ 321, K- -321
+    // p  2212
+    // n 2112
+    
+    rtree.mc_pdg[rtree.mc_Ntrack] = 13; // all muons for now ...
+    if (sg->get_flag_shower()) rtree.mc_pdg[rtree.mc_Ntrack] = 11; // electron
+
+    rtree.mc_process[rtree.mc_Ntrack] = 0;
+    rtree.mc_mother[rtree.mc_Ntrack] = 0; 
+
+    rtree.mc_startXYZT[rtree.mc_Ntrack][0] = sg->get_point_vec().front().x/units::cm;
+    rtree.mc_startXYZT[rtree.mc_Ntrack][1] = sg->get_point_vec().front().y/units::cm;
+    rtree.mc_startXYZT[rtree.mc_Ntrack][2] = sg->get_point_vec().front().z/units::cm;
+    rtree.mc_startXYZT[rtree.mc_Ntrack][3] = 0;
+    
+    rtree.mc_endXYZT[rtree.mc_Ntrack][0] = sg->get_point_vec().back().x/units::cm;
+    rtree.mc_endXYZT[rtree.mc_Ntrack][1] = sg->get_point_vec().back().y/units::cm;
+    rtree.mc_endXYZT[rtree.mc_Ntrack][2] = sg->get_point_vec().back().z/units::cm;
+    rtree.mc_endXYZT[rtree.mc_Ntrack][3] = 0;
+	     
+    rtree.mc_startMomentum[rtree.mc_Ntrack][0] = 1;
+    rtree.mc_startMomentum[rtree.mc_Ntrack][1] = 1;
+    rtree.mc_startMomentum[rtree.mc_Ntrack][2] = 1;
+    rtree.mc_startMomentum[rtree.mc_Ntrack][3] = 1;
+    
+    rtree.mc_endMomentum[rtree.mc_Ntrack][0] = 1;
+    rtree.mc_endMomentum[rtree.mc_Ntrack][1] = 1;
+    rtree.mc_endMomentum[rtree.mc_Ntrack][2] = 1;
+    rtree.mc_endMomentum[rtree.mc_Ntrack][3] = 1;
+
+    rtree.mc_Ntrack++;
+  }
+  rtree.mc_daughters->resize(rtree.mc_Ntrack);
+}

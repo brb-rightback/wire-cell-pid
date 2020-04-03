@@ -33,3 +33,22 @@ void WCPPID::NeutrinoID::separate_track_shower(){
   }
   
 }
+
+
+
+void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
+  for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+
+    if (sg->get_flag_shower_trajectory()){
+      // trajectory shower
+    }else if (sg->get_flag_shower_topology()){
+      // topology shower
+    }else{
+      // track ...
+    }
+
+    
+  }
+}

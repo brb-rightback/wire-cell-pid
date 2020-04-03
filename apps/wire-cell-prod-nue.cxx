@@ -1371,8 +1371,32 @@ int main(int argc, char* argv[])
       T_vtx->Fill();
     }
   }
- 
-   
+
+
+  TTree *TMC = new TTree("TMC","TMC");
+  
+  WCPPID::WCRecoTree reco_tree;
+  reco_tree.mc_daughters = new std::vector<std::vector<int> >;
+  
+  TMC->Branch("mc_Ntrack", &reco_tree.mc_Ntrack);  // number of tracks in MC
+  TMC->Branch("mc_id", &reco_tree.mc_id, "mc_id[mc_Ntrack]/I");  // track id; size == mc_Ntrack
+  TMC->Branch("mc_pdg", &reco_tree.mc_pdg, "mc_id[mc_Ntrack]/I");  // track particle pdg; size == mc_Ntrack
+  TMC->Branch("mc_process", &reco_tree.mc_process, "mc_process[mc_Ntrack]/I");  // track generation process code; size == mc_Ntrack
+  TMC->Branch("mc_mother", &reco_tree.mc_mother, "mc_mother[mc_Ntrack]/I");  // mother id of this track; size == mc_Ntrack
+  TMC->Branch("mc_daughters", reco_tree.mc_daughters);  // daughters id of this track; vector
+  TMC->Branch("mc_startXYZT", &reco_tree.mc_startXYZT, "mc_startXYZT[mc_Ntrack][4]/F");  // start position of this track; size == mc_Ntrack
+  TMC->Branch("mc_endXYZT", &reco_tree.mc_endXYZT, "mc_endXYZT[mc_Ntrack][4]/F");  // start position of this track; size == mc_Ntrack
+  TMC->Branch("mc_startMomentum", &reco_tree.mc_startMomentum, "mc_startMomentum[mc_Ntrack][4]/F");  // start momentum of this track; size == mc_Ntrack
+  TMC->Branch("mc_endMomentum", &reco_tree.mc_endMomentum, "mc_endMomentum[mc_Ntrack][4]/F");  // start momentum of this track; size == mc_Ntrack
+  TMC->SetDirectory(file1);
+
+  for (size_t i=0; i!= neutrino_vec.size();i++){
+    neutrino_vec.at(i)->fill_reco_simple_tree(reco_tree);
+    TMC->Fill();
+  }
+
+
+  
   TTree *T_cluster ;
   Double_t x,y,z,q,nq;
   Int_t ncluster;
@@ -1540,8 +1564,8 @@ int main(int argc, char* argv[])
   // original save ...
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     WCPPID::PR3DCluster* cluster = *it;
-    
-    ndf_save = cluster->get_cluster_id();
+    ndf_save = map_cluster_parent_id[cluster];
+    //    ndf_save = cluster->get_cluster_id();
     // original
     PointVector& pts = cluster->get_fine_tracking_path();
     //std::vector<double> dQ, dx;
