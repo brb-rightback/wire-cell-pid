@@ -121,7 +121,7 @@ namespace WCPPID{
 
     // get direction 
     TVector3 get_dir(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, double dis = 2*units::cm);
-    void determin_direction(WCPPID::PR3DCluster* temp_cluster);
+    void determine_direction(WCPPID::PR3DCluster* temp_cluster);
     
     // clustering points
     void clustering_points(WCPPID::PR3DCluster* temp_cluster);

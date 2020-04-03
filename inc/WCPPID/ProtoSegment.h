@@ -79,7 +79,12 @@ namespace WCPPID{
     bool get_flag_shower(){return flag_shower_trajectory || flag_shower_topology;};
     bool get_flag_shower_trajectory(){return flag_shower_trajectory;};
     bool get_flag_shower_topology(){return flag_shower_topology;};
-    
+
+    int get_flag_dir(){return flag_dir;};
+
+    void determine_dir_shower_trajectory();
+    void determine_dir_shower_topology();
+    void determine_dir_track();
     
   protected:
     int id;
@@ -112,6 +117,9 @@ namespace WCPPID{
     bool flag_shower_topology;
     
     bool flag_fit;
+
+    int flag_dir;
+    
   };
   typedef std::vector<ProtoSegment*> ProtoSegmentSelection;
   

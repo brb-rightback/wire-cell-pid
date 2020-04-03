@@ -302,16 +302,29 @@ void WCPPID::NeutrinoID::fill_reco_simple_tree(WCPPID::WCRecoTree& rtree){
     rtree.mc_process[rtree.mc_Ntrack] = 0;
     rtree.mc_mother[rtree.mc_Ntrack] = 0; 
 
-    rtree.mc_startXYZT[rtree.mc_Ntrack][0] = sg->get_point_vec().front().x/units::cm;
-    rtree.mc_startXYZT[rtree.mc_Ntrack][1] = sg->get_point_vec().front().y/units::cm;
-    rtree.mc_startXYZT[rtree.mc_Ntrack][2] = sg->get_point_vec().front().z/units::cm;
-    rtree.mc_startXYZT[rtree.mc_Ntrack][3] = 0;
+    if (sg->get_flag_dir()==0) continue;
+    else if (sg->get_flag_dir()==1){
+      rtree.mc_startXYZT[rtree.mc_Ntrack][0] = sg->get_point_vec().front().x/units::cm;
+      rtree.mc_startXYZT[rtree.mc_Ntrack][1] = sg->get_point_vec().front().y/units::cm;
+      rtree.mc_startXYZT[rtree.mc_Ntrack][2] = sg->get_point_vec().front().z/units::cm;
+      rtree.mc_startXYZT[rtree.mc_Ntrack][3] = 0;
     
-    rtree.mc_endXYZT[rtree.mc_Ntrack][0] = sg->get_point_vec().back().x/units::cm;
-    rtree.mc_endXYZT[rtree.mc_Ntrack][1] = sg->get_point_vec().back().y/units::cm;
-    rtree.mc_endXYZT[rtree.mc_Ntrack][2] = sg->get_point_vec().back().z/units::cm;
-    rtree.mc_endXYZT[rtree.mc_Ntrack][3] = 0;
-	     
+      rtree.mc_endXYZT[rtree.mc_Ntrack][0] = sg->get_point_vec().back().x/units::cm;
+      rtree.mc_endXYZT[rtree.mc_Ntrack][1] = sg->get_point_vec().back().y/units::cm;
+      rtree.mc_endXYZT[rtree.mc_Ntrack][2] = sg->get_point_vec().back().z/units::cm;
+      rtree.mc_endXYZT[rtree.mc_Ntrack][3] = 0;
+    }else if (sg->get_flag_dir()==-1){
+      rtree.mc_startXYZT[rtree.mc_Ntrack][0] = sg->get_point_vec().back().x/units::cm;
+      rtree.mc_startXYZT[rtree.mc_Ntrack][1] = sg->get_point_vec().back().y/units::cm;
+      rtree.mc_startXYZT[rtree.mc_Ntrack][2] = sg->get_point_vec().back().z/units::cm;
+      rtree.mc_startXYZT[rtree.mc_Ntrack][3] = 0;
+    
+      rtree.mc_endXYZT[rtree.mc_Ntrack][0] = sg->get_point_vec().front().x/units::cm;
+      rtree.mc_endXYZT[rtree.mc_Ntrack][1] = sg->get_point_vec().front().y/units::cm;
+      rtree.mc_endXYZT[rtree.mc_Ntrack][2] = sg->get_point_vec().front().z/units::cm;
+      rtree.mc_endXYZT[rtree.mc_Ntrack][3] = 0;
+    }
+    
     rtree.mc_startMomentum[rtree.mc_Ntrack][0] = 1;
     rtree.mc_startMomentum[rtree.mc_Ntrack][1] = 1;
     rtree.mc_startMomentum[rtree.mc_Ntrack][2] = 1;

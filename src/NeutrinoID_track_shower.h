@@ -43,12 +43,14 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
 
     if (sg->get_flag_shower_trajectory()){
       // trajectory shower
+      sg->determine_dir_shower_trajectory();
     }else if (sg->get_flag_shower_topology()){
       // topology shower
+      sg->determine_dir_shower_topology();
     }else{
       // track ...
+      sg->determine_dir_track();
     }
-
     
   }
 }

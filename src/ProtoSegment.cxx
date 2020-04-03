@@ -11,6 +11,7 @@ WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::
   , pcloud_associated_steiner(0)
   , flag_shower_trajectory(false)
   , flag_shower_topology(false)
+  , flag_dir(0)
 {
   
   for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
@@ -652,4 +653,16 @@ WCP::WCPointCloud<double>::WCPoint WCPPID::ProtoSegment::get_closest_wcpt(WCP::P
     }
   }
   return min_wcpt;
+}
+
+void WCPPID::ProtoSegment::determine_dir_track(){
+  
+}
+
+void WCPPID::ProtoSegment::determine_dir_shower_trajectory(){
+
+}
+
+void WCPPID::ProtoSegment::determine_dir_shower_topology(){
+  
 }
