@@ -305,9 +305,8 @@ void WCPPID::NeutrinoID::fill_reco_simple_tree(WCPPID::WCRecoTree& rtree){
     // p  2212
     // n 2112
     
-    rtree.mc_pdg[rtree.mc_Ntrack] = 13; // all muons for now ...
-    if (sg->get_flag_shower()) rtree.mc_pdg[rtree.mc_Ntrack] = 11; // electron
-
+    rtree.mc_pdg[rtree.mc_Ntrack] = sg->get_particle_type(); // all muons for now ...
+    
     rtree.mc_process[rtree.mc_Ntrack] = 0;
     rtree.mc_mother[rtree.mc_Ntrack] = 0; 
 

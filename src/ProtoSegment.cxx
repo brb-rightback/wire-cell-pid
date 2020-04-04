@@ -667,6 +667,155 @@ WCP::WCPointCloud<double>::WCPoint WCPPID::ProtoSegment::get_closest_wcpt(WCP::P
   return min_wcpt;
 }
 
+std::vector<double> WCPPID::ProtoSegment::do_track_comp(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range, double offset_length){
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  TGraph *g_muon = mp.get_muon_dq_dx();
+  TGraph *g_proton = mp.get_proton_dq_dx();
+  TGraph *g_electron = mp.get_electron_dq_dx();
+  
+  double end_L = L.back() + 0.15*units::cm;
+  
+  
+  int ncount = 0;
+  std::vector<double> vec_x;
+  std::vector<double> vec_y;
+    
+  for (size_t i=0;i!=L.size(); i++){
+    if (end_L - L.at(i) < compare_range && end_L - L.at(i) > 0){ // check up to compared range ...
+      vec_x.push_back(end_L-L.at(i));
+      vec_y.push_back(dQ_dx.at(i));
+      ncount ++;
+    }
+  }
+    
+  TH1F *h1 = new TH1F("h1","h1",ncount,0,ncount);
+  TH1F *h2 = new TH1F("h2","h2",ncount,0,ncount);
+  TH1F *h3 = new TH1F("h3","h3",ncount,0,ncount);
+  TH1F *h4 = new TH1F("h4","h4",ncount,0,ncount);
+  TH1F *h5 = new TH1F("h5","h5",ncount,0,ncount);
+    
+    
+  for (size_t i=0;i!=ncount;i++){
+    // std::cout << i << " " << vec_y.at(i) << std::endl;
+    h1->SetBinContent(i+1,vec_y.at(i));
+    h2->SetBinContent(i+1,g_muon->Eval((vec_x.at(i))/units::cm)); //muon
+    h3->SetBinContent(i+1,50e3); //MIP like ...
+    h4->SetBinContent(i+1,g_proton->Eval(vec_x.at(i)/units::cm)); //proton
+    h5->SetBinContent(i+1,g_electron->Eval(vec_x.at(i)/units::cm));    // electron
+  }
+  double ks1 = h2->KolmogorovTest(h1,"M");
+  double ratio1 = h2->GetSum()/(h1->GetSum()+1e-9);
+  double ks2 = h3->KolmogorovTest(h1,"M");
+  double ratio2 = h3->GetSum()/(h1->GetSum()+1e-9);
+  double ks3 = h4->KolmogorovTest(h1,"M");
+  double ratio3 = h4->GetSum()/(h1->GetSum()+1e-9);
+  double ks4 = h5->KolmogorovTest(h1,"M");
+  double ratio4 = h5->GetSum()/(h1->GetSum()+1e-9);
+  
+  delete h1;
+  delete h2;
+  delete h3;
+  delete h4;
+  delete h5;
+  
+  //  std::cout << id << " " << get_length()/units::cm << " " << ks1 << " " << ratio1 << " " << ks2 << " " << ratio2 << " " << ks3 << " " << ratio3 << " " << ks4 << " " << ratio4 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << std::endl;
+
+  std::vector<double> results;
+  results.push_back(eval_ks_ratio(ks1, ks2, ratio1, ratio2)); // direction metric
+  
+  results.push_back(sqrt(pow(ks1,2) + pow(ratio1-1,2))); // muon information
+  //  results.push_back(ratio1);
+
+  results.push_back(sqrt(pow(ks3,2) + pow(ratio3-1,2))); // proton information
+  //results.push_back(ratio3);
+
+  results.push_back(sqrt(pow(ks4,2) + pow(ratio4-1,2))); // electron information
+  //  results.push_back(ratio4);
+  
+  return results;
+  
+}
+
+bool WCPPID::ProtoSegment::eval_ks_ratio(double ks1, double ks2, double ratio1, double ratio2){
+  if (ks1-ks2 >= 0.0) return false;
+  if (sqrt(pow(ks2/0.06,2)+pow((ratio2-1)/0.06,2))< 1.4 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.02) return false;
+
+  if (ks1 - ks2 < -0.02 && (ks2 > 0.09 && fabs(ratio2-1) >0.1 || ratio2 > 1.5 || ks2 > 0.2)) return true;
+  if ( ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 < 0) return true;
+
+  return false;
+ }
+
+
+bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range , double offset_length ){
+  std::vector<double> rL(L.size(),0);
+  std::vector<double> rdQ_dx(L.size(),0);
+  // get reverse  vectors ...
+  for (size_t i=0;i!=L.size();i++){
+    rL.at(i) = L.back() - L.at(L.size()-1-i);
+    rdQ_dx.at(i) = dQ_dx.at(L.size()-1-i);
+  }
+
+  std::vector<double> result_forward = do_track_comp(L, dQ_dx, compare_range, offset_length);
+  std::vector<double> result_backward = do_track_comp(rL, rdQ_dx, compare_range, offset_length);
+
+  // direction determination 
+  bool flag_forward = std::round(result_forward.at(0));
+  bool flag_backward = std::round(result_backward.at(0));
+
+  int forward_particle_type = 13; // default muon
+  double min_forward_val = result_forward.at(1) ;
+  if (result_forward.at(2) < min_forward_val){
+    min_forward_val = result_forward.at(2);
+    forward_particle_type = 2212;
+  }
+  if (result_forward.at(3) < min_forward_val){
+    min_forward_val = result_forward.at(3);
+    forward_particle_type = 11;
+  }
+  int backward_particle_type  =-13; // default muon
+  double min_backward_val = result_backward.at(1);
+  if (result_backward.at(2) < min_backward_val){
+    min_backward_val = result_backward.at(2);
+    backward_particle_type = 2212;
+  }
+  if (result_backward.at(3) < min_backward_val){
+    min_backward_val = result_backward.at(3);
+    backward_particle_type = 11;
+  }
+
+  if (flag_forward == 1 && flag_backward == 0){
+    flag_dir = 1;
+    particle_type = forward_particle_type;
+    return true;
+  }else if (flag_forward == 0 && flag_backward == 1){
+    flag_dir = -1;
+    particle_type = backward_particle_type;
+    return true;
+  }else if (flag_forward == 1 && flag_backward == 1){
+    if (min_forward_val < min_backward_val){
+      flag_dir = 1;
+      particle_type = forward_particle_type;
+    }else{
+      flag_dir = -1;
+      particle_type = backward_particle_type;
+    }
+    return true;
+  }
+  
+  
+  //  std::cout << id << " " << get_length()/units::cm << " " << result_forward.at(0) << " m: " << result_forward.at(1)  << " p: " << result_forward.at(2) << " e: " << result_forward.at(3)  << std::endl;
+  //std::cout << id << " " << get_length()/units::cm << " " << result_backward.at(0) << " m: " << result_backward.at(1)  << " p: " << result_backward.at(2)  << " e: " << result_backward.at(3) <<  std::endl;
+
+  
+
+  // reset before return ...
+  flag_dir = 0;
+  particle_type  = 0;
+  
+  return false;
+}
+
 void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n){
   
   int npoints = fit_pt_vec.size();
@@ -681,99 +830,41 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n){
     start_n1 = 1;
   }
 
-  if (npoints >=5){ // reasonably long ...
+  if (npoints ==0) return;
+  std::vector<double> L(npoints,0);
+  std::vector<double> dQ_dx(npoints,0);
+  
+  double dis = 0;
+  //  std::cout << start_n1 << " " << end_n1 << " " << dQ_vec.size() << " " << fit_pt_vec.size() << std::endl;
+  for (size_t i = start_n1; i <= end_n1; i++){
+    L.at(i-start_n1) = dis;
+    dQ_dx.at(i-start_n1) = dQ_vec.at(i)/(dx_vec.at(i)/units::cm+1e-9);
+    if (i+1 < fit_pt_vec.size())
+      dis += sqrt(pow(fit_pt_vec.at(i+1).x-fit_pt_vec.at(i).x,2) + pow(fit_pt_vec.at(i+1).y-fit_pt_vec.at(i).y,2) + pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
+  }
+  
+ 
+  
+  if (npoints >=2){ // reasonably long ...
     // can use the dQ/dx to do PID and direction ...
-    std::vector<double> L(npoints,0);
-    std::vector<double> dQ_dx(npoints,0);
-    double dis = 0;
-    for (size_t i = start_n1; i <= end_n1; i++){
-      L.at(i) = dis;
-      dQ_dx.at(i) = dQ_vec.at(i)/(dx_vec.at(i)/units::cm+1e-9);
-
-      if (i+1 < fit_pt_vec.size())
-	dis += sqrt(pow(fit_pt_vec.at(i+1).x-fit_pt_vec.at(i).x,2) + pow(fit_pt_vec.at(i+1).y-fit_pt_vec.at(i).y,2) + pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
-    }
-    
-    
+    bool tmp_flag_pid = do_track_pid(L, dQ_dx);
+    if (!tmp_flag_pid) do_track_pid(L, dQ_dx, 15*units::cm);
+    if (!tmp_flag_pid) do_track_pid(L, dQ_dx, 35*units::cm, 3*units::cm);
+    if (!tmp_flag_pid) do_track_pid(L, dQ_dx, 15*units::cm, 3*units::cm);
   }
   // short track what to do???
+  if (particle_type == 0){
+    // calculate medium dQ/dx
+    std::vector<double> vec_dQ_dx = dQ_dx;
+    std::nth_element(vec_dQ_dx.begin(), vec_dQ_dx.begin() + vec_dQ_dx.size()/2, vec_dQ_dx.end());
+    double medium_dQ_dx = *std::next(vec_dQ_dx.begin(), vec_dQ_dx.size()/2);
+    if (medium_dQ_dx > 43e3 * 1.75) particle_type = 2212;
+    //    std::cout << medium_dQ_dx/(43e3) << std::endl;
+  }
   
-
-  // TPCParams& mp = Singleton<TPCParams>::Instance();
-
-  // TGraph *g_muon = mp.get_muon_dq_dx();
-  // TGraph *g_proton = mp.get_proton_dq_dx();
-  // TGraph *g_electron = mp.get_electron_dq_dx();
-
-  
-  // bool flag_forward = false;
-  // {
-  //   double end_L;
-  //   int max_bin;
-  //   if (end_n==1){
-  //     end_L = L.back();
-  //     max_bin = L.size()-1;
-  //   }else{
-  //     end_L = L.at(L.size()-2);
-  //     max_bin = L.size()-2;
-  //   }
-  //   end_L = L.at(max_bin) + 0.1*units::cm;
-    
-  //   int ncount = 0;
-  //   std::vector<double> vec_x;
-  //   std::vector<double> vec_y;
-    
-  //   for (size_t i=0;i!=L.size(); i++){
-  //     if (end_L - L.at(i) < 40*units::cm && end_L - L.at(i) > 0){ // check up to 40 cm ...
-  // 	vec_x.push_back(end_L-L.at(i));
-  // 	vec_y.push_back(dQ_dx.at(i));
-  // 	ncount ++;
-  //     }
-  //   }
-    
-  //   TH1F *h1 = new TH1F("h1","h1",ncount,0,ncount);
-  //   TH1F *h2 = new TH1F("h2","h2",ncount,0,ncount);
-  //   TH1F *h3 = new TH1F("h3","h3",ncount,0,ncount);
-  //   TH1F *h4 = new TH1F("h4","h4",ncount,0,ncount);
-  //   TH1F *h5 = new TH1F("h5","h5",ncount,0,ncount);
-    
-    
-  //   for (size_t i=0;i!=ncount;i++){
-  //     // std::cout << i << " " << vec_y.at(i) << std::endl;
-  //     h1->SetBinContent(i+1,vec_y.at(i));
-  //     h2->SetBinContent(i+1,g_muon->Eval((vec_x.at(i))/units::cm));
-  //     h3->SetBinContent(i+1,50e3); //MIP like ...
-  //     h4->SetBinContent(i+1,g_proton->Eval(vec_x.at(i)/units::cm)); 
-  //     h5->SetBinContent(i+1,g_electron->Eval(vec_x.at(i)/units::cm));     
-  //   }
-  //   double ks1 = h2->KolmogorovTest(h1,"M");
-  //   double ratio1 = h2->GetSum()/(h1->GetSum()+1e-9);
-  //   double ks2 = h3->KolmogorovTest(h1,"M");
-  //   double ratio2 = h3->GetSum()/(h1->GetSum()+1e-9);
-  //   double ks3 = h4->KolmogorovTest(h1,"M");
-  //   double ratio3 = h4->GetSum()/(h1->GetSum()+1e-9);
-  //   double ks4 = h5->KolmogorovTest(h1,"M");
-  //   double ratio4 = h5->GetSum()/(h1->GetSum()+1e-9);
-    
-  //   delete h1;
-  //   delete h2;
-  //   delete h3;
-  //   delete h4;
-  //   delete h5;
-    
-  //   std::cout << id << " " << ks1 << " " << ratio1 << " " << ks2 << " " << ratio2 << " " << ks3 << " " << ratio3 << " " << ks4 << " " << ratio4 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << std::endl;
-  // }
-  // check forward
-  
-  
-  
-  // fill backward
-
-  // check backward
+  std::cout << id << " " << get_length()/units::cm << " " << flag_dir << " " << particle_type << std::endl;
 
   
-  // four separate cases ...
-
   
   
   

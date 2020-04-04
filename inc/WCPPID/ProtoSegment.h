@@ -82,10 +82,16 @@ namespace WCPPID{
 
     int get_flag_dir(){return flag_dir;};
     int get_particle_type();
+
+    void determine_dir_track(int start_n, int end_n);
+    bool do_track_pid(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range = 35*units::cm, double offset_length = 0*units::cm);
+    std::vector<double> do_track_comp(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range = 35*units::cm, double offset_length = 0*units::cm);
+    bool eval_ks_ratio(double ks1, double ks2, double ratio1, double ratio2);
+
     
     void determine_dir_shower_trajectory();
     void determine_dir_shower_topology();
-    void determine_dir_track(int start_n, int end_n);
+    
     
   protected:
     int id;
