@@ -80,8 +80,12 @@ namespace WCPPID{
     bool get_flag_shower_trajectory(){return flag_shower_trajectory;};
     bool get_flag_shower_topology(){return flag_shower_topology;};
 
+    bool is_dir_weak();
     int get_flag_dir(){return flag_dir;};
+    void set_flag_dir(int val){flag_dir = val;};
     int get_particle_type();
+    
+    
     double get_particle_mass(){return particle_mass;};
     double get_particle_4mom(int num){return particle_4mom[num];};
     
@@ -130,6 +134,7 @@ namespace WCPPID{
     
     int flag_dir;
     int particle_type; // -1 undetermined,
+    double particle_score;
     // e- 11  e+ -11
     // muon- 13  muon+ -13
     // gamma 22

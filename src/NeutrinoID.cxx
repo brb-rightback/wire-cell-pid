@@ -88,6 +88,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
 
   if (flag_main_cluster){
     determine_direction(main_cluster);
+    determine_main_vertex(main_cluster);
   }
   if (flag_other_clusters){
     for (auto it = other_clusters.begin(); it != other_clusters.end(); it++){

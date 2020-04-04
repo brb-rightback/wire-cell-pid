@@ -1504,7 +1504,7 @@ WCPPID::ProtoVertexSelection WCPPID::NeutrinoID::find_vertices(WCPPID::PR3DClust
   return tmp_vertices;
 }
 
-WCPPID::ProtoSegmentSelection WCPPID::NeutrinoID::find_segmentss(WCPPID::PR3DCluster* temp_cluster){
+WCPPID::ProtoSegmentSelection WCPPID::NeutrinoID::find_segments(WCPPID::PR3DCluster* temp_cluster){
   WCPPID::ProtoSegmentSelection tmp_segments;
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     if (temp_cluster->get_cluster_id() == (it->first)->get_cluster_id()) tmp_segments.push_back(it->first);

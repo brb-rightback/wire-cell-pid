@@ -24,6 +24,7 @@ WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::
   , flag_shower_topology(false)
   , flag_dir(0)
   , particle_type(0)
+  , particle_score(100)
   , particle_mass(0)
 {
   for (int i=0;i!=4;i++){
@@ -203,7 +204,7 @@ bool WCPPID::ProtoSegment::is_shower_topology(){
       }
       total_length1 += tmp_length;
       if (tmp_length > max_length1) max_length1 = tmp_length;
-       std::cout << id << " " << start_n << " " << end_n << " " << tmp_length/units::cm << std::endl;
+      //       std::cout << id << " " << start_n << " " << end_n << " " << tmp_length/units::cm << std::endl;
     }
 
 
@@ -235,7 +236,7 @@ bool WCPPID::ProtoSegment::is_shower_topology(){
        }
        total_length2 += tmp_length;
        if (tmp_length > max_length2) max_length2 = tmp_length;
-       std::cout << id << " " << start_n << " " << end_n << " " << tmp_length/units::cm << std::endl;
+       //std::cout << id << " " << start_n << " " << end_n << " " << tmp_length/units::cm << std::endl;
     }
 
     if (total_length1 + max_length1 > 1.1*(total_length2 + max_length2)){
@@ -871,18 +872,22 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
   if (flag_forward == 1 && flag_backward == 0){
     flag_dir = 1;
     particle_type = forward_particle_type;
+    particle_score = min_forward_val;
     return true;
   }else if (flag_forward == 0 && flag_backward == 1){
     flag_dir = -1;
     particle_type = backward_particle_type;
+    particle_score = min_backward_val;
     return true;
   }else if (flag_forward == 1 && flag_backward == 1){
     if (min_forward_val < min_backward_val){
       flag_dir = 1;
       particle_type = forward_particle_type;
+      particle_score = min_forward_val;
     }else{
       flag_dir = -1;
       particle_type = backward_particle_type;
+      particle_score = min_backward_val;
     }
     return true;
   }  
@@ -894,6 +899,10 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
   return false;
 }
 
+bool WCPPID::ProtoSegment::is_dir_weak(){
+  if (fabs(particle_type)==13 && particle_score > 0.07) return true;
+  return false;
+}
 
 
 void WCPPID::ProtoSegment::cal_4mom_range(){
@@ -1022,7 +1031,7 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
   }
 
   if (flag_print)
-    std::cout << id << " " << length/units::cm << " Track " << flag_dir << " " << particle_type << " " << particle_mass/units::MeV << " " << (particle_4mom[3]-particle_mass)/units::MeV << std::endl;
+    std::cout << id << " " << length/units::cm << " Track " << flag_dir << " " << is_dir_weak() <<  " " << particle_type << " " << particle_mass/units::MeV << " " << (particle_4mom[3]-particle_mass)/units::MeV << " " << particle_score << std::endl;
   
   
 }
@@ -1051,13 +1060,16 @@ void WCPPID::ProtoSegment::determine_dir_shower_trajectory(int start_n, int end_
   cal_4mom_range();
 
   if (flag_print)
-    std::cout << id << " " << length/units::cm << " S_traj " << flag_dir << " " << particle_type << " " << particle_mass/units::MeV << " " << (particle_4mom[3]-particle_mass)/units::MeV << std::endl;
+    std::cout << id << " " << length/units::cm << " S_traj " << flag_dir << " " << is_dir_weak() <<  " " << particle_type << " " << particle_mass/units::MeV << " " << (particle_4mom[3]-particle_mass)/units::MeV << " " << particle_score << std::endl;
+
 }
 
 void WCPPID::ProtoSegment::determine_dir_shower_topology(int start_n, int end_n, bool flag_print){
   double length = get_length();
   // hack for now
   particle_type = 11;
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  particle_mass = mp.get_mass_electron();
   
   //if (start_n==1 && end_n >1){
   //  flag_dir = -1;
@@ -1081,5 +1093,5 @@ void WCPPID::ProtoSegment::determine_dir_shower_topology(int start_n, int end_n,
   // std::cout << dis1/units::cm << " " << dis2/units::cm << std::endl;
 
   if (flag_print)
-    std::cout << id << " " << length/units::cm << " S_topo " << flag_dir << " " << particle_type << " " << particle_mass/units::MeV << " " << (particle_4mom[3]-particle_mass)/units::MeV << std::endl;
+    std::cout << id << " " << length/units::cm << " S_topo " << flag_dir << " " << is_dir_weak() <<  " " << particle_type << " " << particle_mass/units::MeV << " " << (particle_4mom[3]-particle_mass)/units::MeV << " " << particle_score << std::endl;
 }

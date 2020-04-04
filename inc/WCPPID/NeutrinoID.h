@@ -122,6 +122,7 @@ namespace WCPPID{
     // get direction 
     TVector3 get_dir(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, double dis = 2*units::cm);
     void determine_direction(WCPPID::PR3DCluster* temp_cluster);
+    void determine_main_vertex(WCPPID::PR3DCluster* temp_cluster);
     
     // clustering points
     void clustering_points(WCPPID::PR3DCluster* temp_cluster);
@@ -130,7 +131,7 @@ namespace WCPPID{
     std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> find_vertices(WCPPID::ProtoSegment* sg);
     WCPPID::ProtoVertex* find_other_vertex(WCPPID::ProtoSegment *sg, WCPPID::ProtoVertex* v1); 
     WCPPID::ProtoVertexSelection find_vertices(WCPPID::PR3DCluster* temp_cluster);
-    WCPPID::ProtoSegmentSelection find_segmentss(WCPPID::PR3DCluster* temp_cluster);
+    WCPPID::ProtoSegmentSelection find_segments(WCPPID::PR3DCluster* temp_cluster);
     
     Map_Proto_Vertex_Segments& get_map_vertex_segments(){return map_vertex_segments;};
     Map_Proto_Segment_Vertices& get_map_segment_verteices(){return map_segment_vertices;};
