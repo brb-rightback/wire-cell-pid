@@ -85,15 +85,15 @@ namespace WCPPID{
     double get_particle_mass(){return particle_mass;};
     double get_particle_4mom(int num){return particle_4mom[num];};
     
-    void determine_dir_track(int start_n, int end_n);
+    void determine_dir_track(int start_n, int end_n, bool flag_print = false);
     bool do_track_pid(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range = 35*units::cm, double offset_length = 0*units::cm);
     std::vector<double> do_track_comp(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range = 35*units::cm, double offset_length = 0*units::cm);
     bool eval_ks_ratio(double ks1, double ks2, double ratio1, double ratio2);
     void cal_4mom_range();
     
     
-    void determine_dir_shower_trajectory();
-    void determine_dir_shower_topology();
+    void determine_dir_shower_trajectory(int start_n, int end_n, bool flag_print = false);
+    void determine_dir_shower_topology(int start_n, int end_n, bool flag_print = false);
     
     
   protected:

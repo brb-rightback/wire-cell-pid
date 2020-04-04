@@ -59,6 +59,7 @@ bool WCPPID::ProtoSegment::is_shower_topology(){
   // look at the points ...
   std::vector<PointVector > local_points_vec(fit_pt_vec.size());
   std::vector<std::tuple<double, double, double> > vec_rms_vals(fit_pt_vec.size(), std::make_tuple(0,0,0));
+  std::vector<double> vec_dQ_dx(fit_pt_vec.size(), 0);
   
   WCP::WCPointCloud<double>& cloud = pcloud_associated->get_cloud();
 
@@ -132,8 +133,9 @@ bool WCPPID::ProtoSegment::is_shower_topology(){
       std::get<1>(vec_rms_vals.at(i)) = sqrt(std::get<1>(vec_rms_vals.at(i))*1./(ncount));
       std::get<2>(vec_rms_vals.at(i)) = sqrt(std::get<2>(vec_rms_vals.at(i))*1./(ncount));
     }
+    vec_dQ_dx.at(i) = dQ_vec.at(i)/(dx_vec.at(i)+1e-9)/43e3*units::cm;
     //std::cout << dir_1.Angle(drift_dir)/3.1415926*180. << " " << dir_1.Mag() << " " << v1 << std::endl;
-    /// std::cout << std::get<0>(vec_rms_vals.at(i))/units::cm << " " << std::get<1>(vec_rms_vals.at(i))/units::cm << " " << std::get<2>(vec_rms_vals.at(i))/units::cm << std::endl;
+    //    std::cout << i << " " << dQ_vec.at(i)/(dx_vec.at(i)+1e-9)/43e3*units::cm << " " << std::get<0>(vec_rms_vals.at(i))/units::cm << " " << std::get<1>(vec_rms_vals.at(i))/units::cm << " " << std::get<2>(vec_rms_vals.at(i))/units::cm << std::endl;
   }
 
   double max_spread = 0;
@@ -172,8 +174,82 @@ bool WCPPID::ProtoSegment::is_shower_topology(){
   }
   
   if (max_spread > 0.7*units::cm && large_spread_length > 0.2 * total_effective_length && total_effective_length > 3*units::cm || max_spread > 1.0*units::cm && large_spread_length > 0.4 * total_effective_length) flag_shower_topology = true;
+
+  if (flag_shower_topology){
+    std::vector<std::tuple<int, int, double> > threshold_segs;
+    for(size_t i=0;i!=vec_dQ_dx.size(); i++){
+      if (threshold_segs.size()==0 && std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4){
+	threshold_segs.push_back(std::make_tuple(i,i,std::get<2>(vec_rms_vals.at(i))));
+      }else if (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4){
+	if (i == std::get<1>(threshold_segs.back())+1 && std::get<2>(threshold_segs.back()) < std::get<2>(vec_rms_vals.at(i)) ){
+	  std::get<1>(threshold_segs.back()) = i;
+	  std::get<2>(threshold_segs.back()) = std::get<2>(vec_rms_vals.at(i));
+	}else{
+	  if (i!=std::get<1>(threshold_segs.back())+1)
+	    threshold_segs.push_back(std::make_tuple(i,i,std::get<2>(vec_rms_vals.at(i))));
+	}
+      }
+      // loop ...
+    }
+
+    double total_length1 = 0, max_length1 = 0;
+    for (auto it = threshold_segs.begin(); it!= threshold_segs.end(); it++){
+      int start_n = std::get<0>(*it);
+      if (start_n >0) start_n --;
+      int end_n = std::get<1>(*it);
+      double tmp_length = 0;
+      for (int i=start_n; i!=end_n;i++){
+        tmp_length += sqrt(pow(fit_pt_vec.at(i+1).x - fit_pt_vec.at(i).x,2)+pow(fit_pt_vec.at(i+1).y - fit_pt_vec.at(i).y,2)+pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
+      }
+      total_length1 += tmp_length;
+      if (tmp_length > max_length1) max_length1 = tmp_length;
+       std::cout << id << " " << start_n << " " << end_n << " " << tmp_length/units::cm << std::endl;
+    }
+
+
+    threshold_segs.clear();
+    for(int i=vec_dQ_dx.size()-1;i>=0; i--){
+      if (threshold_segs.size()==0 && std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4){
+	threshold_segs.push_back(std::make_tuple(i,i,std::get<2>(vec_rms_vals.at(i))));
+      }else if (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4){
+	if (i == std::get<1>(threshold_segs.back())-1 && std::get<2>(threshold_segs.back()) < std::get<2>(vec_rms_vals.at(i)) ){
+	  std::get<1>(threshold_segs.back()) = i;
+	  std::get<2>(threshold_segs.back()) = std::get<2>(vec_rms_vals.at(i));
+	}else{
+	  if (i!=std::get<1>(threshold_segs.back())-1)
+	    threshold_segs.push_back(std::make_tuple(i,i,std::get<2>(vec_rms_vals.at(i))));
+	}
+      }
+      // loop ...
+    }
+
+    
+    double total_length2 = 0, max_length2 = 0;
+    for (auto it = threshold_segs.begin(); it!= threshold_segs.end(); it++){
+       int start_n = std::get<0>(*it);
+       if (start_n <fit_pt_vec.size()-1) start_n ++;
+       int end_n = std::get<1>(*it);
+       double tmp_length = 0;
+       for (int i=start_n; i!=end_n;i--){
+	 tmp_length+= sqrt(pow(fit_pt_vec.at(i-1).x - fit_pt_vec.at(i).x,2)+pow(fit_pt_vec.at(i-1).y - fit_pt_vec.at(i).y,2)+pow(fit_pt_vec.at(i-1).z - fit_pt_vec.at(i).z,2));
+       }
+       total_length2 += tmp_length;
+       if (tmp_length > max_length2) max_length2 = tmp_length;
+       std::cout << id << " " << start_n << " " << end_n << " " << tmp_length/units::cm << std::endl;
+    }
+
+    if (total_length1 + max_length1 > 1.1*(total_length2 + max_length2)){
+      flag_dir = 1;
+    }else if (1.1*(total_length1 + max_length1) < total_length2 + max_length2){
+      flag_dir = -1;
+    }
+    
+    //std::cout << id << " " << total_length1/units::cm << " " << total_length2/units::cm << " " << max_length1/units::cm << " " << max_length2/units::cm << std::endl;
+    
+  }
   
   //  std::cout << cluster_id << " "  << id << " " << max_spread/units::cm << " " << large_spread_length/total_effective_length << " " << max_cont_length/units::cm << " " << total_effective_length/units::cm << " " << flag_shower_trajectory << " " << flag_shower_topology << std::endl;
+  
   return flag_shower_topology;
 }
 
@@ -809,12 +885,7 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
       particle_type = backward_particle_type;
     }
     return true;
-  }
-  
-  
-  
-
-  
+  }  
 
   // reset before return ...
   flag_dir = 0;
@@ -823,7 +894,51 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
   return false;
 }
 
-void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n){
+
+
+void WCPPID::ProtoSegment::cal_4mom_range(){
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  TGraph *g_range = 0;
+  if (fabs(particle_type)==11)    g_range = mp.get_electron_r2ke();
+  else if (fabs(particle_type)==13) g_range = mp.get_muon_r2ke();
+  else if (fabs(particle_type)==211) g_range = mp.get_pion_r2ke();
+  else if (fabs(particle_type)==321) g_range = mp.get_kaon_r2ke();
+  else if (fabs(particle_type)==2212) g_range = mp.get_proton_r2ke();
+
+  //  std::cout << g_range << std::endl;
+  
+  double kine_energy = g_range->Eval(get_length()/units::cm) * units::MeV;
+  //std::cout << kine_energy << std::endl;
+  particle_4mom[3]= kine_energy + particle_mass;
+  double mom = sqrt(pow(particle_4mom[3],2) - pow(particle_mass,2));
+  //  direction vector ...
+
+  WCP::Point p(0,0,0);
+  
+  if (flag_dir == 1){
+    for (size_t i=1;i<5;i++){
+      if (i>= fit_pt_vec.size()) break;
+      p.x += fit_pt_vec.at(i).x - fit_pt_vec.at(0).x;
+      p.y += fit_pt_vec.at(i).y - fit_pt_vec.at(0).y;
+      p.z += fit_pt_vec.at(i).z - fit_pt_vec.at(0).z;
+    }
+  }else if (flag_dir == -1){
+    for (size_t i=1;i<5;i++){
+      if (i+1 > fit_pt_vec.size()) break;
+      p.x += fit_pt_vec.at(fit_pt_vec.size()-i-1).x - fit_pt_vec.back().x;
+      p.y += fit_pt_vec.at(fit_pt_vec.size()-i-1).y - fit_pt_vec.back().y;
+      p.z += fit_pt_vec.at(fit_pt_vec.size()-i-1).z - fit_pt_vec.back().z;
+    }
+  }
+  TVector3 v1(p.x, p.y, p.z);
+  v1 = v1.Unit();
+  particle_4mom[0] = mom * v1.X();
+  particle_4mom[1] = mom * v1.Y();
+  particle_4mom[2] = mom * v1.Z();
+}
+
+
+void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag_print){
   
   int npoints = fit_pt_vec.size();
   int start_n1 = 0, end_n1 = npoints - 1;
@@ -905,58 +1020,66 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n){
   if ((flag_dir==1 && end_n == 1 || flag_dir==-1 && start_n ==1) && particle_type!=0){
     cal_4mom_range();
   }
-  
-  std::cout << id << " " <<get_flag_shower_trajectory() << " " << get_flag_shower_topology() << " " << length/units::cm << " " << flag_dir << " " << particle_type << " " << particle_mass/units::MeV << " " << (particle_4mom[3]-particle_mass)/units::MeV << std::endl;
+
+  if (flag_print)
+    std::cout << id << " " << length/units::cm << " Track " << flag_dir << " " << particle_type << " " << particle_mass/units::MeV << " " << (particle_4mom[3]-particle_mass)/units::MeV << std::endl;
   
   
 }
 
-void WCPPID::ProtoSegment::cal_4mom_range(){
+void WCPPID::ProtoSegment::determine_dir_shower_trajectory(int start_n, int end_n, bool flag_print){
+  double length = get_length();
+
+  // hack for now ...
+  particle_type = 11;
   TPCParams& mp = Singleton<TPCParams>::Instance();
-  TGraph *g_range = 0;
-  if (fabs(particle_type)==11)    g_range = mp.get_electron_r2ke();
-  else if (fabs(particle_type)==13) g_range = mp.get_muon_r2ke();
-  else if (fabs(particle_type)==211) g_range = mp.get_pion_r2ke();
-  else if (fabs(particle_type)==321) g_range = mp.get_kaon_r2ke();
-  else if (fabs(particle_type)==2212) g_range = mp.get_proton_r2ke();
+  particle_mass = mp.get_mass_electron();
 
-  //  std::cout << g_range << std::endl;
-  
-  double kine_energy = g_range->Eval(get_length()/units::cm) * units::MeV;
-  //std::cout << kine_energy << std::endl;
-  particle_4mom[3]= kine_energy + particle_mass;
-  double mom = sqrt(pow(particle_4mom[3],2) - pow(particle_mass,2));
-  //  direction vector ...
-
-  WCP::Point p(0,0,0);
-  
-  if (flag_dir == 1){
-    for (size_t i=1;i<5;i++){
-      if (i>= fit_pt_vec.size()) break;
-      p.x += fit_pt_vec.at(i).x - fit_pt_vec.at(0).x;
-      p.y += fit_pt_vec.at(i).y - fit_pt_vec.at(0).y;
-      p.z += fit_pt_vec.at(i).z - fit_pt_vec.at(0).z;
-    }
-  }else if (flag_dir == -1){
-    for (size_t i=1;i<5;i++){
-      if (i+1 > fit_pt_vec.size()) break;
-      p.x += fit_pt_vec.at(fit_pt_vec.size()-i-1).x - fit_pt_vec.back().x;
-      p.y += fit_pt_vec.at(fit_pt_vec.size()-i-1).y - fit_pt_vec.back().y;
-      p.z += fit_pt_vec.at(fit_pt_vec.size()-i-1).z - fit_pt_vec.back().z;
+  if (start_n==1 && end_n >1){
+    flag_dir = -1;
+  }else if (start_n > 1 && end_n == 1){
+    flag_dir = 1;
+  }else{
+    determine_dir_track(start_n, end_n, false);
+    if (particle_type!=11){
+      particle_type = 11;
+      flag_dir = 0;
     }
   }
-  TVector3 v1(p.x, p.y, p.z);
-  v1 = v1.Unit();
-  particle_4mom[0] = mom * v1.X();
-  particle_4mom[1] = mom * v1.Y();
-  particle_4mom[2] = mom * v1.Z();
-}
 
-
-void WCPPID::ProtoSegment::determine_dir_shower_trajectory(){
-
-}
-
-void WCPPID::ProtoSegment::determine_dir_shower_topology(){
   
+  cal_4mom_range();
+
+  if (flag_print)
+    std::cout << id << " " << length/units::cm << " S_traj " << flag_dir << " " << particle_type << " " << particle_mass/units::MeV << " " << (particle_4mom[3]-particle_mass)/units::MeV << std::endl;
+}
+
+void WCPPID::ProtoSegment::determine_dir_shower_topology(int start_n, int end_n, bool flag_print){
+  double length = get_length();
+  // hack for now
+  particle_type = 11;
+  
+  //if (start_n==1 && end_n >1){
+  //  flag_dir = -1;
+  //}else if (start_n > 1 && end_n == 1){
+  //  flag_dir = 1;
+  //}
+  // WCP::Point center(0,0,0);
+  // WCP::WCPointCloud<double>& cloud = pcloud_associated->get_cloud();
+  // for (size_t i=0;i!=cloud.pts.size();i++){
+  //   center.x += cloud.pts.at(i).x;
+  //   center.y += cloud.pts.at(i).y;
+  //   center.z += cloud.pts.at(i).z;
+  // }
+  // center.x /= cloud.pts.size();
+  // center.y /= cloud.pts.size();
+  // center.z /= cloud.pts.size();
+
+  // double dis1 = sqrt(pow(center.x - fit_pt_vec.front().x ,2) + pow(center.y - fit_pt_vec.front().y,2) + pow(center.z - fit_pt_vec.front().z,2));
+  // double dis2 = sqrt(pow(center.x - fit_pt_vec.back().x ,2) + pow(center.y - fit_pt_vec.back().y,2) + pow(center.z - fit_pt_vec.back().z,2));
+
+  // std::cout << dis1/units::cm << " " << dis2/units::cm << std::endl;
+
+  if (flag_print)
+    std::cout << id << " " << length/units::cm << " S_topo " << flag_dir << " " << particle_type << " " << particle_mass/units::MeV << " " << (particle_4mom[3]-particle_mass)/units::MeV << std::endl;
 }
