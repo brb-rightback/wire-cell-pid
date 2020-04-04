@@ -116,11 +116,10 @@ namespace WCPPID{
 
     bool flag_shower_trajectory;
     bool flag_shower_topology;
-    
     bool flag_fit;
-
-    int flag_dir;
     
+    
+    int flag_dir;
     int particle_type; // -1 undetermined,
     // e- 11  e+ -11
     // muon- 13  muon+ -13
