@@ -1,4 +1,6 @@
 #include "WCPPID/ProtoSegment.h"
+#include "WCPData/TPCParams.h"
+#include "WCPData/Singleton.h"
 
 using namespace WCP;
 
@@ -656,6 +658,10 @@ WCP::WCPointCloud<double>::WCPoint WCPPID::ProtoSegment::get_closest_wcpt(WCP::P
 }
 
 void WCPPID::ProtoSegment::determine_dir_track(){
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  TGraph *g_muon = mp.get_muon_dq_dx();
+  
+  //std::cout << g_muon->GetN() << std::endl;
   
 }
 

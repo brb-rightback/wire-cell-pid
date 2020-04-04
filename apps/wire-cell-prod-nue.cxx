@@ -128,6 +128,7 @@ int main(int argc, char* argv[])
   mp.set_ts_width(time_slice_width);
   if (flag_calib_corr==1)
     mp.init_corr_files();
+  mp.init_PID_dq_dx();
 
    // test geometry ...
   const GeomWire *uwire = gds.by_planeindex(WirePlaneType_t(0),0);

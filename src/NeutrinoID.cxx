@@ -31,7 +31,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   , flash_time(flash_time)
   , type(0)
 {
-  bool flag_other_clusters = true;
+  bool flag_other_clusters = false;
   bool flag_main_cluster = true;
   
   // form id vs. cluster ...
@@ -85,6 +85,15 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   
   // track shower separation
   separate_track_shower();
+
+  if (flag_main_cluster){
+    determine_direction(main_cluster);
+  }
+  if (flag_other_clusters){
+    for (auto it = other_clusters.begin(); it != other_clusters.end(); it++){
+      determine_direction(*it);
+    }
+  }
   
   // for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
   //   std::cout << it->first->get_fit_pt() << std::endl;
