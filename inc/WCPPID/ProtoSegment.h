@@ -82,12 +82,15 @@ namespace WCPPID{
 
     int get_flag_dir(){return flag_dir;};
     int get_particle_type();
-
+    double get_particle_mass(){return particle_mass;};
+    double get_particle_4mom(int num){return particle_4mom[num];};
+    
     void determine_dir_track(int start_n, int end_n);
     bool do_track_pid(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range = 35*units::cm, double offset_length = 0*units::cm);
     std::vector<double> do_track_comp(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range = 35*units::cm, double offset_length = 0*units::cm);
     bool eval_ks_ratio(double ks1, double ks2, double ratio1, double ratio2);
-
+    void cal_4mom_range();
+    
     
     void determine_dir_shower_trajectory();
     void determine_dir_shower_topology();
@@ -134,6 +137,8 @@ namespace WCPPID{
     // kaon+ 321, K- -321
     // p  2212
     // n 2112
+    double particle_mass;
+    double particle_4mom[4];
   };
   typedef std::vector<ProtoSegment*> ProtoSegmentSelection;
   

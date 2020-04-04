@@ -24,7 +24,11 @@ WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::
   , flag_shower_topology(false)
   , flag_dir(0)
   , particle_type(0)
+  , particle_mass(0)
 {
+  for (int i=0;i!=4;i++){
+    particle_4mom[i] = 0;
+  }
   
   for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
     wcpt_vec.push_back(*it);
@@ -861,14 +865,66 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n){
     if (medium_dQ_dx > 43e3 * 1.75) particle_type = 2212;
     //    std::cout << medium_dQ_dx/(43e3) << std::endl;
   }
-  
-  std::cout << id << " " << get_length()/units::cm << " " << flag_dir << " " << particle_type << std::endl;
 
+  if (particle_type!=0){
+    TPCParams& mp = Singleton<TPCParams>::Instance();
+    if (fabs(particle_type)==11)    particle_mass = mp.get_mass_electron();
+    else if (fabs(particle_type)==13) particle_mass = mp.get_mass_muon();
+    else if (fabs(particle_type)==211) particle_mass = mp.get_mass_pion();
+    else if (fabs(particle_type)==321) particle_mass = mp.get_mass_kaon();
+    else if (fabs(particle_type)==2212) particle_mass = mp.get_mass_proton();
+  }
+
+  if ((flag_dir==1 && end_n == 1 || flag_dir==-1 && start_n ==1) && particle_type!=0){
+    cal_4mom_range();
+  }
   
-  
+  std::cout << id << " " << get_length()/units::cm << " " << flag_dir << " " << particle_type << " " << particle_mass/units::MeV << std::endl;
   
   
 }
+
+void WCPPID::ProtoSegment::cal_4mom_range(){
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  TGraph *g_range = 0;
+  if (fabs(particle_type)==11)    g_range = mp.get_electron_r2ke();
+  else if (fabs(particle_type)==13) g_range = mp.get_muon_r2ke();
+  else if (fabs(particle_type)==211) g_range = mp.get_pion_r2ke();
+  else if (fabs(particle_type)==321) g_range = mp.get_kaon_r2ke();
+  else if (fabs(particle_type)==2212) g_range = mp.get_proton_r2ke();
+
+  //  std::cout << g_range << std::endl;
+  
+  double kine_energy = g_range->Eval(get_length()/units::cm) * units::MeV;
+  //std::cout << kine_energy << std::endl;
+  particle_4mom[3]= kine_energy + particle_mass;
+  double mom = sqrt(pow(particle_4mom[3],2) - pow(particle_mass,2));
+  //  direction vector ...
+
+  WCP::Point p(0,0,0);
+  
+  if (flag_dir == 1){
+    for (size_t i=1;i<5;i++){
+      if (i>= fit_pt_vec.size()) break;
+      p.x += fit_pt_vec.at(i).x - fit_pt_vec.at(0).x;
+      p.y += fit_pt_vec.at(i).y - fit_pt_vec.at(0).y;
+      p.z += fit_pt_vec.at(i).z - fit_pt_vec.at(0).z;
+    }
+  }else if (flag_dir == -1){
+    for (size_t i=1;i<5;i++){
+      if (i+1 > fit_pt_vec.size()) break;
+      p.x += fit_pt_vec.at(fit_pt_vec.size()-i-1).x - fit_pt_vec.back().x;
+      p.y += fit_pt_vec.at(fit_pt_vec.size()-i-1).y - fit_pt_vec.back().y;
+      p.z += fit_pt_vec.at(fit_pt_vec.size()-i-1).z - fit_pt_vec.back().z;
+    }
+  }
+  TVector3 v1(p.x, p.y, p.z);
+  v1 = v1.Unit();
+  particle_4mom[0] = mom * v1.X();
+  particle_4mom[1] = mom * v1.Y();
+  particle_4mom[2] = mom * v1.Z();
+}
+
 
 void WCPPID::ProtoSegment::determine_dir_shower_trajectory(){
 
