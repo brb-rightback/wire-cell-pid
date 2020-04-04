@@ -777,7 +777,7 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
     min_forward_val = result_forward.at(3);
     forward_particle_type = 11;
   }
-  int backward_particle_type  =-13; // default muon
+  int backward_particle_type  =13; // default muon
   double min_backward_val = result_backward.at(1);
   if (result_backward.at(2) < min_backward_val){
     min_backward_val = result_backward.at(2);
@@ -788,6 +788,10 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
     backward_particle_type = 11;
   }
 
+  //  std::cout << id << " " << get_length()/units::cm << " " << result_forward.at(0) << " m: " << result_forward.at(1)  << " p: " << result_forward.at(2) << " e: " << result_forward.at(3)  << std::endl;
+  //std::cout << id << " " << get_length()/units::cm << " " << result_backward.at(0) << " m: " << result_backward.at(1)  << " p: " << result_backward.at(2)  << " e: " << result_backward.at(3) <<  std::endl;
+
+  
   if (flag_forward == 1 && flag_backward == 0){
     flag_dir = 1;
     particle_type = forward_particle_type;
@@ -808,8 +812,7 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
   }
   
   
-  //  std::cout << id << " " << get_length()/units::cm << " " << result_forward.at(0) << " m: " << result_forward.at(1)  << " p: " << result_forward.at(2) << " e: " << result_forward.at(3)  << std::endl;
-  //std::cout << id << " " << get_length()/units::cm << " " << result_backward.at(0) << " m: " << result_backward.at(1)  << " p: " << result_backward.at(2)  << " e: " << result_backward.at(3) <<  std::endl;
+  
 
   
 
@@ -856,15 +859,39 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n){
     if (!tmp_flag_pid) do_track_pid(L, dQ_dx, 35*units::cm, 3*units::cm);
     if (!tmp_flag_pid) do_track_pid(L, dQ_dx, 15*units::cm, 3*units::cm);
   }
+
+  double length = get_length();
   // short track what to do???
   if (particle_type == 0){
     // calculate medium dQ/dx
     std::vector<double> vec_dQ_dx = dQ_dx;
     std::nth_element(vec_dQ_dx.begin(), vec_dQ_dx.begin() + vec_dQ_dx.size()/2, vec_dQ_dx.end());
     double medium_dQ_dx = *std::next(vec_dQ_dx.begin(), vec_dQ_dx.size()/2);
-    if (medium_dQ_dx > 43e3 * 1.75) particle_type = 2212;
+    if (medium_dQ_dx > 43e3 * 1.75) particle_type = 2212; // proton
+    else if (medium_dQ_dx < 43e3 * 1.2) particle_type = 13; //muon type
+    else if (medium_dQ_dx < 43e3 * 1.5 && length < 4*units::cm) particle_type = 13;
     //    std::cout << medium_dQ_dx/(43e3) << std::endl;
   }
+  
+  // vertex activities ...
+  if (length < 1.5*units::cm && (start_n == 1 || end_n == 1)){
+    if (start_n ==1 && end_n > 2){
+      flag_dir = -1;
+      std::vector<double> vec_dQ_dx = dQ_dx;
+      std::nth_element(vec_dQ_dx.begin(), vec_dQ_dx.begin() + vec_dQ_dx.size()/2, vec_dQ_dx.end());
+      double medium_dQ_dx = *std::next(vec_dQ_dx.begin(), vec_dQ_dx.size()/2);
+      if (medium_dQ_dx > 43e3 * 1.75) particle_type = 2212;
+      else if (medium_dQ_dx < 43e3*1.2) particle_type = 221;
+    }else if (end_n==1 && start_n>2){
+      flag_dir = 1;
+      std::vector<double> vec_dQ_dx = dQ_dx;
+      std::nth_element(vec_dQ_dx.begin(), vec_dQ_dx.begin() + vec_dQ_dx.size()/2, vec_dQ_dx.end());
+      double medium_dQ_dx = *std::next(vec_dQ_dx.begin(), vec_dQ_dx.size()/2);
+      if (medium_dQ_dx > 43e3 * 1.75) particle_type = 2212;
+      else if (medium_dQ_dx < 43e3*1.2) particle_type = 221;
+    }
+  }
+  
 
   if (particle_type!=0){
     TPCParams& mp = Singleton<TPCParams>::Instance();
@@ -879,7 +906,7 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n){
     cal_4mom_range();
   }
   
-  std::cout << id << " " << get_length()/units::cm << " " << flag_dir << " " << particle_type << " " << particle_mass/units::MeV << std::endl;
+  std::cout << id << " " <<get_flag_shower_trajectory() << " " << get_flag_shower_topology() << " " << length/units::cm << " " << flag_dir << " " << particle_type << " " << particle_mass/units::MeV << " " << (particle_4mom[3]-particle_mass)/units::MeV << std::endl;
   
   
 }
