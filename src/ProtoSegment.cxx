@@ -2,7 +2,16 @@
 #include "WCPData/TPCParams.h"
 #include "WCPData/Singleton.h"
 
+#include "TH1F.h"
+
 using namespace WCP;
+
+int WCPPID::ProtoSegment::get_particle_type(){
+  if (get_flag_shower()){
+    particle_type = 11; // shower are all treated as electron
+  }
+  return particle_type;
+}
 
 WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::WCPoint >& path_wcps, int cluster_id )
   : id(id)
@@ -14,6 +23,7 @@ WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::
   , flag_shower_trajectory(false)
   , flag_shower_topology(false)
   , flag_dir(0)
+  , particle_type(0)
 {
   
   for (auto it = path_wcps.begin(); it!=path_wcps.end(); it++){
@@ -657,11 +667,96 @@ WCP::WCPointCloud<double>::WCPoint WCPPID::ProtoSegment::get_closest_wcpt(WCP::P
   return min_wcpt;
 }
 
-void WCPPID::ProtoSegment::determine_dir_track(){
+void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n){
   TPCParams& mp = Singleton<TPCParams>::Instance();
   TGraph *g_muon = mp.get_muon_dq_dx();
+  TGraph *g_proton = mp.get_proton_dq_dx();
+  TGraph *g_electron = mp.get_electron_dq_dx();
   
-  //std::cout << g_muon->GetN() << std::endl;
+  bool flag_forward = false;
+
+  {
+    // fill forward
+    std::vector<double> L(fit_pt_vec.size(),0);
+    std::vector<double> dQ_dx(fit_pt_vec.size(),0);
+    
+    double dis = 0;
+    L.at(0) = dis;
+    dQ_dx.at(0) = dQ_vec.at(0)/(dx_vec.at(0)/units::cm+1e-9);
+    for (size_t i=1;i!=fit_pt_vec.size();i++){
+      dis += sqrt(pow(fit_pt_vec.at(i).x-fit_pt_vec.at(i-1).x,2) + pow(fit_pt_vec.at(i).y-fit_pt_vec.at(i-1).y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.at(i-1).z,2));
+      L.at(i) = dis;
+      dQ_dx.at(i) = dQ_vec.at(i)/(dx_vec.at(i)/units::cm+1e-9);
+    }
+    
+    double end_L;
+    int max_bin;
+    if (end_n==1){
+      end_L = L.back();
+      max_bin = L.size()-1;
+    }else{
+      end_L = L.at(L.size()-2);
+      max_bin = L.size()-2;
+    }
+    end_L = L.at(max_bin) + 0.1*units::cm;
+    
+    int ncount = 0;
+    std::vector<double> vec_x;
+    std::vector<double> vec_y;
+    
+    for (size_t i=0;i!=L.size(); i++){
+      if (end_L - L.at(i) < 40*units::cm && end_L - L.at(i) > 0){ // check up to 40 cm ...
+	vec_x.push_back(end_L-L.at(i));
+	vec_y.push_back(dQ_dx.at(i));
+	ncount ++;
+      }
+    }
+    
+    TH1F *h1 = new TH1F("h1","h1",ncount,0,ncount);
+    TH1F *h2 = new TH1F("h2","h2",ncount,0,ncount);
+    TH1F *h3 = new TH1F("h3","h3",ncount,0,ncount);
+    TH1F *h4 = new TH1F("h4","h4",ncount,0,ncount);
+    TH1F *h5 = new TH1F("h5","h5",ncount,0,ncount);
+    
+    
+    for (size_t i=0;i!=ncount;i++){
+      // std::cout << i << " " << vec_y.at(i) << std::endl;
+      h1->SetBinContent(i+1,vec_y.at(i));
+      h2->SetBinContent(i+1,g_muon->Eval((vec_x.at(i))/units::cm));
+      h3->SetBinContent(i+1,50e3); //MIP like ...
+      h4->SetBinContent(i+1,g_proton->Eval(vec_x.at(i)/units::cm)); 
+      h5->SetBinContent(i+1,g_electron->Eval(vec_x.at(i)/units::cm));     
+    }
+    double ks1 = h2->KolmogorovTest(h1,"M");
+    double ratio1 = h2->GetSum()/(h1->GetSum()+1e-9);
+    double ks2 = h3->KolmogorovTest(h1,"M");
+    double ratio2 = h3->GetSum()/(h1->GetSum()+1e-9);
+    double ks3 = h4->KolmogorovTest(h1,"M");
+    double ratio3 = h4->GetSum()/(h1->GetSum()+1e-9);
+    double ks4 = h5->KolmogorovTest(h1,"M");
+    double ratio4 = h5->GetSum()/(h1->GetSum()+1e-9);
+    
+    delete h1;
+    delete h2;
+    delete h3;
+    delete h4;
+    delete h5;
+    
+    std::cout << id << " " << ks1 << " " << ratio1 << " " << ks2 << " " << ratio2 << " " << ks3 << " " << ratio3 << " " << ks4 << " " << ratio4 << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << std::endl;
+  }
+  // check forward
+  
+  
+  
+  // fill backward
+
+  // check backward
+
+  
+  // four separate cases ...
+
+  
+  
   
 }
 

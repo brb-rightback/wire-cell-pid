@@ -41,6 +41,16 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
 
+    WCPPID::ProtoVertex *start_v=0, *end_v=0;
+    for (auto it = map_segment_vertices[sg].begin(); it!=map_segment_vertices[sg].end(); it++){
+      if ((*it)->get_wcpt().index == sg->get_wcpt_vec().front().index) start_v = *it;
+      if ((*it)->get_wcpt().index == sg->get_wcpt_vec().back().index) end_v = *it;
+    }
+    if (start_v==0 || end_v==0){
+      std::cout << "Error in finding vertices for a segment" << std::endl; 
+    }
+    
+    
     if (sg->get_flag_shower_trajectory()){
       // trajectory shower
       sg->determine_dir_shower_trajectory();
@@ -49,7 +59,7 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
       sg->determine_dir_shower_topology();
     }else{
       // track ...
-      sg->determine_dir_track();
+      sg->determine_dir_track(map_vertex_segments[start_v].size(), map_vertex_segments[end_v].size() );
     }
     
   }

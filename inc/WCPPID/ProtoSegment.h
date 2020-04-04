@@ -81,10 +81,11 @@ namespace WCPPID{
     bool get_flag_shower_topology(){return flag_shower_topology;};
 
     int get_flag_dir(){return flag_dir;};
-
+    int get_particle_type();
+    
     void determine_dir_shower_trajectory();
     void determine_dir_shower_topology();
-    void determine_dir_track();
+    void determine_dir_track(int start_n, int end_n);
     
   protected:
     int id;
@@ -120,6 +121,14 @@ namespace WCPPID{
 
     int flag_dir;
     
+    int particle_type; // -1 undetermined,
+    // e- 11  e+ -11
+    // muon- 13  muon+ -13
+    // gamma 22
+    // pi+ 211, pi- 111, pi- -211
+    // kaon+ 321, K- -321
+    // p  2212
+    // n 2112
   };
   typedef std::vector<ProtoSegment*> ProtoSegmentSelection;
   
