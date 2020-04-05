@@ -20,16 +20,19 @@ using namespace WCP;
 #include "NeutrinoID_deghost.h"
 #include "NeutrinoID_track_shower.h"
 
-WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, std::vector<WCPPID::PR3DCluster*>& all_clusters, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time)
+WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, std::vector<WCPPID::PR3DCluster*>& all_clusters, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x)
   : acc_vertex_id(0)
   , acc_segment_id(0)
   , main_cluster(main_cluster)
   , other_clusters(other_clusters)
   , all_clusters(all_clusters)
+  , fid(fid)
   , ct_point_cloud(ct_point_cloud)
   , global_wc_map(global_wc_map)
   , flash_time(flash_time)
+  , offset_x(offset_x)
   , type(0)
+  , main_vertex(0)
 {
   bool flag_other_clusters = false;
   bool flag_main_cluster = true;

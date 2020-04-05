@@ -85,6 +85,8 @@ namespace WCPPID{
     void set_flag_dir(int val){flag_dir = val;};
     int get_particle_type();
     
+    int set_particle_type(int type){particle_type = type;};
+    void set_particle_mass(double val){particle_mass = val;};
     
     double get_particle_mass(){return particle_mass;};
     double get_particle_4mom(int num){return particle_4mom[num];};

@@ -1242,9 +1242,8 @@ int main(int argc, char* argv[])
 	additional_clusters.push_back(*it1);
     }
 
-
-    
-    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time);
+    double offset_x =     (flash_time - time_offset)*2./nrebin*time_slice_width;
+    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x);
     neutrino_vec.push_back(neutrino);
     
   }

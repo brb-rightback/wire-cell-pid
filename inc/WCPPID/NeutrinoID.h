@@ -9,6 +9,8 @@
 #include "WCPPID/WCVertex.h"
 #include "WCPPID/WCParticle.h"
 
+#include "WCPPID/ToyFiducial.h"
+
 #include "WCPPID/Map_Proto_Vertex_Segment.h"
 
 //#include "Minuit2/FCNBase.h"
@@ -78,7 +80,7 @@ namespace WCPPID{
   
   class NeutrinoID{
   public:
-    NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, std::vector<WCPPID::PR3DCluster*>& all_clusters, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis,	WCP::ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double flash_time);
+    NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, std::vector<WCPPID::PR3DCluster*>& all_clusters, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis,	WCP::ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double flash_time, double offset_x);
     ~NeutrinoID();
 
     // deal with the map ...
@@ -123,6 +125,9 @@ namespace WCPPID{
     TVector3 get_dir(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, double dis = 2*units::cm);
     void determine_direction(WCPPID::PR3DCluster* temp_cluster);
     void determine_main_vertex(WCPPID::PR3DCluster* temp_cluster);
+    WCPPID::ProtoVertex* compare_main_vertices(WCPPID::ProtoVertexSelection& vertex_candidates);
+    
+    bool examine_direction(WCPPID::ProtoVertex* main_vertex);
     
     // clustering points
     void clustering_points(WCPPID::PR3DCluster* temp_cluster);
@@ -145,6 +150,7 @@ namespace WCPPID{
     
     // fill_fit_parameters();
     void fill_fit_parameters();
+    WCPPID::ProtoVertex* get_main_vertex(){return main_vertex;};
     
   protected:
     int acc_vertex_id;
@@ -153,14 +159,16 @@ namespace WCPPID{
     WCPPID::PR3DCluster *main_cluster;
     std::vector<WCPPID::PR3DCluster*> other_clusters;
     std::vector<WCPPID::PR3DCluster*> all_clusters;
-
+    WCPPID::ToyFiducial* fid;
+      
+    WCPPID::ProtoVertex *main_vertex;
     
     std::map<int, WCPPID::PR3DCluster*> map_id_cluster;
     
     WCP::ToyCTPointCloud* ct_point_cloud;
     std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > > global_wc_map;
     double flash_time;
-
+    double offset_x;
     // output ...
     int type; // nue, numu, NC for 1,2,3,    0 for no ID
 
