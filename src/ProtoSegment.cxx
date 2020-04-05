@@ -914,8 +914,45 @@ bool WCPPID::ProtoSegment::get_flag_shower_dQdx(){
   return false;
 }
 
+double WCPPID::ProtoSegment::cal_kine_charge(){
+  double kine_energy =0;
+  // this is for shower ...
 
-void WCPPID::ProtoSegment::cal_4mom_range(){
+  
+  return kine_energy;
+}
+
+double WCPPID::ProtoSegment::cal_kine_dQdx(){
+  double kine_energy =0;
+  Double_t alpha = 1.0;
+  Double_t beta = 0.255;
+  for (size_t i=0;i!=fit_pt_vec.size();i++){
+    Double_t dQdx = dQ_vec.at(i)/(dx_vec.at(i) + 1e-9) * units::cm;
+    if (dQdx/43e3 > 1000) dQdx = 0;
+    Double_t dEdx = (exp(dQdx * 23.6e-6*beta/1.38/0.273) - alpha)/(beta/1.38/0.273) * units::MeV/units::cm;
+    if (i==0){
+      double dis = sqrt(pow(fit_pt_vec.at(1).x - fit_pt_vec.at(0).x,2) + pow(fit_pt_vec.at(1).y - fit_pt_vec.at(0).y,2) + pow(fit_pt_vec.at(1).z - fit_pt_vec.at(0).z,2));
+      if (dx_vec.at(i) > dis*1.5){
+	kine_energy += dEdx * dis * 1.5;
+      }else{
+	kine_energy += dEdx * dx_vec.at(i);
+      }
+    }else if (i+1 == fit_pt_vec.size()){
+      double dis = sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.at(i-1).x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.at(i-1).y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.at(i-1).z,2));
+      if (dx_vec.at(i) > dis*1.5){
+	kine_energy += dEdx * dis * 1.5;
+      }else{
+	kine_energy += dEdx * dx_vec.at(i);
+      }
+    }else{
+      kine_energy += dEdx * dx_vec.at(i);
+    }
+  }
+  
+  return kine_energy;
+}
+
+double WCPPID::ProtoSegment::cal_kine_range(){
   TPCParams& mp = Singleton<TPCParams>::Instance();
   TGraph *g_range = 0;
   if (fabs(particle_type)==11)    g_range = mp.get_electron_r2ke();
@@ -927,6 +964,15 @@ void WCPPID::ProtoSegment::cal_4mom_range(){
   //  std::cout << g_range << std::endl;
   
   double kine_energy = g_range->Eval(get_length()/units::cm) * units::MeV;
+  return kine_energy;
+}
+
+void WCPPID::ProtoSegment::cal_4mom_range(){
+ 
+
+  //  std::cout << g_range << std::endl;
+  
+  double kine_energy = cal_kine_range();
   //std::cout << kine_energy << std::endl;
   particle_4mom[3]= kine_energy + particle_mass;
   double mom = sqrt(pow(particle_4mom[3],2) - pow(particle_mass,2));

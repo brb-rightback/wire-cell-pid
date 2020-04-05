@@ -25,6 +25,9 @@ namespace WCPPID{
     int mc_mother[1000];  // mother id of this track; size == mc_Ntrack
 
     int mc_dir_weak[1000]; // weak direction ...
+    float mc_kine_range[1000];
+    float mc_kine_dQdx[1000];
+    float mc_kine_charge[1000];
     
     float mc_startXYZT[1000][4];  // start position of this track; size == mc_Ntrack
     float mc_endXYZT[1000][4];  // end position of this track; size == mc_Ntrack

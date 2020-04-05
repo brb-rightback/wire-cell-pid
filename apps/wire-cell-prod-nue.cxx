@@ -1383,7 +1383,12 @@ int main(int argc, char* argv[])
   TMC->Branch("mc_pdg", &reco_tree.mc_pdg, "mc_id[mc_Ntrack]/I");  // track particle pdg; size == mc_Ntrack
   TMC->Branch("mc_process", &reco_tree.mc_process, "mc_process[mc_Ntrack]/I");  // track generation process code; size == mc_Ntrack
   TMC->Branch("mc_mother", &reco_tree.mc_mother, "mc_mother[mc_Ntrack]/I");  // mother id of this track; size == mc_Ntrack
+
   TMC->Branch("mc_dir_weak",&reco_tree.mc_dir_weak,"mc_dir_weak[mc_Ntrack]/I");
+  TMC->Branch("mc_kine_range",&reco_tree.mc_kine_range,"mc_kine_range[mc_Ntrack]/D");
+  TMC->Branch("mc_kine_dQdx",&reco_tree.mc_kine_dQdx,"mc_kine_dQdx[mc_Ntrack]/D");
+  TMC->Branch("mc_kine_charge",&reco_tree.mc_kine_charge,"mc_kine_charge[mc_Ntrack]/D");
+  
   TMC->Branch("mc_daughters", reco_tree.mc_daughters);  // daughters id of this track; vector
   TMC->Branch("mc_startXYZT", &reco_tree.mc_startXYZT, "mc_startXYZT[mc_Ntrack][4]/F");  // start position of this track; size == mc_Ntrack
   TMC->Branch("mc_endXYZT", &reco_tree.mc_endXYZT, "mc_endXYZT[mc_Ntrack][4]/F");  // start position of this track; size == mc_Ntrack

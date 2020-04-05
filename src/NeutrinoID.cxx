@@ -308,12 +308,19 @@ void WCPPID::NeutrinoID::fill_reco_simple_tree(WCPPID::WCRecoTree& rtree){
     // kaon+ 321, K- -321
     // p  2212
     // n 2112
+
+    //    std::cout << sg->cal_kine_range()/units::MeV << " " << sg->cal_kine_dQdx()/units::MeV << std::endl;
     
     rtree.mc_pdg[rtree.mc_Ntrack] = sg->get_particle_type(); // all muons for now ...
     
     rtree.mc_process[rtree.mc_Ntrack] = 0;
     rtree.mc_mother[rtree.mc_Ntrack] = 0; 
     rtree.mc_dir_weak[rtree.mc_Ntrack] = sg->is_dir_weak();
+    
+    rtree.mc_kine_range[rtree.mc_Ntrack] = sg->cal_kine_range()/units::MeV;
+    rtree.mc_kine_dQdx[rtree.mc_Ntrack] = sg->cal_kine_dQdx()/units::MeV;
+    rtree.mc_kine_charge[rtree.mc_Ntrack] = sg->cal_kine_charge()/units::MeV;
+    
     
     if (sg->get_flag_dir()==0) continue;
     else if (sg->get_flag_dir()==1){

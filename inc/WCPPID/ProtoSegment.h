@@ -99,6 +99,10 @@ namespace WCPPID{
     bool eval_ks_ratio(double ks1, double ks2, double ratio1, double ratio2);
     void cal_4mom_range();
     
+    double cal_kine_range();
+    double cal_kine_dQdx();
+    double cal_kine_charge(); // for shower ...
+    
     
     void determine_dir_shower_trajectory(int start_n, int end_n, bool flag_print = false);
     void determine_dir_shower_topology(int start_n, int end_n, bool flag_print = false);
