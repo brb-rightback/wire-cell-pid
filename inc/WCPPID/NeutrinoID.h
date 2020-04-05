@@ -100,7 +100,7 @@ namespace WCPPID{
 
     // fill reco information
     void fill_reco_simple_tree(WCRecoTree& rtree);
-    
+    void fill_proto_tree(WCRecoTree& rtree);
     
     // proto-vertex finder
     bool find_proto_vertex(WCPPID::PR3DCluster *cluster, bool flag_break_trak = true, int nrounds_find_other_tracks = 2);

@@ -361,4 +361,77 @@ void WCPPID::NeutrinoID::fill_reco_simple_tree(WCPPID::WCRecoTree& rtree){
     rtree.mc_Ntrack++;
   }
   rtree.mc_daughters->resize(rtree.mc_Ntrack);
+
+  // std::cout << rtree.mc_Ntrack << std::endl;
+}
+
+
+
+void WCPPID::NeutrinoID::fill_proto_tree(WCPPID::WCRecoTree& rtree){
+  fill_reco_simple_tree(rtree);
+
+  // id vs. rtree id
+  std::map<int, int> map_sgid_rtid;
+  std::map<int, int> map_rtid_sgid;
+  for (int i=0;i!=rtree.mc_Ntrack;i++){
+    int sgid = rtree.mc_id[i];
+    map_sgid_rtid[sgid] = i;
+    map_rtid_sgid[i] = sgid;
+  }
+  
+  // id vs. sg 
+  std::map<int, WCPPID::ProtoSegment*> map_sgid_sg;
+  std::map<WCPPID::ProtoSegment*, int> map_sg_sgid;
+  for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment* sg= it->first;
+    // only save the main cluster
+    if (sg->get_cluster_id() != main_cluster->get_cluster_id()) continue;
+    int sgid = sg->get_cluster_id()*1000 + sg->get_id();
+
+    map_sg_sgid[sg] = sgid;
+    map_sgid_sg[sgid] = sg;
+  }
+
+  
+  // main_vertex figure out the daughters and mother ...
+  std::set<WCPPID::ProtoVertex* > used_vertices;
+  std::set<WCPPID::ProtoSegment* > used_segments;
+
+  std::vector<std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> > segments_to_be_examined;
+  for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
+    // parent are all zero now ...
+    used_segments.insert(*it);
+    WCPPID::ProtoVertex *other_vertex = find_other_vertex(*it, main_vertex);
+    segments_to_be_examined.push_back(std::make_pair(other_vertex, *it));
+  }
+  used_vertices.insert(main_vertex);
+  //std::cout << segments_to_be_examined.size() << " " << used_vertices.size() << " " << used_segments.size() << std::endl;
+  
+  while(segments_to_be_examined.size()>0){
+    std::vector<std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> > temp_segments;
+    for (auto it = segments_to_be_examined.begin(); it!= segments_to_be_examined.end(); it++){
+      WCPPID::ProtoVertex *curr_vtx = it->first;
+      WCPPID::ProtoSegment *prev_sg = it->second;
+      if (used_vertices.find(curr_vtx)!=used_vertices.end()) continue;
+
+      for (auto it1 = map_vertex_segments[curr_vtx].begin(); it1!=map_vertex_segments[curr_vtx].end(); it1++){
+	WCPPID::ProtoSegment *curr_sg = *it1;
+	if (used_segments.find(curr_sg)!=used_segments.end()) continue;
+	used_segments.insert(curr_sg);
+	
+	// set mother ...
+	rtree.mc_mother[map_sgid_rtid[map_sg_sgid[curr_sg]]] = map_sg_sgid[prev_sg];
+	// set daughters ...
+	rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(map_sg_sgid[curr_sg]);
+
+	WCPPID::ProtoVertex *other_vertex = find_other_vertex(curr_sg, curr_vtx);
+	if (used_vertices.find(other_vertex) == used_vertices.end())
+	  temp_segments.push_back(std::make_pair(other_vertex, curr_sg));
+      }
+      used_vertices.insert(curr_vtx);
+    }
+    segments_to_be_examined = temp_segments;
+    //std::cout << segments_to_be_examined.size() << " " << used_vertices.size() << " " << used_segments.size() << std::endl;
+  }
+  
 }

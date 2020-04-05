@@ -218,25 +218,32 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
     
     for (auto it1 = map_vertex_segments[vtx].begin(); it1 != map_vertex_segments[vtx].end(); it1++){
       WCPPID::ProtoSegment *sg = (*it1);
-      bool flag_start;
-      if (sg->get_wcpt_vec().front().index == vtx->get_wcpt().index)
-	flag_start = true;
-      else if (sg->get_wcpt_vec().back().index == vtx->get_wcpt().index)
-	flag_start = false;
-
-      if ((flag_start && sg->get_flag_dir()==1 || (!flag_start) && sg->get_flag_dir()==-1) && (!sg->is_dir_weak()) && fabs(sg->get_particle_type())==2212 ){
-	n_proton_out ++;
-      }
-      
-      if ((flag_start && sg->get_flag_dir()==-1 || (!flag_start) && sg->get_flag_dir()==1) && (!sg->is_dir_weak()) && fabs(sg->get_particle_type())==2212){
-      	n_proton_in ++;
-      }
       if ((sg->is_dir_weak() || sg->get_flag_dir() == 0) && fabs(sg->get_particle_type())==2212){
-	n_proton_in ++;
+	WCPPID::ProtoVertex *other_vertex = find_other_vertex(sg, vtx);
+
+	for (auto it2 = map_vertex_segments[other_vertex].begin(); it2!=map_vertex_segments[other_vertex].end(); it2++){
+	  bool flag_start; 
+	  if ((*it2)->get_wcpt_vec().front().index == other_vertex->get_wcpt().index) 
+	    flag_start = true; 
+	  else if ((*it2)->get_wcpt_vec().back().index == other_vertex->get_wcpt().index) 
+	    flag_start = false; 
+	
+	  if ((flag_start && (*it2)->get_flag_dir()==1 || (!flag_start) && (*it2)->get_flag_dir()==-1) && (!(*it2)->is_dir_weak()) && fabs((*it2)->get_particle_type())==2212 ){ 
+	    n_proton_out ++; 
+	  } 
+	
+	  if ((flag_start && (*it2)->get_flag_dir()==-1 || (!flag_start) && (*it2)->get_flag_dir()==1) && (!(*it2)->is_dir_weak()) && fabs((*it2)->get_particle_type())==2212){ 
+	    n_proton_in ++; 
+	  } 
+	  if (((*it2)->is_dir_weak() || (*it2)->get_flag_dir() == 0) && fabs((*it2)->get_particle_type())==2212)
+	    n_proton_in ++;
+	}
       }
     }
-    //    std::cout << n_proton_out << " " << n_proton_in << std::endl;
+    
+    // positive is good ...
     map_vertex_num[vtx] -= (n_proton_in - n_proton_out);
+    // std::cout << map_vertex_num[vtx] << " " << n_proton_in << " " << n_proton_out << std::endl;
   }
 
   // whether the vertex is at beginning or not ...
@@ -248,17 +255,20 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
   for (auto it = vertex_candidates.begin(); it!=vertex_candidates.end(); it++){
     WCPPID::ProtoVertex *vtx = *it;
     // std::cout << vtx->get_fit_pt().z << std::endl;
-    map_vertex_num[vtx] += (vtx->get_fit_pt().z - min_z)/(400*units::cm);  
+    map_vertex_num[vtx] -= (vtx->get_fit_pt().z - min_z)/(400*units::cm);  
     //    std::cout << map_vertex_segments[vtx].size() << std::endl;
-    // number of tracks ...
+    // number of tracks, more is good 
     map_vertex_num[vtx] += map_vertex_segments[vtx].size()/4.;
+
+    //    std::cout << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(400*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
   }
   
   // whether the vetex is at boundary or not ...
   for (auto it = vertex_candidates.begin(); it!=vertex_candidates.end(); it++){
     WCPPID::ProtoVertex *vtx = *it;
     if (fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x))
-      map_vertex_num[vtx] +=0.5;
+      map_vertex_num[vtx] +=0.5; // good 
+    // std::cout << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
   }
   
   double max_val = -1e9; WCPPID::ProtoVertex* max_vertex = 0;
@@ -269,6 +279,8 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
       max_vertex = vtx;
     }
   }
+
+  //  std::cout << (max_vertex->get_fit_pt().z-min_z)/(400*units::cm) << std::endl;
   
   return max_vertex;
 }
@@ -343,20 +355,20 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
     }
   }
   
-  /* // print ... */
-  /* std::cout << "Information 2: " << std::endl; */
-  /* for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){ */
-  /*   WCPPID::ProtoSegment *sg = it->first; */
-  /*   if (sg->get_cluster_id() != main_vertex->get_cluster_id()) continue; */
+  // print ...
+  std::cout << "Information 2: " << std::endl;
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != main_vertex->get_cluster_id()) continue;
     
-  /*   if (sg->get_flag_shower_topology()){ */
-  /*     std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " S_topo "  << sg->get_flag_dir() << " " << sg->get_particle_type() << " " << sg->get_particle_mass()/units::MeV << " " << (sg->get_particle_4mom(3)-sg->get_particle_mass())/units::MeV << std::endl; */
-  /*   }else if (sg->get_flag_shower_trajectory()){ */
-  /*     std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " S_traj "  << sg->get_flag_dir() << " " << sg->get_particle_type() << " " << sg->get_particle_mass()/units::MeV << " " << (sg->get_particle_4mom(3)-sg->get_particle_mass())/units::MeV << std::endl; */
-  /*   }else{ */
-  /*     std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " Track  "  << sg->get_flag_dir() << " " << sg->get_particle_type() << " " << sg->get_particle_mass()/units::MeV << " " << (sg->get_particle_4mom(3)-sg->get_particle_mass())/units::MeV << std::endl; */
-  /*   } */
-  /* } */
+    if (sg->get_flag_shower_topology()){
+      std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " S_topo "  << sg->get_flag_dir() << " " << sg->get_particle_type() << " " << sg->get_particle_mass()/units::MeV << " " << (sg->get_particle_4mom(3)-sg->get_particle_mass())/units::MeV << std::endl;
+    }else if (sg->get_flag_shower_trajectory()){
+      std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " S_traj "  << sg->get_flag_dir() << " " << sg->get_particle_type() << " " << sg->get_particle_mass()/units::MeV << " " << (sg->get_particle_4mom(3)-sg->get_particle_mass())/units::MeV << std::endl;
+    }else{
+      std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " Track  "  << sg->get_flag_dir() << " " << sg->get_particle_type() << " " << sg->get_particle_mass()/units::MeV << " " << (sg->get_particle_4mom(3)-sg->get_particle_mass())/units::MeV << std::endl;
+    }
+  }
   
   // examination ...
   for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end();it++){
