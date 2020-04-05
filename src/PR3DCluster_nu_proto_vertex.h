@@ -225,6 +225,7 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::ProtoSegment* seg, int star
     }else{
       rr = L; // quick
     }
+    //    std::cout << start_n << " " << end_n << std::endl;
     if (start_n>1) rr.front() = -1;
     if (end_n >1) rr.back() = -1;
     sub_cluster_rr.insert(sub_cluster_rr.end(), rr.begin(), rr.end());

@@ -81,6 +81,7 @@ namespace WCPPID{
     bool get_flag_shower_topology(){return flag_shower_topology;};
 
     bool is_dir_weak();
+    void set_dir_weak(bool val){dir_weak = val;};
     int get_flag_dir(){return flag_dir;};
     void set_flag_dir(int val){flag_dir = val;};
     int get_particle_type();
@@ -135,6 +136,7 @@ namespace WCPPID{
     
     
     int flag_dir;
+    bool dir_weak;
     int particle_type; // -1 undetermined,
     double particle_score;
     // e- 11  e+ -11

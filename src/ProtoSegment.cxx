@@ -23,6 +23,7 @@ WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::
   , flag_shower_trajectory(false)
   , flag_shower_topology(false)
   , flag_dir(0)
+  , dir_weak(false)
   , particle_type(0)
   , particle_score(100)
   , particle_mass(0)
@@ -900,7 +901,7 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
 }
 
 bool WCPPID::ProtoSegment::is_dir_weak(){
-  if (fabs(particle_type)==13 && particle_score > 0.07) return true;
+  if (fabs(particle_type)==13 && particle_score > 0.07  || dir_weak ) return true;
   return false;
 }
 

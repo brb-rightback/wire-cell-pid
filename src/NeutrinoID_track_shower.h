@@ -69,53 +69,59 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
 
 void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster){
   // update directions ... 
-  bool flag_update = true;
+  {
+    bool flag_update = true;
+    std::set<WCPPID::ProtoSegment* > used_segments;
+    while(flag_update){
+      flag_update = false;
+      std::set<WCPPID::ProtoVertex* > used_vertices;
+      for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end();it++){
+	WCPPID::ProtoVertex *vtx = it->first;
+	if (vtx->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+	if (it->second.size()==1) continue;
+	if (used_vertices.find(vtx)!=used_vertices.end()) continue;
 
-  while(flag_update){
-    flag_update = false;
-    std::set<WCPPID::ProtoVertex* > used_vertices;
-    for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end();it++){
-      WCPPID::ProtoVertex *vtx = it->first;
-      if (vtx->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
-      if (it->second.size()==1) continue;
-      if (used_vertices.find(vtx)!=used_vertices.end()) continue;
-
-      int n_in = 0;
-      std::map<WCPPID::ProtoSegment*, bool> map_sg_dir;
-      for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
-	WCPPID::ProtoSegment *sg = (*it1);
-	bool flag_start;
-	if (sg->get_wcpt_vec().front().index == vtx->get_wcpt().index)
-	  flag_start = true;
-	else if (sg->get_wcpt_vec().back().index == vtx->get_wcpt().index)
-	  flag_start = false;
-
-	if ((flag_start && sg->get_flag_dir()==-1 || (!flag_start) && sg->get_flag_dir()==1) && (!sg->is_dir_weak()))
-	  n_in ++;
-	if (sg->get_flag_dir()==0 || sg->is_dir_weak())
-	  map_sg_dir[sg] = flag_start;
-      }
-      
-      if (map_sg_dir.size() == 0 ) used_vertices.insert(vtx);
-	
-      if (n_in>0){
-	for (auto it1 = map_sg_dir.begin(); it1!=map_sg_dir.end(); it1++){
-	  WCPPID::ProtoSegment *sg = it1->first;
-	  bool flag_start = it1->second;
-	  if (flag_start){
-	    sg->set_flag_dir(1);
-	  }else{
-	    sg->set_flag_dir(-1);
-	  }
-	  flag_update = true;
+	int n_in = 0;
+	std::map<WCPPID::ProtoSegment*, bool> map_sg_dir;
+	for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+	  WCPPID::ProtoSegment *sg = (*it1);
+	  if (used_segments.find(sg) != used_segments.end()) continue;
+	  bool flag_start;
+	  if (sg->get_wcpt_vec().front().index == vtx->get_wcpt().index)
+	    flag_start = true;
+	  else if (sg->get_wcpt_vec().back().index == vtx->get_wcpt().index)
+	    flag_start = false;
+	  
+	  if ((flag_start && sg->get_flag_dir()==-1 || (!flag_start) && sg->get_flag_dir()==1) && (!sg->is_dir_weak()))
+	    n_in ++;
+	  if (sg->get_flag_dir()==0 || sg->is_dir_weak())
+	    map_sg_dir[sg] = flag_start;
 	}
-	used_vertices.insert(vtx);
-      }
       
-      if (flag_update) break; // is this the best?
-    }
-  } // keep updating
+	if (map_sg_dir.size() == 0 ) used_vertices.insert(vtx);
+	
+	if (n_in>0){
+	  for (auto it1 = map_sg_dir.begin(); it1!=map_sg_dir.end(); it1++){
+	    WCPPID::ProtoSegment *sg = it1->first;
+	    bool flag_start = it1->second;
+	    if (flag_start){
+	      sg->set_flag_dir(1);
+	    }else{
+	      sg->set_flag_dir(-1);
+	    }
+	    sg->set_dir_weak(true);
+	    used_segments.insert(sg);
+	    flag_update = true;
+	  }
+	  used_vertices.insert(vtx);
+      }
+	
+	if (flag_update) break; // is this the best?
+      }
+    } // keep updating
+  }
 
+  
   // examination ...
   for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end();it++){
     WCPPID::ProtoVertex *vtx = it->first;
@@ -150,7 +156,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
 
   
   // print ...
-  std::cout << "Information: " << std::endl;
+  std::cout << "Information after initial logic examination: " << std::endl;
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
@@ -201,6 +207,13 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   }
   bool flag_check = examine_direction(main_vertex);
   if (!flag_check) std::cout << "Wrong: inconsistency for track directions! " << std::endl;
+
+  std::cout << "Main Vertex " << main_vertex->get_fit_pt() << " connecting to: ";
+  for (auto it = map_vertex_segments[main_vertex].begin(); it!=map_vertex_segments[main_vertex].end(); it++){
+    std::cout << (*it)->get_id() << ", ";
+  }
+  std::cout << std::endl;
+  
 }
 
 WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVertexSelection& vertex_candidates){
@@ -315,6 +328,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
 
 	if (flag_start) current_sg->set_flag_dir(1);
 	else current_sg->set_flag_dir(-1);
+	current_sg->set_dir_weak(true);
       }
       used_segments.insert(current_sg);
 
@@ -356,17 +370,17 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
   }
   
   // print ...
-  std::cout << "Information 2: " << std::endl;
+  std::cout << "Information after main vertex determination: " << std::endl;
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != main_vertex->get_cluster_id()) continue;
     
     if (sg->get_flag_shower_topology()){
-      std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " S_topo "  << sg->get_flag_dir() << " " << sg->get_particle_type() << " " << sg->get_particle_mass()/units::MeV << " " << (sg->get_particle_4mom(3)-sg->get_particle_mass())/units::MeV << std::endl;
+      std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " S_topo "  << sg->get_flag_dir() << " " << sg->get_particle_type() << " " << sg->get_particle_mass()/units::MeV << " " << (sg->get_particle_4mom(3)-sg->get_particle_mass())/units::MeV << " " << sg->is_dir_weak() << std::endl;
     }else if (sg->get_flag_shower_trajectory()){
-      std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " S_traj "  << sg->get_flag_dir() << " " << sg->get_particle_type() << " " << sg->get_particle_mass()/units::MeV << " " << (sg->get_particle_4mom(3)-sg->get_particle_mass())/units::MeV << std::endl;
+      std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " S_traj "  << sg->get_flag_dir() << " " << sg->get_particle_type() << " " << sg->get_particle_mass()/units::MeV << " " << (sg->get_particle_4mom(3)-sg->get_particle_mass())/units::MeV << " " << sg->is_dir_weak()<< std::endl;
     }else{
-      std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " Track  "  << sg->get_flag_dir() << " " << sg->get_particle_type() << " " << sg->get_particle_mass()/units::MeV << " " << (sg->get_particle_4mom(3)-sg->get_particle_mass())/units::MeV << std::endl;
+      std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " Track  "  << sg->get_flag_dir() << " " << sg->get_particle_type() << " " << sg->get_particle_mass()/units::MeV << " " << (sg->get_particle_4mom(3)-sg->get_particle_mass())/units::MeV << " " << sg->is_dir_weak() << std::endl;
     }
   }
   
