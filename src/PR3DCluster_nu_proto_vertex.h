@@ -140,7 +140,25 @@ WCP::WCPointCloud<double>::WCPoint WCPPID::PR3DCluster::proto_extend_point(WCP::
   
   return curr_wcp;
 }
+
+void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::ProtoVertex* vtx){
+  if (vtx->get_cluster_id()==cluster_id) {
+    fine_tracking_path.push_back((vtx)->get_fit_pt());
+    dQ.push_back((vtx)->get_dQ());
+    dx.push_back((vtx)->get_dx());
+    pu.push_back((vtx)->get_pu());
+    pv.push_back((vtx)->get_pv());
+    pw.push_back((vtx)->get_pw());
+    pt.push_back((vtx)->get_pt());
+    reduced_chi2.push_back((vtx)->get_reduced_chi2());
     
+    sub_cluster_rr.push_back(-1);
+    
+    flag_vertex.push_back(true);
+    sub_cluster_id.push_back(-1);
+    flag_shower.push_back(false);
+  }
+}
 
 void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments, WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices){
   fine_tracking_path.clear();
@@ -154,48 +172,77 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::Map_Proto_Vertex_Segments& 
   flag_vertex.clear();
   sub_cluster_id.clear();
   flag_shower.clear();
+  sub_cluster_rr.clear();
 
   for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
-    if (it->first->get_cluster_id()!=cluster_id) continue;
-    fine_tracking_path.push_back((it->first)->get_fit_pt());
-    dQ.push_back((it->first)->get_dQ());
-    dx.push_back((it->first)->get_dx());
-    pu.push_back((it->first)->get_pu());
-    pv.push_back((it->first)->get_pv());
-    pw.push_back((it->first)->get_pw());
-    pt.push_back((it->first)->get_pt());
-    reduced_chi2.push_back((it->first)->get_reduced_chi2());
-
-    flag_vertex.push_back(true);
-    sub_cluster_id.push_back(-1);
-    flag_shower.push_back(false);
+    set_fit_parameters(it->first);
   }
 
   //  int tmp_id = cluster_id*1000 + 1; // hack ...
   for (auto it=map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
-    if (it->first->get_cluster_id()!=cluster_id) continue;
-    fine_tracking_path.insert(fine_tracking_path.end(),(it->first)->get_point_vec().begin(), (it->first)->get_point_vec().end());
-    dQ.insert(dQ.end(),(it->first)->get_dQ_vec().begin(), (it->first)->get_dQ_vec().end());
-    dx.insert(dx.end(),(it->first)->get_dx_vec().begin(), (it->first)->get_dx_vec().end());
-    pu.insert(pu.end(),(it->first)->get_pu_vec().begin(), (it->first)->get_pu_vec().end());
-    pv.insert(pv.end(),(it->first)->get_pv_vec().begin(), (it->first)->get_pv_vec().end());
-    pw.insert(pw.end(),(it->first)->get_pw_vec().begin(), (it->first)->get_pw_vec().end());
-    pt.insert(pt.end(),(it->first)->get_pt_vec().begin(), (it->first)->get_pt_vec().end());
-    reduced_chi2.insert(reduced_chi2.end(),(it->first)->get_reduced_chi2_vec().begin(), (it->first)->get_reduced_chi2_vec().end());
-    bool is_shower = it->first->get_flag_shower();
-    for (size_t i=0;i!=(it->first)->get_point_vec().size();i++){
-      flag_vertex.push_back(false);
-      sub_cluster_id.push_back(cluster_id*1000 + it->first->get_id());
-      flag_shower.push_back(is_shower);
+    WCPPID::ProtoVertex *start_v=0, *end_v=0;
+    for (auto it1 = map_segment_vertices[it->first].begin(); it1!=map_segment_vertices[it->first].end(); it1++){
+      if ((*it1)->get_wcpt().index == it->first->get_wcpt_vec().front().index) start_v = *it1;
+      if ((*it1)->get_wcpt().index == it->first->get_wcpt_vec().back().index) end_v = *it1;
     }
-    //    tmp_id ++;
+    int start_n = map_vertex_segments[start_v].size();
+    int end_n = map_vertex_segments[end_v].size();
+    
+    
+    set_fit_parameters(it->first, start_n, end_n);
   }
   //
 }
 
+void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::ProtoSegment* seg, int start_n, int end_n){
+  if ((seg)->get_cluster_id()==cluster_id){
+    fine_tracking_path.insert(fine_tracking_path.end(),(seg)->get_point_vec().begin(), (seg)->get_point_vec().end());
+    dQ.insert(dQ.end(),(seg)->get_dQ_vec().begin(), (seg)->get_dQ_vec().end());
+    dx.insert(dx.end(),(seg)->get_dx_vec().begin(), (seg)->get_dx_vec().end());
+    pu.insert(pu.end(),(seg)->get_pu_vec().begin(), (seg)->get_pu_vec().end());
+    pv.insert(pv.end(),(seg)->get_pv_vec().begin(), (seg)->get_pv_vec().end());
+    pw.insert(pw.end(),(seg)->get_pw_vec().begin(), (seg)->get_pw_vec().end());
+    pt.insert(pt.end(),(seg)->get_pt_vec().begin(), (seg)->get_pt_vec().end());
+    reduced_chi2.insert(reduced_chi2.end(),(seg)->get_reduced_chi2_vec().begin(), (seg)->get_reduced_chi2_vec().end());
+
+    // calculate rr vector ...
+    WCP::PointVector& pts = (seg)->get_point_vec();
+    std::vector<double> L(pts.size(),0);
+    std::vector<double> rr(pts.size(),0);
+    double acc_length = 0;
+    for (size_t i=0;i+1<pts.size();i++){
+      acc_length += sqrt(pow(pts.at(i+1).x-pts.at(i).x,2) + pow(pts.at(i+1).y - pts.at(i).y ,2) + pow(pts.at(i+1).z - pts.at(i).z,2)); 
+      L.at(i+1) = acc_length;
+    }
+    
+   
+    if ((seg)->get_flag_dir()==1){// forward direction
+      for (size_t i=0;i!=pts.size();i++){
+      	rr.at(pts.size()-1-i) = L.back() - L.at(pts.size()-1-i);
+      }
+    }else if ((seg)->get_flag_dir()==-1){ // reverse direction
+      rr = L;
+    }else{
+      rr = L; // quick
+    }
+    if (start_n>1) rr.front() = -1;
+    if (end_n >1) rr.back() = -1;
+    sub_cluster_rr.insert(sub_cluster_rr.end(), rr.begin(), rr.end());
+
+    //    std::cout << seg->get_flag_dir() << " " << reduced_chi2.size() << " " << sub_cluster_rr.size() << std::endl;
+
+    
+    bool is_shower = (seg)->get_flag_shower();
+    for (size_t i=0;i!=(seg)->get_point_vec().size();i++){
+      flag_vertex.push_back(false);
+      sub_cluster_id.push_back(cluster_id*1000 + (seg)->get_id());
+      flag_shower.push_back(is_shower);
+    }
+  }
+}
 
 
-void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::ProtoVertexSelection& temp_vertices, WCPPID::ProtoSegmentSelection& temp_segments){
+void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::ProtoVertexSelection& temp_vertices, WCPPID::ProtoSegmentSelection& temp_segments, Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices){
   fine_tracking_path.clear();
   dQ.clear();
   dx.clear();
@@ -209,40 +256,18 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::ProtoVertexSelection& temp_
   flag_shower.clear();
 
   for (auto it = temp_vertices.begin(); it!=temp_vertices.end(); it++){
-    if ((*it)->get_cluster_id()!=cluster_id) continue;
-    fine_tracking_path.push_back((*it)->get_fit_pt());
-    dQ.push_back((*it)->get_dQ());
-    dx.push_back((*it)->get_dx());
-    pu.push_back((*it)->get_pu());
-    pv.push_back((*it)->get_pv());
-    pw.push_back((*it)->get_pw());
-    pt.push_back((*it)->get_pt());
-    reduced_chi2.push_back((*it)->get_reduced_chi2());
-
-    flag_vertex.push_back(true);
-    sub_cluster_id.push_back(-1);
-    flag_shower.push_back(false);
+    set_fit_parameters(*it);
   }
   
-
-  //  int tmp_id = cluster_id*1000 + 1;
   for (auto it=temp_segments.begin(); it!=temp_segments.end(); it++){
-    if ((*it)->get_cluster_id()!=cluster_id) continue;
-    fine_tracking_path.insert(fine_tracking_path.end(),(*it)->get_point_vec().begin(), (*it)->get_point_vec().end());
-    dQ.insert(dQ.end(),(*it)->get_dQ_vec().begin(), (*it)->get_dQ_vec().end());
-    dx.insert(dx.end(),(*it)->get_dx_vec().begin(), (*it)->get_dx_vec().end());
-    pu.insert(pu.end(),(*it)->get_pu_vec().begin(), (*it)->get_pu_vec().end());
-    pv.insert(pv.end(),(*it)->get_pv_vec().begin(), (*it)->get_pv_vec().end());
-    pw.insert(pw.end(),(*it)->get_pw_vec().begin(), (*it)->get_pw_vec().end());
-    pt.insert(pt.end(),(*it)->get_pt_vec().begin(), (*it)->get_pt_vec().end());
-    reduced_chi2.insert(reduced_chi2.end(),(*it)->get_reduced_chi2_vec().begin(), (*it)->get_reduced_chi2_vec().end());
-    bool is_shower = (*it)->get_flag_shower();
-    for (size_t i=0;i!=(*it)->get_point_vec().size();i++){
-      flag_vertex.push_back(false);
-      sub_cluster_id.push_back(cluster_id*1000 + (*it)->get_id());
-      flag_shower.push_back(is_shower);
+     WCPPID::ProtoVertex *start_v=0, *end_v=0;
+    for (auto it1 = map_segment_vertices[*it].begin(); it1!=map_segment_vertices[*it].end(); it1++){
+      if ((*it1)->get_wcpt().index == (*it)->get_wcpt_vec().front().index) start_v = *it1;
+      if ((*it1)->get_wcpt().index == (*it)->get_wcpt_vec().back().index) end_v = *it1;
     }
-    //   tmp_id ++;
+    int start_n = map_vertex_segments[start_v].size();
+    int end_n = map_vertex_segments[end_v].size();
+    set_fit_parameters(*it, start_n, end_n);
   }
   //
 }

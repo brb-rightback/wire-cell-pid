@@ -116,7 +116,7 @@ void WCPPID::NeutrinoID::fill_fit_parameters(){
     clusters_set.insert(cluster);
   }
   for (auto it = clusters_set.begin(); it!=clusters_set.end(); it++){
-    (*it)->set_fit_parameters(proto_vertices, proto_segments);
+    (*it)->set_fit_parameters(proto_vertices, proto_segments, map_vertex_segments, map_segment_vertices);
   }
 
   PR3DClusterSelection all_clusters = other_clusters;

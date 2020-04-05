@@ -1483,6 +1483,11 @@ int main(int argc, char* argv[])
   t_rec_charge->Branch("pv",&pv,"pv/D");
   t_rec_charge->Branch("pw",&pw,"pw/D");
   t_rec_charge->Branch("pt",&pt,"pt/D");
+
+  Double_t rr;
+  t_rec_charge->Branch("rr",&rr,"rr/D"); // residual range
+  
+  
   Double_t reduced_chi2;
   t_rec_charge->Branch("reduced_chi2",&reduced_chi2,"reduced_chi2/D");
   Int_t flag_vertex_save;
@@ -1579,6 +1584,9 @@ int main(int argc, char* argv[])
     std::vector<bool>& Vflag_vertex = cluster->get_flag_vertex();
     std::vector<int>& Vsub_cluster_id = cluster->get_sub_cluster_id();
     std::vector<bool>& Vflag_shower = cluster->get_flag_shower();
+    std::vector<double>& Vrr = cluster->get_track_rr();
+
+    // std::cout << Vrr.size() << " " << Vflag_shower.size() << std::endl;
     
     if (pts.size()!=dQ.size() || pts.size()==0) continue;
     
@@ -1597,6 +1605,7 @@ int main(int argc, char* argv[])
       ncluster = ndf_save;
       real_cluster_id = Vsub_cluster_id.at(i);
       sub_cluster_id = Vsub_cluster_id.at(i);
+      rr = Vrr.at(i)/units::cm;
       t_rec_charge->Fill();
 
       if (Vflag_shower.at(i))

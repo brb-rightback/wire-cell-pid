@@ -171,6 +171,7 @@ namespace WCPPID{
     std::vector<bool>& get_flag_vertex(){return flag_vertex;};
     std::vector<int>& get_sub_cluster_id(){return sub_cluster_id;};
     std::vector<bool>& get_flag_shower(){return flag_shower;};
+    std::vector<double>& get_track_rr(){return sub_cluster_rr;};
     
     // main function to do the overall tracking, 
     void do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double time = 4*units::microsecond, bool flag_dQ_dx_fit_reg = true, bool flag_dQ_dx_fit = true);
@@ -253,7 +254,9 @@ namespace WCPPID{
     bool proto_break_tracks(WCP::WCPointCloud<double>::WCPoint& start_wcp, WCP::WCPointCloud<double>::WCPoint& break_wcp, WCP::WCPointCloud<double>::WCPoint& end_wcp, std::list<WCP::WCPointCloud<double>::WCPoint>& wcp_list1, std::list<WCP::WCPointCloud<double>::WCPoint>& wcp_list2, bool flag_pass_check = false);
 
     void set_fit_parameters(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices);
-    void set_fit_parameters(ProtoVertexSelection& temp_vertices, ProtoSegmentSelection& temp_segments);
+    void set_fit_parameters(ProtoVertexSelection& temp_vertices, ProtoSegmentSelection& temp_segments, Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices);
+    void set_fit_parameters(WCPPID::ProtoVertex* vtx);
+    void set_fit_parameters(WCPPID::ProtoSegment* seg, int start_n, int end_n);
 
     void clustering_points_master(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, double search_range = 1.2*units::cm, double scaling_2d = 0.7);
     void clustering_points(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, int choice = 1, WCP::ToyPointCloud* pcloud = 0, double search_range = 1.2*units::cm, double scaling_2d = 0.7);
@@ -324,6 +327,7 @@ namespace WCPPID{
     std::vector<bool> flag_vertex;
     std::vector<int> sub_cluster_id;
     std::vector<bool> flag_shower;
+    std::vector<double> sub_cluster_rr;
 
     WCP::TrackInfoSelection fit_tracks;
     
