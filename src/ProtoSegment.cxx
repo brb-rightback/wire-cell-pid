@@ -917,7 +917,18 @@ bool WCPPID::ProtoSegment::get_flag_shower_dQdx(){
 double WCPPID::ProtoSegment::cal_kine_charge(){
   double kine_energy =0;
   // this is for shower ...
+  double fudge_factor = 1.0;
+  double recom_factor  = 0.7;
+  if (get_flag_shower()) {
+    recom_factor = 0.5; // assume shower
+    fudge_factor = 0.8; // shower ...
+  }
 
+  // merged cell   2D charge
+  
+  // dead channels 3D charge
+
+  // other 2D charge close to trajectory ...
   
   return kine_energy;
 }

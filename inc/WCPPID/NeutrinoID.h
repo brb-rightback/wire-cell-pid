@@ -63,6 +63,7 @@ namespace WCPPID{
 
     void print_points();
     
+    void collect_2D_charges();
     //  double operator() (const std::vector<double> & xx) const;
     //  double get_chi2(const std::vector<double> & xx) const;
     
