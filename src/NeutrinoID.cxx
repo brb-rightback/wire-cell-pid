@@ -19,6 +19,7 @@ using namespace WCP;
 #include "NeutrinoID_improve_vertex.h"
 #include "NeutrinoID_deghost.h"
 #include "NeutrinoID_track_shower.h"
+#include "NeutrinoID_energy_reco.h"
 
 WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, std::vector<WCPPID::PR3DCluster*>& all_clusters, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x)
   : acc_vertex_id(0)
@@ -98,6 +99,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
       determine_direction(*it);
     }
   }
+
+  collect_2D_charges();
   
   // for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
   //   std::cout << it->first->get_fit_pt() << std::endl;
@@ -319,8 +322,9 @@ void WCPPID::NeutrinoID::fill_reco_simple_tree(WCPPID::WCRecoTree& rtree){
     
     rtree.mc_kine_range[rtree.mc_Ntrack] = sg->cal_kine_range()/units::MeV;
     rtree.mc_kine_dQdx[rtree.mc_Ntrack] = sg->cal_kine_dQdx()/units::MeV;
-    rtree.mc_kine_charge[rtree.mc_Ntrack] = sg->cal_kine_charge()/units::MeV;
+    rtree.mc_kine_charge[rtree.mc_Ntrack] = cal_kine_charge(sg)/units::MeV;
     
+    //    std::cout << rtree.mc_kine_range[rtree.mc_Ntrack] << " " << rtree.mc_kine_dQdx[rtree.mc_Ntrack] << " " << rtree.mc_kine_charge[rtree.mc_Ntrack] << std::endl;
     
     if (sg->get_flag_dir()==0) continue;
     else if (sg->get_flag_dir()==1){

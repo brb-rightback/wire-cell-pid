@@ -264,7 +264,10 @@ namespace WCPPID{
     std::vector<int>& get_point_sub_cluster_ids(){return point_sub_cluster_ids;};
     std::vector<bool>& get_point_flag_showers(){return point_flag_showers;};
     std::vector<int>& get_point_steiner_sub_cluster_ids(){return point_steiner_sub_cluster_ids;};
-      
+
+    std::vector<float> get_time_ch_range(); 
+    void fill_2d_charge_dead_chs(std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_u, std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_v, std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_w);
+    
   protected:
     
     int cluster_id;

@@ -63,7 +63,7 @@ namespace WCPPID{
 
     void print_points();
     
-    void collect_2D_charges();
+   
     //  double operator() (const std::vector<double> & xx) const;
     //  double get_chi2(const std::vector<double> & xx) const;
     
@@ -122,7 +122,10 @@ namespace WCPPID{
     void find_other_segments(WCPPID::PR3DCluster* temp_cluster, bool flag_break_track = true, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
     ProtoVertex* find_vertex_other_segment(WCPPID::PR3DCluster *temp_cluster, bool flag_forward, WCP::WCPointCloud<double>::WCPoint& wcp);
 
-
+    // calculate charge
+    void collect_2D_charges();
+    double cal_kine_charge(WCPPID::ProtoSegment *sg);
+    
     // improve vertex ...
     void improve_vertex(WCPPID::PR3DCluster* temp_cluster);
     bool fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster);
@@ -191,11 +194,16 @@ namespace WCPPID{
     std::map<ProtoSegment*, PR3DCluster*> map_segment_cluster;
 
     std::vector<std::tuple<PR3DCluster*, int, int> > residual_segment_candidates;
-    
+
+    std::map<std::pair<int,int>, std::pair<double,double> > charge_2d_u;
+    std::map<std::pair<int,int>, std::pair<double,double> > charge_2d_v;
+    std::map<std::pair<int,int>, std::pair<double,double> > charge_2d_w;
     
     // after fit, for alter direction
     WCVertexSelection vertices;
     WCParticleSelection particles;
+
+    
     
   };
 

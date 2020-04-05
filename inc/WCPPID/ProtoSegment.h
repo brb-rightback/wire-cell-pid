@@ -66,6 +66,7 @@ namespace WCPPID{
     std::tuple<WCP::Point, TVector3, TVector3, bool> search_kink(WCP::Point& start_p);
 
     void reset_associate_points();
+    WCP::ToyPointCloud* get_fit_pcloud(){return pcloud_fit;};
     WCP::ToyPointCloud* get_associated_pcloud(){return pcloud_associated;};
     WCP::ToyPointCloud* get_associated_pcloud_steiner(){return pcloud_associated_steiner;};
     
@@ -101,7 +102,7 @@ namespace WCPPID{
     
     double cal_kine_range();
     double cal_kine_dQdx();
-    double cal_kine_charge(); // for shower ...
+    //    double cal_kine_charge(std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_u, std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_v, std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_w, WCP::ToyCTPointCloud* ct_point_cloud); // for shower ...
     
     
     void determine_dir_shower_trajectory(int start_n, int end_n, bool flag_print = false);

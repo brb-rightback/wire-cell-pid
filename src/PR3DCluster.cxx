@@ -348,6 +348,96 @@ int WCPPID::PR3DCluster::get_num_points(Point& p_test, double dis){
 }
 
 
+std::vector<float> WCPPID::PR3DCluster::get_time_ch_range(){
+  double min_ts=1e9, max_ts=-1e9;
+  double min_uch=1e9, max_uch=-1e9;
+  double min_vch=1e9, max_vch=-1e9;
+  double min_wch=1e9, max_wch=-1e9;
+  for (auto it = mcells.begin(); it!=mcells.end(); it++){
+    SlimMergeGeomCell *mcell = (*it);
+    int time_slice = mcell->GetTimeSlice();
+    GeomWireSelection& uwires = mcell->get_uwires();
+    GeomWireSelection& vwires = mcell->get_vwires();
+    GeomWireSelection& wwires = mcell->get_wwires();
+    if (time_slice > max_ts) max_ts = time_slice;
+    if (time_slice < min_ts) min_ts = time_slice;
+    if (uwires.back()->channel() > max_uch) max_uch = uwires.back()->channel();
+    if (uwires.front()->channel() < min_uch) min_uch = uwires.front()->channel();
+    if (vwires.back()->channel() > max_vch) max_vch = vwires.back()->channel();
+    if (vwires.front()->channel() < min_vch) min_vch = vwires.front()->channel();
+    if (wwires.back()->channel() > max_wch) max_wch = wwires.back()->channel();
+    if (wwires.front()->channel() < min_wch) min_wch = wwires.front()->channel();
+  }
+  std::vector<float> results(8,0);
+  results.at(0) = min_ts;
+  results.at(1) = max_ts;
+  results.at(2) = min_uch;
+  results.at(3) = max_uch;
+  results.at(4) = min_vch;
+  results.at(5) = max_vch;
+  results.at(6) = min_wch;
+  results.at(7) = max_wch;
+  return results;
+}
+
+void WCPPID::PR3DCluster::fill_2d_charge_dead_chs(std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_u, std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_v, std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_w){
+  for (auto it = mcells.begin(); it!=mcells.end(); it++){
+    SlimMergeGeomCell *mcell = *it;
+    int time_slice = mcell->GetTimeSlice();
+    GeomWireSelection& uwires = mcell->get_uwires();
+    GeomWireSelection& vwires = mcell->get_vwires();
+    GeomWireSelection& wwires = mcell->get_wwires();
+    
+    std::vector<WirePlaneType_t> bad_planes = mcell->get_bad_planes();
+    //    if (bad_planes.size() >0) std::cout << bad_planes.size() << std::endl;
+    // U plane
+    if (find(bad_planes.begin(),bad_planes.end(),WirePlaneType_t(0))!=bad_planes.end()){
+      double charge = mcell->get_q()*1.0/uwires.size();
+      double charge_err = sqrt(pow(charge*0.1,2)+pow(600,2)); // assume 30% error
+      for (auto it1 = uwires.begin(); it1!=uwires.end(); it1++){
+	auto it2 = charge_2d_u.find(std::make_pair(time_slice, (*it1)->channel()));
+	if (it2 != charge_2d_u.end()){
+	  it2->second.first += charge;
+	  it2->second.second = sqrt(pow(charge_err,2) + pow(it2->second.second,2));
+	}else{
+	  charge_2d_u[std::make_pair(time_slice, (*it1)->channel())] = std::make_pair(charge, charge_err);
+	}
+      }
+    }
+
+    if (find(bad_planes.begin(),bad_planes.end(),WirePlaneType_t(1))!=bad_planes.end()){
+      double charge = mcell->get_q()*1.0/vwires.size();
+      double charge_err = sqrt(pow(charge*0.1,2)+pow(600,2)); // assume 30% error
+      for (auto it1 = vwires.begin(); it1!=vwires.end(); it1++){
+	auto it2 = charge_2d_v.find(std::make_pair(time_slice, (*it1)->channel()));
+	if (it2 != charge_2d_v.end()){
+	  it2->second.first += charge;
+	  it2->second.second = sqrt(pow(charge_err,2) + pow(it2->second.second,2));
+	}else{
+	  charge_2d_v[std::make_pair(time_slice, (*it1)->channel())] = std::make_pair(charge, charge_err);
+	}
+      }
+    }
+
+    if (find(bad_planes.begin(),bad_planes.end(),WirePlaneType_t(2))!=bad_planes.end()){
+      double charge = mcell->get_q()*1.0/wwires.size();
+      double charge_err = sqrt(pow(charge*0.1,2)+pow(600,2)); // assume 30% error
+      for (auto it1 = wwires.begin(); it1!=wwires.end(); it1++){
+	auto it2 = charge_2d_w.find(std::make_pair(time_slice, (*it1)->channel()));
+	if (it2 != charge_2d_w.end()){
+	  it2->second.first += charge;
+	  it2->second.second = sqrt(pow(charge_err,2) + pow(it2->second.second,2));
+	}else{
+	  charge_2d_w[std::make_pair(time_slice, (*it1)->channel())] = std::make_pair(charge, charge_err);
+	}
+      }
+    }
+    
+    
+  }
+  
+}
+
 
 void WCPPID::PR3DCluster::Calc_PCA(){
   if (flag_PCA) return;
