@@ -368,6 +368,48 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
 	(*it)->cal_4mom_range();
     }
   }
+
+  for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != main_vertex->get_cluster_id()) continue;
+    if (sg->get_particle_4mom(3)==0 && sg->get_particle_mass() > 0&& (!sg->get_flag_shower_topology())){
+      if (!sg->is_dir_weak() ){  // weak direction and not shower
+	//      std::cout << sg->get_id() << std::endl;
+	sg->cal_4mom_range();
+      } else{  
+      	std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> vertices = find_vertices(sg);
+      	WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
+      	if (vertices.first->get_wcpt().index == sg->get_wcpt_vec().front().index){
+      	  start_v = vertices.first;
+      	  end_v = vertices.second;
+      	}else{
+      	  start_v = vertices.second;
+      	  end_v = vertices.first;
+      	}
+
+      	if (sg->get_flag_dir()==1  && map_vertex_segments[end_v].size()==1  && fid->inside_fiducial_volume(end_v->get_fit_pt(),offset_x) ||
+	    sg->get_flag_dir()==-1 && map_vertex_segments[start_v].size()==1 && fid->inside_fiducial_volume(start_v->get_fit_pt(),offset_x))
+      	  sg->cal_4mom_range();
+	else if (map_vertex_segments[end_v].size()==2){
+	  bool flag_Michel = false;
+	  for (auto it1 = map_vertex_segments[end_v].begin(); it1 != map_vertex_segments[end_v].end(); it1++){
+	    if ((*it1) == sg) continue;
+	    if ( (*it1)->get_flag_shower_trajectory() || (*it1)->get_flag_shower_dQdx() ) flag_Michel = true;
+	  }
+	  if (flag_Michel) sg->cal_4mom_range();
+	}else if (map_vertex_segments[start_v].size()==2){
+	  bool flag_Michel = false;
+	  for (auto it1 = map_vertex_segments[start_v].begin(); it1 != map_vertex_segments[start_v].end(); it1++){
+	    if ((*it1) == sg) continue;
+	    if ( (*it1)->get_flag_shower_trajectory() || (*it1)->get_flag_shower_dQdx() ) flag_Michel = true;
+	  }
+	  if (flag_Michel) sg->cal_4mom_range();
+	}
+      }
+    }
+  }
+
+  
   
   // print ...
   std::cout << "Information after main vertex determination: " << std::endl;
