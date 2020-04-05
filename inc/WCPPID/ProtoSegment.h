@@ -76,9 +76,10 @@ namespace WCPPID{
     bool is_shower_trajectory(double step_size =10.*units::cm);
     bool is_shower_topology();
     
-    bool get_flag_shower(){return flag_shower_trajectory || flag_shower_topology;};
+    bool get_flag_shower(); 
     bool get_flag_shower_trajectory(){return flag_shower_trajectory;};
     bool get_flag_shower_topology(){return flag_shower_topology;};
+    bool get_flag_shower_dQdx();
 
     bool is_dir_weak();
     void set_dir_weak(bool val){dir_weak = val;};

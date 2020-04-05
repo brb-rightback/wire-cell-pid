@@ -23,6 +23,9 @@ namespace WCPPID{
     int mc_pdg[1000];  // track particle pdg; size == mc_Ntrack
     int mc_process[1000];  // track generation process code; size == mc_Ntrack
     int mc_mother[1000];  // mother id of this track; size == mc_Ntrack
+
+    int mc_dir_weak[1000]; // weak direction ...
+    
     float mc_startXYZT[1000][4];  // start position of this track; size == mc_Ntrack
     float mc_endXYZT[1000][4];  // end position of this track; size == mc_Ntrack
     float mc_startMomentum[1000][4];  // start momentum of this track; size == mc_Ntrack

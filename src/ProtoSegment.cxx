@@ -905,6 +905,15 @@ bool WCPPID::ProtoSegment::is_dir_weak(){
   return false;
 }
 
+bool WCPPID::ProtoSegment::get_flag_shower(){
+  return flag_shower_trajectory || flag_shower_topology || get_flag_shower_dQdx();
+}
+
+bool WCPPID::ProtoSegment::get_flag_shower_dQdx(){
+  if (fabs(particle_type)==11) return true;
+  return false;
+}
+
 
 void WCPPID::ProtoSegment::cal_4mom_range(){
   TPCParams& mp = Singleton<TPCParams>::Instance();
