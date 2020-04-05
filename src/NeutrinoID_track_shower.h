@@ -365,7 +365,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
       (*it)->set_particle_type(211);
       (*it)->set_particle_mass(mp.get_mass_pion());
       if ((*it)->get_particle_4mom(3)>0)
-	(*it)->cal_4mom_range();
+	(*it)->cal_4mom();
     }
   }
 
@@ -375,7 +375,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
     if (sg->get_particle_4mom(3)==0 && sg->get_particle_mass() > 0&& (!sg->get_flag_shower_topology())){
       if (!sg->is_dir_weak() ){  // weak direction and not shower
 	//      std::cout << sg->get_id() << std::endl;
-	sg->cal_4mom_range();
+	sg->cal_4mom();
       } else{  
       	std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> vertices = find_vertices(sg);
       	WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
@@ -389,21 +389,21 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
 
       	if (sg->get_flag_dir()==1  && map_vertex_segments[end_v].size()==1  && fid->inside_fiducial_volume(end_v->get_fit_pt(),offset_x) ||
 	    sg->get_flag_dir()==-1 && map_vertex_segments[start_v].size()==1 && fid->inside_fiducial_volume(start_v->get_fit_pt(),offset_x))
-      	  sg->cal_4mom_range();
+      	  sg->cal_4mom();
 	else if (map_vertex_segments[end_v].size()==2){
 	  bool flag_Michel = false;
 	  for (auto it1 = map_vertex_segments[end_v].begin(); it1 != map_vertex_segments[end_v].end(); it1++){
 	    if ((*it1) == sg) continue;
 	    if ( (*it1)->get_flag_shower_trajectory() || (*it1)->get_flag_shower_dQdx() ) flag_Michel = true;
 	  }
-	  if (flag_Michel) sg->cal_4mom_range();
+	  if (flag_Michel) sg->cal_4mom();
 	}else if (map_vertex_segments[start_v].size()==2){
 	  bool flag_Michel = false;
 	  for (auto it1 = map_vertex_segments[start_v].begin(); it1 != map_vertex_segments[start_v].end(); it1++){
 	    if ((*it1) == sg) continue;
 	    if ( (*it1)->get_flag_shower_trajectory() || (*it1)->get_flag_shower_dQdx() ) flag_Michel = true;
 	  }
-	  if (flag_Michel) sg->cal_4mom_range();
+	  if (flag_Michel) sg->cal_4mom();
 	}
       }
     }

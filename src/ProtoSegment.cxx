@@ -961,12 +961,21 @@ double WCPPID::ProtoSegment::cal_kine_range(){
   return kine_energy;
 }
 
-void WCPPID::ProtoSegment::cal_4mom_range(){
+void WCPPID::ProtoSegment::cal_4mom(){
  
+  double length = get_length();
+  double kine_energy = 0;
 
-  //  std::cout << g_range << std::endl;
+  if (length < 4*units::cm){
+    kine_energy = cal_kine_dQdx(); // short track 
+  }else if (flag_shower_trajectory){
+    kine_energy = cal_kine_dQdx();
+  }else{
+    kine_energy = cal_kine_range();
+  }
+
+
   
-  double kine_energy = cal_kine_range();
   //std::cout << kine_energy << std::endl;
   particle_4mom[3]= kine_energy + particle_mass;
   double mom = sqrt(pow(particle_4mom[3],2) - pow(particle_mass,2));
@@ -1077,7 +1086,7 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
   }
 
   if ((flag_dir==1 && end_n == 1 || flag_dir==-1 && start_n ==1) && particle_type!=0){
-    cal_4mom_range();
+    cal_4mom();
   }
 
   if (flag_print)
@@ -1107,7 +1116,7 @@ void WCPPID::ProtoSegment::determine_dir_shower_trajectory(int start_n, int end_
   }
 
   
-  cal_4mom_range();
+  cal_4mom();
 
   if (flag_print)
     std::cout << id << " " << length/units::cm << " S_traj " << flag_dir << " " << is_dir_weak() <<  " " << particle_type << " " << particle_mass/units::MeV << " " << (particle_4mom[3]-particle_mass)/units::MeV << " " << particle_score << std::endl;
