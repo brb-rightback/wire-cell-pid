@@ -1378,6 +1378,8 @@ int main(int argc, char* argv[])
   
   WCPPID::WCRecoTree reco_tree;
   reco_tree.mc_daughters = new std::vector<std::vector<int> >;
+  reco_tree.mc_daughters->clear();
+  reco_tree.mc_Ntrack = 0;
   
   TMC->Branch("mc_Ntrack", &reco_tree.mc_Ntrack);  // number of tracks in MC
   TMC->Branch("mc_id", &reco_tree.mc_id, "mc_id[mc_Ntrack]/I");  // track id; size == mc_Ntrack
@@ -1399,8 +1401,8 @@ int main(int argc, char* argv[])
 
   for (size_t i=0; i!= neutrino_vec.size();i++){
     neutrino_vec.at(i)->fill_proto_tree(reco_tree);
-    TMC->Fill();
   }
+  TMC->Fill();
 
 
   
@@ -1426,13 +1428,12 @@ int main(int argc, char* argv[])
   T_cluster->SetDirectory(file1);
 
   
-  
+  // save all the points, points are grouped by proto clusters ...
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     WCPPID::PR3DCluster* new_cluster = *it;  
     ncluster = map_cluster_parent_id[new_cluster];
-    real_cluster_id = new_cluster->get_cluster_id();
+    real_cluster_id = new_cluster->get_cluster_id(); // for all other clusters ....
     ToyPointCloud *pcloud = new_cluster->get_point_cloud();
-          
     if (pcloud!=0){
       WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
       std::vector<int>& point_sub_cluster_ids = new_cluster->get_point_sub_cluster_ids();
@@ -1444,14 +1445,11 @@ int main(int argc, char* argv[])
 	if (point_sub_cluster_ids.size() == cloud.pts.size()){
 	  if (point_sub_cluster_ids.at(i)==-1){
 	    real_cluster_id = -1;
-	    continue; // skip -1 points ... deghosting ...
 	  }else{
 	    real_cluster_id =new_cluster->get_cluster_id()*1000 + point_sub_cluster_ids.at(i);
 	  }
 	}
-	//	real_cluster_id =new_cluster->get_cluster_id();
-	
-	sub_cluster_id =  new_cluster->get_cluster_id();//*1000;	  
+	sub_cluster_id =  new_cluster->get_cluster_id();
 	
 	SlimMergeGeomCell *mcell = cloud.pts[i].mcell;
 	ch_u = cloud.pts[i].index_u;
@@ -1475,59 +1473,121 @@ int main(int argc, char* argv[])
     }
   }
 
-  Double_t pu, pv, pw, pt;
-  Double_t charge_save=1, ncharge_save=1, chi2_save=1, ndf_save=1;
-  TTree *t_rec_charge = new TTree("T_rec_charge","T_rec_charge");
-  t_rec_charge->SetDirectory(file1);
-  t_rec_charge->Branch("x",&x,"x/D");
-  t_rec_charge->Branch("y",&y,"y/D");
-  t_rec_charge->Branch("z",&z,"z/D");
-  t_rec_charge->Branch("q",&charge_save,"q/D");
-  t_rec_charge->Branch("nq",&ncharge_save,"nq/D");
-  t_rec_charge->Branch("chi2",&chi2_save,"chi2/D");
-  t_rec_charge->Branch("ndf",&ndf_save,"ndf/D");
-  t_rec_charge->Branch("pu",&pu,"pu/D");
-  t_rec_charge->Branch("pv",&pv,"pv/D");
-  t_rec_charge->Branch("pw",&pw,"pw/D");
-  t_rec_charge->Branch("pt",&pt,"pt/D");
+  // Double_t pu, pv, pw, pt;
+  // Double_t charge_save=1, ncharge_save=1, chi2_save=1, ndf_save=1;
+  // TTree *t_rec_charge = new TTree("T_rec_charge","T_rec_charge");
+  // t_rec_charge->SetDirectory(file1);
+  // t_rec_charge->Branch("x",&x,"x/D");
+  // t_rec_charge->Branch("y",&y,"y/D");
+  // t_rec_charge->Branch("z",&z,"z/D");
+  // t_rec_charge->Branch("q",&charge_save,"q/D");
+  // t_rec_charge->Branch("nq",&ncharge_save,"nq/D");
+  // t_rec_charge->Branch("chi2",&chi2_save,"chi2/D");
+  // t_rec_charge->Branch("ndf",&ndf_save,"ndf/D");
+  // t_rec_charge->Branch("pu",&pu,"pu/D");
+  // t_rec_charge->Branch("pv",&pv,"pv/D");
+  // t_rec_charge->Branch("pw",&pw,"pw/D");
+  // t_rec_charge->Branch("pt",&pt,"pt/D");
+  // Double_t rr;
+  // t_rec_charge->Branch("rr",&rr,"rr/D"); // residual range
+  // Double_t reduced_chi2;
+  // t_rec_charge->Branch("reduced_chi2",&reduced_chi2,"reduced_chi2/D");
+  // Int_t flag_vertex_save;
+  // t_rec_charge->Branch("flag_vertex",&flag_vertex_save,"flag_vertex/I");
+  // t_rec_charge->Branch("cluster_id",&ncluster,"cluster_id/I");
+  // t_rec_charge->Branch("real_cluster_id",&real_cluster_id,"real_cluster_id/I");
+  // t_rec_charge->Branch("sub_cluster_id",&sub_cluster_id,"sub_cluster_id/I");
+  // // extra save ...
+  // TTree *t_rec_simple = new TTree("T_rec","T_rec");
+  // t_rec_simple->SetDirectory(file1);
+  // t_rec_simple->Branch("x",&x,"x/D");
+  // t_rec_simple->Branch("y",&y,"y/D");
+  // t_rec_simple->Branch("z",&z,"z/D");
+  // t_rec_simple->Branch("cluster_id",&ncluster,"cluster_id/I");
+  // t_rec_simple->Branch("real_cluster_id",&real_cluster_id,"real_cluster_id/I");
+  // t_rec_simple->Branch("sub_cluster_id",&sub_cluster_id,"sub_cluster_id/I");
+  // t_rec_simple->SetDirectory(file1);
+  // // extra save ...
+  // TTree *t_rec_deblob = new TTree("T_rec_charge_blob","T_rec_charge_blob");
+  // t_rec_deblob->SetDirectory(file1);
+  // t_rec_deblob->Branch("x",&x,"x/D");
+  // t_rec_deblob->Branch("y",&y,"y/D");
+  // t_rec_deblob->Branch("z",&z,"z/D");
+  // t_rec_deblob->Branch("q",&charge_save,"q/D");
+  // t_rec_deblob->Branch("nq",&ncharge_save,"nq/D");
+  // t_rec_deblob->Branch("chi2",&chi2_save,"chi2/D");
+  // t_rec_deblob->Branch("ndf",&ndf_save,"ndf/D");
+  // t_rec_deblob->Branch("cluster_id",&ncluster,"cluster_id/I");
+  // t_rec_deblob->Branch("real_cluster_id",&real_cluster_id,"real_cluster_id/I");
+  // t_rec_deblob->Branch("sub_cluster_id",&sub_cluster_id,"sub_cluster_id/I");
 
-  Double_t rr;
-  t_rec_charge->Branch("rr",&rr,"rr/D"); // residual range
-  
-  
-  Double_t reduced_chi2;
-  t_rec_charge->Branch("reduced_chi2",&reduced_chi2,"reduced_chi2/D");
-  Int_t flag_vertex_save;
-  t_rec_charge->Branch("flag_vertex",&flag_vertex_save,"flag_vertex/I");
-  t_rec_charge->Branch("cluster_id",&ncluster,"cluster_id/I");
-  t_rec_charge->Branch("real_cluster_id",&real_cluster_id,"real_cluster_id/I");
-  t_rec_charge->Branch("sub_cluster_id",&sub_cluster_id,"sub_cluster_id/I");
 
- 
-  // extra save ...
+  // also all points, charge can be used to save the track shower 
+  WCPPID::WCPointTree point_tree;
   TTree *t_rec_simple = new TTree("T_rec","T_rec");
   t_rec_simple->SetDirectory(file1);
-  t_rec_simple->Branch("x",&x,"x/D");
-  t_rec_simple->Branch("y",&y,"y/D");
-  t_rec_simple->Branch("z",&z,"z/D");
-  t_rec_simple->Branch("cluster_id",&ncluster,"cluster_id/I");
-  t_rec_simple->Branch("real_cluster_id",&real_cluster_id,"real_cluster_id/I");
-  t_rec_simple->Branch("sub_cluster_id",&sub_cluster_id,"sub_cluster_id/I");
+  t_rec_simple->Branch("x",&point_tree.reco_x,"x/D");
+  t_rec_simple->Branch("y",&point_tree.reco_y,"y/D");
+  t_rec_simple->Branch("z",&point_tree.reco_z,"z/D");
+  // hack charge to store the track or shower information ...
+  t_rec_simple->Branch("q",&point_tree.reco_flag_track_shower_charge,"q/D");
+  t_rec_simple->Branch("nq",&point_tree.reco_flag_track_shower,"nq/D");
+  //
+  t_rec_simple->Branch("cluster_id",&point_tree.reco_mother_cluster_id,"cluster_id/I");
+  // later can save the particle cluster id ...
+  t_rec_simple->Branch("real_cluster_id",&point_tree.reco_proto_cluster_id,"real_cluster_id/I");
+  t_rec_simple->Branch("sub_cluster_id",&point_tree.reco_cluster_id,"sub_cluster_id/I");
   t_rec_simple->SetDirectory(file1);
+
+  // save skeleton ...
+  TTree *t_rec_charge = new TTree("T_rec_charge","T_rec_charge");
+  t_rec_charge->SetDirectory(file1);
+  t_rec_charge->Branch("x",&point_tree.reco_x,"x/D");
+  t_rec_charge->Branch("y",&point_tree.reco_y,"y/D");
+  t_rec_charge->Branch("z",&point_tree.reco_z,"z/D");
+  t_rec_charge->Branch("q",&point_tree.reco_dQ,"q/D");
+  t_rec_charge->Branch("nq",&point_tree.reco_dx,"nq/D");
+  t_rec_charge->Branch("chi2",&point_tree.reco_chi2,"chi2/D");
+  t_rec_charge->Branch("ndf",&point_tree.reco_ndf,"ndf/D");
+  t_rec_charge->Branch("pu",&point_tree.reco_pu,"pu/D");
+  t_rec_charge->Branch("pv",&point_tree.reco_pv,"pv/D");
+  t_rec_charge->Branch("pw",&point_tree.reco_pw,"pw/D");
+  t_rec_charge->Branch("pt",&point_tree.reco_pt,"pt/D");
+  t_rec_charge->Branch("reduced_chi2",&point_tree.reco_reduced_chi2,"reduced_chi2/D");
+  t_rec_charge->Branch("flag_vertex",&point_tree.reco_flag_vertex,"flag_vertex/I");
+  t_rec_charge->Branch("flag_shower",&point_tree.reco_flag_track_shower,"flag_shower/I");
+  t_rec_charge->Branch("rr",&point_tree.reco_rr,"rr/D"); 
+  t_rec_charge->Branch("cluster_id",&point_tree.reco_mother_cluster_id,"cluster_id/I");
+  t_rec_charge->Branch("real_cluster_id",&point_tree.reco_proto_cluster_id,"real_cluster_id/I");
+  t_rec_charge->Branch("sub_cluster_id",&point_tree.reco_proto_cluster_id,"sub_cluster_id/I");
   
-  // extra save ...
+  // save skeleton informatio  ...
   TTree *t_rec_deblob = new TTree("T_rec_charge_blob","T_rec_charge_blob");
   t_rec_deblob->SetDirectory(file1);
-  t_rec_deblob->Branch("x",&x,"x/D");
-  t_rec_deblob->Branch("y",&y,"y/D");
-  t_rec_deblob->Branch("z",&z,"z/D");
-  t_rec_deblob->Branch("q",&charge_save,"q/D");
-  t_rec_deblob->Branch("nq",&ncharge_save,"nq/D");
-  t_rec_deblob->Branch("chi2",&chi2_save,"chi2/D");
-  t_rec_deblob->Branch("ndf",&ndf_save,"ndf/D");
-  t_rec_deblob->Branch("cluster_id",&ncluster,"cluster_id/I");
-  t_rec_deblob->Branch("real_cluster_id",&real_cluster_id,"real_cluster_id/I");
-  t_rec_deblob->Branch("sub_cluster_id",&sub_cluster_id,"sub_cluster_id/I");
+  t_rec_deblob->Branch("x",&point_tree.reco_x,"x/D");
+  t_rec_deblob->Branch("y",&point_tree.reco_y,"y/D");
+  t_rec_deblob->Branch("z",&point_tree.reco_z,"z/D");
+  t_rec_deblob->Branch("q",&point_tree.reco_dQ,"q/D");
+  t_rec_deblob->Branch("nq",&point_tree.reco_dx,"nq/D");
+  t_rec_deblob->Branch("chi2",&point_tree.reco_chi2,"chi2/D");
+  t_rec_deblob->Branch("ndf",&point_tree.reco_ndf,"ndf/D");
+  t_rec_deblob->Branch("flag_shower",&point_tree.reco_flag_track_shower,"flag_shower/I");
+  t_rec_deblob->Branch("cluster_id",&point_tree.reco_mother_cluster_id,"cluster_id/I");
+  t_rec_deblob->Branch("real_cluster_id",&point_tree.reco_particle_id,"real_cluster_id/I");
+  t_rec_deblob->Branch("sub_cluster_id",&point_tree.reco_cluster_id,"sub_cluster_id/I");
+  
+
+
+  
+  for (size_t i=0; i!= neutrino_vec.size();i++){
+    int mother_cluster_id = neutrino_vec.at(i)->get_main_cluster()->get_cluster_id();
+    neutrino_vec.at(i)->fill_skeleton_info(mother_cluster_id, point_tree, t_rec_charge, dQdx_scale, dQdx_offset);
+    neutrino_vec.at(i)->fill_skeleton_info(mother_cluster_id, point_tree, t_rec_deblob, dQdx_scale, dQdx_offset, true);
+    neutrino_vec.at(i)->fill_point_info(mother_cluster_id, point_tree, t_rec_simple);
+  }
+  
+
+  
   
   
   TTree *T_proj_data = new TTree("T_proj_data","T_proj_data");
@@ -1546,83 +1606,89 @@ int main(int argc, char* argv[])
   T_proj_data->Branch("charge_pred",&proj_data_cluster_charge_pred);
   T_proj_data->SetDirectory(file1);
 
+
+
+
+
+
+  
   // original save ...
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     WCPPID::PR3DCluster* cluster = *it;
-    ndf_save= cluster->get_cluster_id(); 
-    ncluster = map_cluster_parent_id[cluster];
-    //    ndf_save 
-    // original
-    PointVector& pts = cluster->get_fine_tracking_path();
-    //std::vector<double> dQ, dx;
-    std::vector<double>& dQ = cluster->get_dQ();
-    std::vector<double>& dx = cluster->get_dx();
-    std::vector<double>& tpu = cluster->get_pu();
-    std::vector<double>& tpv = cluster->get_pv();
-    std::vector<double>& tpw = cluster->get_pw();
-    std::vector<double>& tpt = cluster->get_pt();
-    std::vector<double>& Vreduced_chi2 = cluster->get_reduced_chi2();
-    std::vector<bool>& Vflag_vertex = cluster->get_flag_vertex();
-    std::vector<int>& Vsub_cluster_id = cluster->get_sub_cluster_id();
-    std::vector<bool>& Vflag_shower = cluster->get_flag_shower();
-    std::vector<double>& Vrr = cluster->get_track_rr();
+    int ndf_save= cluster->get_cluster_id(); 
+    //ncluster = map_cluster_parent_id[cluster];
+    // //    ndf_save 
+    // // original
+    // PointVector& pts = cluster->get_fine_tracking_path();
+    // //std::vector<double> dQ, dx;
+    // std::vector<double>& dQ = cluster->get_dQ();
+    // std::vector<double>& dx = cluster->get_dx();
+    // std::vector<double>& tpu = cluster->get_pu();
+    // std::vector<double>& tpv = cluster->get_pv();
+    // std::vector<double>& tpw = cluster->get_pw();
+    // std::vector<double>& tpt = cluster->get_pt();
+    // std::vector<double>& Vreduced_chi2 = cluster->get_reduced_chi2();
+    // std::vector<bool>& Vflag_vertex = cluster->get_flag_vertex();
+    // std::vector<int>& Vsub_cluster_id = cluster->get_sub_cluster_id();
+    // std::vector<bool>& Vflag_shower = cluster->get_flag_shower();
+    // std::vector<double>& Vrr = cluster->get_track_rr();
 
-    // std::cout << Vrr.size() << " " << Vflag_shower.size() << std::endl;
+    // // std::cout << Vrr.size() << " " << Vflag_shower.size() << std::endl;
     
-    if (pts.size()!=dQ.size() || pts.size()==0) continue;
+    // if (pts.size()!=dQ.size() || pts.size()==0) continue;
     
-    for (size_t i=0; i!=pts.size(); i++){
-      x = pts.at(i).x/units::cm;
-      y = pts.at(i).y/units::cm;
-      z = pts.at(i).z/units::cm;
-      charge_save = dQ.at(i) * dQdx_scale + dQdx_offset; // for display purpose ...
-      ncharge_save = dx.at(i)/units::cm;
-      pu = tpu.at(i);
-      pv = tpv.at(i);
-      pw = tpw.at(i);
-      pt = tpt.at(i);
-      reduced_chi2 = Vreduced_chi2.at(i);
-      flag_vertex_save = Vflag_vertex.at(i);
-      //      ncluster = ndf_save;
-      real_cluster_id = Vsub_cluster_id.at(i);
-      sub_cluster_id = Vsub_cluster_id.at(i);
-      rr = Vrr.at(i)/units::cm;
-      t_rec_charge->Fill();
+    // for (size_t i=0; i!=pts.size(); i++){
+    //   x = pts.at(i).x/units::cm;
+    //   y = pts.at(i).y/units::cm;
+    //   z = pts.at(i).z/units::cm;
+    //   charge_save = dQ.at(i) * dQdx_scale + dQdx_offset; // for display purpose ...
+    //   ncharge_save = dx.at(i)/units::cm;
+    //   pu = tpu.at(i);
+    //   pv = tpv.at(i);
+    //   pw = tpw.at(i);
+    //   pt = tpt.at(i);
+    //   reduced_chi2 = Vreduced_chi2.at(i);
+    //   flag_vertex_save = Vflag_vertex.at(i);
+    //   //      ncluster = ndf_save;
+    //   real_cluster_id = Vsub_cluster_id.at(i);
+    //   sub_cluster_id = Vsub_cluster_id.at(i);
+    //   rr = Vrr.at(i)/units::cm;
+    //   t_rec_charge->Fill();
 
-      if (Vflag_shower.at(i))
-	real_cluster_id = 1;
-      else
-	real_cluster_id = 4;
+    //   if (Vflag_shower.at(i))
+    // 	real_cluster_id = 1;
+    //   else
+    // 	real_cluster_id = 4;
       
       
-      t_rec_deblob->Fill();
-    }
+    //   t_rec_deblob->Fill();
+    // }
 
-    ToyPointCloud *pcloud = cluster->get_point_cloud();          
-    if (pcloud!=0){
-      WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
-      std::vector<int>& point_sub_cluster_ids = cluster->get_point_sub_cluster_ids();
-      std::vector<bool>& point_flag_showers = cluster->get_point_flag_showers();
-      for (size_t i=0;i!=cloud.pts.size();i++){
-	x = cloud.pts[i].x/units::cm;
-	y = cloud.pts[i].y/units::cm;
-	z = cloud.pts[i].z/units::cm;
-	if (point_sub_cluster_ids.size() == cloud.pts.size()){
-	  if (point_sub_cluster_ids.at(i)==-1){
-	    real_cluster_id = -1;
-	    continue; // skip -1 points ... deghosting ...
-	  }else{
+    // ToyPointCloud *pcloud = cluster->get_point_cloud();          
+    // if (pcloud!=0){
+    //   WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
+    //   std::vector<int>& point_sub_cluster_ids = cluster->get_point_sub_cluster_ids();
+    //   std::vector<bool>& point_flag_showers = cluster->get_point_flag_showers();
+    //   for (size_t i=0;i!=cloud.pts.size();i++){
+    // 	x = cloud.pts[i].x/units::cm;
+    // 	y = cloud.pts[i].y/units::cm;
+    // 	z = cloud.pts[i].z/units::cm;
+    // 	if (point_sub_cluster_ids.size() == cloud.pts.size()){
+    // 	  if (point_sub_cluster_ids.at(i)==-1){
+    // 	    real_cluster_id = -1;
+    // 	    continue; // skip -1 points ... deghosting ...
+    // 	  }else{
 	    
-	    if (point_flag_showers.at(i))
-	      real_cluster_id = 1;
-	    else
-	      real_cluster_id = 4;
-	  }
-	}
-	sub_cluster_id =  cluster->get_cluster_id();
-	t_rec_simple->Fill();
-      }
-    }
+    // 	    if (point_flag_showers.at(i))
+    // 	      real_cluster_id = 1;
+    // 	    else
+    // 	      real_cluster_id = 4;
+    // 	  }
+    // 	}
+    // 	sub_cluster_id =  cluster->get_cluster_id();
+    // 	t_rec_simple->Fill();
+    //   }
+    // }
 
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_u_map = cluster->get_proj_data_u_map();
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_v_map = cluster->get_proj_data_v_map();
@@ -1670,6 +1736,7 @@ int main(int argc, char* argv[])
   }
   T_proj_data->Fill();
 
+  
   // now save the original projected charge information
   // fill the bad channels ...
   TTree *T_proj = new TTree("T_proj","T_proj");

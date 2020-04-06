@@ -16,6 +16,30 @@
 //#include "Minuit2/FCNBase.h"
 
 namespace WCPPID{
+  struct WCPointTree
+  {
+    Double_t reco_x;
+    Double_t reco_y;
+    Double_t reco_z;
+    Double_t reco_dQ;
+    Double_t reco_dx;
+    Double_t reco_chi2;
+    Double_t reco_ndf;
+    Double_t reco_pu;
+    Double_t reco_pv;
+    Double_t reco_pw;
+    Double_t reco_pt;
+    Double_t reco_rr;
+    Double_t reco_reduced_chi2;
+    Int_t reco_flag_vertex; // vertex or not ...
+    Int_t reco_mother_cluster_id; // parent cluster id
+    Int_t reco_cluster_id; // current cluster id ...
+    Int_t reco_proto_cluster_id; // proto segments ...
+    Int_t reco_particle_id; // particle level ...
+    Int_t reco_flag_track_shower; // track or shower
+    Double_t reco_flag_track_shower_charge; //label charge ...
+  };
+
   struct WCRecoTree
   {
     int mc_Ntrack;  // number of tracks in MC
@@ -100,6 +124,8 @@ namespace WCPPID{
     
     // get segments
     int get_num_segments(ProtoVertex *pv);
+
+    WCPPID::PR3DCluster* get_main_cluster(){return main_cluster;};
     
     // actual functions ...
     void process_main_cluster();
@@ -108,6 +134,11 @@ namespace WCPPID{
     // fill reco information
     void fill_reco_simple_tree(WCRecoTree& rtree);
     void fill_proto_tree(WCRecoTree& rtree);
+    
+    void fill_skeleton_info(int mother_cluster_id, WCPointTree& ptree, TTree *T, double dQdx_scale, double dQdx_offset, bool flag_skip_vertex = false);
+    void fill_point_info(int mother_cluster_id, WCPointTree& ptree, TTree *T);
+    
+
     
     // proto-vertex finder
     bool find_proto_vertex(WCPPID::PR3DCluster *cluster, bool flag_break_trak = true, int nrounds_find_other_tracks = 2);
