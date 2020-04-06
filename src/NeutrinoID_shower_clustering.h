@@ -1,10 +1,10 @@
-void WCPPID::NeutrinoID::particle_clustering(){
+void WCPPID::NeutrinoID::shower_clustering(){
 
-  particle_clustering_in_main_cluster();
+  shower_clustering_in_main_cluster();
 }
 
 
-void WCPPID::NeutrinoID::particle_clustering_in_main_cluster(){
+void WCPPID::NeutrinoID::shower_clustering_in_main_cluster(){
   // search from main vertex ...
 
   /* // main_vertex figure out the daughters and mother ... */

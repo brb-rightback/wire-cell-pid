@@ -190,8 +190,8 @@ namespace WCPPID{
     void separate_track_shower();
 
     // particle_clustering
-    void particle_clustering();
-    void particle_clustering_in_main_cluster();
+    void shower_clustering();
+    void shower_clustering_in_main_cluster();
     
     // fill_fit_parameters();
     void fill_fit_parameters();

@@ -19,7 +19,7 @@ using namespace WCP;
 #include "NeutrinoID_deghost.h"
 #include "NeutrinoID_track_shower.h"
 #include "NeutrinoID_energy_reco.h"
-#include "NeutrinoID_particle_clustering.h"
+#include "NeutrinoID_shower_clustering.h"
 
 WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, std::vector<WCPPID::PR3DCluster*>& all_clusters, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x)
   : acc_vertex_id(0)
@@ -103,7 +103,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   collect_2D_charges();
 
   // cluster E&M ...
-  particle_clustering();
+  shower_clustering();
 
   
   // prepare output ...
