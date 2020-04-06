@@ -1085,6 +1085,8 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
     else if (fabs(particle_type)==2212) particle_mass = mp.get_mass_proton();
   }
 
+  
+
   if ((flag_dir==1 && end_n == 1 || flag_dir==-1 && start_n ==1) && particle_type!=0){
     cal_4mom();
   }
@@ -1101,7 +1103,7 @@ void WCPPID::ProtoSegment::determine_dir_shower_trajectory(int start_n, int end_
   // hack for now ...
   particle_type = 11;
   TPCParams& mp = Singleton<TPCParams>::Instance();
-  particle_mass = mp.get_mass_electron();
+
 
   if (start_n==1 && end_n >1){
     flag_dir = -1;
@@ -1114,7 +1116,7 @@ void WCPPID::ProtoSegment::determine_dir_shower_trajectory(int start_n, int end_
       flag_dir = 0;
     }
   }
-
+  particle_mass = mp.get_mass_electron();
   
   cal_4mom();
 

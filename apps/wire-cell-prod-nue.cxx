@@ -1575,8 +1575,9 @@ int main(int argc, char* argv[])
   // original save ...
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     WCPPID::PR3DCluster* cluster = *it;
-    ndf_save = map_cluster_parent_id[cluster];
-    //    ndf_save = cluster->get_cluster_id();
+    ndf_save= cluster->get_cluster_id(); 
+    ncluster = map_cluster_parent_id[cluster];
+    //    ndf_save 
     // original
     PointVector& pts = cluster->get_fine_tracking_path();
     //std::vector<double> dQ, dx;
@@ -1608,7 +1609,7 @@ int main(int argc, char* argv[])
       pt = tpt.at(i);
       reduced_chi2 = Vreduced_chi2.at(i);
       flag_vertex_save = Vflag_vertex.at(i);
-      ncluster = ndf_save;
+      //      ncluster = ndf_save;
       real_cluster_id = Vsub_cluster_id.at(i);
       sub_cluster_id = Vsub_cluster_id.at(i);
       rr = Vrr.at(i)/units::cm;

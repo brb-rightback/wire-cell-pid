@@ -109,6 +109,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
 	    }else{
 	      sg->set_flag_dir(-1);
 	    }
+	    sg->cal_4mom();
 	    sg->set_dir_weak(true);
 	    used_segments.insert(sg);
 	    flag_update = true;
@@ -328,6 +329,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
 
 	if (flag_start) current_sg->set_flag_dir(1);
 	else current_sg->set_flag_dir(-1);
+	current_sg->cal_4mom();
 	current_sg->set_dir_weak(true);
       }
       used_segments.insert(current_sg);

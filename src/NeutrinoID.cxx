@@ -350,6 +350,8 @@ void WCPPID::NeutrinoID::fill_reco_simple_tree(WCPPID::WCRecoTree& rtree){
     }
 
     if (sg->get_particle_4mom(3)>0){
+      //      std::cout << sg->get_particle_4mom(0)/units::MeV << " " << sg->get_particle_4mom(1)/units::MeV << " " << sg->get_particle_4mom(2)/units::MeV << " " << sg->get_particle_4mom(3)/units::MeV << " " << sg->get_particle_type() << " " << sg->get_particle_mass() << std::endl;
+      
       rtree.mc_startMomentum[rtree.mc_Ntrack][0] = sg->get_particle_4mom(0)/units::GeV;
       rtree.mc_startMomentum[rtree.mc_Ntrack][1] = sg->get_particle_4mom(1)/units::GeV;
       rtree.mc_startMomentum[rtree.mc_Ntrack][2] = sg->get_particle_4mom(2)/units::GeV;
