@@ -129,6 +129,7 @@ int main(int argc, char* argv[])
   if (flag_calib_corr==1)
     mp.init_corr_files();
   mp.init_PID_dq_dx();
+  //mp.init_PID_dq_dx("input_data_files/stopping_ave_dQ_dx_v2.root");
 
    // test geometry ...
   const GeomWire *uwire = gds.by_planeindex(WirePlaneType_t(0),0);
