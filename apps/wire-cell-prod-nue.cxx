@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
   mp.set_ts_width(time_slice_width);
   if (flag_calib_corr==1)
     mp.init_corr_files();
-  mp.init_PID_dq_dx();
+  mp.init_PID_dq_dx();   // default 
   //mp.init_PID_dq_dx("input_data_files/stopping_ave_dQ_dx_v2.root");
 
    // test geometry ...
@@ -1326,52 +1326,52 @@ int main(int argc, char* argv[])
     T_match1->Fill();
   }
 
-  TTree *T_vtx = new TTree("T_vtx","T_vtx");
-  T_vtx->SetDirectory(file1);
-  Double_t x_vtx, y_vtx, z_vtx;
-  Int_t type_vtx=0;
-  // 1: Steiner-inspired graph
-  // 2: Steiner terminals
-  // 3: end point (extreme point, connecting to one object)
-  // 4: kink (connecting to two objects
-  // 5: vertex (connecting to three or more objects)
-  Int_t flag_main_vtx=0; // main vertex or not
-  Int_t cluster_id_vtx=-1; // -1 if not belonging to any cluster ...
-  std::vector<int> *sub_cluster_ids_vtx = new std::vector<int>;
+  // TTree *T_vtx = new TTree("T_vtx","T_vtx");
+  // T_vtx->SetDirectory(file1);
+  // Double_t x_vtx, y_vtx, z_vtx;
+  // Int_t type_vtx=0;
+  // // 1: Steiner-inspired graph
+  // // 2: Steiner terminals
+  // // 3: end point (extreme point, connecting to one object)
+  // // 4: kink (connecting to two objects
+  // // 5: vertex (connecting to three or more objects)
+  // Int_t flag_main_vtx=0; // main vertex or not
+  // Int_t cluster_id_vtx=-1; // -1 if not belonging to any cluster ...
+  // std::vector<int> *sub_cluster_ids_vtx = new std::vector<int>;
   
-  T_vtx->Branch("x",&x_vtx,"x/D");
-  T_vtx->Branch("y",&y_vtx,"y/D");
-  T_vtx->Branch("z",&z_vtx,"z/D");
-  T_vtx->Branch("type",&type_vtx,"type/I");
-  T_vtx->Branch("flag_main",&flag_main_vtx,"flag_main/I");
-  T_vtx->Branch("cluster_id",&cluster_id_vtx,"cluster_id/I");
-  T_vtx->Branch("sub_cluster_ids",&sub_cluster_ids_vtx);
+  // T_vtx->Branch("x",&x_vtx,"x/D");
+  // T_vtx->Branch("y",&y_vtx,"y/D");
+  // T_vtx->Branch("z",&z_vtx,"z/D");
+  // T_vtx->Branch("type",&type_vtx,"type/I");
+  // T_vtx->Branch("flag_main",&flag_main_vtx,"flag_main/I");
+  // T_vtx->Branch("cluster_id",&cluster_id_vtx,"cluster_id/I");
+  // T_vtx->Branch("sub_cluster_ids",&sub_cluster_ids_vtx);
   
-  for (size_t i=0;i!=neutrino_vec.size();i++){
-    WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();
-    //    WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices = neutrino.get_map_segment_vertices();
-    for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end();it++){
-      WCPPID::ProtoVertex *vtx = it->first;
-      x_vtx = vtx->get_fit_pt().x/units::cm;
-      y_vtx = vtx->get_fit_pt().y/units::cm;
-      z_vtx = vtx->get_fit_pt().z/units::cm;
-      if (it->second.size()==1){
-      	type_vtx = 3;
-      }else if (it->second.size()==2){
-      	type_vtx = 4;
-      }else{
-      	type_vtx = 5;
-      }
-      flag_main_vtx = vtx->get_flag_neutrino_vertex();
-      cluster_id_vtx = vtx->get_cluster_id();
-      sub_cluster_ids_vtx->clear();
-      for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-      	WCPPID::ProtoSegment *sg = *it1;
-      	sub_cluster_ids_vtx->push_back(cluster_id_vtx*1000 + sg->get_id());
-      }
-      T_vtx->Fill();
-    }
-  }
+  // for (size_t i=0;i!=neutrino_vec.size();i++){
+  //   WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();
+  //   //    WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices = neutrino.get_map_segment_vertices();
+  //   for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end();it++){
+  //     WCPPID::ProtoVertex *vtx = it->first;
+  //     x_vtx = vtx->get_fit_pt().x/units::cm;
+  //     y_vtx = vtx->get_fit_pt().y/units::cm;
+  //     z_vtx = vtx->get_fit_pt().z/units::cm;
+  //     if (it->second.size()==1){
+  //     	type_vtx = 3;
+  //     }else if (it->second.size()==2){
+  //     	type_vtx = 4;
+  //     }else{
+  //     	type_vtx = 5;
+  //     }
+  //     flag_main_vtx = vtx->get_flag_neutrino_vertex();
+  //     cluster_id_vtx = vtx->get_cluster_id();
+  //     sub_cluster_ids_vtx->clear();
+  //     for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+  //     	WCPPID::ProtoSegment *sg = *it1;
+  //     	sub_cluster_ids_vtx->push_back(cluster_id_vtx*1000 + sg->get_id());
+  //     }
+  //     T_vtx->Fill();
+  //   }
+  // }
 
 
   TTree *TMC = new TTree("TMC","TMC");
@@ -1546,33 +1546,6 @@ int main(int argc, char* argv[])
   T_proj_data->Branch("charge_pred",&proj_data_cluster_charge_pred);
   T_proj_data->SetDirectory(file1);
 
-  // // save the Steiner-inspired Graph ...
-  // for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-  //   WCPPID::PR3DCluster* cluster = *it;
-  //   ndf_save = cluster->get_cluster_id();
-  //   if (cluster->get_point_cloud_steiner()!=0){
-  //     WCP::WCPointCloud<double>& cloud = cluster->get_point_cloud_steiner()->get_cloud();
-  //     std::vector<bool>& flag_tagged = cluster->get_flag_tagged_steiner_graph();
-  //     for (size_t i=0;i!=cloud.pts.size();i++){
-  // 	x = cloud.pts[i].x/units::cm;
-  // 	y = cloud.pts[i].y/units::cm;
-  // 	z = cloud.pts[i].z/units::cm;
-  // 	t_rec_simple->Fill();
-
-  // 	charge_save = 1;
-  // 	ncharge_save = 1;
-  // 	chi2_save = 1;
-  
-  // 	if (flag_tagged.size()>0){
-  // 	  if (!flag_tagged.at(i)) t_rec_deblob->Fill();
-  // 	}
-  //     }
-      
-  //   }
-  // }
-
-  
-
   // original save ...
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     WCPPID::PR3DCluster* cluster = *it;
@@ -1654,8 +1627,6 @@ int main(int argc, char* argv[])
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_u_map = cluster->get_proj_data_u_map();
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_v_map = cluster->get_proj_data_v_map();
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_w_map = cluster->get_proj_data_w_map();
-
-    
     
     proj_data_cluster_id->push_back(ndf_save);
     std::vector<int> temp_channel;
