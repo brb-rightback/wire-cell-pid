@@ -12,7 +12,6 @@
 #include "WCPData/Line.h"
 
 
-
 using namespace WCP;
 
 #include "NeutrinoID_proto_vertex.h"
@@ -199,7 +198,7 @@ WCPPID::NeutrinoID::~NeutrinoID(){
   for (auto it = proto_segments.begin(); it != proto_segments.end(); it++){
     delete (*it);
   }
-  for (auto it = particles.begin(); it!=particles.end(); it++){
+  for (auto it = showers.begin(); it!= showers.end(); it++){
     delete (*it);
   }
 }

@@ -1,15 +1,15 @@
-#ifndef WCPPID_WCPARTICLE_H
-#define WCPPID_WCPARTICLE_H
+#ifndef WCPPID_WCSHOWER_H
+#define WCPPID_WCSHOWER_H
 
 #include "WCPPID/ProtoVertex.h"
 #include "WCPPID/ProtoSegment.h"
 #include <vector>
 
 namespace WCPPID{
-  class WCParticle{
+  class WCShower{
   public:
-    WCParticle();
-    ~WCParticle();
+    WCShower();
+    ~WCShower();
     void set_start_vertex(ProtoVertex* vertex, int type);
     void set_end_vertex(ProtoVertex* vertex, int type);
     void set_start_segment(ProtoSegment* seg);
@@ -25,8 +25,8 @@ namespace WCPPID{
     ProtoSegmentSelection& get_contained_segments(){return contained_segments;};
     
   protected:
-    int particle_type; // type of particle
-
+    int particle_type;
+    
     ProtoVertexSelection contained_vertices;
     ProtoSegmentSelection contained_segments;
     
@@ -40,7 +40,7 @@ namespace WCPPID{
     int end_connection_type;
   };
   
-  typedef std::vector<WCParticle*> WCParticleSelection;
+  typedef std::vector<WCShower*> WCShowerSelection;
 }
 
 #endif

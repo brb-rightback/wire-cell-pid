@@ -6,7 +6,7 @@
 #include "WCPPID/PR3DCluster.h"
 #include "WCPData/ToyCTPointCloud.h"
 
-#include "WCPPID/WCParticle.h"
+#include "WCPPID/WCShower.h"
 
 #include "WCPPID/ToyFiducial.h"
 
@@ -191,6 +191,7 @@ namespace WCPPID{
 
     // particle_clustering
     void particle_clustering();
+    void particle_clustering_in_main_cluster();
     
     // fill_fit_parameters();
     void fill_fit_parameters();
@@ -234,16 +235,14 @@ namespace WCPPID{
     std::map<std::pair<int,int>, std::pair<double,double> > charge_2d_w;
     
     // after fit, for alter direction, further clustering particles ...
-    WCParticleSelection particles;
+    WCShowerSelection showers;
     // find the particle, given something inside ...
-    std::map<WCPPID::ProtoVertex*, WCParticle* > map_vertex_in_particle; 
-    std::map<WCPPID::ProtoSegment*, WCParticle*> map_segment_in_particle;
+    std::map<WCPPID::ProtoVertex*, WCShower* > map_vertex_in_shower; 
+    std::map<WCPPID::ProtoSegment*, WCShower*> map_segment_in_shower;
 
     // find the connection ...
-    std::map<WCPPID::ProtoVertex*, WCParticle*> map_vertex_to_particle; 
-    
-    
-    
+    std::map<WCPPID::ProtoVertex*, WCShower*> map_vertex_to_shower;
+        
   };
 
   struct Res_proto_segment
