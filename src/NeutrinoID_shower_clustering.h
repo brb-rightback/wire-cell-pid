@@ -1,6 +1,21 @@
 void WCPPID::NeutrinoID::shower_clustering(){
-
   shower_clustering_in_main_cluster();
+
+  update_shower_maps();
+  
+}
+
+void WCPPID::NeutrinoID::update_shower_maps(){
+
+  map_vertex_to_shower.clear();
+  map_vertex_in_shower.clear();
+  map_segment_in_shower.clear();
+  
+  for (auto it = showers.begin(); it!=showers.end(); it++){
+    WCPPID::WCShower* shower = *it;
+    map_vertex_to_shower[shower->get_start_vertex().first] = shower;
+    shower->fill_maps(map_vertex_in_shower, map_segment_in_shower);
+  }
 }
 
 
@@ -51,49 +66,4 @@ void WCPPID::NeutrinoID::shower_clustering_in_main_cluster(){
   }
   
   //  std::cout << showers.size() << " " << used_segments.size() << std::endl;
-}
-
-
-void WCPPID::WCShower::complete_structure_with_start_segment(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices,  std::set<WCPPID::ProtoSegment* >& used_segments){
-  // fill the start segment ...
-  std::vector<ProtoSegment* > new_segments;
-  std::vector<ProtoVertex* > new_vertices;
-  
-  for (auto it = map_segment_vertices[start_segment].begin(); it!= map_segment_vertices[start_segment].end(); it++){
-    WCPPID::ProtoVertex *vtx = *it;
-    if (vtx == start_vertex) continue;
-    map_vtx_segs[vtx].insert(start_segment);
-    map_seg_vtxs[start_segment].insert(vtx);
-
-    new_vertices.push_back(vtx);
-  }
-
-  while( new_vertices.size()>0 || new_segments.size()>0 ){
-    if (new_vertices.size()>0){
-      ProtoVertex *vtx = new_vertices.back();
-      new_vertices.pop_back();
-      for (auto it = map_vertex_segments[vtx].begin(); it != map_vertex_segments[vtx].end(); it++){
-    	ProtoSegment *seg = *it;
-    	if (used_segments.find(seg)!=used_segments.end()) continue;
-    	map_vtx_segs[vtx].insert(seg);
-    	map_seg_vtxs[seg].insert(vtx);
-    	new_segments.push_back(seg);
-	used_segments.insert(seg);
-      }
-    }
-
-    if (new_segments.size()>0){
-      ProtoSegment *seg = new_segments.back();
-      new_segments.pop_back();
-      for (auto it = map_segment_vertices[seg].begin(); it!= map_segment_vertices[seg].end(); it++){
-  	ProtoVertex *vtx = *it;
-  	if (map_vtx_segs.find(vtx)!= map_vtx_segs.end() || vtx == start_vertex) continue;
-  	map_vtx_segs[vtx].insert(seg);
-  	map_seg_vtxs[seg].insert(vtx);
-  	new_vertices.push_back(vtx);
-      }
-    }
-  }
-  
-  //std::cout << map_vtx_segs.size() << " " << map_seg_vtxs.size() << std::endl;
 }

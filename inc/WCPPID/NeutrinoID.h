@@ -192,6 +192,7 @@ namespace WCPPID{
     // particle_clustering
     void shower_clustering();
     void shower_clustering_in_main_cluster();
+    void update_shower_maps();
     
     // fill_fit_parameters();
     void fill_fit_parameters();
@@ -236,10 +237,10 @@ namespace WCPPID{
     
     // after fit, for alter direction, further clustering particles ...
     WCShowerSelection showers;
+    
     // find the particle, given something inside ...
     std::map<WCPPID::ProtoVertex*, WCShower* > map_vertex_in_shower; 
     std::map<WCPPID::ProtoSegment*, WCShower*> map_segment_in_shower;
-
     // find the connection ...
     std::map<WCPPID::ProtoVertex*, WCShower*> map_vertex_to_shower;
         
