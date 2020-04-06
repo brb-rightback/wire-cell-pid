@@ -196,9 +196,6 @@ WCPPID::NeutrinoID::~NeutrinoID(){
   for (auto it = proto_segments.begin(); it != proto_segments.end(); it++){
     delete (*it);
   }
-  for (auto it = vertices.begin(); it!= vertices.end(); it++){
-    delete (*it);
-  }
   for (auto it = particles.begin(); it!=particles.end(); it++){
     delete (*it);
   }
@@ -430,12 +427,10 @@ void WCPPID::NeutrinoID::fill_proto_tree(WCPPID::WCRecoTree& rtree){
 	WCPPID::ProtoSegment *curr_sg = *it1;
 	if (used_segments.find(curr_sg)!=used_segments.end()) continue;
 	used_segments.insert(curr_sg);
-	
 	// set mother ...
 	rtree.mc_mother[map_sgid_rtid[map_sg_sgid[curr_sg]]] = map_sg_sgid[prev_sg];
 	// set daughters ...
 	rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(map_sg_sgid[curr_sg]);
-
 	WCPPID::ProtoVertex *other_vertex = find_other_vertex(curr_sg, curr_vtx);
 	if (used_vertices.find(other_vertex) == used_vertices.end())
 	  temp_segments.push_back(std::make_pair(other_vertex, curr_sg));
@@ -443,9 +438,7 @@ void WCPPID::NeutrinoID::fill_proto_tree(WCPPID::WCRecoTree& rtree){
       used_vertices.insert(curr_vtx);
     }
     segments_to_be_examined = temp_segments;
-    //std::cout << segments_to_be_examined.size() << " " << used_vertices.size() << " " << used_segments.size() << std::endl;
   }
-  
 }
 
 

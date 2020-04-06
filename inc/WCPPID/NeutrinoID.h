@@ -6,7 +6,6 @@
 #include "WCPPID/PR3DCluster.h"
 #include "WCPData/ToyCTPointCloud.h"
 
-#include "WCPPID/WCVertex.h"
 #include "WCPPID/WCParticle.h"
 
 #include "WCPPID/ToyFiducial.h"
@@ -230,8 +229,16 @@ namespace WCPPID{
     std::map<std::pair<int,int>, std::pair<double,double> > charge_2d_v;
     std::map<std::pair<int,int>, std::pair<double,double> > charge_2d_w;
     
-    // after fit, for alter direction
+    // after fit, for alter direction, further clustering particles ...
     WCParticleSelection particles;
+    // find the particle, given something inside ...
+    std::map<WCPPID::ProtoVertex*, WCParticle* > map_vertex_in_particle; 
+    std::map<WCPPID::ProtoSegment*, WCParticle*> map_segment_in_particle;
+
+    // find the connection ...
+    std::map<WCPPID::ProtoVertex*, WCParticle*> map_vertex_to_particle; 
+    
+    
     
   };
 
