@@ -20,6 +20,7 @@ using namespace WCP;
 #include "NeutrinoID_deghost.h"
 #include "NeutrinoID_track_shower.h"
 #include "NeutrinoID_energy_reco.h"
+#include "NeutrinoID_particle_clustering.h"
 
 WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, std::vector<WCPPID::PR3DCluster*>& all_clusters, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x)
   : acc_vertex_id(0)
@@ -98,12 +99,14 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
       determine_direction(*it);
     }
   }
-
-  collect_2D_charges();
   
-  // for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
-  //   std::cout << it->first->get_fit_pt() << std::endl;
-  // }
+  // for charge based on calculation ...
+  collect_2D_charges();
+
+  // cluster E&M ...
+  particle_clustering();
+
+  
   // prepare output ...
   fill_fit_parameters();
 }
@@ -442,7 +445,7 @@ void WCPPID::NeutrinoID::fill_proto_tree(WCPPID::WCRecoTree& rtree){
 }
 
 
-void WCPPID::NeutrinoID::fill_skeleton_info(int mother_cluster_id, WCPPID::WCPointTree& ptree, TTree *T, double dQdx_scale, double dQdx_offset, bool flag_skip_vertex){
+void WCPPID::NeutrinoID::fill_skeleton_info_magnify(int mother_cluster_id, WCPPID::WCPointTree& ptree, TTree *T, double dQdx_scale, double dQdx_offset, bool flag_skip_vertex){
 
   WCPPID::PR3DClusterSelection clusters_vec;
   clusters_vec.push_back(main_cluster);
@@ -565,8 +568,104 @@ void WCPPID::NeutrinoID::fill_skeleton_info(int mother_cluster_id, WCPPID::WCPoi
     }
   }
   
+}
+
+
+void WCPPID::NeutrinoID::fill_skeleton_info(int mother_cluster_id, WCPPID::WCPointTree& ptree, TTree *T, double dQdx_scale, double dQdx_offset, bool flag_skip_vertex){
+
+  WCPPID::PR3DClusterSelection clusters_vec;
+  clusters_vec.push_back(main_cluster);
+  for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
+    clusters_vec.push_back(*it);
+  }
+  
+  ptree.reco_chi2 = 1;
+  ptree.reco_mother_cluster_id = mother_cluster_id;
+  
+
+  for (auto it0 = clusters_vec.begin(); it0!=clusters_vec.end(); it0++){
+    WCPPID::PR3DCluster* cluster = *it0;
+    
+    if (!flag_skip_vertex){
+      // fill vertex information
+      ptree.reco_flag_track_shower = 0;
+      for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
+	WCPPID::ProtoVertex *vtx = it->first;
+	if (vtx->get_cluster_id() != cluster->get_cluster_id()) continue;
+	ptree.reco_cluster_id = vtx->get_cluster_id();
+	ptree.reco_proto_cluster_id = -1;
+	ptree.reco_particle_id = -1;
+	ptree.reco_ndf = vtx->get_cluster_id();
+	ptree.reco_flag_vertex = 1;
+      
+	ptree.reco_x = vtx->get_fit_pt().x/units::cm;
+	ptree.reco_y = vtx->get_fit_pt().y/units::cm;
+	ptree.reco_z = vtx->get_fit_pt().z/units::cm;
+	ptree.reco_dQ = vtx->get_dQ() * dQdx_scale + dQdx_offset;
+	ptree.reco_dx = vtx->get_dx()/units::cm;
+	ptree.reco_pu = vtx->get_pu();
+	ptree.reco_pv = vtx->get_pv();
+	ptree.reco_pw = vtx->get_pw();
+	ptree.reco_pt = vtx->get_pt();    
+	ptree.reco_reduced_chi2 = vtx->get_reduced_chi2();
+	ptree.reco_rr = -1; // no residual range
+	
+	T->Fill();
+      }
+    }
+
+
+    for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+      WCPPID::ProtoSegment *seg = it->first;
+      if (seg->get_cluster_id() != cluster->get_cluster_id()) continue;
+      std::vector<WCP::Point>& pts = seg->get_point_vec();
+      std::vector<double>& dQ_vec = seg->get_dQ_vec();
+      std::vector<double>& dx_vec = seg->get_dx_vec();
+      std::vector<double>& pu_vec = seg->get_pu_vec();
+      std::vector<double>& pv_vec = seg->get_pv_vec();
+      std::vector<double>& pw_vec = seg->get_pw_vec();
+      std::vector<double>& pt_vec = seg->get_pt_vec();
+      std::vector<double>& reduced_chi2_vec = seg->get_reduced_chi2_vec();
+      
+      ptree.reco_cluster_id = seg->get_cluster_id();
+      ptree.reco_ndf = seg->get_cluster_id();
+      ptree.reco_proto_cluster_id = seg->get_cluster_id()*1000 + seg->get_id();
+      
+      // hack for now ...
+      //      ptree.reco_particle_id = seg->get_cluster_id()*1000 + seg->get_id();
+      if (seg->get_flag_shower()){
+	ptree.reco_flag_track_shower = 1;
+      }else{
+	ptree.reco_flag_track_shower = 0;
+      }
+
+      if (ptree.reco_flag_track_shower==1){
+	ptree.reco_particle_id =1;
+      }else{
+	ptree.reco_particle_id =4;
+      }
+      
+      ptree.reco_flag_vertex = 0;
+      for (size_t i=0;i!=pts.size();i++){
+	ptree.reco_x = pts.at(i).x/units::cm;
+	ptree.reco_y = pts.at(i).y/units::cm;
+	ptree.reco_z = pts.at(i).z/units::cm;
+	ptree.reco_dQ = dQ_vec.at(i) * dQdx_scale + dQdx_offset;
+	ptree.reco_dx = dx_vec.at(i)/units::cm;
+	ptree.reco_pu = pu_vec.at(i);
+	ptree.reco_pv = pv_vec.at(i);
+	ptree.reco_pw = pw_vec.at(i);
+	ptree.reco_pt = pt_vec.at(i);    
+	ptree.reco_reduced_chi2 = reduced_chi2_vec.at(i);
+	T->Fill();
+      }
+    }
+  }
+  
   
 }
+
+
 void WCPPID::NeutrinoID::fill_point_info(int mother_cluster_id, WCPPID::WCPointTree& ptree, TTree *T){
   
   ptree.reco_mother_cluster_id = mother_cluster_id;

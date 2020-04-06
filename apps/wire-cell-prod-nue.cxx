@@ -1581,7 +1581,7 @@ int main(int argc, char* argv[])
   
   for (size_t i=0; i!= neutrino_vec.size();i++){
     int mother_cluster_id = neutrino_vec.at(i)->get_main_cluster()->get_cluster_id();
-    neutrino_vec.at(i)->fill_skeleton_info(mother_cluster_id, point_tree, t_rec_charge, dQdx_scale, dQdx_offset);
+    neutrino_vec.at(i)->fill_skeleton_info_magnify(mother_cluster_id, point_tree, t_rec_charge, dQdx_scale, dQdx_offset);
     neutrino_vec.at(i)->fill_skeleton_info(mother_cluster_id, point_tree, t_rec_deblob, dQdx_scale, dQdx_offset, true);
     neutrino_vec.at(i)->fill_point_info(mother_cluster_id, point_tree, t_rec_simple);
   }
