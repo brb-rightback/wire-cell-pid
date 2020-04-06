@@ -231,10 +231,7 @@ namespace WCPPID{
     std::map<std::pair<int,int>, std::pair<double,double> > charge_2d_w;
     
     // after fit, for alter direction
-    WCVertexSelection vertices;
     WCParticleSelection particles;
-
-    
     
   };
 
