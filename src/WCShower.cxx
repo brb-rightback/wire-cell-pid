@@ -26,13 +26,13 @@ WCPPID::WCShower::WCShower()
 }
 
 WCPPID::WCShower::~WCShower(){
-  if (pcloud_fit != 0) delete pcloud_fit;
-  if (pcloud_associated != 0) delete pcloud_associated;
+  if (pcloud_fit != (ToyPointCloud*)0) delete pcloud_fit;
+  if (pcloud_associated != (ToyPointCloud*)0) delete pcloud_associated;
 }
 
 void WCPPID::WCShower::rebuild_point_clouds(){
-  if (pcloud_fit != 0) delete pcloud_fit;
-  if (pcloud_associated != 0) delete pcloud_associated;
+  if (pcloud_fit != (ToyPointCloud*)0) delete pcloud_fit;
+  if (pcloud_associated != (ToyPointCloud*)0) delete pcloud_associated;
   pcloud_fit = 0;
   pcloud_associated = 0;
   build_point_clouds();
@@ -40,8 +40,28 @@ void WCPPID::WCShower::rebuild_point_clouds(){
 
 void WCPPID::WCShower::build_point_clouds(){
   if (pcloud_fit == 0){
+    pcloud_fit = new ToyPointCloud();
+    for (auto it = map_seg_vtxs.begin(); it!= map_seg_vtxs.end(); it++){
+      WCPPID::ProtoSegment *sg = it->first;
+      WCP::PointVector& pts = sg->get_point_vec();
+      pcloud_fit->AddPoints(pts);
+    }
+    pcloud_fit->build_kdtree_index();
   }
   if (pcloud_associated == 0){
+    pcloud_associated = new ToyPointCloud();
+    for (auto it = map_seg_vtxs.begin(); it!= map_seg_vtxs.end(); it++){
+      WCPPID::ProtoSegment *sg = it->first;
+      ToyPointCloud* sg_pcloud = sg->get_associated_pcloud();
+      WCP::WCPointCloud<double>& sg_cloud = sg_pcloud->get_cloud();
+      WCP::WC2DPointCloud<double>& sg_cloud_u = sg_pcloud->get_cloud_u();
+      WCP::WC2DPointCloud<double>& sg_cloud_v = sg_pcloud->get_cloud_v();
+      WCP::WC2DPointCloud<double>& sg_cloud_w = sg_pcloud->get_cloud_w();
+      for (size_t i=0;i!=sg_cloud.pts.size();i++){
+	pcloud_associated->AddPoint(sg_cloud.pts.at(i), sg_cloud_u.pts.at(i), sg_cloud_v.pts.at(i), sg_cloud_w.pts.at(i));
+      }
+    }
+    pcloud_associated->build_kdtree_index();
   }
 }
 

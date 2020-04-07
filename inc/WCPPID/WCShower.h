@@ -29,10 +29,10 @@ namespace WCPPID{
 
     int get_particle_type(){return particle_type;};
     bool get_flag_shower(){return flag_shower;};
-    double get_kenergy_range(){return kenergy_range;};
-    double get_kenergy_dQdx(){return kenergy_dQdx;};
-    void set_kenergy_charge(double val){kenergy_charge = val;};
-    double get_kenergy_charge(){return kenergy_charge;};
+    double get_kine_range(){return kenergy_range;};
+    double get_kine_dQdx(){return kenergy_dQdx;};
+    void set_kine_charge(double val){kenergy_charge = val;};
+    double get_kine_charge(){return kenergy_charge;};
     WCP::Point& get_start_point(){return start_point;};
     WCP::Point& get_end_point(){return end_point;};
     TVector3& get_init_dir(){return init_dir;};

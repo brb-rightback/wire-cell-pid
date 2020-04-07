@@ -9,7 +9,10 @@ void WCPPID::NeutrinoID::calculate_shower_kinematics(){
   for (size_t i=0;i!=showers.size();i++){
     WCPPID::WCShower *shower = showers.at(i);
     shower->calculate_kinematics();
+    double kine_charge = cal_kine_charge(shower);
+    shower->set_kine_charge(kine_charge);
     
+    std::cout << shower->get_kine_range()/units::MeV << " " << shower->get_kine_dQdx()/units::MeV << " " << shower->get_kine_charge()/units::MeV << std::endl;
   }
 }
 
@@ -23,8 +26,7 @@ void WCPPID::NeutrinoID::update_shower_maps(){
     WCPPID::WCShower* shower = *it;
     map_vertex_to_shower[shower->get_start_vertex().first] = shower;
     shower->fill_maps(map_vertex_in_shower, map_segment_in_shower);
-    double kine_charge = cal_kine_charge(shower);
-    shower->set_kenergy_charge(kine_charge);
+    
   }
 }
 
