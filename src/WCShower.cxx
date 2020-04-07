@@ -11,6 +11,8 @@ WCPPID::WCShower::WCShower()
   , start_vertex(0)
   , start_connection_type(0)
   , start_segment(0)
+  , pcloud_fit(0)
+  , pcloud_associated(0)
 {
   start_point.x = 0;
   start_point.y = 0;
@@ -24,7 +26,52 @@ WCPPID::WCShower::WCShower()
 }
 
 WCPPID::WCShower::~WCShower(){
-  
+  if (pcloud_fit != 0) delete pcloud_fit;
+  if (pcloud_associated != 0) delete pcloud_associated;
+}
+
+void WCPPID::WCShower::rebuild_point_clouds(){
+  if (pcloud_fit != 0) delete pcloud_fit;
+  if (pcloud_associated != 0) delete pcloud_associated;
+  pcloud_fit = 0;
+  pcloud_associated = 0;
+  build_point_clouds();
+}
+
+void WCPPID::WCShower::build_point_clouds(){
+  if (pcloud_fit == 0){
+  }
+  if (pcloud_associated == 0){
+  }
+}
+
+
+
+void WCPPID::WCShower::calculate_kinematics(){
+  if (map_seg_vtxs.size()==1){
+    particle_type = start_segment->get_particle_type();
+    flag_shower = start_segment->get_flag_shower();
+    kenergy_range = start_segment->cal_kine_range();
+    kenergy_dQdx = start_segment->cal_kine_dQdx();
+    if (start_segment->get_flag_dir()==1){
+      start_point = start_segment->get_point_vec().front();
+      end_point = start_segment->get_point_vec().back();
+    }else if (start_segment->get_flag_dir()==-1){
+      start_point = start_segment->get_point_vec().back();
+      end_point = start_segment->get_point_vec().front();
+    }
+    // initial direction ...
+    if (start_connection_type == 1){
+      init_dir = start_segment->cal_dir_3vector();
+    }else if (start_connection_type == 2){
+      init_dir.SetXYZ(start_point.x - start_vertex->get_fit_pt().x, start_point.y - start_vertex->get_fit_pt().y, start_point.z - start_vertex->get_fit_pt().z);
+    }else if (start_connection_type == 3){
+      init_dir.SetXYZ(start_point.x - start_vertex->get_fit_pt().x, start_point.y - start_vertex->get_fit_pt().y, start_point.z - start_vertex->get_fit_pt().z);
+    }
+    init_dir = init_dir.Unit();
+  }else{
+    // two different types ...
+  }
 }
 
 void WCPPID::WCShower::set_start_vertex(ProtoVertex* vertex, int type){

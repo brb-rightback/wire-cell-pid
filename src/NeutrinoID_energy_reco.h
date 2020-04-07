@@ -41,6 +41,30 @@
 } 
 
 
+double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::WCShower *shower){
+  double kine_energy = 0;
+  
+  // to be improved ...
+  double fudge_factor = 0.95;
+  double recom_factor  = 0.7;
+
+  if (shower->get_flag_shower()) {
+    recom_factor = 0.5; // assume shower
+    fudge_factor = 0.8; // shower ...
+  }else if (fabs(shower->get_particle_type())==2212){
+    recom_factor = 0.35;
+  }
+
+  double sum_u_charge = 0;
+  double sum_v_charge = 0;
+  double sum_w_charge = 0;
+
+  
+
+  
+  return kine_energy;
+}
+
 double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::ProtoSegment *sg){
   double kine_energy = 0;
   

@@ -99,9 +99,12 @@ namespace WCPPID{
     std::vector<double> do_track_comp(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range = 35*units::cm, double offset_length = 0*units::cm);
     bool eval_ks_ratio(double ks1, double ks2, double ratio1, double ratio2);
     void cal_4mom();
-    
+    TVector3 cal_dir_3vector();
     double cal_kine_range();
     double cal_kine_dQdx();
+
+    double get_kine_charge(){return kenergy_charge;};
+    void set_kine_charge(double val){kenergy_charge = val;};
     //    double cal_kine_charge(std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_u, std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_v, std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_w, WCP::ToyCTPointCloud* ct_point_cloud); // for shower ...
     
     
@@ -154,6 +157,7 @@ namespace WCPPID{
     // n 2112
     double particle_mass;
     double particle_4mom[4];
+    double kenergy_charge;
   };
   typedef std::vector<ProtoSegment*> ProtoSegmentSelection;
   

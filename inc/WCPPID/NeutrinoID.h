@@ -159,6 +159,7 @@ namespace WCPPID{
     // calculate charge
     void collect_2D_charges();
     double cal_kine_charge(WCPPID::ProtoSegment *sg);
+    double cal_kine_charge(WCPPID::WCShower *shower);
     
     // improve vertex ...
     void improve_vertex(WCPPID::PR3DCluster* temp_cluster);
@@ -195,6 +196,7 @@ namespace WCPPID{
     // particle_clustering
     void shower_clustering();
     void shower_clustering_in_main_cluster();
+    void calculate_shower_kinematics();
     void update_shower_maps();
     
     // fill_fit_parameters();

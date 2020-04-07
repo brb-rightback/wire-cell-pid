@@ -16,7 +16,6 @@ namespace WCPPID{
     
     std::pair<ProtoVertex*, int> get_start_vertex(){return std::make_pair(start_vertex, start_connection_type);};
     ProtoSegment* get_start_segment(){return start_segment;}
-    bool get_flag_shower(){return flag_shower;};
     
     // provide internal information to outside structure ...
     void fill_maps(std::map<WCPPID::ProtoVertex*, WCPPID::WCShower* >& map_vertex_in_shower, std::map<WCPPID::ProtoSegment*, WCPPID::WCShower*>& map_segment_in_shower);
@@ -25,7 +24,23 @@ namespace WCPPID{
     // complete structure ...
     void complete_structure_with_start_segment(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices,  std::set<WCPPID::ProtoSegment* >& used_segments);
 
+    void calculate_kinematics();
     
+
+    int get_particle_type(){return particle_type;};
+    bool get_flag_shower(){return flag_shower;};
+    double get_kenergy_range(){return kenergy_range;};
+    double get_kenergy_dQdx(){return kenergy_dQdx;};
+    void set_kenergy_charge(double val){kenergy_charge = val;};
+    double get_kenergy_charge(){return kenergy_charge;};
+    WCP::Point& get_start_point(){return start_point;};
+    WCP::Point& get_end_point(){return end_point;};
+    TVector3& get_init_dir(){return init_dir;};
+
+    void rebuild_point_clouds();
+    void build_point_clouds();
+    WCP::ToyPointCloud* get_fit_pcloud(){return pcloud_fit;};
+    WCP::ToyPointCloud* get_associated_pcloud(){return pcloud_associated;};
     
   protected:
     int particle_type;
@@ -37,6 +52,9 @@ namespace WCPPID{
     WCP::Point start_point;
     WCP::Point end_point;
     TVector3 init_dir;
+
+    WCP::ToyPointCloud* pcloud_fit;
+    WCP::ToyPointCloud* pcloud_associated;
     
     
     ProtoVertex* start_vertex;

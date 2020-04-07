@@ -27,6 +27,7 @@ WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::
   , particle_type(0)
   , particle_score(100)
   , particle_mass(0)
+  , kenergy_charge(0)
 {
   for (int i=0;i!=4;i++){
     particle_4mom[i] = 0;
@@ -981,8 +982,14 @@ void WCPPID::ProtoSegment::cal_4mom(){
   double mom = sqrt(pow(particle_4mom[3],2) - pow(particle_mass,2));
   //  direction vector ...
 
-  WCP::Point p(0,0,0);
-  
+  TVector3 v1 = cal_dir_3vector();
+  particle_4mom[0] = mom * v1.X();
+  particle_4mom[1] = mom * v1.Y();
+  particle_4mom[2] = mom * v1.Z();
+}
+
+TVector3 WCPPID::ProtoSegment::cal_dir_3vector(){
+  WCP::Point p(0,0,0);  
   if (flag_dir == 1){
     for (size_t i=1;i<5;i++){
       if (i>= fit_pt_vec.size()) break;
@@ -1000,9 +1007,7 @@ void WCPPID::ProtoSegment::cal_4mom(){
   }
   TVector3 v1(p.x, p.y, p.z);
   v1 = v1.Unit();
-  particle_4mom[0] = mom * v1.X();
-  particle_4mom[1] = mom * v1.Y();
-  particle_4mom[2] = mom * v1.Z();
+  return v1;
 }
 
 
