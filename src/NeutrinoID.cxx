@@ -373,7 +373,85 @@ void WCPPID::NeutrinoID::fill_reco_simple_tree(WCPPID::WCRecoTree& rtree){
   // std::cout << rtree.mc_Ntrack << std::endl;
 }
 
+void WCPPID::NeutrinoID::fill_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rtree){
+  fill_reco_tree(shower->get_start_segment(), rtree);
+}
 
+void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
+  for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment* sg= it->first;
+    if (map_segment_in_shower.find(sg)!=map_segment_in_shower.end()) continue;
+    fill_reco_tree(sg, rtree);
+  }
+  for (auto it = showers.begin(); it!=showers.end();it++){
+    fill_reco_tree(*it, rtree);
+  }
+
+    // id vs. rtree id
+  std::map<int, int> map_sgid_rtid;
+  std::map<int, int> map_rtid_sgid;
+  for (int i=0;i!=rtree.mc_Ntrack;i++){
+    int sgid = rtree.mc_id[i];
+    map_sgid_rtid[sgid] = i;
+    map_rtid_sgid[i] = sgid;
+  }
+  
+  // id vs. sg 
+  std::map<int, WCPPID::ProtoSegment*> map_sgid_sg;
+  std::map<WCPPID::ProtoSegment*, int> map_sg_sgid;
+  for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment* sg= it->first;
+    // only save the main cluster
+    int sgid = sg->get_cluster_id()*1000 + sg->get_id();
+    map_sg_sgid[sg] = sgid;
+    map_sgid_sg[sgid] = sg;
+  }
+  
+  // main_vertex figure out the daughters and mother ...
+  std::set<WCPPID::ProtoVertex* > used_vertices;
+  std::set<WCPPID::ProtoSegment* > used_segments;
+
+  for (auto it = showers.begin(); it!=showers.end();it++){
+    (*it)->fill_sets(used_vertices, used_segments);
+  }
+  
+  
+  std::vector<std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> > segments_to_be_examined;
+  for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
+    // parent are all zero now ...
+    used_segments.insert(*it);
+    WCPPID::ProtoVertex *other_vertex = find_other_vertex(*it, main_vertex);
+    segments_to_be_examined.push_back(std::make_pair(other_vertex, *it));
+  }
+  used_vertices.insert(main_vertex);
+  //std::cout << segments_to_be_examined.size() << " " << used_vertices.size() << " " << used_segments.size() << std::endl;
+  
+  while(segments_to_be_examined.size()>0){
+    std::vector<std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> > temp_segments;
+    for (auto it = segments_to_be_examined.begin(); it!= segments_to_be_examined.end(); it++){
+      WCPPID::ProtoVertex *curr_vtx = it->first;
+      WCPPID::ProtoSegment *prev_sg = it->second;
+      if (used_vertices.find(curr_vtx)!=used_vertices.end()) continue;
+
+      for (auto it1 = map_vertex_segments[curr_vtx].begin(); it1!=map_vertex_segments[curr_vtx].end(); it1++){
+	WCPPID::ProtoSegment *curr_sg = *it1;
+	if (used_segments.find(curr_sg)!=used_segments.end()) continue;
+	used_segments.insert(curr_sg);
+	// set mother ...
+	rtree.mc_mother[map_sgid_rtid[map_sg_sgid[curr_sg]]] = map_sg_sgid[prev_sg];
+	// set daughters ...
+	rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(map_sg_sgid[curr_sg]);
+	WCPPID::ProtoVertex *other_vertex = find_other_vertex(curr_sg, curr_vtx);
+	if (used_vertices.find(other_vertex) == used_vertices.end())
+	  temp_segments.push_back(std::make_pair(other_vertex, curr_sg));
+      }
+      used_vertices.insert(curr_vtx);
+    }
+    segments_to_be_examined = temp_segments;
+  }
+
+  
+}
 
 void WCPPID::NeutrinoID::fill_proto_main_tree(WCPPID::WCRecoTree& rtree){
   fill_reco_simple_tree(rtree);
@@ -649,9 +727,14 @@ void WCPPID::NeutrinoID::fill_skeleton_info(int mother_cluster_id, WCPPID::WCPoi
       WCPPID::WCShower *shower = it1->second;
       
       ptree.reco_proto_cluster_id = shower->get_start_segment()->get_cluster_id()*1000 + shower->get_start_segment()->get_id();
-      ptree.reco_flag_track_shower = 1;
+      if (shower->get_flag_shower()){
+	ptree.reco_flag_track_shower = 1;
+      }else{
+	ptree.reco_flag_track_shower = 0;
+      }
       ptree.reco_particle_id = shower->get_start_segment()->get_cluster_id()*1000 + shower->get_start_segment()->get_id();
       ptree.reco_flag_vertex = 0;
+
       for (size_t i=1; i+1<pts.size();i++){
 	ptree.reco_x = pts.at(i).x/units::cm;
 	ptree.reco_y = pts.at(i).y/units::cm;
@@ -668,11 +751,13 @@ void WCPPID::NeutrinoID::fill_skeleton_info(int mother_cluster_id, WCPPID::WCPoi
     }else{
       
       ptree.reco_proto_cluster_id = seg->get_cluster_id()*1000 + seg->get_id();
+
       if (seg->get_flag_shower()){
 	ptree.reco_flag_track_shower = 1;
       }else{
 	ptree.reco_flag_track_shower = 0;
       }
+      
       ptree.reco_particle_id = ptree.reco_particle_id = seg->get_cluster_id()*1000 + seg->get_id();
       
       ptree.reco_flag_vertex = 0;
@@ -706,8 +791,13 @@ void WCPPID::NeutrinoID::fill_point_info(int mother_cluster_id, WCPPID::WCPointT
     auto it1 = map_segment_in_shower.find(seg);
     if (it1 != map_segment_in_shower.end()){
       ptree.reco_proto_cluster_id = (it1->second)->get_start_segment()->get_cluster_id() * 1000 + (it1->second)->get_start_segment()->get_id();
-      ptree.reco_flag_track_shower = 1;
-      ptree.reco_flag_track_shower_charge = 15000;
+      if (it1->second->get_flag_shower()){
+	ptree.reco_flag_track_shower = 1;
+	ptree.reco_flag_track_shower_charge = 15000;
+      }else{
+	ptree.reco_flag_track_shower = 0;
+	ptree.reco_flag_track_shower_charge = 0;
+      }
     }else{
       ptree.reco_proto_cluster_id = seg->get_cluster_id() * 1000 + seg->get_id();
       if (seg->get_flag_shower()){

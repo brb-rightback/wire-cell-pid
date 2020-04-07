@@ -4,6 +4,7 @@ using namespace WCP;
 
 WCPPID::WCShower::WCShower()
   : particle_type(0)
+  , flag_shower(true)
   , start_vertex(0)
   , start_connection_type(0)
   , start_segment(0)
@@ -21,6 +22,18 @@ void WCPPID::WCShower::set_start_vertex(ProtoVertex* vertex, int type){
 
 void WCPPID::WCShower::set_start_segment(ProtoSegment* seg){
   start_segment = seg;
+}
+
+void WCPPID::WCShower::fill_sets( std::set<WCPPID::ProtoVertex* >& used_vertices,  std::set<WCPPID::ProtoSegment* >& used_segments, bool flag_exclude_start_segment){
+  for (auto it = map_vtx_segs.begin(); it != map_vtx_segs.end(); it++){
+    used_vertices.insert(it->first);
+  }
+  for (auto it = map_seg_vtxs.begin(); it != map_seg_vtxs.end(); it++){
+    if (flag_exclude_start_segment){
+      if (it->first == start_segment) continue;
+    }
+    used_segments.insert(it->first);
+  }
 }
 
 void WCPPID::WCShower::fill_maps(std::map<WCPPID::ProtoVertex*, WCPPID::WCShower* >& map_vertex_in_shower, std::map<WCPPID::ProtoSegment*, WCPPID::WCShower*>& map_segment_in_shower){

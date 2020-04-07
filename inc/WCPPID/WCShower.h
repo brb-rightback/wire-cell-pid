@@ -14,12 +14,16 @@ namespace WCPPID{
     
     std::pair<ProtoVertex*, int> get_start_vertex(){return std::make_pair(start_vertex, start_connection_type);};
     ProtoSegment* get_start_segment(){return start_segment;}
-
+    bool get_flag_shower(){return flag_shower;};
+    
+    
     void fill_maps(std::map<WCPPID::ProtoVertex*, WCPPID::WCShower* >& map_vertex_in_shower, std::map<WCPPID::ProtoSegment*, WCPPID::WCShower*>& map_segment_in_shower);
+    void fill_sets( std::set<WCPPID::ProtoVertex* >& used_vertices,  std::set<WCPPID::ProtoSegment* >& used_segments, bool flag_exclude_start_segment = true);
     
     void complete_structure_with_start_segment(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices,  std::set<WCPPID::ProtoSegment* >& used_segments);
   protected:
     int particle_type;
+    bool flag_shower;
     
     ProtoVertex* start_vertex;
     int start_connection_type;
