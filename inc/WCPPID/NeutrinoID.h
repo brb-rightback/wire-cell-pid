@@ -154,6 +154,7 @@ namespace WCPPID{
     bool examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2, double offset_t, double slope_xt, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw);
     
     void find_other_segments(WCPPID::PR3DCluster* temp_cluster, bool flag_break_track = true, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
+    WCPPID::ProtoSegment* find_incoming_segment(WCPPID::ProtoVertex *vtx);
     ProtoVertex* find_vertex_other_segment(WCPPID::PR3DCluster *temp_cluster, bool flag_forward, WCP::WCPointCloud<double>::WCPoint& wcp);
 
     // calculate charge
@@ -196,6 +197,9 @@ namespace WCPPID{
     // particle_clustering
     void shower_clustering();
     void shower_clustering_in_main_cluster();
+    // holder for now ...
+    void shower_clustering_in_other_clusters();
+    
     void calculate_shower_kinematics();
     void update_shower_maps();
     

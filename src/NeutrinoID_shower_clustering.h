@@ -1,9 +1,17 @@
 void WCPPID::NeutrinoID::shower_clustering(){
+
+  // connect to the main cluster ...
   shower_clustering_in_main_cluster();
 
+  // check other clusters
+  shower_clustering_in_other_clusters();
+  
   calculate_shower_kinematics();
   update_shower_maps();  
 }
+
+
+
 
 void WCPPID::NeutrinoID::calculate_shower_kinematics(){
   for (size_t i=0;i!=showers.size();i++){
@@ -12,7 +20,7 @@ void WCPPID::NeutrinoID::calculate_shower_kinematics(){
     double kine_charge = cal_kine_charge(shower);
     shower->set_kine_charge(kine_charge);
     
-    std::cout << shower->get_kine_range()/units::MeV << " " << shower->get_kine_dQdx()/units::MeV << " " << shower->get_kine_charge()/units::MeV << std::endl;
+    //  std::cout << shower->get_kine_range()/units::MeV << " " << shower->get_kine_dQdx()/units::MeV << " " << shower->get_kine_charge()/units::MeV << std::endl;
   }
 }
 
@@ -26,6 +34,30 @@ void WCPPID::NeutrinoID::update_shower_maps(){
     WCPPID::WCShower* shower = *it;
     map_vertex_to_shower[shower->get_start_vertex().first] = shower;
     shower->fill_maps(map_vertex_in_shower, map_segment_in_shower);
+    
+  }
+}
+
+
+// place holder ...
+void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(){
+  for (auto it = other_clusters.begin(); it != other_clusters.end(); it++){
+    WCPPID::PR3DCluster *cluster = *it;
+    WCPPID::ProtoSegment *sg = 0;
+    for (auto it1 = map_segment_vertices.begin(); it1 != map_segment_vertices.end(); it1++){
+      if (it1->first->get_cluster_id() != cluster->get_cluster_id()) continue;
+      sg = it1->first;
+      break;
+    }
+
+    if (sg != 0){
+      WCPPID::WCShower *shower = new WCPPID::WCShower();
+      shower->set_start_vertex(main_vertex, 2);
+      shower->set_start_segment(sg);
+      std::set<WCPPID::ProtoSegment* > used_segments; 
+      shower->complete_structure_with_start_segment(map_vertex_segments, map_segment_vertices, used_segments); 
+      showers.push_back(shower);
+    }
     
   }
 }

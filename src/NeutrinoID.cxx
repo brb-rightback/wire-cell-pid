@@ -35,7 +35,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   , type(0)
   , main_vertex(0)
 {
-  bool flag_other_clusters = false;
+  bool flag_other_clusters = true;
   bool flag_main_cluster = true;  
   // form id vs. cluster ...
   map_id_cluster[main_cluster->get_cluster_id()] = main_cluster;
@@ -71,9 +71,11 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
       // do not break track and find other tracks ...
       if (!find_proto_vertex(*it, false, 1)) init_point_segment(*it);
       //      std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
+      //break;
     }
     //  deghost ...
     deghost_clusters();
+    
   }
   
   // clustering points
@@ -104,7 +106,6 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
 
   // cluster E&M ...
   shower_clustering();
-
   
   // prepare output ...
   fill_fit_parameters();
@@ -496,10 +497,46 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
     segments_to_be_examined = temp_segments;
   }
 
-  // Now the showers 
-  
-  
+  // Now the showers
+  for (auto it = showers.begin(); it!= showers.end(); it++){
+    WCPPID::WCShower *shower = *it;
+    WCPPID::ProtoSegment* curr_sg = shower->get_start_segment();
+    std::pair<ProtoVertex*, int> pair_vertex = shower->get_start_vertex();
+
+    if (pair_vertex.first == main_vertex){
+      rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = 0;
+    }else{
+      WCPPID::ProtoSegment* prev_sg = find_incoming_segment(pair_vertex.first);
+      // set mother ...
+      rtree.mc_mother[map_sgid_rtid[map_sg_sgid[curr_sg]]] = map_sg_sgid[prev_sg];
+      // set daughters ...
+      rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(map_sg_sgid[curr_sg]);
+    }
+  } 
 }
+
+WCPPID::ProtoSegment* WCPPID::NeutrinoID::find_incoming_segment(WCPPID::ProtoVertex *vtx){
+  WCPPID::ProtoSegment* sg = 0;
+  // find the first segment ...
+  for ( auto it = map_vertex_segments[vtx].begin(); it != map_vertex_segments[vtx].end(); it++){
+    WCPPID::ProtoSegment* current_sg = (*it);
+    bool flag_start;
+    if (current_sg->get_wcpt_vec().front().index == vtx->get_wcpt().index)
+      flag_start = true;
+    else if (current_sg->get_wcpt_vec().back().index == vtx->get_wcpt().index)
+      flag_start = false;
+
+    if (flag_start && current_sg->get_flag_dir()==-1
+	|| (!flag_start) && current_sg->get_flag_dir()==1 ){
+      sg = current_sg;
+      break;
+    }
+    
+  }
+  
+  return sg;
+}
+
 
 void WCPPID::NeutrinoID::fill_proto_main_tree(WCPPID::WCRecoTree& rtree){
   fill_reco_simple_tree(rtree);
