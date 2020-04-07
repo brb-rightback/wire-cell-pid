@@ -33,14 +33,20 @@ namespace WCPPID{
     double get_kine_dQdx(){return kenergy_dQdx;};
     void set_kine_charge(double val){kenergy_charge = val;};
     double get_kine_charge(){return kenergy_charge;};
+    double get_kine_best(){return kenergy_best;};
     WCP::Point& get_start_point(){return start_point;};
     WCP::Point& get_end_point(){return end_point;};
     TVector3& get_init_dir(){return init_dir;};
-
+    
+    
     void rebuild_point_clouds();
     void build_point_clouds();
     WCP::ToyPointCloud* get_fit_pcloud(){return pcloud_fit;};
     WCP::ToyPointCloud* get_associated_pcloud(){return pcloud_associated;};
+
+    //
+    std::pair<std::set<WCPPID::ProtoSegment*>, std::set<WCPPID::ProtoVertex*> > get_connected_pieces(WCPPID::ProtoSegment* seg);
+      
     
   protected:
     int particle_type;
@@ -49,6 +55,8 @@ namespace WCPPID{
     double kenergy_range;
     double kenergy_dQdx;
     double kenergy_charge;
+    double kenergy_best;
+    
     WCP::Point start_point;
     WCP::Point end_point;
     TVector3 init_dir;

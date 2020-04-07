@@ -917,6 +917,20 @@ bool WCPPID::ProtoSegment::get_flag_shower_dQdx(){
 
 
 
+double WCPPID::ProtoSegment::cal_kine_dQdx(std::vector<double>& vec_dQ, std::vector<double>& vec_dx){
+  double kine_energy =0;
+  Double_t alpha = 1.0;
+  Double_t beta = 0.255;
+  for (size_t i=0;i!=vec_dQ.size();i++){
+    Double_t dQdx = vec_dQ.at(i)/(vec_dx.at(i) + 1e-9) * units::cm;
+    if (dQdx/43e3 > 1000) dQdx = 0;
+    Double_t dEdx = (exp(dQdx * 23.6e-6*beta/1.38/0.273) - alpha)/(beta/1.38/0.273) * units::MeV/units::cm;
+    kine_energy += dEdx * vec_dx.at(i);
+  }
+  
+  return kine_energy;
+}
+
 double WCPPID::ProtoSegment::cal_kine_dQdx(){
   double kine_energy =0;
   Double_t alpha = 1.0;
@@ -928,14 +942,14 @@ double WCPPID::ProtoSegment::cal_kine_dQdx(){
     if (i==0){
       double dis = sqrt(pow(fit_pt_vec.at(1).x - fit_pt_vec.at(0).x,2) + pow(fit_pt_vec.at(1).y - fit_pt_vec.at(0).y,2) + pow(fit_pt_vec.at(1).z - fit_pt_vec.at(0).z,2));
       if (dx_vec.at(i) > dis*1.5){
-	kine_energy += dEdx * dis * 1.5;
+	kine_energy += dEdx * dis ;
       }else{
 	kine_energy += dEdx * dx_vec.at(i);
       }
     }else if (i+1 == fit_pt_vec.size()){
       double dis = sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.at(i-1).x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.at(i-1).y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.at(i-1).z,2));
       if (dx_vec.at(i) > dis*1.5){
-	kine_energy += dEdx * dis * 1.5;
+	kine_energy += dEdx * dis ;
       }else{
 	kine_energy += dEdx * dx_vec.at(i);
       }
@@ -944,6 +958,19 @@ double WCPPID::ProtoSegment::cal_kine_dQdx(){
     }
   }
   
+  return kine_energy;
+}
+
+double WCPPID::ProtoSegment::cal_kine_range(double L){
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  TGraph *g_range = 0;
+  if (fabs(particle_type)==11)    g_range = mp.get_electron_r2ke();
+  else if (fabs(particle_type)==13) g_range = mp.get_muon_r2ke();
+  else if (fabs(particle_type)==211) g_range = mp.get_pion_r2ke();
+  else if (fabs(particle_type)==321) g_range = mp.get_kaon_r2ke();
+  else if (fabs(particle_type)==2212) g_range = mp.get_proton_r2ke();
+
+  double kine_energy = g_range->Eval(L/units::cm) * units::MeV;
   return kine_energy;
 }
 

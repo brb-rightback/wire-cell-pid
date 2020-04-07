@@ -100,9 +100,13 @@ namespace WCPPID{
     bool eval_ks_ratio(double ks1, double ks2, double ratio1, double ratio2);
     void cal_4mom();
     TVector3 cal_dir_3vector();
+
     double cal_kine_range();
     double cal_kine_dQdx();
-
+    
+    double cal_kine_range(double length);
+    double cal_kine_dQdx(std::vector<double>& vec_dQ, std::vector<double>& vec_dx);
+    
     double get_kine_charge(){return kenergy_charge;};
     void set_kine_charge(double val){kenergy_charge = val;};
     //    double cal_kine_charge(std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_u, std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_v, std::map<std::pair<int,int>, std::pair<double,double> >& charge_2d_w, WCP::ToyCTPointCloud* ct_point_cloud); // for shower ...

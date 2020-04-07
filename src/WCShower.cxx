@@ -8,6 +8,7 @@ WCPPID::WCShower::WCShower()
   , kenergy_range(0)
   , kenergy_dQdx(0)
   , kenergy_charge(0)
+  , kenergy_best(0)
   , start_vertex(0)
   , start_connection_type(0)
   , start_segment(0)
@@ -73,6 +74,27 @@ void WCPPID::WCShower::calculate_kinematics(){
     flag_shower = start_segment->get_flag_shower();
     kenergy_range = start_segment->cal_kine_range();
     kenergy_dQdx = start_segment->cal_kine_dQdx();
+
+    // single track
+    if (start_connection_type == 1){
+      // whether it is shower or not
+      if (start_segment->get_length() < 4*units::cm){
+	kenergy_best = kenergy_dQdx;
+      }else{
+	kenergy_best = kenergy_range;
+      }
+    }else{
+      if (flag_shower){
+	kenergy_best = 0;
+      }else{
+	if (start_segment->get_length() < 4*units::cm){
+	  kenergy_best = kenergy_dQdx;
+	}else{
+	  kenergy_best = kenergy_range;
+	}
+      }
+    }
+    
     if (start_segment->get_flag_dir()==1){
       start_point = start_segment->get_point_vec().front();
       end_point = start_segment->get_point_vec().back();
@@ -90,7 +112,113 @@ void WCPPID::WCShower::calculate_kinematics(){
     }
     init_dir = init_dir.Unit();
   }else{
+    int nsegments = map_seg_vtxs.size();
+    int nconnected_segs = 0;
+    {
+      std::pair<std::set<WCPPID::ProtoSegment*>, std::set<WCPPID::ProtoVertex*> > results = get_connected_pieces(start_segment);
+      nconnected_segs = results.first.size();
+    }
     // two different types ...
+    if (nsegments == nconnected_segs){
+      // single track
+      particle_type = start_segment->get_particle_type();
+      flag_shower = start_segment->get_flag_shower();
+      // initial direction ...
+      if (start_connection_type == 1){
+	init_dir = start_segment->cal_dir_3vector();
+      }else if (start_connection_type == 2){
+	init_dir.SetXYZ(start_point.x - start_vertex->get_fit_pt().x, start_point.y - start_vertex->get_fit_pt().y, start_point.z - start_vertex->get_fit_pt().z);
+      }else if (start_connection_type == 3){
+	init_dir.SetXYZ(start_point.x - start_vertex->get_fit_pt().x, start_point.y - start_vertex->get_fit_pt().y, start_point.z - start_vertex->get_fit_pt().z);
+      }
+      init_dir = init_dir.Unit();
+      
+      
+      if (start_segment->get_flag_dir()==1){
+	start_point = start_segment->get_point_vec().front();
+      }else if (start_segment->get_flag_dir()==-1){
+	start_point = start_segment->get_point_vec().back();
+      }
+      double max_dis = 0; Point max_point;
+      for (auto it = map_vtx_segs.begin(); it != map_vtx_segs.end(); it++){
+	WCPPID::ProtoVertex *vtx = it->first;
+	double dis = sqrt(pow(start_point.x - vtx->get_fit_pt().x,2) + pow(start_point.y - vtx->get_fit_pt().y,2) + pow(start_point.z - vtx->get_fit_pt().z,2));
+	if (dis > max_dis){
+	  max_dis = dis;
+	  max_point = vtx->get_fit_pt();
+	}
+      } // far of the vertex ...
+      end_point = max_point;
+
+      double L=0;
+      std::vector<double> vec_dQ, vec_dx;
+      for (auto it = map_seg_vtxs.begin(); it != map_seg_vtxs.end(); it++){
+	WCPPID::ProtoSegment *sg = it->first;
+	L += sg->get_length();
+	vec_dQ.insert(vec_dQ.end(), sg->get_dQ_vec().begin(), sg->get_dQ_vec().end());
+	vec_dx.insert(vec_dx.end(), sg->get_dx_vec().begin(), sg->get_dx_vec().end());
+      }
+      kenergy_range = start_segment->cal_kine_range(L);
+      kenergy_dQdx = start_segment->cal_kine_dQdx(vec_dQ, vec_dx);
+
+      if (start_connection_type == 1){
+	// whether it is shower or not
+	if (start_segment->get_length() < 4*units::cm){
+	  kenergy_best = kenergy_dQdx;
+	}else{
+	  kenergy_best = kenergy_range;
+	}
+      }else{
+	if (flag_shower){
+	  kenergy_best = 0;
+	}else{
+	  if (start_segment->get_length() < 4*units::cm){
+	    kenergy_best = kenergy_dQdx;
+	  }else{
+	    kenergy_best = kenergy_range;
+	  }
+	}
+      }
+    }else{
+      // multiple tracks ...
+      particle_type = start_segment->get_particle_type();
+      flag_shower = start_segment->get_flag_shower();
+      // initial direction ...
+      if (start_connection_type == 1){
+	init_dir = start_segment->cal_dir_3vector();
+      }else if (start_connection_type == 2){
+	init_dir.SetXYZ(start_point.x - start_vertex->get_fit_pt().x, start_point.y - start_vertex->get_fit_pt().y, start_point.z - start_vertex->get_fit_pt().z);
+      }else if (start_connection_type == 3){
+	init_dir.SetXYZ(start_point.x - start_vertex->get_fit_pt().x, start_point.y - start_vertex->get_fit_pt().y, start_point.z - start_vertex->get_fit_pt().z);
+      }
+      init_dir = init_dir.Unit();
+      
+      if (start_segment->get_flag_dir()==1){
+	start_point = start_segment->get_point_vec().front();
+      }else if (start_segment->get_flag_dir()==-1){
+	start_point = start_segment->get_point_vec().back();
+      }
+      double max_dis = 0; Point max_point;
+      for (auto it = map_vtx_segs.begin(); it != map_vtx_segs.end(); it++){
+	WCPPID::ProtoVertex *vtx = it->first;
+	double dis = sqrt(pow(start_point.x - vtx->get_fit_pt().x,2) + pow(start_point.y - vtx->get_fit_pt().y,2) + pow(start_point.z - vtx->get_fit_pt().z,2));
+	if (dis > max_dis){
+	  max_dis = dis;
+	  max_point = vtx->get_fit_pt();
+	}
+      } // far of the vertex ...
+      end_point = max_point;
+      
+      std::vector<double> vec_dQ, vec_dx;
+      for (auto it = map_seg_vtxs.begin(); it != map_seg_vtxs.end(); it++){
+	WCPPID::ProtoSegment *sg = it->first;
+	vec_dQ.insert(vec_dQ.end(), sg->get_dQ_vec().begin(), sg->get_dQ_vec().end());
+	vec_dx.insert(vec_dx.end(), sg->get_dx_vec().begin(), sg->get_dx_vec().end());
+      }
+      kenergy_range = 0;
+      kenergy_dQdx = start_segment->cal_kine_dQdx(vec_dQ, vec_dx);
+      kenergy_best = 0;
+    }
   }
 }
 
@@ -125,7 +253,43 @@ void WCPPID::WCShower::fill_maps(std::map<WCPPID::ProtoVertex*, WCPPID::WCShower
 }
 
 
+std::pair<std::set<WCPPID::ProtoSegment*>, std::set<WCPPID::ProtoVertex*> > WCPPID::WCShower::get_connected_pieces(WCPPID::ProtoSegment* tseg){
+  std::set<WCPPID::ProtoSegment* > used_segments;
+  std::set<WCPPID::ProtoVertex* > used_vertices;
 
+  std::vector<ProtoSegment* > new_segments;
+  std::vector<ProtoVertex* > new_vertices;
+
+  new_segments.push_back(tseg);
+  used_segments.insert(tseg);
+
+  while(new_vertices.size()>0 || new_segments.size()>0 ){
+    if (new_vertices.size()>0){
+      ProtoVertex *vtx = new_vertices.back();
+      new_vertices.pop_back();
+      for (auto it = map_vtx_segs[vtx].begin(); it != map_vtx_segs[vtx].end(); it++){
+    	ProtoSegment *seg1 = *it;
+    	if (used_segments.find(seg1)!=used_segments.end()) continue;
+    	new_segments.push_back(seg1);
+	used_segments.insert(seg1);
+      }
+    }
+
+    if (new_segments.size()>0){
+      ProtoSegment *seg1 = new_segments.back();
+      new_segments.pop_back();
+      for (auto it = map_seg_vtxs[seg1].begin(); it!= map_seg_vtxs[seg1].end(); it++){
+  	ProtoVertex *vtx = *it;
+  	if (used_vertices.find(vtx)!=used_vertices.end()) continue;
+	new_vertices.push_back(vtx);
+	used_vertices.insert(vtx);
+      }
+    }
+  }
+  
+  
+  return std::make_pair(used_segments, used_vertices);
+}
 
 
 void WCPPID::WCShower::complete_structure_with_start_segment(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices,  std::set<WCPPID::ProtoSegment* >& used_segments){
