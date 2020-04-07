@@ -1,8 +1,8 @@
 void WCPPID::NeutrinoID::shower_clustering(){
   shower_clustering_in_main_cluster();
 
-  update_shower_maps();
   
+  update_shower_maps();  
 }
 
 void WCPPID::NeutrinoID::update_shower_maps(){

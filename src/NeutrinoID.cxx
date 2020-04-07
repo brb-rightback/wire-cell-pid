@@ -450,6 +450,8 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
     segments_to_be_examined = temp_segments;
   }
 
+  // Now the shower that are not connected to the main cluster ...
+  // to be added
   
 }
 

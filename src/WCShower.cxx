@@ -5,10 +5,22 @@ using namespace WCP;
 WCPPID::WCShower::WCShower()
   : particle_type(0)
   , flag_shower(true)
+  , kenergy_range(0)
+  , kenergy_dQdx(0)
+  , kenergy_charge(0)
   , start_vertex(0)
   , start_connection_type(0)
   , start_segment(0)
 {
+  start_point.x = 0;
+  start_point.y = 0;
+  start_point.z = 0;
+  
+  end_point.x = 0;
+  end_point.y = 0;
+  end_point.z = 0;
+
+  init_dir.SetXYZ(0,0,0);
 }
 
 WCPPID::WCShower::~WCShower(){
