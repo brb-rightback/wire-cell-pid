@@ -131,8 +131,9 @@ namespace WCPPID{
     void process_other_clusters();
 
     // fill reco information
+    void fill_reco_tree(WCPPID::ProtoSegment* seg, WCRecoTree& rtree);
     void fill_reco_simple_tree(WCRecoTree& rtree);
-    void fill_proto_tree(WCRecoTree& rtree);
+    void fill_proto_main_tree(WCRecoTree& rtree);
     
     void fill_skeleton_info_magnify(int mother_cluster_id, WCPointTree& ptree, TTree *T, double dQdx_scale, double dQdx_offset, bool flag_skip_vertex = false);
     void fill_skeleton_info(int mother_cluster_id, WCPointTree& ptree, TTree *T, double dQdx_scale, double dQdx_offset, bool flag_skip_vertex = false);
