@@ -133,6 +133,8 @@ namespace WCPPID{
     // fill reco information
     void fill_reco_tree(WCPPID::ProtoSegment* seg, WCRecoTree& rtree);
     void fill_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rtree);
+    int fill_psuedo_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rtree);
+
     void fill_reco_simple_tree(WCRecoTree& rtree);
     void fill_proto_main_tree(WCRecoTree& rtree);
     void fill_particle_tree(WCRecoTree& rtree);
