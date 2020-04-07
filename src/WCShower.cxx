@@ -69,6 +69,9 @@ void WCPPID::WCShower::build_point_clouds(){
 
 
 void WCPPID::WCShower::calculate_kinematics(){
+
+  //  std::cout << map_seg_vtxs.size() << " " << start_segment->get_point_vec().size() << " " << start_segment->get_particle_type() << std::endl;
+  
   if (map_seg_vtxs.size()==1){
     particle_type = start_segment->get_particle_type();
     flag_shower = start_segment->get_flag_shower();
@@ -229,6 +232,9 @@ void WCPPID::WCShower::set_start_vertex(ProtoVertex* vertex, int type){
 
 void WCPPID::WCShower::set_start_segment(ProtoSegment* seg){
   start_segment = seg;
+
+ 
+  
 }
 
 void WCPPID::WCShower::fill_sets( std::set<WCPPID::ProtoVertex* >& used_vertices,  std::set<WCPPID::ProtoSegment* >& used_segments, bool flag_exclude_start_segment){

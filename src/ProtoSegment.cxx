@@ -976,7 +976,7 @@ double WCPPID::ProtoSegment::cal_kine_range(double L){
 
 double WCPPID::ProtoSegment::cal_kine_range(){
   TPCParams& mp = Singleton<TPCParams>::Instance();
-  TGraph *g_range = 0;
+  TGraph *g_range = mp.get_muon_r2ke();
   if (fabs(particle_type)==11)    g_range = mp.get_electron_r2ke();
   else if (fabs(particle_type)==13) g_range = mp.get_muon_r2ke();
   else if (fabs(particle_type)==211) g_range = mp.get_pion_r2ke();

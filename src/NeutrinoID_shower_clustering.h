@@ -38,6 +38,14 @@ void WCPPID::NeutrinoID::update_shower_maps(){
   }
 }
 
+std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> WCPPID::NeutrinoID::get_start_end_vertices(WCPPID::ProtoSegment* sg){
+  WCPPID::ProtoVertex *start_v=0, *end_v=0;
+  for (auto it = map_segment_vertices[sg].begin(); it!=map_segment_vertices[sg].end(); it++){
+    if ((*it)->get_wcpt().index == sg->get_wcpt_vec().front().index) start_v = *it;
+    if ((*it)->get_wcpt().index == sg->get_wcpt_vec().back().index) end_v = *it;
+  }
+  return std::make_pair(start_v, end_v);
+}
 
 // place holder ...
 void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(){
@@ -54,6 +62,34 @@ void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(){
       WCPPID::WCShower *shower = new WCPPID::WCShower();
       shower->set_start_vertex(main_vertex, 2);
       shower->set_start_segment(sg);
+      
+      if (sg->get_flag_dir()==0){
+	auto tmp_vertices = get_start_end_vertices(sg);
+	if (map_vertex_segments[tmp_vertices.first].size()==1 && map_vertex_segments[tmp_vertices.second].size()>1){
+	  sg->set_flag_dir(1);
+	}else if (map_vertex_segments[tmp_vertices.first].size()>1 && map_vertex_segments[tmp_vertices.second].size()==1){
+	  sg->set_flag_dir(-1);
+	}else{
+	  // examine vertices 
+	  double dis1 = sqrt(pow(main_vertex->get_fit_pt().x - sg->get_point_vec().front().x,2) + pow(main_vertex->get_fit_pt().y - sg->get_point_vec().front().y,2) + pow(main_vertex->get_fit_pt().z - sg->get_point_vec().front().z,2));
+	  double dis2 = sqrt(pow(main_vertex->get_fit_pt().x - sg->get_point_vec().back().x,2) + pow(main_vertex->get_fit_pt().y - sg->get_point_vec().back().y,2) + pow(main_vertex->get_fit_pt().z - sg->get_point_vec().back().z,2));
+	    
+	  if (dis1 < dis2){
+	    sg->set_flag_dir(1);
+	  }else{
+	    sg->set_flag_dir(-1);
+	  }
+	}
+      }
+      //      std::cout << sg->get_particle_type() << " " << std::endl;
+      if (sg->get_particle_type()==0 || fabs(sg->get_particle_type())==13){
+	sg->set_particle_type(11);
+	TPCParams& mp = Singleton<TPCParams>::Instance();
+	sg->set_particle_mass(mp.get_mass_electron());
+	sg->cal_4mom();
+      }
+
+      
       std::set<WCPPID::ProtoSegment* > used_segments; 
       shower->complete_structure_with_start_segment(map_vertex_segments, map_segment_vertices, used_segments); 
       showers.push_back(shower);

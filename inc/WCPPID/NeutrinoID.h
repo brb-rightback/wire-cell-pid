@@ -183,6 +183,7 @@ namespace WCPPID{
     WCPPID::ProtoVertex* find_other_vertex(WCPPID::ProtoSegment *sg, WCPPID::ProtoVertex* v1); 
     WCPPID::ProtoVertexSelection find_vertices(WCPPID::PR3DCluster* temp_cluster);
     WCPPID::ProtoSegmentSelection find_segments(WCPPID::PR3DCluster* temp_cluster);
+    std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*>get_start_end_vertices(WCPPID::ProtoSegment* seg);
     
     Map_Proto_Vertex_Segments& get_map_vertex_segments(){return map_vertex_segments;};
     Map_Proto_Segment_Vertices& get_map_segment_verteices(){return map_segment_vertices;};
