@@ -567,7 +567,12 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
       if (pair_vertex.first == main_vertex){
 	rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = 0;
       }else{
-	WCPPID::ProtoSegment* prev_sg = find_incoming_segment(pair_vertex.first);
+	WCPPID::ProtoSegment* prev_sg = 0;
+	if (map_vertex_in_shower.find(pair_vertex.first) != map_vertex_in_shower.end()){
+	  prev_sg = map_vertex_in_shower[pair_vertex.first]->get_start_segment();
+	}else{
+	  prev_sg = find_incoming_segment(pair_vertex.first);
+	}
 	// set mother ...
 	rtree.mc_mother[map_sgid_rtid[map_sg_sgid[curr_sg]]] = map_sg_sgid[prev_sg];
 	// set daughters ...
@@ -580,7 +585,14 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
 	rtree.mc_daughters->at(rtree.mc_Ntrack-1).push_back(map_sg_sgid[curr_sg]);
 	rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = psuedo_particle_id;
       }else{
-	WCPPID::ProtoSegment* prev_sg = find_incoming_segment(pair_vertex.first);
+	WCPPID::ProtoSegment* prev_sg = 0;
+	if (map_vertex_in_shower.find(pair_vertex.first) != map_vertex_in_shower.end()){
+	  prev_sg = map_vertex_in_shower[pair_vertex.first]->get_start_segment();
+	}else{
+	  prev_sg = find_incoming_segment(pair_vertex.first);
+	}
+
+	find_incoming_segment(pair_vertex.first);
 	rtree.mc_mother[rtree.mc_Ntrack-1] = map_sg_sgid[prev_sg];
 	rtree.mc_daughters->at(rtree.mc_Ntrack-1).push_back(map_sg_sgid[curr_sg]);
 	rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = psuedo_particle_id;
@@ -889,8 +901,8 @@ void WCPPID::NeutrinoID::fill_skeleton_info(int mother_cluster_id, WCPPID::WCPoi
      ptree.reco_pt = vtx->get_pt();    
      ptree.reco_reduced_chi2 = vtx->get_reduced_chi2();
 
-     //     std::cout <<  ptree.reco_proto_cluster_id << std::endl;
-     //std::cout << shower->get_start_segment()->get_length()/units::cm << " " << vtx << " " << shower << std::endl;
+     // std::cout <<  ptree.reco_proto_cluster_id << std::endl;
+     // std::cout << shower->get_start_segment()->get_length()/units::cm << " " << vtx << " " << shower << std::endl;
      T->Fill();
   }
   
