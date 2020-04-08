@@ -57,8 +57,6 @@ void WCPPID::NeutrinoID::init_point_segment(WCPPID::PR3DCluster *temp_cluster){
   WCPPID::ProtoVertex *v2=0;
   WCPPID::ProtoSegment *sg1=0;
 
-
-  
   if (temp_cluster->get_path_wcps().size()>1){
     v1 = new WCPPID::ProtoVertex(acc_vertex_id, wcps.first, temp_cluster->get_cluster_id()); acc_vertex_id++;
     v2 = new WCPPID::ProtoVertex(acc_vertex_id, wcps.second, temp_cluster->get_cluster_id()); acc_vertex_id++;
