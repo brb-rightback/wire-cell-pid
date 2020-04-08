@@ -19,20 +19,18 @@ void WCPPID::NeutrinoID::shower_clustering_from_main_cluster(){
     WCPPID::ProtoSegment *seg = it->first;
     if (seg->get_cluster_id() != main_cluster->get_cluster_id()) continue;
     if (!seg->get_flag_shower_topology()) continue;
+    WCPPID::WCShower *shower = map_segment_in_shower[seg];
     
-    WCPPID::WCShower *shower = new WCPPID::WCShower();
-    showers.push_back(shower);
-    shower->set_start_segment(seg);
-    WCPPID::ProtoVertex *start_v=0, *end_v=0;
-    for (auto it = map_segment_vertices[seg].begin(); it!=map_segment_vertices[seg].end(); it++){
-      if ((*it)->get_wcpt().index == seg->get_wcpt_vec().front().index) start_v = *it;
-      if ((*it)->get_wcpt().index == seg->get_wcpt_vec().back().index) end_v = *it;
-    }
-    if (seg->get_flag_dir()==1){
-      shower->set_start_vertex(start_v, 1);
-    }else if (seg->get_flag_dir()==-1){
-      shower->set_start_vertex(end_v, 1);
-    }
+    /* WCPPID::ProtoVertex *start_v=0, *end_v=0; */
+    /* for (auto it = map_segment_vertices[seg].begin(); it!=map_segment_vertices[seg].end(); it++){ */
+    /*   if ((*it)->get_wcpt().index == seg->get_wcpt_vec().front().index) start_v = *it; */
+    /*   if ((*it)->get_wcpt().index == seg->get_wcpt_vec().back().index) end_v = *it; */
+    /* } */
+    /* if (seg->get_flag_dir()==1){ */
+    /*   shower->set_start_vertex(start_v, 1); */
+    /* }else if (seg->get_flag_dir()==-1){ */
+    /*   shower->set_start_vertex(end_v, 1); */
+    /* } */
     TVector3 dir_shower = seg->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 15*units::cm);
 
     map_shower_dir[shower] = dir_shower;

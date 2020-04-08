@@ -308,6 +308,8 @@ void WCPPID::NeutrinoID::fill_reco_tree(WCPPID::ProtoSegment* sg, WCRecoTree& rt
   rtree.mc_kine_range[rtree.mc_Ntrack] = sg->cal_kine_range()/units::MeV;
   rtree.mc_kine_dQdx[rtree.mc_Ntrack] = sg->cal_kine_dQdx()/units::MeV;
   rtree.mc_kine_charge[rtree.mc_Ntrack] = cal_kine_charge(sg)/units::MeV;
+
+  // std::cout << rtree.mc_id[rtree.mc_Ntrack] << " " << rtree.mc_dir_weak[rtree.mc_Ntrack] << " " << rtree.mc_kine_range[rtree.mc_Ntrack] << " " << rtree.mc_kine_dQdx[rtree.mc_Ntrack] << " " << rtree.mc_kine_charge[rtree.mc_Ntrack] << std::endl;
   
   sg->set_kine_charge( rtree.mc_kine_charge[rtree.mc_Ntrack] * units::MeV);
   //    std::cout << rtree.mc_kine_range[rtree.mc_Ntrack] << " " << rtree.mc_kine_dQdx[rtree.mc_Ntrack] << " " << rtree.mc_kine_charge[rtree.mc_Ntrack] << std::endl;
@@ -489,9 +491,11 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
     WCPPID::ProtoSegment* sg= it->first;
     if (map_segment_in_shower.find(sg)!=map_segment_in_shower.end()) continue;
     fill_reco_tree(sg, rtree);
+    // std::cout << sg->get_id() << std::endl;
   }
   for (auto it = showers.begin(); it!=showers.end();it++){
     fill_reco_tree(*it, rtree);
+    //  std::cout << "gag " << *it << " " << (*it)->get_start_segment()->get_id() << std::endl;
   }
 
     // id vs. rtree id
