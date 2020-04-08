@@ -1015,6 +1015,25 @@ void WCPPID::ProtoSegment::cal_4mom(){
   particle_4mom[2] = mom * v1.Z();
 }
 
+TVector3 WCPPID::ProtoSegment::cal_dir_3vector(WCP::Point& p, double dis_cut){
+  WCP::Point p1(0,0,0);
+  Int_t ncount = 0;
+  for (size_t i=0;i!=fit_pt_vec.size();i++){
+    double dis = sqrt(pow(fit_pt_vec.at(i).x - p.x,2)+pow(fit_pt_vec.at(i).y - p.y,2)+pow(fit_pt_vec.at(i).z - p.z,2));
+    //    std::cout << dis/units::cm << std::endl;
+    if (dis < dis_cut){
+      p1.x += fit_pt_vec.at(i).x;
+      p1.y += fit_pt_vec.at(i).y;
+      p1.z += fit_pt_vec.at(i).z;
+      ncount ++;
+    }
+  }
+  
+  TVector3 v1(p1.x/ncount - p.x, p1.y/ncount - p.y, p1.z/ncount - p.z);
+  v1 = v1.Unit();
+  return v1;
+}
+
 TVector3 WCPPID::ProtoSegment::cal_dir_3vector(){
   WCP::Point p(0,0,0);  
   if (flag_dir == 1){

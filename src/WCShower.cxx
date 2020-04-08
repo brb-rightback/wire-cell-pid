@@ -298,6 +298,13 @@ std::pair<std::set<WCPPID::ProtoSegment*>, std::set<WCPPID::ProtoVertex*> > WCPP
   return std::make_pair(used_segments, used_vertices);
 }
 
+void WCPPID::WCShower::add_segment(WCPPID::ProtoSegment* seg, Map_Proto_Segment_Vertices& map_segment_vertices){
+  for (auto it = map_segment_vertices[seg].begin(); it != map_segment_vertices[seg].end(); it++){
+    WCPPID::ProtoVertex *vtx = *it;
+    map_seg_vtxs[seg].insert(vtx);
+    map_vtx_segs[vtx].insert(seg);
+  }
+}
 
 void WCPPID::WCShower::complete_structure_with_start_segment(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices,  std::set<WCPPID::ProtoSegment* >& used_segments){
   // fill the start segment ...

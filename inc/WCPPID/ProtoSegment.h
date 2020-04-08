@@ -100,7 +100,8 @@ namespace WCPPID{
     bool eval_ks_ratio(double ks1, double ks2, double ratio1, double ratio2);
     void cal_4mom();
     TVector3 cal_dir_3vector();
-
+    TVector3 cal_dir_3vector(WCP::Point& p, double dis_cut);
+    
     double cal_kine_range();
     double cal_kine_dQdx();
     
