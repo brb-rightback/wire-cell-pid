@@ -25,8 +25,9 @@ namespace WCPPID{
     void complete_structure_with_start_segment(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices,  std::set<WCPPID::ProtoSegment* >& used_segments);
 
     void calculate_kinematics();
-    
 
+    void set_flag_kinematics(bool val){flag_kinematics = val;};
+    bool get_flag_kinematics(){return flag_kinematics;};
     int get_particle_type(){return particle_type;};
     bool get_flag_shower(){return flag_shower;};
     double get_kine_range(){return kenergy_range;};
@@ -51,7 +52,8 @@ namespace WCPPID{
   protected:
     int particle_type;
     bool flag_shower;
-
+    bool flag_kinematics;
+    
     double kenergy_range;
     double kenergy_dQdx;
     double kenergy_charge;

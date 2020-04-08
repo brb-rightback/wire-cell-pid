@@ -5,6 +5,7 @@ using namespace WCP;
 WCPPID::WCShower::WCShower()
   : particle_type(0)
   , flag_shower(true)
+  , flag_kinematics(false)
   , kenergy_range(0)
   , kenergy_dQdx(0)
   , kenergy_charge(0)
