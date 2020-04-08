@@ -100,10 +100,9 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
       determine_direction(*it);
     }
   }
-  
   // for charge based on calculation ...
   collect_2D_charges();
-
+  
   // cluster E&M ...
   shower_clustering();
   
@@ -389,6 +388,7 @@ void WCPPID::NeutrinoID::fill_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rt
   std::pair<ProtoVertex*, int> pair_start_vertex = shower->get_start_vertex();
   if (pair_start_vertex.second ==3){
     rtree.mc_dir_weak[rtree.mc_Ntrack] = 1;
+    return;
   }else{
     rtree.mc_dir_weak[rtree.mc_Ntrack] = 0;
   }
@@ -563,7 +563,7 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
     WCPPID::ProtoSegment* curr_sg = shower->get_start_segment();
     std::pair<ProtoVertex*, int> pair_vertex = shower->get_start_vertex();
 
-    if (pair_vertex.second == 1 || pair_vertex.second == 3){ // direct connection
+    if (pair_vertex.second == 1){ // direct connection
       if (pair_vertex.first == main_vertex){
 	rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = 0;
       }else{
@@ -573,7 +573,7 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
 	// set daughters ...
 	rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(map_sg_sgid[curr_sg]);
       }
-    }else{
+    }else if (pair_vertex.second == 2){
       int psuedo_particle_id = fill_psuedo_reco_tree(shower, rtree);
       if (pair_vertex.first == main_vertex){
 	rtree.mc_mother[rtree.mc_Ntrack-1] = 0;

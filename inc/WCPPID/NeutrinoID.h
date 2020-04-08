@@ -200,6 +200,8 @@ namespace WCPPID{
     // particle_clustering
     void shower_clustering();
     void shower_clustering_in_main_cluster();
+    void shower_clustering_from_main_cluster();
+    void shower_clustering_from_vertices();
     // holder for now ...
     void shower_clustering_in_other_clusters();
     
@@ -255,7 +257,8 @@ namespace WCPPID{
     std::map<WCPPID::ProtoSegment*, WCShower*> map_segment_in_shower;
     // find the connection ...
     std::map<WCPPID::ProtoVertex*, WCShower*> map_vertex_to_shower;
-        
+    std::set<int> used_shower_clusters;
+    
   };
 
   struct Res_proto_segment

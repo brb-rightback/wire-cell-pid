@@ -2,15 +2,21 @@ void WCPPID::NeutrinoID::shower_clustering(){
 
   // connect to the main cluster ...
   shower_clustering_in_main_cluster();
-
-  // check other clusters
+  shower_clustering_from_main_cluster();
+  
+  // check remaining clusters ...
   shower_clustering_in_other_clusters();
   
   calculate_shower_kinematics();
-  update_shower_maps();  
 }
 
+void WCPPID::NeutrinoID::shower_clustering_from_main_cluster(){
+  
+}
 
+void WCPPID::NeutrinoID::shower_clustering_from_vertices(){
+
+}
 
 
 void WCPPID::NeutrinoID::calculate_shower_kinematics(){
@@ -29,13 +35,17 @@ void WCPPID::NeutrinoID::update_shower_maps(){
   map_vertex_to_shower.clear();
   map_vertex_in_shower.clear();
   map_segment_in_shower.clear();
+  used_shower_clusters.clear();
   
   for (auto it = showers.begin(); it!=showers.end(); it++){
     WCPPID::WCShower* shower = *it;
     map_vertex_to_shower[shower->get_start_vertex().first] = shower;
     shower->fill_maps(map_vertex_in_shower, map_segment_in_shower);
-    
   }
+  for (auto it = map_segment_in_shower.begin(); it!=map_segment_in_shower.end();it++){
+    used_shower_clusters.insert(it->first->get_cluster_id());
+  }
+  
 }
 
 std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> WCPPID::NeutrinoID::get_start_end_vertices(WCPPID::ProtoSegment* sg){
@@ -47,10 +57,13 @@ std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> WCPPID::NeutrinoID::get_st
   return std::make_pair(start_v, end_v);
 }
 
+
 // place holder ...
 void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(){
   for (auto it = other_clusters.begin(); it != other_clusters.end(); it++){
     WCPPID::PR3DCluster *cluster = *it;
+    if (used_shower_clusters.find(cluster->get_cluster_id()) != used_shower_clusters.end()) continue;
+    
     WCPPID::ProtoSegment *sg = 0;
     for (auto it1 = map_segment_vertices.begin(); it1 != map_segment_vertices.end(); it1++){
       if (it1->first->get_cluster_id() != cluster->get_cluster_id()) continue;
@@ -60,7 +73,7 @@ void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(){
 
     if (sg != 0){
       WCPPID::WCShower *shower = new WCPPID::WCShower();
-      shower->set_start_vertex(main_vertex, 2);
+      shower->set_start_vertex(main_vertex, 3);
       shower->set_start_segment(sg);
       
       if (sg->get_flag_dir()==0){
@@ -96,6 +109,7 @@ void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(){
     }
     
   }
+  update_shower_maps();  
 }
 
 
@@ -144,6 +158,7 @@ void WCPPID::NeutrinoID::shower_clustering_in_main_cluster(){
   for (size_t i=0;i!=showers.size();i++){
     showers.at(i)->complete_structure_with_start_segment(map_vertex_segments, map_segment_vertices, used_segments); 
   }
-  
+
+  update_shower_maps();  
   //  std::cout << showers.size() << " " << used_segments.size() << std::endl;
 }
