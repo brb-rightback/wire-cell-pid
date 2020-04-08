@@ -50,7 +50,8 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
       std::cout << "Error in finding vertices for a segment" << std::endl; 
     }
 
-    bool flag_print = true;
+    bool flag_print = false;
+    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
     
     if (sg->get_flag_shower_trajectory()){
       // trajectory shower
