@@ -214,10 +214,122 @@ void WCPPID::NeutrinoID::shower_clustering_from_vertices(){
   // std::cout << vec_pi.at(i).min_dis << std::endl;
   //}
 
+  std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* > map_cluster_associated_vertex;
+  for (size_t i=0;i!=vec_pi.size();i++){
+    map_cluster_associated_vertex[vec_pi.at(i).cluster] = vec_pi.at(i).min_vertex;
+  }
+  
   for (size_t i=0;i!=vec_pi.size();i++){
     // find the segment and/or create the new vertices ...
+    WCPPID::PR3DCluster *cluster = vec_pi.at(i).cluster;
+    WCPPID::ProtoVertex *vertex = vec_pi.at(i).min_vertex;
+    WCP::Point point = vec_pi.at(i).min_point;
+    WCPPID::ProtoSegment* sg1 = 0;
+    double angle = vec_pi.at(i).min_angle;
+    if (angle > 25) continue;
+    
+    for (auto it = map_cluster_segments[cluster].begin(); it!=map_cluster_segments[cluster].end();it++){
+      WCPPID::ProtoSegment *sg = *it;
+      if (map_segment_in_shower.find(sg) != map_segment_in_shower.end() ) continue;
+      std::pair<double, WCP::Point> result = sg->get_closest_point(point);
+      if (result.first < 0.01*units::cm){
+	sg1 = sg;
+	break;
+      }
+    }
+    if (sg1 == 0 ) continue;
+
     // create the new shower ...
+    WCPPID::WCShower *shower = new WCPPID::WCShower();
+    //    std::cout << shower << " " << angle << std::endl;
+    shower->set_start_vertex(vertex, 2); 
+    showers.push_back(shower); 
+    
+    if (sqrt(pow(sg1->get_point_vec().front().x-point.x,2) + pow(sg1->get_point_vec().front().y-point.y,2) + pow(sg1->get_point_vec().front().z-point.z,2)) < 0.01*units::cm || sqrt(pow(sg1->get_point_vec().back().x-point.x,2) + pow(sg1->get_point_vec().back().y-point.y,2) + pow(sg1->get_point_vec().back().z-point.z,2)) < 0.01*units::cm){
+
+      shower->set_start_segment(sg1);
+    }else{
+      // break the segment ...
+      //      std::cout << sg1 << " " << sg1->get_wcpt_vec().size() << " " << sg1->get_point_vec().size() << std::endl;
+      // create two segments with filled information , and find the correct segments ...
+      std::tuple<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> result1 = sg1->break_segment_at_point(point, acc_segment_id, acc_vertex_id);
+      if (std::get<1>(result1) == 0){
+	shower->set_start_segment(sg1);
+      }else{
+	 std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> result2 = find_vertices(sg1);
+	 TVector3 v3(point.x - vertex->get_fit_pt().x, point.y - vertex->get_fit_pt().y, point.z - vertex->get_fit_pt().z);
+	 //std::cout << result2.first->get_wcpt().index << " " << result2.second->get_wcpt().index << " " << std::get<0>(result1)->get_wcpt_vec().front().index << " " << std::get<2>(result1)->get_wcpt_vec().back().index << std::endl;
+	 if (result2.first->get_wcpt().index == std::get<0>(result1)->get_wcpt_vec().front().index){
+	   add_proto_connection(result2.first, std::get<0>(result1), cluster);
+	   add_proto_connection(result2.second, std::get<2>(result1), cluster);
+	 }else{
+	   add_proto_connection(result2.first, std::get<2>(result1), cluster);
+	   add_proto_connection(result2.second, std::get<0>(result1), cluster);
+	 }
+	 add_proto_connection(std::get<1>(result1), std::get<0>(result1), cluster);
+	 add_proto_connection(std::get<1>(result1), std::get<2>(result1), cluster);
+	 del_proto_segment(sg1);
+
+	 TVector3 v1 = std::get<0>(result1)->cal_dir_3vector(point, 5*units::cm);
+	 TVector3 v2 = std::get<2>(result1)->cal_dir_3vector(point, 5*units::cm);
+	
+	 //std::cout << v3.Angle(v1) << " " << v3.Angle(v2) << std::endl;
+	 if ( v3.Angle(v1) <v3.Angle(v2)) {
+	   shower->set_start_segment(std::get<0>(result1));
+	 }else{
+	   shower->set_start_segment(std::get<2>(result1));
+	 }
+      }
+    }
+    
+    
+    if (shower->get_start_segment()->get_flag_dir()==0){
+      // examine vertices 
+      double dis1 = sqrt(pow(main_vertex->get_fit_pt().x - shower->get_start_segment()->get_point_vec().front().x,2) + pow(main_vertex->get_fit_pt().y - shower->get_start_segment()->get_point_vec().front().y,2) + pow(main_vertex->get_fit_pt().z - shower->get_start_segment()->get_point_vec().front().z,2));
+      double dis2 = sqrt(pow(main_vertex->get_fit_pt().x - shower->get_start_segment()->get_point_vec().back().x,2) + pow(main_vertex->get_fit_pt().y - shower->get_start_segment()->get_point_vec().back().y,2) + pow(main_vertex->get_fit_pt().z - shower->get_start_segment()->get_point_vec().back().z,2));
+      
+      if (dis1 < dis2){
+	shower->get_start_segment()->set_flag_dir(1);
+      }else{
+	shower->get_start_segment()->set_flag_dir(-1);
+      }
+    }
+    //      std::cout << shower->get_start_segment()->get_particle_type() << " " << std::endl;
+    if (shower->get_start_segment()->get_particle_type()==0 || fabs(shower->get_start_segment()->get_particle_type())==13){
+      shower->get_start_segment()->set_particle_type(11);
+      TPCParams& mp = Singleton<TPCParams>::Instance();
+      shower->get_start_segment()->set_particle_mass(mp.get_mass_electron());
+      shower->get_start_segment()->cal_4mom();
+    }
+    
     // cluster the other things ...
+    
+    TVector3 dir_shower = shower->get_start_segment()->cal_dir_3vector(point, 15*units::cm);
+
+    
+    for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ 
+      WCPPID::ProtoSegment *seg1 = it->first; 
+      if (seg1->get_cluster_id() == main_cluster->get_cluster_id()) continue; 
+      if (map_segment_in_shower.find(seg1) != map_segment_in_shower.end()) continue;
+      if (seg1 == shower->get_start_segment()) continue;
+      auto it1 = map_cluster_associated_vertex.find(map_segment_cluster[seg1]);
+      if (it1 != map_cluster_associated_vertex.end())
+	if (it1->second != vertex) continue;
+      // find the closest point 
+      // judge the detection ...
+      
+      std::pair<double, WCP::Point> pair_dis_point = seg1->get_closest_point(shower->get_start_vertex().first->get_fit_pt()); 
+      TVector3 v1(pair_dis_point.second.x - shower->get_start_vertex().first->get_fit_pt().x, pair_dis_point.second.y - shower->get_start_vertex().first->get_fit_pt().y, pair_dis_point.second.z - shower->get_start_vertex().first->get_fit_pt().z);
+      double angle = dir_shower.Angle(v1);
+      if (angle/3.1415926*180.<15 && pair_dis_point.first < 80*units::cm ||
+	  angle/3.1415926*180 < 7.5 && pair_dis_point.first < 120*units::cm ){
+	//	double dis = pow(pair_dis_point.first*cos(angle),2)/pow(40*units::cm,2) + pow(pair_dis_point.first*sin(angle),2)/pow(5*units::cm,2);
+	//      min_dis = dis;
+	shower->add_segment(seg1, map_segment_vertices);
+      }
+    }
+    
+
     
     // udate the map
     update_shower_maps();

@@ -32,14 +32,20 @@ namespace WCPPID{
     void reset_fit_prop();
     
     // after dQ/dx fit ...
+    void set_dQ(double val){dQ = val;};
     double get_dQ(){return dQ;};
     void set_dx(double val){dx = val;};
     double get_dx(){return dx;};
     double get_dQ_dx(){return dQ/(dx+1e-9);};
+    void set_pu(double val){pu = val;};
     double get_pu(){return pu;};
+    void set_pv(double val){pv = val;};
     double get_pv(){return pv;};
+    void set_pw(double val){pw = val;};
     double get_pw(){return pw;};
+    void set_pt(double val){pt = val;};
     double get_pt(){return pt;};
+    void set_reduced_chi2(double val){reduced_chi2 = val;};
     double get_reduced_chi2(){return reduced_chi2;};
     
     int get_id(){return id;};

@@ -24,6 +24,8 @@ namespace WCPPID{
     std::vector<double>& get_pt_vec(){return pt_vec;};
     std::vector<double>& get_reduced_chi2_vec(){return reduced_chi2_vec;};
 
+    void build_pcloud_fit();
+    
     void set_fit_associate_vec(std::vector<WCP::Point >& tmp_fit_pt_vec, std::vector<int>& tmp_fit_index, std::vector<bool>& tmp_fit_skip);
     void reset_fit_prop();
     std::vector<int>& get_fit_index_vec(){return fit_index_vec;};
@@ -43,6 +45,9 @@ namespace WCPPID{
 
     int get_id(){return id;};
     int get_cluster_id(){return cluster_id;};
+    // break a segment into two from the middle
+    std::tuple<ProtoSegment*, ProtoVertex*, ProtoSegment*> break_segment_at_point(WCP::Point& p, int& acc_segment_id, int& acc_vertex_id);
+
     
     // after fit
     void clear_fit();
@@ -77,7 +82,9 @@ namespace WCPPID{
     bool is_shower_trajectory(double step_size =10.*units::cm);
     bool is_shower_topology();
     
-    bool get_flag_shower(); 
+    bool get_flag_shower();
+    void set_flag_shower_trajectory(bool val){flag_shower_trajectory = val;};
+    void set_flag_shower_topology(bool val){flag_shower_topology = val;};
     bool get_flag_shower_trajectory(){return flag_shower_trajectory;};
     bool get_flag_shower_topology(){return flag_shower_topology;};
     bool get_flag_shower_dQdx();
@@ -90,9 +97,12 @@ namespace WCPPID{
     
     int set_particle_type(int type){particle_type = type;};
     void set_particle_mass(double val){particle_mass = val;};
-    
+
+    void set_particle_score(double val){particle_score = val;};
+    double get_particle_score(){return particle_score;};
     double get_particle_mass(){return particle_mass;};
     double get_particle_4mom(int num){return particle_4mom[num];};
+
     
     void determine_dir_track(int start_n, int end_n, bool flag_print = false);
     bool do_track_pid(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range = 35*units::cm, double offset_length = 0*units::cm);

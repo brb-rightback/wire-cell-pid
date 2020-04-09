@@ -49,6 +49,13 @@ WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::
   
 }
 
+void WCPPID::ProtoSegment::build_pcloud_fit(){
+  if (pcloud_fit != (ToyPointCloud*)0) delete pcloud_fit;
+  pcloud_fit = new ToyPointCloud();
+  pcloud_fit->AddPoints(fit_pt_vec);
+  pcloud_fit->build_kdtree_index();
+}
+
 WCPPID::ProtoSegment::~ProtoSegment(){
   if (pcloud_fit != (ToyPointCloud*)0)
     delete pcloud_fit;
@@ -1206,4 +1213,183 @@ void WCPPID::ProtoSegment::determine_dir_shower_topology(int start_n, int end_n,
 
   if (flag_print)
     std::cout << id << " " << length/units::cm << " S_topo " << flag_dir << " " << is_dir_weak() <<  " " << particle_type << " " << particle_mass/units::MeV << " " << (particle_4mom[3]-particle_mass)/units::MeV << " " << particle_score << std::endl;
+}
+
+
+std::tuple<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> WCPPID::ProtoSegment::break_segment_at_point(WCP::Point& p, int& acc_segment_id, int& acc_vertex_id){
+
+  int nbreak = -1;
+  double min_dis = 1e9;
+  for (size_t i=0;i!=wcpt_vec.size(); i++){
+    double dis = sqrt(pow(wcpt_vec.at(i).x-p.x,2) + pow(wcpt_vec.at(i).y-p.y,2) + pow(wcpt_vec.at(i).z-p.z,2));
+    if (dis < min_dis){
+      min_dis = dis;
+      nbreak = i;
+    }
+  }
+  
+  int nbreak_fit = -1;
+  min_dis = 1e9;
+  for (size_t i=0; i!=fit_pt_vec.size(); i++){
+    double dis = sqrt(pow(fit_pt_vec.at(i).x-p.x,2) + pow(fit_pt_vec.at(i).y-p.y,2) + pow(fit_pt_vec.at(i).z-p.z,2));
+    if (dis < min_dis){
+      min_dis = dis;
+      nbreak_fit = i;
+    }
+  }
+
+  if (nbreak_fit == 0 || nbreak_fit+1 == fit_pt_vec.size()){
+    return std::make_tuple(this, (WCPPID::ProtoVertex*)0, (WCPPID::ProtoSegment*)0);
+  }else{
+    if (nbreak ==0 ) nbreak ++;
+    if (nbreak+1==wcpt_vec.size()) nbreak --;
+  }
+
+  // Now start to construct new segment ...
+  std::list<WCP::WCPointCloud<double>::WCPoint > path_wcps1;
+  std::list<WCP::WCPointCloud<double>::WCPoint > path_wcps2;
+  WCP::WCPointCloud<double>::WCPoint vertex_wcp;
+  for (size_t i=0; i!=wcpt_vec.size(); i++){
+    if (i==nbreak){
+      path_wcps1.push_back(wcpt_vec.at(i));
+      path_wcps2.push_back(wcpt_vec.at(i));
+      vertex_wcp = wcpt_vec.at(i);
+    }else if ( i< nbreak){
+      path_wcps1.push_back(wcpt_vec.at(i));
+    }else{
+      path_wcps2.push_back(wcpt_vec.at(i));
+    }
+  }
+  // create new segment vertex ...
+  WCPPID::ProtoSegment *sg1 = new WCPPID::ProtoSegment(acc_segment_id, path_wcps1, cluster_id); acc_segment_id ++;
+  WCPPID::ProtoVertex *vtx = new WCPPID::ProtoVertex(acc_vertex_id, vertex_wcp, cluster_id); acc_vertex_id ++;
+  WCPPID::ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, path_wcps2, cluster_id); acc_segment_id ++;
+
+  // fill in the vertex
+  vtx->set_neutrino_vertex(false);
+  vtx->set_fit_pt(fit_pt_vec.at(nbreak_fit) );
+  vtx->set_fit_index(fit_index_vec.at(nbreak_fit) );
+  vtx->set_flag_fit_fix(false);
+  vtx->set_fit_range(1*units::cm);
+  vtx->set_dx(dx_vec.at(nbreak_fit) );
+  vtx->set_fit_flag(true);
+  vtx->set_dQ(dQ_vec.at(nbreak_fit));
+  vtx->set_pu(pu_vec.at(nbreak_fit));
+  vtx->set_pv(pv_vec.at(nbreak_fit));
+  vtx->set_pw(pw_vec.at(nbreak_fit));
+  vtx->set_pt(pt_vec.at(nbreak_fit));
+  vtx->set_reduced_chi2(reduced_chi2_vec.at(nbreak_fit));
+  
+  // fill in first and segments
+  sg1->set_dir_weak(dir_weak); sg2->set_dir_weak(dir_weak);
+  sg1->set_fit_flag(flag_fit); sg2->set_fit_flag(flag_fit);
+  sg1->set_flag_dir(flag_dir); sg2->set_flag_dir(flag_dir);
+  sg1->set_particle_type(particle_type); sg2->set_particle_type(particle_type);
+  sg1->set_particle_mass(particle_mass); sg2->set_particle_mass(particle_mass);
+  sg1->set_flag_shower_trajectory(flag_shower_trajectory); sg2->set_flag_shower_trajectory(flag_shower_trajectory);
+  sg1->set_flag_shower_topology(flag_shower_topology); sg2->set_flag_shower_topology(flag_shower_topology);
+  sg1->set_particle_score(particle_score); sg2->set_particle_score(particle_score);
+  
+  
+  std::vector<WCP::Point >& fit_pt_vec1 = sg1->get_point_vec();
+  std::vector<WCP::Point >& fit_pt_vec2 = sg2->get_point_vec();
+  std::vector<double>& dQ_vec1 = sg1->get_dQ_vec();
+  std::vector<double>& dQ_vec2 = sg2->get_dQ_vec();
+  std::vector<double>& dx_vec1 = sg1->get_dx_vec();
+  std::vector<double>& dx_vec2 = sg2->get_dx_vec();
+  std::vector<double>& dQ_dx_vec1 = sg1->get_dQ_dx_vec();
+  std::vector<double>& dQ_dx_vec2 = sg2->get_dQ_dx_vec();
+  std::vector<double>& pu_vec1 = sg1->get_pu_vec();
+  std::vector<double>& pu_vec2 = sg2->get_pu_vec();
+  std::vector<double>& pv_vec1 = sg1->get_pv_vec();
+  std::vector<double>& pv_vec2 = sg2->get_pv_vec();
+  std::vector<double>& pw_vec1 = sg1->get_pw_vec();
+  std::vector<double>& pw_vec2 = sg2->get_pw_vec();
+  std::vector<double>& pt_vec1 = sg1->get_pt_vec();
+  std::vector<double>& pt_vec2 = sg2->get_pt_vec();
+  std::vector<double>& reduced_chi2_vec1 = sg1->get_reduced_chi2_vec();
+  std::vector<double>& reduced_chi2_vec2 = sg2->get_reduced_chi2_vec();
+  std::vector<int>& fit_index_vec1 = sg1->get_fit_index_vec();
+  std::vector<int>& fit_index_vec2 = sg2->get_fit_index_vec();
+  std::vector<bool>& fit_flag_skip1 = sg1->get_fit_flag_skip(); // vertex???
+  std::vector<bool>& fit_flag_skip2 = sg2->get_fit_flag_skip(); // vertex???
+
+  fit_pt_vec1.clear(); fit_pt_vec2.clear();
+  dQ_vec1.clear(); dQ_vec2.clear();
+  pu_vec1.clear(); pu_vec2.clear();
+  pv_vec1.clear(); pv_vec2.clear();
+  pw_vec1.clear(); pw_vec2.clear();
+  pt_vec1.clear(); pt_vec2.clear();
+  reduced_chi2_vec1.clear(); reduced_chi2_vec2.clear();
+  fit_index_vec1.clear(); fit_index_vec2.clear();
+  fit_flag_skip1.clear(); fit_flag_skip2.clear();
+  //std::cout << fit_pt_vec.size() << " " << dQ_vec.size() << " " << dx_vec.size() << " " << pu_vec.size() << " " << pv_vec.size() << " " << pw_vec.size() << " " << pt_vec.size() << " " << reduced_chi2_vec.size() << " " << fit_index_vec.size() << " " << fit_flag_skip.size() << std::endl;
+  
+  for (size_t i=0; i!=fit_pt_vec.size(); i++){
+    if (i==nbreak_fit){
+      fit_pt_vec1.push_back(fit_pt_vec.at(i)); fit_pt_vec2.push_back(fit_pt_vec.at(i));
+      dQ_vec1.push_back(dQ_vec.at(i)); dQ_vec2.push_back(dQ_vec.at(i));
+      dx_vec1.push_back(dx_vec.at(i)); dx_vec2.push_back(dx_vec.at(i));
+      dQ_dx_vec1.push_back(dQ_dx_vec.at(i));  dQ_dx_vec2.push_back(dQ_dx_vec.at(i));
+      pu_vec1.push_back(pu_vec.at(i)); pu_vec2.push_back(pu_vec.at(i));
+      pv_vec1.push_back(pv_vec.at(i)); pv_vec2.push_back(pv_vec.at(i));
+      pw_vec1.push_back(pw_vec.at(i)); pw_vec2.push_back(pw_vec.at(i));
+      pt_vec1.push_back(pt_vec.at(i)); pt_vec2.push_back(pt_vec.at(i));
+      reduced_chi2_vec1.push_back(reduced_chi2_vec.at(i)); reduced_chi2_vec2.push_back(reduced_chi2_vec.at(i));
+      fit_index_vec1.push_back(fit_index_vec.at(i)); fit_index_vec2.push_back(fit_index_vec.at(i));
+      fit_flag_skip1.push_back(fit_flag_skip.at(i)); fit_flag_skip2.push_back(fit_flag_skip.at(i));
+    }else if (i< nbreak_fit){
+      fit_pt_vec1.push_back(fit_pt_vec.at(i));
+      dQ_vec1.push_back(dQ_vec.at(i));
+      dx_vec1.push_back(dx_vec.at(i));
+      dQ_dx_vec1.push_back(dQ_dx_vec.at(i));
+      pu_vec1.push_back(pu_vec.at(i));
+      pv_vec1.push_back(pv_vec.at(i)); 
+      pw_vec1.push_back(pw_vec.at(i)); 
+      pt_vec1.push_back(pt_vec.at(i));
+      reduced_chi2_vec1.push_back(reduced_chi2_vec.at(i)); 
+      fit_index_vec1.push_back(fit_index_vec.at(i)); 
+      fit_flag_skip1.push_back(fit_flag_skip.at(i)); 
+    }else{
+      fit_pt_vec2.push_back(fit_pt_vec.at(i));
+      dQ_vec2.push_back(dQ_vec.at(i));
+      dx_vec2.push_back(dx_vec.at(i));
+      dQ_dx_vec2.push_back(dQ_dx_vec.at(i));
+      pu_vec2.push_back(pu_vec.at(i));
+      pv_vec2.push_back(pv_vec.at(i));
+      pw_vec2.push_back(pw_vec.at(i));
+      pt_vec2.push_back(pt_vec.at(i));
+      reduced_chi2_vec2.push_back(reduced_chi2_vec.at(i));
+      fit_index_vec2.push_back(fit_index_vec.at(i));
+      fit_flag_skip2.push_back(fit_flag_skip.at(i));
+    }
+  }
+
+  // std::cout << nbreak_fit << " " << fit_pt_vec.size() << std::endl;
+  // std::cout << fit_pt_vec2.size() << " " << dQ_vec2.size() << " " << dx_vec2.size() << " " << pu_vec2.size() << " " << pv_vec2.size() << " " << pw_vec2.size() << " " << pt_vec2.size() << " " << reduced_chi2_vec2.size() << " " << fit_index_vec2.size() << " " << fit_flag_skip2.size() << std::endl;
+
+  sg1->build_pcloud_fit();
+  sg2->build_pcloud_fit();
+  sg1->cal_4mom();
+  sg2->cal_4mom();
+
+  WCP::WCPointCloud<double>& cloud = pcloud_associated->get_cloud();
+  WCP::WC2DPointCloud<double>& cloud_u = pcloud_associated->get_cloud_u();
+  WCP::WC2DPointCloud<double>& cloud_v = pcloud_associated->get_cloud_v();
+  WCP::WC2DPointCloud<double>& cloud_w = pcloud_associated->get_cloud_w();
+  for (size_t i=0;i!=cloud.pts.size();i++){
+    Point p(cloud.pts.at(i).x, cloud.pts.at(i).y, cloud.pts.at(i).z);
+    if (sg1->get_closest_point(p).first < sg2->get_closest_point(p).first){
+      sg1->add_associate_point(cloud.pts.at(i), cloud_u.pts.at(i), cloud_v.pts.at(i), cloud_w.pts.at(i));
+    }else{
+      sg2->add_associate_point(cloud.pts.at(i), cloud_u.pts.at(i), cloud_v.pts.at(i), cloud_w.pts.at(i));
+    }
+  }
+  sg1->get_associated_pcloud()->build_kdtree_index();
+  sg1->get_associated_pcloud()->build_kdtree_index();
+  
+  //std::cout << nbreak << " " << wcpt_vec.size() << " " << nbreak_fit << " " << fit_pt_vec.size() << std::endl;
+
+  return std::make_tuple(sg1, vtx, sg2);
+  
 }
