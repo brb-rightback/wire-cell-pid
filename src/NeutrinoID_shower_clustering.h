@@ -21,13 +21,38 @@ void WCPPID::NeutrinoID::shower_clustering(){
   shower_clustering_from_main_cluster();
   //std::cout << showers.size() << std::endl;
   shower_clustering_from_vertices();
-  //  std::cout << showers.size() << std::endl;
-  
+  //  std::cout << showers.size() << std::endl;  
   calculate_shower_kinematics();
+
   // check remaining clusters ...
   shower_clustering_in_other_clusters(true);
-  
+ 
   calculate_shower_kinematics();
+
+  id_pi0_with_vertex();
+}
+
+void WCPPID::NeutrinoID::id_pi0_with_vertex(){
+  for (auto it = map_vertex_to_shower.begin(); it!= map_vertex_to_shower.end(); it++){
+    std::vector<WCPPID::WCShower*> tmp_showers;
+    for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+      if ((*it1)->get_start_vertex().second < 3)
+	tmp_showers.push_back(*it1);
+    }
+    
+    if (tmp_showers.size()>1){
+      for (size_t i=0;i!= tmp_showers.size();i++){
+	WCPPID::WCShower *shower_1 = tmp_showers.at(i);
+	TVector3 dir1 = shower_1->get_init_dir();
+	for (size_t j=i+1; j<tmp_showers.size();j++){
+	  WCPPID::WCShower *shower_2 = tmp_showers.at(j);
+	  TVector3 dir2 = shower_2->get_init_dir();
+	  double angle = dir1.Angle(dir2);
+	  std::cout << it->first << " " << i << " " << j << " " << shower_1->get_kine_charge()/units::MeV << " " << shower_2->get_kine_charge()/units::MeV << " " << dir1.Mag() << " " << dir2.Mag() << " " << angle/3.1415926*180. << " " << sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2))/units::MeV<< std::endl;
+	}
+      }
+    }
+  }
 }
 
 void WCPPID::NeutrinoID::shower_clustering_from_vertices(){
@@ -302,7 +327,7 @@ void WCPPID::NeutrinoID::update_shower_maps(){
   
   for (auto it = showers.begin(); it!=showers.end(); it++){
     WCPPID::WCShower* shower = *it;
-    map_vertex_to_shower[shower->get_start_vertex().first] = shower;
+    map_vertex_to_shower[shower->get_start_vertex().first].insert(shower);
     shower->fill_maps(map_vertex_in_shower, map_segment_in_shower);
   }
   for (auto it = map_segment_in_shower.begin(); it!=map_segment_in_shower.end();it++){
@@ -382,13 +407,13 @@ void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(bool flag_save){
 
 
 
-    int connection_type = 2;
+    int connection_type = 3;
     if (min_dis > 80*units::cm){
-      connection_type = 3;
+      connection_type = 4;
     }
 
     if (!flag_save)
-      connection_type = 3;
+      connection_type = 4;
     
     
     if (sg != 0){

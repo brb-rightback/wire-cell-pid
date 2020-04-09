@@ -388,7 +388,7 @@ void WCPPID::NeutrinoID::fill_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rt
   rtree.mc_endXYZT[rtree.mc_Ntrack][3] = 0;
 
   std::pair<ProtoVertex*, int> pair_start_vertex = shower->get_start_vertex();
-  if (pair_start_vertex.second ==3){
+  if (pair_start_vertex.second ==4 ){
     rtree.mc_dir_weak[rtree.mc_Ntrack] = 1;
     return;
   }else{
@@ -584,7 +584,7 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
 	// set daughters ...
 	rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(map_sg_sgid[curr_sg]);
       }
-    }else if (pair_vertex.second == 2){
+    }else if (pair_vertex.second == 2 || pair_vertex.second == 3){
       int psuedo_particle_id = fill_psuedo_reco_tree(shower, rtree);
       if (pair_vertex.first == main_vertex){
 	rtree.mc_mother[rtree.mc_Ntrack-1] = 0;
@@ -858,31 +858,34 @@ void WCPPID::NeutrinoID::fill_skeleton_info(int mother_cluster_id, WCPPID::WCPoi
   
   for (auto it = map_vertex_to_shower.begin(); it!=map_vertex_to_shower.end(); it++){
     WCPPID::ProtoVertex* vtx = it->first;
-    WCPPID::WCShower *shower = it->second;
+    for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+      WCPPID::WCShower *shower = (*it1);
     
-    if (map_vertex_segments[vtx].find(shower->get_start_segment())!=map_vertex_segments[vtx].end()){
-      ptree.reco_cluster_id = vtx->get_cluster_id();
-
-      ptree.reco_proto_cluster_id = shower->get_start_segment()->get_cluster_id()*1000 + shower->get_start_segment()->get_id();
-      ptree.reco_particle_id = shower->get_start_segment()->get_cluster_id()*1000 + shower->get_start_segment()->get_id();
+      if (map_vertex_segments[vtx].find(shower->get_start_segment())!=map_vertex_segments[vtx].end()){
+	ptree.reco_cluster_id = vtx->get_cluster_id();
+	
+	ptree.reco_proto_cluster_id = shower->get_start_segment()->get_cluster_id()*1000 + shower->get_start_segment()->get_id();
+	ptree.reco_particle_id = shower->get_start_segment()->get_cluster_id()*1000 + shower->get_start_segment()->get_id();
+	
+	ptree.reco_ndf = vtx->get_cluster_id();
+	ptree.reco_flag_vertex = 1;
+	
+	ptree.reco_x = vtx->get_fit_pt().x/units::cm;
+	ptree.reco_y = vtx->get_fit_pt().y/units::cm;
+	ptree.reco_z = vtx->get_fit_pt().z/units::cm;
+	ptree.reco_dQ = vtx->get_dQ() * dQdx_scale + dQdx_offset;
+	ptree.reco_dx = vtx->get_dx()/units::cm;
+	ptree.reco_pu = vtx->get_pu();
+	ptree.reco_pv = vtx->get_pv();
+	ptree.reco_pw = vtx->get_pw();
+	ptree.reco_pt = vtx->get_pt();    
+	ptree.reco_reduced_chi2 = vtx->get_reduced_chi2();
       
-      ptree.reco_ndf = vtx->get_cluster_id();
-      ptree.reco_flag_vertex = 1;
-      
-      ptree.reco_x = vtx->get_fit_pt().x/units::cm;
-      ptree.reco_y = vtx->get_fit_pt().y/units::cm;
-      ptree.reco_z = vtx->get_fit_pt().z/units::cm;
-      ptree.reco_dQ = vtx->get_dQ() * dQdx_scale + dQdx_offset;
-      ptree.reco_dx = vtx->get_dx()/units::cm;
-      ptree.reco_pu = vtx->get_pu();
-      ptree.reco_pv = vtx->get_pv();
-      ptree.reco_pw = vtx->get_pw();
-      ptree.reco_pt = vtx->get_pt();    
-      ptree.reco_reduced_chi2 = vtx->get_reduced_chi2();
-      
-      T->Fill();
+	T->Fill();
+      }
     }
   }
+  
   for (auto it = map_vertex_in_shower.begin(); it != map_vertex_in_shower.end(); it++){
      WCPPID::ProtoVertex *vtx = it->first;
      WCPPID::WCShower *shower = it->second;

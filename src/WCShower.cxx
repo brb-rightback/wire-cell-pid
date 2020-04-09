@@ -189,6 +189,12 @@ void WCPPID::WCShower::calculate_kinematics(){
       // multiple tracks ...
       particle_type = start_segment->get_particle_type();
       flag_shower = start_segment->get_flag_shower();
+      if (start_segment->get_flag_dir()==1){
+	start_point = start_segment->get_point_vec().front();
+      }else if (start_segment->get_flag_dir()==-1){
+	start_point = start_segment->get_point_vec().back();
+      }
+       
       // initial direction ...
       if (start_connection_type == 1){
 	init_dir = start_segment->cal_dir_3vector();
@@ -199,11 +205,7 @@ void WCPPID::WCShower::calculate_kinematics(){
       }
       init_dir = init_dir.Unit();
       
-      if (start_segment->get_flag_dir()==1){
-	start_point = start_segment->get_point_vec().front();
-      }else if (start_segment->get_flag_dir()==-1){
-	start_point = start_segment->get_point_vec().back();
-      }
+     
       double max_dis = 0; Point max_point;
       for (auto it = map_vtx_segs.begin(); it != map_vtx_segs.end(); it++){
 	WCPPID::ProtoVertex *vtx = it->first;
@@ -226,6 +228,8 @@ void WCPPID::WCShower::calculate_kinematics(){
       kenergy_best = 0;
     }
   }
+
+  // std::cout << map_seg_vtxs.size() << " " << start_connection_type  << " " << init_dir.X() << " " <<  init_dir.Y() << " " << init_dir.Z() << " " << kenergy_dQdx/units::MeV << " " << start_point << " " << start_vertex->get_fit_pt() << std::endl;
 }
 
 void WCPPID::WCShower::set_start_vertex(ProtoVertex* vertex, int type){
