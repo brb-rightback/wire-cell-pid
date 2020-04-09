@@ -356,14 +356,22 @@ void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(bool flag_save){
     ToyPointCloud *pcloud = cluster->get_point_cloud();
     double min_dis = 1e9;
     WCPPID::ProtoVertex *min_vertex = 0;
+    double main_dis;
     for (size_t i=0;i!=vertices.size();i++){
       double dis = pcloud->get_closest_dis(vertices.at(i)->get_fit_pt());
       if (dis < min_dis){
 	min_dis = dis;
 	min_vertex = vertices.at(i);
       }
+      if (vertices.at(i) == main_vertex)
+	main_dis = dis;
     }
     
+    // std::cout << min_dis/units::cm << " " << main_dis/units::cm << " " << min_dis/main_dis << std::endl;
+    if (min_dis > 0.8 * main_dis){
+      min_dis = main_dis;
+      min_vertex = main_vertex;
+    }
     
     WCPPID::ProtoSegment *sg = 0;
     for (auto it1 = map_segment_vertices.begin(); it1 != map_segment_vertices.end(); it1++){
@@ -371,6 +379,8 @@ void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(bool flag_save){
       sg = it1->first;
       break;
     }
+
+
 
     int connection_type = 2;
     if (min_dis > 80*units::cm){
