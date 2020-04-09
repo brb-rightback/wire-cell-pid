@@ -214,6 +214,15 @@ void WCPPID::NeutrinoID::shower_clustering_from_vertices(){
   // std::cout << vec_pi.at(i).min_dis << std::endl;
   //}
 
+  for (size_t i=0;i!=vec_pi.size();i++){
+    // find the segment and/or create the new vertices ...
+    // create the new shower ...
+    // cluster the other things ...
+    
+    // udate the map
+    update_shower_maps();
+  }
+
   
   
 }
