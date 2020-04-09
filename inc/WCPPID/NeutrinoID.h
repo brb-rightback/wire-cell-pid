@@ -204,9 +204,13 @@ namespace WCPPID{
     void shower_clustering_from_vertices();
     // holder for now ...
     void shower_clustering_in_other_clusters();
+
+    // establish map
+    //    void establish_cluster_segment_maps();
     
     void calculate_shower_kinematics();
     void update_shower_maps();
+
     
     // fill_fit_parameters();
     void fill_fit_parameters();
@@ -258,6 +262,9 @@ namespace WCPPID{
     // find the connection ...
     std::map<WCPPID::ProtoVertex*, WCShower*> map_vertex_to_shower;
     std::set<int> used_shower_clusters;
+
+    //    std::map<WCPPID::PR3DCluster*, ProtoSegmentSet> map_cluster_segments;
+    //std::map<WCPPID::ProtoSegment*, WCPPID::PR3DCluster*> map_segment_cluster;
     
   };
 

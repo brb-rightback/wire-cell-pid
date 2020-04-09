@@ -1,3 +1,18 @@
+
+struct cluster_point_info{
+  WCPPID::PR3DCluster *cluster;
+  double min_angle;
+  double min_dis;
+  Point min_point;
+  WCPPID::ProtoVertex *min_vertex;
+};
+
+bool sortbydis(const cluster_point_info &a, const cluster_point_info &b){
+  return (a.min_dis < b.min_dis);
+}
+
+
+
 void WCPPID::NeutrinoID::shower_clustering(){
 
   // connect to the main cluster ...
@@ -71,8 +86,136 @@ void WCPPID::NeutrinoID::shower_clustering_from_main_cluster(){
   update_shower_maps();
 }
 
-void WCPPID::NeutrinoID::shower_clustering_from_vertices(){
+/* void WCPPID::NeutrinoID::establish_cluster_segment_maps(){ */
+/*   map_cluster_segments.clear(); */
+/*   map_segment_cluster.clear(); */
 
+/*   std::map<int, WCPPID::PR3DCluster*> map_cid_cluster; */
+/*   std::map<WCPPID::ProtoSegment*, int> map_segment_cid; */
+
+/*   map_cid_cluster[main_cluster->get_cluster_id()] = main_cluster; */
+/*   for (size_t i=0; i!=other_clusters.size(); i++){ */
+/*     map_cid_cluster[other_clusters.at(i)->get_cluster_id()] = other_clusters.at(i); */
+/*   } */
+
+/*   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){ */
+/*     WCPPID::ProtoSegment* seg = it->first; */
+/*     map_segment_cid[seg] = seg->get_cluster_id(); */
+/*   } */
+
+  
+  
+/* } */
+
+void WCPPID::NeutrinoID::shower_clustering_from_vertices(){
+  // first map the sg vs. cluster existing ...
+  //  std::cout << map_cluster_segments.size() << " " << other_clusters.size() << " " << map_segment_cluster.size() << " " << map_segment_vertices.size() << std::endl;
+  std::map<PR3DCluster*, std::pair<WCP::Point, double> > map_cluster_center_point;
+  
+  for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
+    WCPPID::PR3DCluster *cluster = *it;
+    auto it1 = map_cluster_segments.find(cluster);
+    if (it1  == map_cluster_segments.end()) continue;
+    double acc_length = 0;
+    Point p(0,0,0);
+    Int_t np = 0;
+    for (auto it2 = it1->second.begin(); it2!=it1->second.end(); it2++){
+      WCPPID::ProtoSegment *seg = *it2;
+      if (map_segment_in_shower.find(seg) != map_segment_in_shower.end()) continue;
+      if (seg->get_flag_shower()==1){
+	acc_length += seg->get_length();
+	PointVector& pts = seg->get_point_vec();
+	for (size_t i=0; i!= pts.size(); i++){
+	  p.x += pts.at(i).x;
+	  p.y += pts.at(i).y;
+	  p.z += pts.at(i).z;
+	  np ++;
+	}
+      }
+    }
+    if (acc_length > 1.0*units::cm){
+      p.x /= np;
+      p.y /= np;
+      p.z /= np;
+      map_cluster_center_point[cluster] = std::make_pair(p, acc_length);
+    }
+  }
+
+  // list the main vertices ...
+  std::vector<WCPPID::ProtoVertex*> main_cluster_vertices;
+  for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
+    if (it->first->get_cluster_id()==main_cluster->get_cluster_id()){
+      //      if (it->first == main_vertex) std::cout << main_cluster_vertices.size() << std::endl;
+      main_cluster_vertices.push_back(it->first);
+    }
+  }
+
+ 
+  std::map<WCPPID::PR3DCluster*, cluster_point_info > map_cluster_pi;
+  
+  // start to check with each of clusters in main cluster ...
+  for (auto it = map_cluster_center_point.begin(); it!= map_cluster_center_point.end(); it++){
+    WCPPID::PR3DCluster *cluster = it->first;
+    Point center_p = it->second.first;
+    PointVector total_pts;
+    for (auto it1 = map_cluster_segments[cluster].begin(); it1!= map_cluster_segments[cluster].end(); it1++){
+      PointVector& pts = (*it1)->get_point_vec();
+      total_pts.insert(total_pts.end(), pts.begin(), pts.end());
+    }
+    WCP::ToyPointCloud pcloud;
+    pcloud.AddPoints(total_pts);
+    pcloud.build_kdtree_index();
+
+    cluster_point_info min_pi;
+    min_pi.cluster = cluster;
+    min_pi.min_angle = 1e9;
+    min_pi.min_dis = 1e9;
+    min_pi.min_vertex = 0;
+    cluster_point_info main_pi;
+    main_pi.cluster = cluster;
+    main_pi.min_vertex = main_vertex;
+    
+    for (size_t i=0;i!=main_cluster_vertices.size();i++){
+      std::pair<double, WCP::Point> result = pcloud.get_closest_point(main_cluster_vertices.at(i)->get_fit_pt());
+      TVector3 v1(result.second.x - main_cluster_vertices.at(i)->get_fit_pt().x,
+		  result.second.y - main_cluster_vertices.at(i)->get_fit_pt().y,
+		  result.second.z - main_cluster_vertices.at(i)->get_fit_pt().z);
+      TVector3 v2(center_p.x - result.second.x,
+		  center_p.y - result.second.y,
+		  center_p.z - result.second.z);
+      double angle = v1.Angle(v2)/3.1415926*180.;
+      if (angle < min_pi.min_angle){
+	min_pi.min_angle = angle;
+	min_pi.min_dis = result.first;
+	min_pi.min_vertex = main_cluster_vertices.at(i);
+	min_pi.min_point = result.second;
+      }
+      if (main_cluster_vertices.at(i) == main_vertex) {
+	main_pi.min_angle = angle;
+	main_pi.min_dis = result.first;
+	main_pi.min_point = result.second;
+      }
+      //  std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << result.first/units::cm << std::endl;
+    }
+    if (main_pi.min_angle < min_pi.min_angle + 3 && min_pi.min_angle > 0.9 * main_pi.min_angle && main_pi.min_dis < min_pi.min_dis * 1.2){
+      map_cluster_pi[cluster] = main_pi;
+      //
+    }else{
+      map_cluster_pi[cluster] = min_pi;
+    }
+  }
+
+  std::vector<cluster_point_info > vec_pi;
+  for (auto it = map_cluster_pi.begin(); it!=map_cluster_pi.end(); it++){
+    vec_pi.push_back(it->second);
+  }
+  std::sort(vec_pi.begin(), vec_pi.end(), sortbydis);
+  //for (size_t i=0;i!=vec_pi.size();i++){
+  // std::cout << vec_pi.at(i).min_dis << std::endl;
+  //}
+
+  
+  
 }
 
 
