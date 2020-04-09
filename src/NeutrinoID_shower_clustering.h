@@ -41,6 +41,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
     }
     
     if (tmp_showers.size()>1){
+      std::map<std::pair<WCPPID::WCShower*, WCPPID::WCShower*>, double> map_shower_pair_mass;
       for (size_t i=0;i!= tmp_showers.size();i++){
 	WCPPID::WCShower *shower_1 = tmp_showers.at(i);
 	TVector3 dir1 = shower_1->get_init_dir();
@@ -48,9 +49,52 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
 	  WCPPID::WCShower *shower_2 = tmp_showers.at(j);
 	  TVector3 dir2 = shower_2->get_init_dir();
 	  double angle = dir1.Angle(dir2);
-	  std::cout << it->first << " " << i << " " << j << " " << shower_1->get_kine_charge()/units::MeV << " " << shower_2->get_kine_charge()/units::MeV << " " << dir1.Mag() << " " << dir2.Mag() << " " << angle/3.1415926*180. << " " << sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2))/units::MeV<< std::endl;
+	  double mass_pio = sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2));
+	  map_shower_pair_mass[std::make_pair(shower_1, shower_2)] = mass_pio;
+	  //  std::cout << it->first << " " << i << " " << j << " " << shower_1->get_kine_charge()/units::MeV << " " << shower_2->get_kine_charge()/units::MeV << " " << dir1.Mag() << " " << dir2.Mag() << " " << angle/3.1415926*180. << " " << sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2))/units::MeV<< std::endl;
 	}
       }
+      while(map_shower_pair_mass.size()>0){
+	// find the one close to the pi0 mass ...
+	double mass_diff = 1e9;
+	double mass_save = 0;
+	WCPPID::WCShower *shower_1 = 0;
+	WCPPID::WCShower *shower_2 = 0;
+	for (auto it = map_shower_pair_mass.begin(); it!= map_shower_pair_mass.end(); it++){
+	  if (fabs(it->second - 135*units::MeV) < mass_diff){
+	    mass_diff = fabs(it->second - 135*units::MeV);
+	    mass_save = it->second;
+	    shower_1 = it->first.first;
+	    shower_2 = it->first.second;
+	  }
+	}
+
+	if (mass_diff < 35*units::MeV){
+	  pi0_showers.insert(shower_1);
+	  pi0_showers.insert(shower_2);
+	  int pio_id = acc_segment_id; acc_segment_id ++;
+	  map_shower_pio_id[shower_1] = pio_id;
+	  map_shower_pio_id[shower_2] = pio_id;
+	  map_pio_id_mass[pio_id] = mass_save;
+	  map_pio_id_showers[pio_id].push_back(shower_1);
+	  map_pio_id_showers[pio_id].push_back(shower_2);
+	  std::cout << "Pi0 found with mass: " << " " << mass_save/units::MeV << " MeV" << std::endl;
+	}else{
+	  break;
+	}
+	std::vector<std::pair<WCPPID::WCShower*, WCPPID::WCShower*> > to_be_removed;
+	for (auto it = map_shower_pair_mass.begin(); it!= map_shower_pair_mass.end(); it++){
+	  if (it->first.first == shower_1 || it->first.first == shower_2 || it->first.second == shower_1 || it->first.second == shower_2)
+	    to_be_removed.push_back(it->first);
+	}
+	for (auto it = to_be_removed.begin(); it != to_be_removed.end(); it++){
+	  map_shower_pair_mass.erase(*it);
+	}
+      }
+      
+
+
+      
     }
   }
 }

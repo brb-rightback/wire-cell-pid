@@ -412,6 +412,49 @@ void WCPPID::NeutrinoID::fill_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rt
   
 }
 
+std::pair<int, int> WCPPID::NeutrinoID::fill_pi0_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rtree){
+
+  if (map_pio_id_saved_pair.find( map_shower_pio_id[shower]) == map_pio_id_saved_pair.end()){
+    WCPPID::ProtoSegment *sg1 = shower->get_start_segment();
+    rtree.mc_id[rtree.mc_Ntrack]  = sg1->get_cluster_id()*1000 + map_shower_pio_id[shower];
+    rtree.mc_pdg[rtree.mc_Ntrack] = 111;
+    
+    rtree.mc_process[rtree.mc_Ntrack] = 0;  
+    rtree.mc_kine_range[rtree.mc_Ntrack] = 0;
+    rtree.mc_kine_dQdx[rtree.mc_Ntrack] = 0;
+    rtree.mc_kine_charge[rtree.mc_Ntrack] = 0;
+    
+    rtree.mc_startXYZT[rtree.mc_Ntrack][0] = shower->get_start_vertex().first->get_fit_pt().x/units::cm;
+    rtree.mc_startXYZT[rtree.mc_Ntrack][1] = shower->get_start_vertex().first->get_fit_pt().y/units::cm;
+    rtree.mc_startXYZT[rtree.mc_Ntrack][2] = shower->get_start_vertex().first->get_fit_pt().z/units::cm;
+    rtree.mc_startXYZT[rtree.mc_Ntrack][3] = 0;
+    
+    rtree.mc_endXYZT[rtree.mc_Ntrack][0] = shower->get_start_vertex().first->get_fit_pt().x/units::cm;
+    rtree.mc_endXYZT[rtree.mc_Ntrack][1] = shower->get_start_vertex().first->get_fit_pt().y/units::cm;
+    rtree.mc_endXYZT[rtree.mc_Ntrack][2] = shower->get_start_vertex().first->get_fit_pt().z/units::cm;
+    rtree.mc_endXYZT[rtree.mc_Ntrack][3] = 0;
+    
+    std::pair<ProtoVertex*, int> pair_start_vertex = shower->get_start_vertex();
+    
+    rtree.mc_dir_weak[rtree.mc_Ntrack] = 0;
+    
+    rtree.mc_startMomentum[rtree.mc_Ntrack][0] = sqrt(pow(map_pio_id_mass[map_shower_pio_id[shower]]+135*units::MeV,2) - pow(135*units::MeV,2))/units::GeV;
+    rtree.mc_startMomentum[rtree.mc_Ntrack][1] = 0;
+    rtree.mc_startMomentum[rtree.mc_Ntrack][2] = 0;
+    rtree.mc_startMomentum[rtree.mc_Ntrack][3] = (map_pio_id_mass[map_shower_pio_id[shower]]+135*units::MeV)/units::GeV;
+    
+    rtree.mc_mother[rtree.mc_Ntrack] = 0;
+    rtree.mc_Ntrack++;
+    rtree.mc_daughters->resize(rtree.mc_Ntrack);
+    
+    map_pio_id_saved_pair[ map_shower_pio_id[shower] ] = std::make_pair(rtree.mc_Ntrack-1, rtree.mc_id[rtree.mc_Ntrack-1]);
+    return std::make_pair(rtree.mc_Ntrack-1, rtree.mc_id[rtree.mc_Ntrack-1]);
+  }else{
+    return map_pio_id_saved_pair[ map_shower_pio_id[shower] ];
+  }
+}
+
+
 
 int WCPPID::NeutrinoID::fill_psuedo_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rtree){
   
@@ -459,6 +502,7 @@ int WCPPID::NeutrinoID::fill_psuedo_reco_tree(WCPPID::WCShower* shower, WCRecoTr
   
   TVector3 init_dir(  rtree.mc_endXYZT[rtree.mc_Ntrack][0] - rtree.mc_startXYZT[rtree.mc_Ntrack][0], rtree.mc_endXYZT[rtree.mc_Ntrack][1] - rtree.mc_startXYZT[rtree.mc_Ntrack][1] , rtree.mc_endXYZT[rtree.mc_Ntrack][2] - rtree.mc_startXYZT[rtree.mc_Ntrack][2]);
   init_dir = init_dir.Unit();
+  if (init_dir.Mag()==0) init_dir = shower->get_start_segment()->cal_dir_3vector();
   rtree.mc_startMomentum[rtree.mc_Ntrack][0] = momentum * init_dir.X()/units::GeV;
   rtree.mc_startMomentum[rtree.mc_Ntrack][1] = momentum * init_dir.Y()/units::GeV;
   rtree.mc_startMomentum[rtree.mc_Ntrack][2] = momentum * init_dir.Z()/units::GeV;
@@ -568,42 +612,82 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
     std::pair<ProtoVertex*, int> pair_vertex = shower->get_start_vertex();
 
     //    std::cout << pair_vertex.second << std::endl;
-    
-    if (pair_vertex.second == 1){ // direct connection
-      if (pair_vertex.first == main_vertex){
-	rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = 0;
-      }else{
-	WCPPID::ProtoSegment* prev_sg = 0;
-	if (map_vertex_in_shower.find(pair_vertex.first) != map_vertex_in_shower.end()){
-	  prev_sg = map_vertex_in_shower[pair_vertex.first]->get_start_segment();
-	}else{
-	  prev_sg = find_incoming_segment(pair_vertex.first);
-	}
-	// set mother ...
-	rtree.mc_mother[map_sgid_rtid[map_sg_sgid[curr_sg]]] = map_sg_sgid[prev_sg];
-	// set daughters ...
-	rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(map_sg_sgid[curr_sg]);
-      }
-    }else if (pair_vertex.second == 2 || pair_vertex.second == 3){
-      int psuedo_particle_id = fill_psuedo_reco_tree(shower, rtree);
-      if (pair_vertex.first == main_vertex){
-	rtree.mc_mother[rtree.mc_Ntrack-1] = 0;
-	rtree.mc_daughters->at(rtree.mc_Ntrack-1).push_back(map_sg_sgid[curr_sg]);
-	rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = psuedo_particle_id;
-      }else{
-	WCPPID::ProtoSegment* prev_sg = 0;
-	if (map_vertex_in_shower.find(pair_vertex.first) != map_vertex_in_shower.end()){
-	  prev_sg = map_vertex_in_shower[pair_vertex.first]->get_start_segment();
-	}else{
-	  prev_sg = find_incoming_segment(pair_vertex.first);
-	}
 
-	find_incoming_segment(pair_vertex.first);
-	rtree.mc_mother[rtree.mc_Ntrack-1] = map_sg_sgid[prev_sg];
-	rtree.mc_daughters->at(rtree.mc_Ntrack-1).push_back(map_sg_sgid[curr_sg]);
-	rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = psuedo_particle_id;
-	rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(psuedo_particle_id);
+    if (pi0_showers.find(shower)==pi0_showers.end()){ // not pi0
+      if (pair_vertex.second == 1){ // direct connection
+	if (pair_vertex.first == main_vertex){
+	  rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = 0;
+	}else{
+	  WCPPID::ProtoSegment* prev_sg = 0;
+	  if (map_vertex_in_shower.find(pair_vertex.first) != map_vertex_in_shower.end()){
+	    prev_sg = map_vertex_in_shower[pair_vertex.first]->get_start_segment();
+	  }else{
+	    prev_sg = find_incoming_segment(pair_vertex.first);
+	  }
+	  // set mother ...
+	  rtree.mc_mother[map_sgid_rtid[map_sg_sgid[curr_sg]]] = map_sg_sgid[prev_sg];
+	  // set daughters ...
+	  rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(map_sg_sgid[curr_sg]);
+	}
+      }else if (pair_vertex.second == 2 || pair_vertex.second == 3){
+	int psuedo_particle_id = fill_psuedo_reco_tree(shower, rtree);
+	if (pair_vertex.first == main_vertex){
+	  rtree.mc_mother[rtree.mc_Ntrack-1] = 0;
+	  rtree.mc_daughters->at(rtree.mc_Ntrack-1).push_back(map_sg_sgid[curr_sg]);
+	  rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = psuedo_particle_id;
+	}else{
+	  WCPPID::ProtoSegment* prev_sg = 0;
+	  if (map_vertex_in_shower.find(pair_vertex.first) != map_vertex_in_shower.end()){
+	    prev_sg = map_vertex_in_shower[pair_vertex.first]->get_start_segment();
+	  }else{
+	    prev_sg = find_incoming_segment(pair_vertex.first);
+	  }
+	  
+
+	  rtree.mc_mother[rtree.mc_Ntrack-1] = map_sg_sgid[prev_sg];
+	  rtree.mc_daughters->at(rtree.mc_Ntrack-1).push_back(map_sg_sgid[curr_sg]);
+	  rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = psuedo_particle_id;
+	  rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(psuedo_particle_id);
+	}
       }
+    }else{
+       std::pair<ProtoVertex*, int> pair_vertex = shower->get_start_vertex();
+      // pi0 ...
+      // create a pi0 ...
+       std::pair<int, int> pio_info_pair = fill_pi0_reco_tree(shower, rtree);
+       int psuedo_particle_id = fill_psuedo_reco_tree(shower, rtree);
+       if (pair_vertex.first == main_vertex){
+	 // pio
+	 rtree.mc_mother[pio_info_pair.first] = 0;
+	 rtree.mc_daughters->at(pio_info_pair.first).push_back(psuedo_particle_id);
+	 // gamma
+	 rtree.mc_mother[rtree.mc_Ntrack-1] = pio_info_pair.second;
+	 rtree.mc_daughters->at(rtree.mc_Ntrack-1).push_back(map_sg_sgid[curr_sg]);
+	 // electron 
+	 rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = psuedo_particle_id;
+       }else{
+	 WCPPID::ProtoSegment* prev_sg = 0;
+	 if (map_vertex_in_shower.find(pair_vertex.first) != map_vertex_in_shower.end()){
+	   prev_sg = map_vertex_in_shower[pair_vertex.first]->get_start_segment();
+	 }else{
+	   prev_sg = find_incoming_segment(pair_vertex.first);
+	 }
+	 // pio
+	 rtree.mc_mother[pio_info_pair.first] = map_sg_sgid[prev_sg];
+	 rtree.mc_daughters->at(pio_info_pair.first).push_back(psuedo_particle_id);
+	 // gamma
+	 rtree.mc_mother[rtree.mc_Ntrack-1] =  pio_info_pair.second;
+	 rtree.mc_daughters->at(rtree.mc_Ntrack-1).push_back(map_sg_sgid[curr_sg]);
+	 // electron
+	 rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = psuedo_particle_id;
+	 rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(psuedo_particle_id);
+       }
+       
+      // create the second psuedo particle
+
+      // fill the final daughter ...
+
+      
     }
   }
 }

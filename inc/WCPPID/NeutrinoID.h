@@ -133,6 +133,7 @@ namespace WCPPID{
     // fill reco information
     void fill_reco_tree(WCPPID::ProtoSegment* seg, WCRecoTree& rtree);
     void fill_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rtree);
+    std::pair<int, int> fill_pi0_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rtree);
     int fill_psuedo_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rtree);
 
     void fill_reco_simple_tree(WCRecoTree& rtree);
@@ -264,6 +265,13 @@ namespace WCPPID{
     std::map<WCPPID::ProtoVertex*, std::set<WCShower*> > map_vertex_to_shower;
     std::set<int> used_shower_clusters;
 
+    // pi0 information
+    std::set<WCShower*> pi0_showers;
+    std::map<WCShower*, int> map_shower_pio_id;
+    std::map<int, std::vector<WCShower* > > map_pio_id_showers;
+    std::map<int, double> map_pio_id_mass;
+    std::map<int, std::pair<int, int> > map_pio_id_saved_pair;
+    
     //    std::map<WCPPID::PR3DCluster*, ProtoSegmentSet> map_cluster_segments;
     //std::map<WCPPID::ProtoSegment*, WCPPID::PR3DCluster*> map_segment_cluster;
     
