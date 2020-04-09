@@ -36,7 +36,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
   for (auto it = map_vertex_to_shower.begin(); it!= map_vertex_to_shower.end(); it++){
     std::vector<WCPPID::WCShower*> tmp_showers;
     for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-      if ((*it1)->get_start_vertex().second < 3)
+      if ((*it1)->get_start_vertex().second <3)
 	tmp_showers.push_back(*it1);
     }
     
