@@ -186,7 +186,11 @@ void WCPPID::NeutrinoID::shower_clustering_from_vertices(){
       TVector3 v2(center_p.x - result.second.x,
 		  center_p.y - result.second.y,
 		  center_p.z - result.second.z);
-      double angle = v1.Angle(v2)/3.1415926*180.;
+      Point near_center = pcloud.get_center_point_radius(result.second, 2*units::cm);
+      TVector3 v3(near_center.x - result.second.x,
+		  near_center.y - result.second.y,
+		  near_center.z - result.second.z);
+      double angle = std::min(v1.Angle(v2)/3.1415926*180., v1.Angle(v3)/3.1415926*180.);
       if (angle < min_pi.min_angle){
 	min_pi.min_angle = angle;
 	min_pi.min_dis = result.first;
@@ -198,8 +202,10 @@ void WCPPID::NeutrinoID::shower_clustering_from_vertices(){
 	main_pi.min_dis = result.first;
 	main_pi.min_point = result.second;
       }
-      //  std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << result.first/units::cm << std::endl;
+      //  std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << v1.Angle(v3)/3.1415926*180. << " " << result.first/units::cm << std::endl;
     }
+    //    std::cout << main_pi.min_angle << " " << min_pi.min_angle << std::endl;
+    
     if (main_pi.min_angle < min_pi.min_angle + 3 && min_pi.min_angle > 0.9 * main_pi.min_angle && main_pi.min_dis < min_pi.min_dis * 1.2){
       map_cluster_pi[cluster] = main_pi;
       //
