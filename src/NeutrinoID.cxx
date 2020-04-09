@@ -491,11 +491,11 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
     WCPPID::ProtoSegment* sg= it->first;
     if (map_segment_in_shower.find(sg)!=map_segment_in_shower.end()) continue;
     fill_reco_tree(sg, rtree);
-    // std::cout << sg->get_id() << std::endl;
+    // std::cout << "kak " << sg->get_id() << std::endl;
   }
   for (auto it = showers.begin(); it!=showers.end();it++){
     fill_reco_tree(*it, rtree);
-    // std::cout << "gag " << *it << " " << (*it)->get_start_segment()->get_id() << std::endl;
+    //std::cout << "gag " << *it << " " << (*it)->get_start_segment()->get_id() << std::endl;
   }
 
     // id vs. rtree id
@@ -567,6 +567,8 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
     WCPPID::ProtoSegment* curr_sg = shower->get_start_segment();
     std::pair<ProtoVertex*, int> pair_vertex = shower->get_start_vertex();
 
+    //    std::cout << pair_vertex.second << std::endl;
+    
     if (pair_vertex.second == 1){ // direct connection
       if (pair_vertex.first == main_vertex){
 	rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = 0;

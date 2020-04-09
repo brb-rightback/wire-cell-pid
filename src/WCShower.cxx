@@ -233,9 +233,16 @@ void WCPPID::WCShower::set_start_vertex(ProtoVertex* vertex, int type){
 
 void WCPPID::WCShower::set_start_segment(ProtoSegment* seg){
   start_segment = seg;
+}
 
- 
-  
+void WCPPID::WCShower::set_start_segment(ProtoSegment* seg, Map_Proto_Segment_Vertices& map_segment_vertices){
+  start_segment = seg;
+  for (auto it = map_segment_vertices[start_segment].begin(); it!= map_segment_vertices[start_segment].end(); it++){
+    WCPPID::ProtoVertex *vtx = *it;
+    if (vtx == start_vertex) continue;
+    map_vtx_segs[vtx].insert(start_segment);
+    map_seg_vtxs[start_segment].insert(vtx);
+  }
 }
 
 void WCPPID::WCShower::fill_sets( std::set<WCPPID::ProtoVertex* >& used_vertices,  std::set<WCPPID::ProtoSegment* >& used_segments, bool flag_exclude_start_segment){

@@ -13,6 +13,7 @@ namespace WCPPID{
     // define the initial condition
     void set_start_vertex(ProtoVertex* vertex, int type);
     void set_start_segment(ProtoSegment* seg);
+    void set_start_segment(ProtoSegment* seg, Map_Proto_Segment_Vertices& map_segment_vertices);
     
     std::pair<ProtoVertex*, int> get_start_vertex(){return std::make_pair(start_vertex, start_connection_type);};
     ProtoSegment* get_start_segment(){return start_segment;}
