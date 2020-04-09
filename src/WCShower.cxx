@@ -1,5 +1,7 @@
 #include "WCPPID/WCShower.h"
 
+#include "WCPData/TPCParams.h"
+#include "WCPData/Singleton.h"
 using namespace WCP;
 
 WCPPID::WCShower::WCShower()
@@ -242,6 +244,27 @@ void WCPPID::WCShower::set_start_segment(ProtoSegment* seg, Map_Proto_Segment_Ve
     if (vtx == start_vertex) continue;
     map_vtx_segs[vtx].insert(start_segment);
     map_seg_vtxs[start_segment].insert(vtx);
+  }
+}
+
+void WCPPID::WCShower::update_particle_type(){
+  double track_length = 0; double shower_length = 0;
+  if (map_seg_vtxs.size()>1){
+    for (auto it = map_seg_vtxs.begin(); it!=map_seg_vtxs.end(); it++){
+      WCPPID::ProtoSegment *seg = it->first;
+      if (seg->get_flag_shower() || fabs(seg->get_particle_type())!=2212 ){ // not proton ...
+ 	shower_length += seg->get_length();
+      }else{
+	track_length += seg->get_length();
+      }
+    }
+    if (shower_length > track_length){
+      start_segment->set_particle_type(11);
+      TPCParams& mp = Singleton<TPCParams>::Instance();
+      start_segment->set_particle_mass(mp.get_mass_electron());
+      start_segment->cal_4mom();
+    }
+    //    std::cout << shower_length << " " << track_length << std::endl;
   }
 }
 

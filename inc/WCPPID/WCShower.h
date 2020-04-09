@@ -40,7 +40,9 @@ namespace WCPPID{
     WCP::Point& get_start_point(){return start_point;};
     WCP::Point& get_end_point(){return end_point;};
     TVector3& get_init_dir(){return init_dir;};
-    
+
+    int get_num_segments(){return  map_seg_vtxs.size();};
+    void update_particle_type();
     
     void rebuild_point_clouds();
     void build_point_clouds();
@@ -49,7 +51,7 @@ namespace WCPPID{
 
     //
     std::pair<std::set<WCPPID::ProtoSegment*>, std::set<WCPPID::ProtoVertex*> > get_connected_pieces(WCPPID::ProtoSegment* seg);
-      
+    
     
   protected:
     int particle_type;
