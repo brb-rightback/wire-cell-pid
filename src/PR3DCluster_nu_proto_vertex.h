@@ -3,18 +3,22 @@ bool WCPPID::PR3DCluster::proto_break_tracks(WCP::WCPointCloud<double>::WCPoint&
   double dis1 = sqrt(pow(curr_wcp.x-first_wcp.x,2) + pow(curr_wcp.y-first_wcp.y,2) + pow(curr_wcp.z-first_wcp.z,2));
   double dis2 = sqrt(pow(curr_wcp.x-last_wcp.x,2) + pow(curr_wcp.y-last_wcp.y,2) + pow(curr_wcp.z-last_wcp.z,2));
 
-  //  std::cout << first_wcp.index << " " << curr_wcp.index << " " << last_wcp.index << " " << dis1/units::cm << " " << dis2/units::cm << std::endl;
+  //  std::cout << first_wcp.index << " " << curr_wcp.index << " " << last_wcp.index << " " << dis1/units::cm << " " << dis2/units::cm << " " << flag_pass_check << std::endl;
   
   if (dis1 > 1*units::cm && dis2 > 1*units::cm || flag_pass_check){
     dijkstra_shortest_paths(first_wcp,2);
+    //std::cout << "xixi0 " << std::endl;
     cal_shortest_path(curr_wcp,2);
 
     wcps_list1 = path_wcps;
 
+    //    std::cout << "xixi1 " << std::endl;
+    
     dijkstra_shortest_paths(curr_wcp,2);
     cal_shortest_path(last_wcp,2);
     wcps_list2 = path_wcps;
-
+    
+    // std::cout << "xixi2 " << std::endl;
     
     auto it1 = wcps_list1.rbegin();
     int count = 0;

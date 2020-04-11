@@ -6,6 +6,7 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
   
   WCPPID::ProtoSegment* sg1 = init_first_segment(temp_cluster);
   if (sg1 == 0) return false;
+  //  std::cout << "haha1 " << std::endl;
   
   if (sg1->get_wcpt_vec().size()>1){
     // break tracks ... 
@@ -15,11 +16,14 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
       break_segments(remaining_segments, temp_cluster);
     }else{
       temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
-    }    
+    }
+    // std::cout << "haha2 " << std::endl;
+    
     // find other segments ...
     for (size_t i=0;i!=nrounds_find_other_tracks;i++){
       find_other_segments(temp_cluster, flag_break_track);
     }
+    //    std::cout << "haha3 " << std::endl;
     // examine the vertices ...
     examine_vertices(temp_cluster);
     return true;
@@ -269,6 +273,8 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     
   }
 
+
+
   // Now figure out the Terminal Graph ...
   std::vector<int> terminals;
   std::map<int, int> map_oindex_tindex;
@@ -279,6 +285,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
       terminals.push_back(i);
     }
   }
+  //  std::cout << N << " abc " << terminals.size() << std::endl;
 
   using Vertex = typename boost::graph_traits<WCPPID::MCUGraph>::vertex_descriptor;
   using Edge = typename boost::graph_traits<WCPPID::MCUGraph>::edge_descriptor;
@@ -315,7 +322,9 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 				 boost::closed_plus<Weight>(), std::numeric_limits<Weight>::max(), 0,
 				 boost::make_dijkstra_visitor(paal::detail::make_nearest_recorder(
 												  nearest_terminal_map, last_edge, boost::on_edge_relaxed{})));
-  
+
+
+  //  std::cout << "abc1 " << std::endl; 
   // computing distances between terminals
   // creating terminal_graph
   TerminalGraph terminal_graph(N);
@@ -375,6 +384,8 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
   //std::cout << map_connection.size() << std::endl;
   //    std::cout << map_saved_edge.size() << " " << terminal_edge.size() << std::endl;
 
+  //  std::cout << "abc2 " << std::endl; 
+  
   std::vector<int> component(num_vertices(terminal_graph_cluster));
   const int num = connected_components(terminal_graph_cluster,&component[0]);
   //  std::cout << "jaja: " << num << std::endl;
@@ -604,23 +615,32 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     delete *it;
   }
 
+  //  std::cout << "abc3 " << std::endl;
+  
   bool flag_final_fit = true;
   
   std::vector<WCPPID::ProtoSegment*> new_segments;
   // save segments ...
   for (auto it = saved_clusters.begin(); it!= saved_clusters.end(); it++){
+    //    std::cout << (saved_cluster_points.at(*it)).first << " " << (saved_cluster_points.at(*it)).second << " " << cloud.pts.size() << std::endl;
     // within the new segment, OK ...
     temp_cluster->dijkstra_shortest_paths(cloud.pts[(saved_cluster_points.at(*it)).first],2); 
     temp_cluster->cal_shortest_path(cloud.pts[(saved_cluster_points.at(*it)).second],2);
+
+
+    
     std::list<WCP::WCPointCloud<double>::WCPoint> temp_path_list = temp_cluster->get_path_wcps();
     temp_cluster->collect_charge_trajectory(*ct_point_cloud);
     // do not fit dQ/dx at beginning ...
     temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, false, false);
 
+    //    std::cout << "abc3.2 " <<  " " << temp_cluster->get_fine_tracking_path().size() << std::endl; 
+    
     if (temp_cluster->get_fine_tracking_path().size() >1){      
       WCPPID::ProtoVertex *v1 = find_vertex_other_segment(temp_cluster, true, cloud.pts[(saved_cluster_points.at(*it)).first]);
+      //      std::cout << v1 << std::endl;
       WCPPID::ProtoVertex *v2 = find_vertex_other_segment(temp_cluster, false, cloud.pts[(saved_cluster_points.at(*it)).second]);
-
+      //      std::cout << "abc3.3 " <<  v1 << " " << v2 << std::endl;
       // protection against a corner case crashing the code
       if (v1==v2){
       	double tmp_dis1 = sqrt(pow(v1->get_wcpt().x - cloud.pts[(saved_cluster_points.at(*it)).first].x, 2) + pow(v1->get_wcpt().y - cloud.pts[(saved_cluster_points.at(*it)).first].y,2) + pow(v1->get_wcpt().z - cloud.pts[(saved_cluster_points.at(*it)).first].z,2));
@@ -776,8 +796,10 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 
       //hack ...
       //break;
-    }
-  }
+    } // path > 1
+  } // loop over saved stuff
+
+  //  std::cout << "abc4 " << std::endl;
   
   if (flag_break_track)
     break_segments(new_segments, temp_cluster);
@@ -789,14 +811,14 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 WCPPID::ProtoVertex* WCPPID::NeutrinoID::find_vertex_other_segment(WCPPID::PR3DCluster* temp_cluster, bool flag_forward, WCP::WCPointCloud<double>::WCPoint& wcp){
   WCPPID::ProtoVertex *v1 = 0;
   
-  std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, Point> check_results = check_end_point(temp_cluster->get_fine_tracking_path(), flag_forward);
+  std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, Point> check_results = check_end_point(temp_cluster,temp_cluster->get_fine_tracking_path(), flag_forward);
   //  std::cout << "A: " << flag_forward << " " << std::get<0>(check_results) << " " << std::get<1>(check_results) << " " << std::get<2>(check_results) << std::endl;
   if (std::get<0>(check_results)==0 && std::get<1>(check_results)==0){
-    check_results = check_end_point(temp_cluster->get_fine_tracking_path(), flag_forward, 1.2*units::cm, 2.5*units::cm);
-    // std::cout << "B: " << flag_forward << " " <<  std::get<0>(check_results) << " " << std::get<1>(check_results) << " " << std::get<2>(check_results) << std::endl;
+    check_results = check_end_point(temp_cluster,temp_cluster->get_fine_tracking_path(), flag_forward, 1.2*units::cm, 2.5*units::cm);
+    //std::cout << "B: " << flag_forward << " " <<  std::get<0>(check_results) << " " << std::get<1>(check_results) << " " << std::get<2>(check_results) << std::endl;
   }
   if (std::get<0>(check_results)==0 && std::get<1>(check_results)==0){
-    check_results = check_end_point(temp_cluster->get_fine_tracking_path(), flag_forward, 1.5*units::cm, 3.0*units::cm);
+    check_results = check_end_point(temp_cluster, temp_cluster->get_fine_tracking_path(), flag_forward, 1.5*units::cm, 3.0*units::cm);
   }
 
   //  std::cout << std::get<0>(check_results) << " " << std::get<1>(check_results) << " " << std::get<2>(check_results) << std::endl;
@@ -818,18 +840,22 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::find_vertex_other_segment(WCPPID::PR3DC
      if ((*it2)->get_wcpt().index == sg1->get_wcpt_vec().back().index) end_v = *it2;
    }
    if (start_v ==0 || end_v ==0) std::cout << "Error in finding vertices for a sgement" << std::endl;
+
+ 
    
-   //	if (break_wcp.index==start_v->get_wcpt().index){
+   // std::cout << sqrt(pow(start_v->get_wcpt().x - break_wcp.x,2)+pow(start_v->get_wcpt().y - break_wcp.y,2) + pow(start_v->get_wcpt().z - break_wcp.z,2))/units::cm << " " << sqrt(pow(end_v->get_wcpt().x - break_wcp.x,2)+pow(end_v->get_wcpt().y - break_wcp.y,2) + pow(end_v->get_wcpt().z - break_wcp.z,2))/units::cm << std::endl;
    if (sqrt(pow(start_v->get_wcpt().x - break_wcp.x,2)+pow(start_v->get_wcpt().y - break_wcp.y,2) + pow(start_v->get_wcpt().z - break_wcp.z,2)) < 0.9*units::cm){
      v1 = start_v;
    }else if (sqrt(pow(end_v->get_wcpt().x - break_wcp.x,2)+pow(end_v->get_wcpt().y - break_wcp.y,2) + pow(end_v->get_wcpt().z - break_wcp.z,2)) < 0.9*units::cm){
-     //}else if (break_wcp.index == end_v->get_wcpt().index){
      v1 = end_v;
    }else{
      std::list<WCP::WCPointCloud<double>::WCPoint> wcps_list1;
      std::list<WCP::WCPointCloud<double>::WCPoint> wcps_list2;
+     //std::cout << start_v->get_wcpt().index << " " << break_wcp.index << " " << end_v->get_wcpt().index << std::endl;
      temp_cluster->proto_break_tracks(start_v->get_wcpt(), break_wcp, end_v->get_wcpt(), wcps_list1, wcps_list2, true);
-	  
+     //     std::cout << "xin " << wcps_list1.size() << " " << wcps_list2.size() << std::endl;
+   
+     
      v1 = new WCPPID::ProtoVertex(acc_vertex_id, break_wcp, temp_cluster->get_cluster_id()); acc_vertex_id++;
      WCPPID::ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, wcps_list1, temp_cluster->get_cluster_id()); acc_segment_id++;
      WCPPID::ProtoSegment *sg3 = new WCPPID::ProtoSegment(acc_segment_id, wcps_list2, temp_cluster->get_cluster_id()); acc_segment_id++;
@@ -851,7 +877,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::find_vertex_other_segment(WCPPID::PR3DC
 }
 
 
-std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::NeutrinoID::check_end_point(WCP::PointVector& tracking_path, bool flag_front, double vtx_cut1, double vtx_cut2, double sg_cut1, double sg_cut2 ){
+std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::NeutrinoID::check_end_point(WCPPID::PR3DCluster* temp_cluster, WCP::PointVector& tracking_path, bool flag_front, double vtx_cut1, double vtx_cut2, double sg_cut1, double sg_cut2 ){
 
   if (tracking_path.size()<2) std::cout << "vector size wrong!" << std::endl;
   int ncount = 5;
@@ -896,6 +922,7 @@ std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::Neut
     // check vertex
     for (auto it1 = map_vertex_segments.begin(); it1!= map_vertex_segments.end(); it1++){
       WCPPID::ProtoVertex *test_v = it1->first;
+      if (test_v->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
       Point p1(test_v->get_wcpt().x, test_v->get_wcpt().y, test_v->get_wcpt().z);
       Point p2 = test_v->get_fit_pt();
       
@@ -943,6 +970,7 @@ std::tuple<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*, WCP::Point> WCPPID::Neut
     double min_dis = 1e9;
       
     for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+      if (it->first->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
       std::pair<double, WCP::Point> results = it->first->get_closest_point(test_p);
       if (results.first < sg_cut1){
 	PointVector& points = it->first->get_point_vec();

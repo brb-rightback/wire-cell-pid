@@ -88,7 +88,7 @@ void WCPPID::PR3DCluster::clustering_points_master(Map_Proto_Vertex_Segments& ma
   if (map_pindex_segment.size()>0){
     std::vector<int> terminals;
     for (auto it = map_pindex_segment.begin(); it!=map_pindex_segment.end(); it++){
-      //std::cout << it->first << std::endl;
+      // std::cout << it->first << " " << it->second->get_cluster_id() << std::endl;
       terminals.push_back(it->first);
     }
 
@@ -137,12 +137,14 @@ void WCPPID::PR3DCluster::clustering_points_master(Map_Proto_Vertex_Segments& ma
       int index = nearest_terminal.at(i);
       if (map_pindex_segment.find(index)==map_pindex_segment.end()) {
 	std::cout << "Wrong!  " << index << " " << i << std::endl;
+	temp_points_ids->at(i) = -1;
+      }else{
+	temp_points_ids->at(i) = map_pindex_segment[index]->get_id();
       }
-      temp_points_ids->at(i) = map_pindex_segment[index]->get_id();
       //std::cout << i << " " << nearest_terminal.at(i) << std::endl;
       //
     }
-    //  std::cout << nearest_terminal.size() << " " << N << std::endl;
+    //    std::cout << nearest_terminal.size() << " " << N << std::endl;
     
     WCPPID::ProtoSegmentSelection temp_segments;
     for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
@@ -154,6 +156,7 @@ void WCPPID::PR3DCluster::clustering_points_master(Map_Proto_Vertex_Segments& ma
     
     // now examine to remove ghost points ....
     for (size_t i=0;i!=N;i++){
+      if (map_pindex_segment.find(nearest_terminal.at(i)) == map_pindex_segment.end()) continue;
       Point p(cloud.pts[i].x, cloud.pts[i].y, cloud.pts[i].z);
       WCPPID::ProtoSegment *main_sg = map_pindex_segment[nearest_terminal.at(i)];
 
