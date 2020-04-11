@@ -198,6 +198,21 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
   }
 }
 
+void WCPPID::PR3DCluster::calc_num_components(){
+  std::cout << cluster_id << " " << graph << " " << graph_steiner << std::endl;
+  if (graph==0 || graph_steiner==0) return;
+  {
+    std::vector<int> component(num_vertices(*graph)); 
+    const int num = connected_components(*graph,&component[0]); 
+    std::cout << cluster_id << " " << num << " ";
+  }
+  {
+    std::vector<int> component(num_vertices(*graph_steiner)); 
+    const int num = connected_components(*graph_steiner,&component[0]); 
+    std::cout << num << " " << std::endl;
+  }
+}
+
 
 WCPPID::PR3DCluster::PR3DCluster(int cluster_id)
   : cluster_id(cluster_id)

@@ -102,8 +102,10 @@ namespace WCPPID{
     std::vector<bool>& get_flag_steiner_terminal(){return flag_steiner_terminal;};
     MCUGraph* get_graph_steiner(){return graph_steiner;};
     MCUGraph* get_graph(){return graph;};
+
+    void calc_num_components();
     
-    // example for more sophisticated algorithm later ...
+    // example for moresophisticated algorithm later ...
     // use the full steiner terminal graph ...
     void recover_steiner_graph();
 

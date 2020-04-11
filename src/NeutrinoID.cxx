@@ -68,6 +68,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
       //      std::cout << (*it)->get_cluster_id() << std::endl;
       (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+      
       //      std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
       // do not break track and find other tracks ...
       if (!find_proto_vertex(*it, false, 1)) init_point_segment(*it);
@@ -85,7 +86,9 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   if (flag_other_clusters){
     //deal with the other clusters ...
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
-      std::cout << (*it)->get_cluster_id() << std::endl;
+      // test ...
+      //(*it)->calc_num_components();
+      //  std::cout << (*it)->get_cluster_id() << std::endl;
       clustering_points(*it);
     }
   }

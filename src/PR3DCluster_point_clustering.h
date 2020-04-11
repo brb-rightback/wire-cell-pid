@@ -98,7 +98,6 @@ void WCPPID::PR3DCluster::clustering_points_master(Map_Proto_Vertex_Segments& ma
     using Vertex = typename boost::graph_traits<WCPPID::MCUGraph>::vertex_descriptor;
     using Edge = typename boost::graph_traits<WCPPID::MCUGraph>::edge_descriptor;
     using Base = typename boost::property<edge_base_t, Edge>;
-    // using EdgeWeightMap = typename boost::choose_const_pmap(boost::get_param(boost::no_named_parameters(), boost::edge_weight), *graph, boost::edge_weight);
     using EdgeWeightMap = typename boost::property_map<WCPPID::MCUGraph, boost::edge_weight_t>::type;
     using Weight = typename boost::property_traits<EdgeWeightMap>::value_type;
     using WeightProperty =
@@ -130,13 +129,23 @@ void WCPPID::PR3DCluster::clustering_points_master(Map_Proto_Vertex_Segments& ma
 				   boost::closed_plus<Weight>(), std::numeric_limits<Weight>::max(), 0,
 				   boost::make_dijkstra_visitor(paal::detail::make_nearest_recorder(
 												    nearest_terminal_map, last_edge, boost::on_edge_relaxed{})));
-    
-    
+
+    /* if (cluster_id==66)  { */
+    /* /\*   typename boost::graph_traits<WCPPID::MCUGraph>::out_edge_iterator ei, ei_end; *\/ */
+    /* /\*   for (boost::tie(ei, ei_end) = out_edges(1676, *temp_graph); ei != ei_end; ++ei){ *\/ */
+    /* /\* 	auto source = boost::source(*ei, *temp_graph); *\/ */
+    /* /\* 	auto target = boost::target(*ei, *temp_graph); *\/ */
+    /* /\* 	std::cout << "There is an edge from " << source << " to " << target << std::endl;  *\/ */
+    /* /\*   } *\/ */
+    /*   std::vector<int> component(num_vertices(*temp_graph)); */
+    /*   const int num = connected_components(*temp_graph,&component[0]); */
+    /*   std::cout << num << std::endl; */
+    /* }  */
     
     for (size_t i=0;i!=nearest_terminal.size();i++){
       int index = nearest_terminal.at(i);
       if (map_pindex_segment.find(index)==map_pindex_segment.end()) {
-	std::cout << "Wrong!  " << index << " " << i << std::endl;
+	//	std::cout << "Wrong, no terminal found!  " << index << " " << i << std::endl;
 	temp_points_ids->at(i) = -1;
       }else{
 	temp_points_ids->at(i) = map_pindex_segment[index]->get_id();

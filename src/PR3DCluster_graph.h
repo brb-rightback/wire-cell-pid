@@ -524,7 +524,7 @@ void WCPPID::PR3DCluster::Create_graph(WCP::ToyCTPointCloud& ct_point_cloud, WCP
   graph = new MCUGraph(N);
 
 
-  
+  //  std::cout << "test1 " << std::endl; 
   Establish_close_connected_graph();
   Connect_graph(ct_point_cloud, ref_point_cloud);
   Connect_graph(ref_point_cloud);
@@ -546,11 +546,13 @@ void WCPPID::PR3DCluster::Create_graph(WCP::ToyPointCloud* ref_point_cloud){
   const int N = point_cloud->get_num_points();
   graph = new WCPPID::MCUGraph(N);
 
-  //  std::cout <<"Create Graph! " << cluster_id  << " " << N << std::endl; 
   
+  //std::cout << "test " << std::endl; 
   Establish_close_connected_graph();
   Connect_graph(ref_point_cloud);
-  
+  //std::cout <<"Create Graph! " << cluster_id  << " " << N << std::endl;
+  //Connect_graph(ref_point_cloud);
+  //calc_num_components();
 }
 
 
@@ -1156,6 +1158,7 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyPointCloud* ref_point_cloud){
   const int num = connected_components(*graph,&component[0]);
   
   if (num >1){
+    //std::cout << cluster_id << " " << num << std::endl;
     //for separated kd tree to find the closest points between disconnected components,
     std::vector<ToyPointCloud*> pt_clouds;
     for (int j=0;j!=num;j++){
@@ -1187,6 +1190,7 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyPointCloud* ref_point_cloud){
       //   std::cout << "Vertex " << i << " " << cloud.pts[i].x << " " << cloud.pts[i].y << " " << cloud.pts[i].z << " " << cloud.pts[i].index_u << " " << cloud.pts[i].index_v << " " << cloud.pts[i].index_w << " " << cloud.pts[i].mcell << " " << cloud.pts[i].mcell->GetTimeSlice()  << " is in component " << component[i] << std::endl;
     }
     for (int j=0;j!=num;j++){
+      //std::cout << j << " " << pt_clouds.at(j)->get_num_points() << std::endl;
       pt_clouds.at(j)->build_kdtree_index();
     }
     
@@ -1376,8 +1380,7 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyPointCloud* ref_point_cloud){
     // according to direction ...
     for (int j=0;j!=num;j++){
       for (int k=j+1;k!=num;k++){
-	if (std::get<0>(index_index_dis_mst[j][k])>=0){
-	  
+	if (std::get<0>(index_index_dis_mst[j][k])>=0){	  
 	  if (std::get<2>(index_index_dis_mst[j][k])>5*units::cm){
 	    auto edge = add_edge(std::get<0>(index_index_dis_mst[j][k]),std::get<1>(index_index_dis_mst[j][k]),WCPPID::EdgeProp(std::get<2>(index_index_dis_mst[j][k])),*graph);
 	  }else{
@@ -1405,7 +1408,6 @@ void WCPPID::PR3DCluster::Connect_graph(WCP::ToyPointCloud* ref_point_cloud){
 	    //	    std::cout << "Xin6: " << std::get<0>(index_index_dis_dir2[j][k]) << " " << std::get<1>(index_index_dis_dir2[j][k]) << " " << std::get<2>(index_index_dis_dir2[j][k]) << std::endl;
 	  }
 	}
-	
 	
       }
     }
