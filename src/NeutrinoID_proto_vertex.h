@@ -79,7 +79,7 @@ WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster
   temp_cluster->dijkstra_shortest_paths(wcps.first,2); 
   temp_cluster->cal_shortest_path(wcps.second,2);
 
-  //  std::cout << wcps.first.index << " " << wcps.first.x << " " << wcps.first.y << " " << wcps.first.z << " " << wcps.second.index << " " << wcps.second.x << " " << wcps.second.y << " " << wcps.second.z << std::endl;
+  //  std::cout << wcps.first.index << " " << wcps.first.x << " " << wcps.first.y << " " << wcps.first.z << " " << wcps.first.index_u << " " << wcps.first.index_v << " " << wcps.first.index_w << " " << wcps.second.index << " " << wcps.second.x << " " << wcps.second.y << " " << wcps.second.z << " " << wcps.second.index_u << " " << wcps.second.index_v << " " << wcps.second.index_w << " " << std::endl;
   
   WCPPID::ProtoVertex *v1=0;
   WCPPID::ProtoVertex *v2=0;
@@ -97,11 +97,13 @@ WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster
     // fit dQ/dx and everything ...
     temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true);
 
-    //    std::cout << temp_cluster->get_fine_tracking_path().size() << " " << temp_cluster->get_dx().size() << " " << temp_cluster->get_fine_tracking_path().front() << " " << temp_cluster->get_fine_tracking_path().back() << std::endl;
+
     
     v1->set_fit(temp_cluster->get_fine_tracking_path().front(), temp_cluster->get_dQ().front(), temp_cluster->get_dx().front(), temp_cluster->get_pu().front(), temp_cluster->get_pv().front(), temp_cluster->get_pw().front(), temp_cluster->get_pt().front(), temp_cluster->get_reduced_chi2().front());
     v2->set_fit(temp_cluster->get_fine_tracking_path().back(), temp_cluster->get_dQ().back(), temp_cluster->get_dx().back(), temp_cluster->get_pu().back(), temp_cluster->get_pv().back(), temp_cluster->get_pw().back(), temp_cluster->get_pt().back(), temp_cluster->get_reduced_chi2().back());
     sg1->set_fit_vec(temp_cluster->get_fine_tracking_path(), temp_cluster->get_dQ(), temp_cluster->get_dx(), temp_cluster->get_pu(), temp_cluster->get_pv(), temp_cluster->get_pw(), temp_cluster->get_pt(), temp_cluster->get_reduced_chi2());
+
+    //    std::cout << temp_cluster->get_fine_tracking_path().size() << " " << temp_cluster->get_dx().size() << " " << temp_cluster->get_fine_tracking_path().front() << " " << temp_cluster->get_fine_tracking_path().back() << " " << v1->get_pw() << " " << wcps.first.index_w << std::endl;
   }
   //else{
   //  v1 = new WCPPID::ProtoVertex(acc_vertex_id, wcps.first, temp_cluster->get_cluster_id()); acc_vertex_id++;

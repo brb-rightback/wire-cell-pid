@@ -75,7 +75,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
   // first round of organizing the path from the path_wcps (shortest path)
   double low_dis_limit = 1.2*units::cm;
   double end_point_limit = 0.6*units::cm;
-  organize_segments_path(map_vertex_segments, map_segment_vertices, low_dis_limit, end_point_limit);
+  organize_segments_path(ct_point_cloud, map_vertex_segments, map_segment_vertices, low_dis_limit, end_point_limit);
 
   
   
@@ -184,7 +184,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     /*   std::cout << sg->get_wcpt_vec().size() << " A " << sg->get_point_vec().size() << " " << sg->get_point_vec().front() << " " << sg->get_point_vec().back() << std::endl; */
     /* } */
     // organize path
-    organize_segments_path_2nd(map_vertex_segments, map_segment_vertices, low_dis_limit, end_point_limit);    
+    organize_segments_path_2nd(ct_point_cloud, map_vertex_segments, map_segment_vertices, low_dis_limit, end_point_limit);    
     
     //    std::cout << "haha3_1 " << std::endl;
     
@@ -244,7 +244,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     //    std::cout << "haha3_3 " << std::endl;
     // organize path
     low_dis_limit = 0.6*units::cm;
-    organize_segments_path_3rd(map_vertex_segments, map_segment_vertices, low_dis_limit);
+    organize_segments_path_3rd(ct_point_cloud, map_vertex_segments, map_segment_vertices, low_dis_limit);
   }
   
   //  std::cout << "haha4 " << std::endl;
@@ -1163,7 +1163,7 @@ void WCPPID::PR3DCluster::update_association(std::set<std::pair<int,int> >& temp
 
 
 
-void WCPPID::PR3DCluster::organize_segments_path_3rd(WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments, WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices, double step_size){
+void WCPPID::PR3DCluster::organize_segments_path_3rd(WCP::ToyCTPointCloud& ct_point_cloud, WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments, WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices, double step_size){
   TPCParams& mp = Singleton<TPCParams>::Instance();
   double pitch_u = mp.get_pitch_u();
   double pitch_v = mp.get_pitch_v();
@@ -1241,14 +1241,20 @@ void WCPPID::PR3DCluster::organize_segments_path_3rd(WCPPID::Map_Proto_Vertex_Se
 	end_v = vt;
       }
     }
+    bool flag_startv_end = true;
+    bool flag_endv_end = true;
+    if (map_vertex_segments[start_v].size()>1) flag_startv_end = false;
+    if (map_vertex_segments[end_v].size()>1) flag_endv_end = false;
     
     PointVector pts;
-    PointVector curr_pts = sg->get_point_vec();
+    PointVector curr_pts = examine_end_ps_vec(ct_point_cloud, sg->get_point_vec(), flag_startv_end, flag_endv_end); //= sg->get_point_vec();
     Point start_p, end_p;
     
     start_p = curr_pts.front();
     end_p = curr_pts.back();
-           
+
+    //    std::cout << start_p << " " << end_p << std::endl;
+    
     // middle points
     pts.push_back(start_p);
     double dis_end;
@@ -1367,7 +1373,7 @@ void WCPPID::PR3DCluster::organize_segments_path_3rd(WCPPID::Map_Proto_Vertex_Se
   
 }
 
-void WCPPID::PR3DCluster::organize_segments_path_2nd(WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments, WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices,double low_dis_limit, double end_point_limit){
+void WCPPID::PR3DCluster::organize_segments_path_2nd(WCP::ToyCTPointCloud& ct_point_cloud, WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments, WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices,double low_dis_limit, double end_point_limit){
   TPCParams& mp = Singleton<TPCParams>::Instance();
   double pitch_u = mp.get_pitch_u();
   double pitch_v = mp.get_pitch_v();
@@ -1451,7 +1457,7 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCPPID::Map_Proto_Vertex_Se
     if (map_vertex_segments[end_v].size()>1) flag_endv_end = false;
 
     PointVector pts;
-    PointVector curr_pts = sg->get_point_vec();
+    PointVector curr_pts = examine_end_ps_vec(ct_point_cloud, sg->get_point_vec(), flag_startv_end, flag_endv_end);
     Point start_p, end_p;
 
     if (!start_v->get_flag_fit_fix()){
@@ -1501,6 +1507,8 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCPPID::Map_Proto_Vertex_Se
       end_p = end_v->get_fit_pt();
     }
 
+    
+    //    std::cout << start_p << " " << end_p << std::endl;
     
 
     
@@ -1594,7 +1602,7 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCPPID::Map_Proto_Vertex_Se
   }
 }
 
-void WCPPID::PR3DCluster::organize_segments_path(WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments, WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices, double low_dis_limit, double end_point_limit){
+void WCPPID::PR3DCluster::organize_segments_path(WCP::ToyCTPointCloud& ct_point_cloud, WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments, WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices, double low_dis_limit, double end_point_limit){
   
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
@@ -1669,6 +1677,8 @@ void WCPPID::PR3DCluster::organize_segments_path(WCPPID::Map_Proto_Vertex_Segmen
     }else{
       end_p = end_v->get_fit_pt();
     }
+
+    //    std::cout << start_p << " " << end_p << std::endl;
     
     // middle points
     pts.push_back(start_p);

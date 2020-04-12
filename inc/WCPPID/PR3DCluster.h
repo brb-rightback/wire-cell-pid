@@ -180,13 +180,16 @@ namespace WCPPID{
     void do_multi_tracking(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double time = 4*units::microsecond, bool flag_dQ_dx_fit_reg = true, bool flag_dQ_dx_fit = true, bool flag_exclusion = false);
     
     // organize path from the shortest path 
-    WCP::PointVector organize_wcps_path(std::list<WCP::WCPointCloud<double>::WCPoint>& path_wcps_list,  double low_dis_limit, double end_point_limit);
-    void organize_ps_path(WCP::PointVector& ps_vec, double low_dis_limit, double end_point_limit);
+    WCP::PointVector organize_wcps_path(WCP::ToyCTPointCloud& ct_point_cloud, std::list<WCP::WCPointCloud<double>::WCPoint>& path_wcps_list,  double low_dis_limit, double end_point_limit);
+    void organize_ps_path(WCP::ToyCTPointCloud& ct_point_cloud, WCP::PointVector& ps_vec, double low_dis_limit, double end_point_limit);
+
+    WCP::PointVector examine_end_ps_vec(WCP::ToyCTPointCloud& ct_point_cloud, WCP::PointVector& pts, bool flag_start, bool flag_end);
+    
     // prepare data
     void prepare_data(WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_ut_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_vt_charge, std::map<std::pair<int,int>,std::tuple<double,double, int> >& map_2D_wt_charge);
-    void organize_segments_path(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices,double low_dis_limit, double end_point_limit);
-    void organize_segments_path_2nd(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices,double low_dis_limit, double end_point_limit);
-    void organize_segments_path_3rd(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices,double step_size);
+    void organize_segments_path(WCP::ToyCTPointCloud& ct_point_cloud, Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices,double low_dis_limit, double end_point_limit);
+    void organize_segments_path_2nd(WCP::ToyCTPointCloud& ct_point_cloud, Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices,double low_dis_limit, double end_point_limit);
+    void organize_segments_path_3rd(WCP::ToyCTPointCloud& ct_point_cloud, Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices,double step_size);
 
     // form map ...
     void form_map(WCP::ToyCTPointCloud& ct_point_cloud, WCP::PointVector& pts,

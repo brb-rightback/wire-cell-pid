@@ -1843,8 +1843,71 @@ void WCPPID::PR3DCluster::prepare_data(WCP::ToyCTPointCloud& ct_point_cloud, std
   
 }
 
-void WCPPID::PR3DCluster::organize_ps_path(WCP::PointVector& pts, double low_dis_limit, double end_point_limit){
-  WCP::PointVector ps_vec = pts;
+WCP::PointVector WCPPID::PR3DCluster::examine_end_ps_vec(WCP::ToyCTPointCloud& ct_point_cloud, WCP::PointVector& pts, bool flag_start, bool flag_end){
+  std::list<Point> ps_list(pts.begin(), pts.end());
+
+  if (flag_start){
+    // test start
+    Point temp_start = ps_list.front(); 
+    while (ps_list.size()>0){
+      if (ct_point_cloud.is_good_point(ps_list.front(), 0.2*units::cm,0,0)) break;
+      temp_start = ps_list.front();
+      ps_list.pop_front();
+    }
+    
+    if (ps_list.size()>0){
+      double dis_step = 0.2*units::cm;
+      double temp_dis = sqrt(pow(temp_start.x - ps_list.front().x,2) + pow(temp_start.y - ps_list.front().y,2) + pow(temp_start.z - ps_list.front().z,2));
+      int ntest = std::round(temp_dis/dis_step);
+      for (size_t i=1;i<ntest;i++){
+	Point test_p(temp_start.x + (ps_list.front().x - temp_start.x)/ntest * i,
+		     temp_start.y + (ps_list.front().y - temp_start.y)/ntest * i,
+		     temp_start.z + (ps_list.front().z - temp_start.z)/ntest * i);
+	if (ct_point_cloud.is_good_point(test_p, 0.2*units::cm,0,0)){
+	  ps_list.push_front(test_p);
+	  break;
+	}
+      }
+    }else{
+      ps_list.push_front(temp_start);
+    }
+  }
+
+  if (flag_end){
+    Point temp_end = ps_list.back();
+    while (ps_list.size()>0){
+      if (ct_point_cloud.is_good_point(ps_list.back(), 0.2*units::cm,0,0)) break;
+      temp_end = ps_list.back();
+      ps_list.pop_back();
+    }
+    if (ps_list.size()>0){
+      double dis_step = 0.2*units::cm;
+      double temp_dis = sqrt(pow(temp_end.x - ps_list.back().x,2) + pow(temp_end.y - ps_list.back().y,2) + pow(temp_end.z - ps_list.back().z,2));
+      int ntest = std::round(temp_dis/dis_step);
+      for (size_t i=1;i<ntest;i++){
+	Point test_p(temp_end.x + (ps_list.back().x - temp_end.x)/ntest * i,
+		     temp_end.y + (ps_list.back().y - temp_end.y)/ntest * i,
+		     temp_end.z + (ps_list.back().z - temp_end.z)/ntest * i);
+	if (ct_point_cloud.is_good_point(test_p, 0.2*units::cm,0,0)){
+	  ps_list.push_back(test_p);
+	  break;
+	}
+      }
+    }else{
+      ps_list.push_back(temp_end);
+    }
+  }
+
+  
+  PointVector tmp_pts(ps_list.begin(), ps_list.end());
+  return tmp_pts;
+
+}
+
+void WCPPID::PR3DCluster::organize_ps_path(WCP::ToyCTPointCloud& ct_point_cloud, WCP::PointVector& pts, double low_dis_limit, double end_point_limit){
+
+  
+  WCP::PointVector ps_vec = examine_end_ps_vec(ct_point_cloud, pts, true, true);
   pts.clear();
   // fill in the beginning part
   {
@@ -1856,12 +1919,13 @@ void WCPPID::PR3DCluster::organize_ps_path(WCP::PointVector& pts, double low_dis
       dis1 = sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2)+pow(p1.z-p2.z,2));
       if (dis1 > low_dis_limit) break;
     }
-    
+    //    std::cout << ct_point_cloud.is_good_point(p1, 0.2*units::cm,0,0) << " " << p1 << std::endl;
     if (dis1 > low_dis_limit){
       p1.x += (p1.x - p2.x)/dis1 * end_point_limit;
       p1.y += (p1.y - p2.y)/dis1 * end_point_limit;
       p1.z += (p1.z - p2.z)/dis1 * end_point_limit;
       pts.push_back(p1);
+      //std::cout << ct_point_cloud.is_good_point(p1, 0.2*units::cm,0,0) << " " << p1 << std::endl;
     }
   }
   
@@ -1920,7 +1984,7 @@ void WCPPID::PR3DCluster::organize_ps_path(WCP::PointVector& pts, double low_dis
     pts = ps_vec;
 }
 
-WCP::PointVector WCPPID::PR3DCluster::organize_wcps_path(std::list<WCPointCloud<double>::WCPoint>& path_wcps_list,  double low_dis_limit, double end_point_limit){
+WCP::PointVector WCPPID::PR3DCluster::organize_wcps_path(WCP::ToyCTPointCloud& ct_point_cloud, std::list<WCPointCloud<double>::WCPoint>& path_wcps_list,  double low_dis_limit, double end_point_limit){
 
   PointVector pts;
   

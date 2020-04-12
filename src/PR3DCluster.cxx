@@ -61,7 +61,7 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
   double low_dis_limit = 1.2*units::cm;
   double end_point_limit = 0.6*units::cm;
   //std::cout << path_wcps.size() << std::endl;
-  PointVector pts = organize_wcps_path(path_wcps,low_dis_limit, end_point_limit); 
+  PointVector pts = organize_wcps_path(ct_point_cloud, path_wcps,low_dis_limit, end_point_limit); 
   if (pts.size()==0) return;
   else if (pts.size()==1){
     if (sqrt(pow(path_wcps.back().x - pts.back().x,2)+pow(path_wcps.back().y - pts.back().y,2)+pow(path_wcps.back().z - pts.back().z,2))<0.01*units::cm ){
@@ -125,7 +125,7 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
     end_point_limit = 0.3*units::cm;
 
     //std::cout << pts.size() << std::endl;
-    organize_ps_path(pts, low_dis_limit, end_point_limit); 
+    organize_ps_path(ct_point_cloud, pts, low_dis_limit, end_point_limit); 
     //std::cout << pts.size() << std::endl;
     
     
@@ -158,7 +158,7 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
     
     // examine trajectory ... // no angle at the moment ...
     //std::cout << pts.size() << std::endl;
-    organize_ps_path(pts, low_dis_limit, 0);
+    organize_ps_path(ct_point_cloud, pts, low_dis_limit, 0);
     //std::cout << pts.size() << std::endl;
     // std::cout << "dQ/dx fit " << pts.size() << std::endl;
   }
