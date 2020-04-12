@@ -70,6 +70,9 @@ bool WCPPID::ProtoSegment::is_shower_topology(){
   std::vector<PointVector > local_points_vec(fit_pt_vec.size());
   std::vector<std::tuple<double, double, double> > vec_rms_vals(fit_pt_vec.size(), std::make_tuple(0,0,0));
   std::vector<double> vec_dQ_dx(fit_pt_vec.size(), 0);
+
+  //  std::cout << fit_pt_vec.size() << " " << pcloud_associated << " " << std::endl;
+  if (pcloud_associated == 0 ) return false;
   
   WCP::WCPointCloud<double>& cloud = pcloud_associated->get_cloud();
 
