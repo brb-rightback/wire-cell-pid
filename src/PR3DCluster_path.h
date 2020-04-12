@@ -287,6 +287,7 @@ std::pair<WCP::WCPointCloud<double>::WCPoint,WCP::WCPointCloud<double>::WCPoint>
   }
   //  std::cout << temp_point_cloud << std::endl;
   WCP::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
+  if (cloud.pts.size()==1) return std::make_pair(cloud.pts[0], cloud.pts[0]);
   // std::cout << cloud.pts.size() << " " << flag << std::endl;
   WCPointCloud<double>::WCPoint extreme_wcp[14];
   
@@ -620,23 +621,27 @@ void WCPPID::PR3DCluster::dijkstra_shortest_paths(WCPointCloud<double>::WCPoint&
   if (flag==1){
     parents.resize(num_vertices(*graph));
     distances.resize(num_vertices(*graph));
-    
+
+    //    if (num_vertices(*graph)>1){
     auto v0 = vertex(wcp.index,*graph);
     boost::dijkstra_shortest_paths(*graph, v0,
 				   weight_map(get(edge_weight, *graph))
 				   .predecessor_map(&parents[0])
 				   .distance_map(&distances[0])
 				   );
+    //}
   }else if (flag==2){
     parents.resize(num_vertices(*graph_steiner));
     distances.resize(num_vertices(*graph_steiner));
     
+    //    if (num_vertices(*graph_steiner)>1){
     auto v0 = vertex(wcp.index,*graph_steiner);
     boost::dijkstra_shortest_paths(*graph_steiner, v0,
 				   weight_map(get(edge_weight, *graph_steiner))
 				   .predecessor_map(&parents[0])
 				   .distance_map(&distances[0])
 				   );
+    //}
   }
 }
 
@@ -652,6 +657,8 @@ void WCPPID::PR3DCluster::cal_shortest_path(WCPointCloud<double>::WCPoint& wcp_t
   }
   
   WCP::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
+  //  std::cout << dest_wcp_index << " " << source_wcp_index << std::endl;
+  //  if ( dest_wcp_index != source_wcp_index && cloud.pts.size()>1){
   int prev_i = -1;
   for(int i = dest_wcp_index; i!=source_wcp_index; i = parents[i]) {
     if (path_wcps.size()==0){
@@ -668,7 +675,10 @@ void WCPPID::PR3DCluster::cal_shortest_path(WCPointCloud<double>::WCPoint& wcp_t
   path_wcps.push_front(cloud.pts[source_wcp_index]);
   if (cloud.pts[source_wcp_index].mcell!=path_mcells.front())
     path_mcells.push_front(cloud.pts[source_wcp_index].mcell);
-
+  //}else{
+  //  path_wcps.push_front(cloud.pts[source_wcp_index]);
+  //  path_mcells.push_front(cloud.pts[source_wcp_index].mcell);
+  // }
   parents.clear();
   distances.clear();
 }
