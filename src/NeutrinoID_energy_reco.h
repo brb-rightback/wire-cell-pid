@@ -63,22 +63,27 @@ double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::WCShower *shower){
   WCP::ToyPointCloud* pcloud1 = shower->get_associated_pcloud();
   WCP::ToyPointCloud* pcloud2 = shower->get_fit_pcloud();
   
+  
   for (auto it = charge_2d_u.begin(); it!= charge_2d_u.end(); it++){
     std::pair<double, double> p2d = ct_point_cloud->convert_time_ch_2Dpoint(it->first.first, it->first.second, 0);
-    double dis = pcloud1->get_closest_2d_dis(p2d.first, p2d.second, 0);
+    double dis = 1e9;
+    if (pcloud1!=0) dis = pcloud1->get_closest_2d_dis(p2d.first, p2d.second, 0);
     if (dis < 0.6*units::cm) sum_u_charge += it->second.first;
     else{
-      dis = pcloud2->get_closest_2d_dis(p2d.first, p2d.second, 0);
+      dis = 1e9;
+      if (pcloud2!=0) dis = pcloud2->get_closest_2d_dis(p2d.first, p2d.second, 0);
       if (dis < 0.6*units::cm) sum_u_charge += it->second.first;
     }
   }
 
   for (auto it = charge_2d_v.begin(); it!= charge_2d_v.end(); it++){
     std::pair<double, double> p2d = ct_point_cloud->convert_time_ch_2Dpoint(it->first.first, it->first.second, 1);
-    double dis = pcloud1->get_closest_2d_dis(p2d.first, p2d.second, 1);
+    double dis = 1e9;
+    if (pcloud1!=0) dis = pcloud1->get_closest_2d_dis(p2d.first, p2d.second, 1);
     if (dis < 0.6*units::cm) sum_v_charge += it->second.first;
     else{
-      dis = pcloud2->get_closest_2d_dis(p2d.first, p2d.second, 1);
+      dis = 1e9;
+      if (pcloud2!=0) dis = pcloud2->get_closest_2d_dis(p2d.first, p2d.second, 1);
       if (dis < 0.6*units::cm) sum_v_charge += it->second.first;
     }
   }
@@ -86,10 +91,12 @@ double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::WCShower *shower){
   
   for (auto it = charge_2d_w.begin(); it!= charge_2d_w.end(); it++){
     std::pair<double, double> p2d = ct_point_cloud->convert_time_ch_2Dpoint(it->first.first, it->first.second, 2);
-    double dis = pcloud1->get_closest_2d_dis(p2d.first, p2d.second, 2);
+    double dis = 1e9;
+    if (pcloud1!=0) dis = pcloud1->get_closest_2d_dis(p2d.first, p2d.second, 2);
     if (dis < 0.6*units::cm) sum_w_charge += it->second.first;
     else{
-      dis = pcloud2->get_closest_2d_dis(p2d.first, p2d.second, 2);
+      dis = 1e9;
+      if (pcloud2!=0) dis = pcloud2->get_closest_2d_dis(p2d.first, p2d.second, 2);
       if (dis < 0.6*units::cm) sum_w_charge += it->second.first;
     }
   }

@@ -57,12 +57,14 @@ void WCPPID::WCShower::build_point_clouds(){
     for (auto it = map_seg_vtxs.begin(); it!= map_seg_vtxs.end(); it++){
       WCPPID::ProtoSegment *sg = it->first;
       ToyPointCloud* sg_pcloud = sg->get_associated_pcloud();
-      WCP::WCPointCloud<double>& sg_cloud = sg_pcloud->get_cloud();
-      WCP::WC2DPointCloud<double>& sg_cloud_u = sg_pcloud->get_cloud_u();
-      WCP::WC2DPointCloud<double>& sg_cloud_v = sg_pcloud->get_cloud_v();
-      WCP::WC2DPointCloud<double>& sg_cloud_w = sg_pcloud->get_cloud_w();
-      for (size_t i=0;i!=sg_cloud.pts.size();i++){
-	pcloud_associated->AddPoint(sg_cloud.pts.at(i), sg_cloud_u.pts.at(i), sg_cloud_v.pts.at(i), sg_cloud_w.pts.at(i));
+      if (sg_pcloud!=0){
+	WCP::WCPointCloud<double>& sg_cloud = sg_pcloud->get_cloud();
+	WCP::WC2DPointCloud<double>& sg_cloud_u = sg_pcloud->get_cloud_u();
+	WCP::WC2DPointCloud<double>& sg_cloud_v = sg_pcloud->get_cloud_v();
+	WCP::WC2DPointCloud<double>& sg_cloud_w = sg_pcloud->get_cloud_w();
+	for (size_t i=0;i!=sg_cloud.pts.size();i++){
+	  pcloud_associated->AddPoint(sg_cloud.pts.at(i), sg_cloud_u.pts.at(i), sg_cloud_v.pts.at(i), sg_cloud_w.pts.at(i));
+	}
       }
     }
     pcloud_associated->build_kdtree_index();

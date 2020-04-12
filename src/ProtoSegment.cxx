@@ -1238,6 +1238,7 @@ std::tuple<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> W
     }
   }
 
+ 
   if (nbreak_fit == 0 || nbreak_fit+1 == fit_pt_vec.size()){
     return std::make_tuple(this, (WCPPID::ProtoVertex*)0, (WCPPID::ProtoSegment*)0);
   }else{
@@ -1245,6 +1246,9 @@ std::tuple<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> W
     if (nbreak+1==wcpt_vec.size()) nbreak --;
   }
 
+  //  std::cout << nbreak_fit << " " << fit_pt_vec.size() << " " << nbreak << " " << wcpt_vec.size() << std::endl;
+ 
+  
   // Now start to construct new segment ...
   std::list<WCP::WCPointCloud<double>::WCPoint > path_wcps1;
   std::list<WCP::WCPointCloud<double>::WCPoint > path_wcps2;
@@ -1366,10 +1370,15 @@ std::tuple<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> W
   }
 
   // std::cout << nbreak_fit << " " << fit_pt_vec.size() << std::endl;
-  // std::cout << fit_pt_vec2.size() << " " << dQ_vec2.size() << " " << dx_vec2.size() << " " << pu_vec2.size() << " " << pv_vec2.size() << " " << pw_vec2.size() << " " << pt_vec2.size() << " " << reduced_chi2_vec2.size() << " " << fit_index_vec2.size() << " " << fit_flag_skip2.size() << std::endl;
+  //  std::cout << fit_pt_vec2.size() << " " << dQ_vec2.size() << " " << dx_vec2.size() << " " << pu_vec2.size() << " " << pv_vec2.size() << " " << pw_vec2.size() << " " << pt_vec2.size() << " " << reduced_chi2_vec2.size() << " " << fit_index_vec2.size() << " " << fit_flag_skip2.size() << std::endl;
 
+  
+  
   sg1->build_pcloud_fit();
   sg2->build_pcloud_fit();
+
+  //  std::cout << fit_pt_vec2.size() << " " << dQ_vec2.size() << " " << dx_vec2.size() << " " << pu_vec2.size() << " " << pv_vec2.size() << " " << pw_vec2.size() << " " << pt_vec2.size() << " " << reduced_chi2_vec2.size() << " " << fit_index_vec2.size() << " " << fit_flag_skip2.size() << std::endl;
+
   sg1->cal_4mom();
   sg2->cal_4mom();
 
@@ -1377,16 +1386,23 @@ std::tuple<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> W
   WCP::WC2DPointCloud<double>& cloud_u = pcloud_associated->get_cloud_u();
   WCP::WC2DPointCloud<double>& cloud_v = pcloud_associated->get_cloud_v();
   WCP::WC2DPointCloud<double>& cloud_w = pcloud_associated->get_cloud_w();
+  Int_t ncount[2]={0,0};
   for (size_t i=0;i!=cloud.pts.size();i++){
     Point p(cloud.pts.at(i).x, cloud.pts.at(i).y, cloud.pts.at(i).z);
     if (sg1->get_closest_point(p).first < sg2->get_closest_point(p).first){
       sg1->add_associate_point(cloud.pts.at(i), cloud_u.pts.at(i), cloud_v.pts.at(i), cloud_w.pts.at(i));
+      ncount[0]++;
     }else{
       sg2->add_associate_point(cloud.pts.at(i), cloud_u.pts.at(i), cloud_v.pts.at(i), cloud_w.pts.at(i));
+      ncount[1]++;
     }
   }
-  sg1->get_associated_pcloud()->build_kdtree_index();
-  sg1->get_associated_pcloud()->build_kdtree_index();
+  //  std::cout << ncount[0] << " " << ncount[1] << std::endl;
+  if (ncount[0] !=0)
+    sg1->get_associated_pcloud()->build_kdtree_index();
+  if (ncount[1] !=0)
+    sg2->get_associated_pcloud()->build_kdtree_index();
+
   
   //std::cout << nbreak << " " << wcpt_vec.size() << " " << nbreak_fit << " " << fit_pt_vec.size() << std::endl;
 
