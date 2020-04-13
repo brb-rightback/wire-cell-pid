@@ -12,10 +12,20 @@ bool sortbydis(const cluster_point_info &a, const cluster_point_info &b){
 }
 
 
-void WCPPID::NeutrinoID::shower_clustering_in_main_cluster(){
-  improve_maps_one_in(main_cluster);
-  improve_maps_shower_in_track_out(main_cluster->get_cluster_id());
+void WCPPID::NeutrinoID::shower_determing_in_main_cluster(){
+
+  // if one shower in and a good track out, reverse the shower ..
+  fix_maps_shower_in_track_out(main_cluster->get_cluster_id());
+
+  // if there is one good track in, turn everything else to out
+  improve_maps_one_in(main_cluster); // one in and many out ...
+  
+  // if one shower in and a track out, change the track to shower
+  improve_maps_shower_in_track_out(main_cluster->get_cluster_id()); // use shower information to determine the rest ...
+  // help to change tracks around shower to showers
   improve_maps_no_dir_tracks(main_cluster->get_cluster_id());
+  // if one shower in and a track out, change the track to shower
+  improve_maps_shower_in_track_out(main_cluster->get_cluster_id()); // use shower information to determine the rest ...    
   // examine map ...
   examine_maps(main_cluster);
 

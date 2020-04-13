@@ -177,6 +177,7 @@ namespace WCPPID{
 
     // if there is one in, fix the others ...
     void improve_maps_one_in(WCPPID::PR3DCluster* temp_cluster, bool flag_strong_check = true);
+    void fix_maps_shower_in_track_out(int temp_cluster_id);
     void improve_maps_shower_in_track_out(int temp_cluster_id);
     void improve_maps_no_dir_tracks(int temp_cluster_id);
     bool examine_maps(WCPPID::PR3DCluster* temp_cluster);
@@ -214,7 +215,7 @@ namespace WCPPID{
     std::pair<int,int> count_num_tracks_showers(WCPPID::PR3DCluster* temp_cluster);
     
     // particle_clustering
-    void shower_clustering_in_main_cluster();
+    void shower_determing_in_main_cluster();
     void shower_clustering_with_nv();
     void shower_clustering_with_nv_in_main_cluster();
     void shower_clustering_with_nv_from_main_cluster();

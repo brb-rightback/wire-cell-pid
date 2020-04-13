@@ -361,6 +361,21 @@ double WCPPID::ProtoSegment::get_length(int n1, int n2, TVector3 dir_perp){
   return length;
 }
 
+double WCPPID::ProtoSegment::get_rms_dQ_dx(){
+  std::vector<double> vec_dQ_dx;
+  double sum[3]={0,0,0};
+  if (dQ_vec.size()<=1) return 0;
+  
+  for (int i = 0 ; i< dQ_vec.size(); i++){
+    vec_dQ_dx.push_back(dQ_vec.at(i)/(dx_vec.at(i)+1e-9));
+    sum[0] += pow(vec_dQ_dx.back(),2);
+    sum[1] += vec_dQ_dx.back();
+    sum[2] += 1;
+  }
+
+  return sqrt((sum[0] - pow(sum[1],2)/sum[2])/(sum[2]-1.));
+}
+
 double WCPPID::ProtoSegment::get_medium_dQ_dx(int n1, int n2){
   if (n1 < 0) n1 = 0;  if (n1+1 > fit_pt_vec.size()) n1 = int(fit_pt_vec.size())-1;
   if (n2 < 0) n2 = 0;  if (n2+1 > fit_pt_vec.size()) n2 = int(fit_pt_vec.size())-1;
@@ -1099,9 +1114,7 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
     if (i+1 < fit_pt_vec.size())
       dis += sqrt(pow(fit_pt_vec.at(i+1).x-fit_pt_vec.at(i).x,2) + pow(fit_pt_vec.at(i+1).y-fit_pt_vec.at(i).y,2) + pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
   }
-  
- 
-  
+    
   if (npoints >=2){ // reasonably long ...
     // can use the dQ/dx to do PID and direction ...
     bool tmp_flag_pid = do_track_pid(L, dQ_dx);
@@ -1142,7 +1155,6 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
     }
   }
   
-
   if (particle_type!=0){
     TPCParams& mp = Singleton<TPCParams>::Instance();
     if (fabs(particle_type)==11)    particle_mass = mp.get_mass_electron();
