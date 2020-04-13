@@ -35,7 +35,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   , type(0)
   , main_vertex(0)
 {
-  bool flag_other_clusters = false;
+  bool flag_other_clusters = true;
   bool flag_main_cluster = true;
   
   // form id vs. cluster ...
@@ -70,60 +70,45 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
     clustering_points(main_cluster);
   }
 
-  /*  
-
+ 
   if (flag_other_clusters){
     //deal with the other clusters ...
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
-      //std::cout << (*it)->get_cluster_id() << std::endl;
+      //      std::cout << "A: " << (*it)->get_cluster_id() << std::endl;
       (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
       
-      //      std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
+      //  std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
       // do not break track and find other tracks ...
       if (!find_proto_vertex(*it, false, 1)) init_point_segment(*it);
-      //std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
+      // std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
       //break;
     }
     //  deghost ...
     deghost_clusters();    
   }
 
-  
-  // clustering points
-  if (flag_main_cluster)
-    clustering_points(main_cluster);
   if (flag_other_clusters){
     //deal with the other clusters ...
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
       // test ...
       //(*it)->calc_num_components();
-      //  std::cout << (*it)->get_cluster_id() << std::endl;
+      //      std::cout << "B: " << (*it)->get_cluster_id() << std::endl;
       clustering_points(*it);
-    }
-  }
-
-  // track shower separation
-  separate_track_shower();
-
-
-  if (flag_main_cluster){
-     determine_direction(main_cluster);
-    
-    determine_main_vertex(main_cluster);
-  }
-  
-  if (flag_other_clusters){
-    for (auto it = other_clusters.begin(); it != other_clusters.end(); it++){
+      separate_track_shower(*it);
       determine_direction(*it);
     }
   }
- 
-  // for charge based on calculation ...
-  collect_2D_charges();
-  
-  // cluster E&M ...
-  shower_clustering_with_nv();
-  */   
+
+  if (flag_main_cluster){
+    // overall
+    separate_track_shower();
+
+    // for charge based on calculation ...
+    collect_2D_charges();
+    
+    // cluster E&M ...
+    shower_clustering_with_nv();
+  }
   
   // prepare output ...
   fill_fit_parameters();

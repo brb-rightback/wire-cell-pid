@@ -1872,7 +1872,8 @@ WCP::PointVector WCPPID::PR3DCluster::examine_end_ps_vec(WCP::ToyCTPointCloud& c
       ps_list.push_front(temp_start);
     }
   }
-
+  
+  
   if (flag_end){
     Point temp_end = ps_list.back();
     while (ps_list.size()>0){
@@ -1892,22 +1893,23 @@ WCP::PointVector WCPPID::PR3DCluster::examine_end_ps_vec(WCP::ToyCTPointCloud& c
 	  ps_list.push_back(test_p);
 	  break;
 	}
+	
       }
     }else{
       ps_list.push_back(temp_end);
     }
   }
 
-  
   PointVector tmp_pts(ps_list.begin(), ps_list.end());
   return tmp_pts;
-
 }
 
 void WCPPID::PR3DCluster::organize_ps_path(WCP::ToyCTPointCloud& ct_point_cloud, WCP::PointVector& pts, double low_dis_limit, double end_point_limit){
 
   
   WCP::PointVector ps_vec = examine_end_ps_vec(ct_point_cloud, pts, true, true);
+  if (ps_vec.size()<=1) ps_vec = pts;
+ 
   pts.clear();
   // fill in the beginning part
   {

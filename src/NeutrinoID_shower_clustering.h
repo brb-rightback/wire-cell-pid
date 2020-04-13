@@ -16,7 +16,8 @@ void WCPPID::NeutrinoID::shower_determing_in_main_cluster(){
 
   // if one shower in and a good track out, reverse the shower ..
   fix_maps_shower_in_track_out(main_cluster->get_cluster_id());
-
+  //fix_maps_two_tracks_in(main_cluster->get_cluster_id());
+  
   // if there is one good track in, turn everything else to out
   improve_maps_one_in(main_cluster); // one in and many out ...
   
