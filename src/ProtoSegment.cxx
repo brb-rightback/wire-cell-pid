@@ -66,6 +66,9 @@ WCPPID::ProtoSegment::~ProtoSegment(){
 }
 
 bool WCPPID::ProtoSegment::is_shower_topology(){
+  flag_shower_topology = false;
+  flag_dir = 0;
+  
   // look at the points ...
   std::vector<PointVector > local_points_vec(fit_pt_vec.size());
   std::vector<std::tuple<double, double, double> > vec_rms_vals(fit_pt_vec.size(), std::make_tuple(0,0,0));
@@ -267,6 +270,7 @@ bool WCPPID::ProtoSegment::is_shower_topology(){
 }
 
 bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
+  flag_shower_trajectory = false;
   double length = get_length();
   int ncount = std::round(length/step_size);
   if (ncount ==0 ) ncount = 1;
@@ -1068,7 +1072,7 @@ TVector3 WCPPID::ProtoSegment::cal_dir_3vector(){
 
 
 void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag_print){
-  
+  flag_dir = 0;
   int npoints = fit_pt_vec.size();
   int start_n1 = 0, end_n1 = npoints - 1;
   // if more than one point, exclude the vertex ...
@@ -1081,7 +1085,9 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
     start_n1 = 1;
   }
 
-  if (npoints ==0) return;
+  
+  
+  if (npoints ==0 || end_n1 < start_n1) return;
   std::vector<double> L(npoints,0);
   std::vector<double> dQ_dx(npoints,0);
   
@@ -1159,13 +1165,14 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
 }
 
 void WCPPID::ProtoSegment::determine_dir_shower_trajectory(int start_n, int end_n, bool flag_print){
+  flag_dir = 0;
   double length = get_length();
-
+ 
   // hack for now ...
   particle_type = 11;
   TPCParams& mp = Singleton<TPCParams>::Instance();
 
-
+  
   if (start_n==1 && end_n >1){
     flag_dir = -1;
   }else if (start_n > 1 && end_n == 1){
@@ -1177,6 +1184,7 @@ void WCPPID::ProtoSegment::determine_dir_shower_trajectory(int start_n, int end_
       flag_dir = 0;
     }
   }
+  
   particle_mass = mp.get_mass_electron();
   
   cal_4mom();
@@ -1187,6 +1195,7 @@ void WCPPID::ProtoSegment::determine_dir_shower_trajectory(int start_n, int end_
 }
 
 void WCPPID::ProtoSegment::determine_dir_shower_topology(int start_n, int end_n, bool flag_print){
+  
   double length = get_length();
   // hack for now
   particle_type = 11;

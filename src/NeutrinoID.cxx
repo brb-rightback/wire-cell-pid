@@ -51,14 +51,21 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
   if (flag_main_cluster){
     // create Steiner-inspired graph
     main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-    
     // find the proto vertex ...
     find_proto_vertex(main_cluster);    
+
+    // deal with shower ...
+    clustering_points(main_cluster);
+    separate_track_shower(main_cluster);
+
+    std::pair<int, int >nums = count_num_tracks_showers(main_cluster);
+    std::cout << nums.first << " " << nums.second  << std::endl;
+    
     // fit the vertex in 3D 
-    improve_vertex(main_cluster);
+    //    improve_vertex(main_cluster);
   }
 
-  
+  /*  
 
   if (flag_other_clusters){
     //deal with the other clusters ...
@@ -73,10 +80,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
       //break;
     }
     //  deghost ...
-    deghost_clusters();
-    
+    deghost_clusters();    
   }
-
 
   
   // clustering points
@@ -91,29 +96,45 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
       clustering_points(*it);
     }
   }
-  
+
+
   // track shower separation
   separate_track_shower();
 
+
   if (flag_main_cluster){
     determine_direction(main_cluster);
+    
     determine_main_vertex(main_cluster);
   }
+  
   if (flag_other_clusters){
     for (auto it = other_clusters.begin(); it != other_clusters.end(); it++){
       determine_direction(*it);
     }
   }
+  
   // for charge based on calculation ...
   collect_2D_charges();
   
   // cluster E&M ...
-  shower_clustering();
-
+  shower_clustering_with_nv();
+  */  
   
   // prepare output ...
   fill_fit_parameters();
 }
+
+std::pair<int, int> WCPPID::NeutrinoID::count_num_tracks_showers(WCPPID::PR3DCluster* temp_cluster){
+  int num[2] = {0,0};
+  for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_flag_shower()) num[1] ++;
+    else num[0] ++;
+  }
+  return std::make_pair(num[0], num[1]);
+}
+
 
 
 void WCPPID::NeutrinoID::fill_fit_parameters(){

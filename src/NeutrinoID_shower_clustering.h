@@ -13,14 +13,14 @@ bool sortbydis(const cluster_point_info &a, const cluster_point_info &b){
 
 
 
-void WCPPID::NeutrinoID::shower_clustering(){
+void WCPPID::NeutrinoID::shower_clustering_with_nv(){
 
   // connect to the main cluster ...
-  shower_clustering_in_main_cluster();
+  shower_clustering_with_nv_in_main_cluster();
   // std::cout << showers.size() << std::endl;
-  shower_clustering_from_main_cluster();
+  shower_clustering_with_nv_from_main_cluster();
   //std::cout << showers.size() << std::endl;
-  shower_clustering_from_vertices();
+  shower_clustering_with_nv_from_vertices();
   //  std::cout << showers.size() << std::endl;  
   calculate_shower_kinematics();
 
@@ -99,7 +99,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
   }
 }
 
-void WCPPID::NeutrinoID::shower_clustering_from_vertices(){
+void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
   // first map the sg vs. cluster existing ...
   //  std::cout << map_cluster_segments.size() << " " << other_clusters.size() << " " << map_segment_cluster.size() << " " << map_segment_vertices.size() << std::endl;
   std::map<PR3DCluster*, std::pair<WCP::Point, double> > map_cluster_center_point;
@@ -502,7 +502,7 @@ void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(bool flag_save){
 }
 
 
-void WCPPID::NeutrinoID::shower_clustering_in_main_cluster(){
+void WCPPID::NeutrinoID::shower_clustering_with_nv_in_main_cluster(){
   // search from main vertex ...
   // search trees, if find an electron, then the rest are all added to it ...
   
@@ -558,7 +558,7 @@ void WCPPID::NeutrinoID::shower_clustering_in_main_cluster(){
 
 
 
-void WCPPID::NeutrinoID::shower_clustering_from_main_cluster(){
+void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
   std::map<WCPPID::WCShower*, TVector3> map_shower_dir;
   
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){

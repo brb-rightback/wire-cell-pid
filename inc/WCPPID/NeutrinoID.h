@@ -197,12 +197,14 @@ namespace WCPPID{
     
     // track shower separation
     void separate_track_shower();
-
+    void separate_track_shower(WCPPID::PR3DCluster* temp_cluster);
+    std::pair<int,int> count_num_tracks_showers(WCPPID::PR3DCluster* temp_cluster);
+    
     // particle_clustering
-    void shower_clustering();
-    void shower_clustering_in_main_cluster();
-    void shower_clustering_from_main_cluster();
-    void shower_clustering_from_vertices();
+    void shower_clustering_with_nv();
+    void shower_clustering_with_nv_in_main_cluster();
+    void shower_clustering_with_nv_from_main_cluster();
+    void shower_clustering_with_nv_from_vertices();
     // holder for now ...
     void shower_clustering_in_other_clusters(bool flag_save = true);
     void id_pi0_with_vertex();
