@@ -12,6 +12,24 @@ bool sortbydis(const cluster_point_info &a, const cluster_point_info &b){
 }
 
 
+void WCPPID::NeutrinoID::shower_clustering_in_main_cluster(){
+  improve_maps_one_in(main_cluster);
+  improve_maps_shower_in_track_out(main_cluster->get_cluster_id());
+  improve_maps_no_dir_tracks(main_cluster->get_cluster_id());
+  // examine map ...
+  examine_maps(main_cluster);
+
+  //  print_segs_info(main_cluster->get_cluster_id());
+  
+  /* std::cout << std::endl << std::endl; */
+  /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
+  /*   WCPPID::ProtoSegment *sg = it->first; */
+  /*   if (sg->get_particle_4mom(3) > sg->get_particle_mass() && (!sg->get_flag_shower())) */
+  /*     std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " Track  "  << sg->get_flag_dir() << " " << sg->get_particle_type() << " " << sg->get_particle_mass()/units::MeV << " " << (sg->get_particle_4mom(3)-sg->get_particle_mass())/units::MeV << " " << sg->is_dir_weak() << std::endl; */
+  /* } */
+  
+}
+
 
 void WCPPID::NeutrinoID::shower_clustering_with_nv(){
 

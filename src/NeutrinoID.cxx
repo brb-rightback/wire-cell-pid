@@ -57,10 +57,14 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
     // deal with shower ...
     clustering_points(main_cluster);
     separate_track_shower(main_cluster);
-
-    std::pair<int, int >nums = count_num_tracks_showers(main_cluster);
-    std::cout << nums.first << " " << nums.second  << std::endl;
+    determine_direction(main_cluster);
     
+    // std::pair<int, int >nums = count_num_tracks_showers(main_cluster);
+    // std::cout << nums.first << " " << nums.second  << std::endl;
+
+    shower_clustering_in_main_cluster();
+    
+	
     // fit the vertex in 3D 
     //    improve_vertex(main_cluster);
   }
@@ -103,7 +107,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
 
 
   if (flag_main_cluster){
-    determine_direction(main_cluster);
+     determine_direction(main_cluster);
     
     determine_main_vertex(main_cluster);
   }
