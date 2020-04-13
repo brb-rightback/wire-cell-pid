@@ -85,13 +85,15 @@ namespace WCPPID{
     std::vector<WCP::PointVector>& get_vec_points(){return vec_points;};
 
     void print_points();
-    
+    void set_enforce_two_track_fit(bool val){enforce_two_track_fit = val;};
+    bool get_enforce_two_track_fit(){return enforce_two_track_fit;};
    
     //  double operator() (const std::vector<double> & xx) const;
     //  double get_chi2(const std::vector<double> & xx) const;
     
   private:
     ProtoVertex *vtx;
+    bool enforce_two_track_fit;
     bool flag_vtx_constraint;
     double vtx_constraint_range;
     

@@ -66,7 +66,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
     determine_main_vertex(main_cluster);	
     
     // fit the vertex in 3D 
-    // improve_vertex(main_cluster);
+    improve_vertex(main_cluster);
+    clustering_points(main_cluster);
   }
 
   /*  

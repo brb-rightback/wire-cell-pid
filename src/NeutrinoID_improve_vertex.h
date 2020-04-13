@@ -14,7 +14,11 @@ bool WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
   for (auto it = sg_set.begin(); it!=sg_set.end(); it++){
     fcn.AddSegment(*it);
   }
+  if (vtx == main_vertex) fcn.set_enforce_two_track_fit(true); 
+  
   std::pair<bool, Point> results = fcn.FitVertex();
+
+  
   
   double old_charge = ct_point_cloud->get_ave_3d_charge(vtx->get_fit_pt());
   double new_charge = ct_point_cloud->get_ave_3d_charge(results.second);
@@ -49,9 +53,15 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
   // find the vertex
   for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end();it++){
     WCPPID::ProtoVertex *vtx = it->first;
-
     // hack for now ...
-    if (vtx->get_cluster_id() != temp_cluster->get_cluster_id() || it->second.size()<=2) continue;
+    if ((vtx->get_cluster_id() != temp_cluster->get_cluster_id() || it->second.size()<=2) && (vtx != main_vertex) ) continue;
+    int ntracks = 0, nshowers = 0;
+    for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+      if ((*it1)->get_flag_shower()) nshowers ++;
+      else ntracks ++;
+    }
+    if (ntracks == 0 && (vtx != main_vertex) ) continue;
+    
     bool flag_update = fit_vertex(vtx, it->second, temp_cluster);
     if (flag_update) flag_update_fit = true;
   }
@@ -68,7 +78,13 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
   for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end();it++){
     WCPPID::ProtoVertex *vtx = it->first;
     // hack for now ...
-    if (vtx->get_cluster_id() != temp_cluster->get_cluster_id() || it->second.size()<=2) continue;
+    if ((vtx->get_cluster_id() != temp_cluster->get_cluster_id() || it->second.size()<=2) && (vtx != main_vertex)) continue;
+    int ntracks = 0, nshowers = 0;
+    for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+      if ((*it1)->get_flag_shower()) nshowers ++;
+      else ntracks ++;
+    }
+    if (ntracks == 0 && vtx != main_vertex) continue;
     bool flag_update = search_for_vertex_activities(vtx, it->second, temp_cluster);
     if (flag_update) flag_update_fit = true;
   }
@@ -83,6 +99,7 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
 
 WCPPID::MyFCN::MyFCN(WCPPID::ProtoVertex* vtx, bool flag_vtx_constraint, double vtx_constraint_range, double vertex_protect_dis, double vertex_protect_dis_short_track, double fit_dis) 
 : vtx(vtx)
+, enforce_two_track_fit(false)
 , flag_vtx_constraint(flag_vtx_constraint)
   , vtx_constraint_range(vtx_constraint_range) 
   , vertex_protect_dis(vertex_protect_dis)
@@ -269,10 +286,10 @@ std::pair<bool, WCP::Point> WCPPID::MyFCN::FitVertex(){
       // std::cout << i << " " << j << " " << dir1.Angle(dir2)/3.1415926*180. << std::endl;
     }
   }
-  //    std::cout << n_large_angles << std::endl;
+  //std::cout << ntracks << " " << n_large_angles << std::endl;
   
   
-  if (ntracks >2 && n_large_angles > 1){
+  if (ntracks >2 && n_large_angles > 1 || ntracks>=2 && enforce_two_track_fit && n_large_angles>=1){
 
    
     
@@ -608,6 +625,7 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
   std::vector<bool>& flag_terminals = temp_cluster->get_flag_steiner_terminal();
 
   std::vector<TVector3> saved_dirs;
+  int nshowers = 0;
   for (auto it = sg_set.begin(); it!=sg_set.end(); it++){
     TVector3 dir = get_dir(vtx, *it);
     if (dir.Mag()!=0) saved_dirs.push_back(dir);
@@ -746,7 +764,7 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
 
     if (max_wcp.index != wcp_list.back().index)
       wcp_list.push_back(max_wcp);
-    std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Vertex Activity Found" << std::endl;
+    std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Vertex Activity Found" << " " << tmp_p << " " << acc_segment_id << " " << wcp_list.size() << " " << v1->get_wcpt().index << " " << vtx->get_wcpt().index << std::endl;
     WCPPID::ProtoSegment* sg1 = new WCPPID::ProtoSegment(acc_segment_id, wcp_list, temp_cluster->get_cluster_id()); acc_segment_id++;
     add_proto_connection(v1,sg1,temp_cluster);
     add_proto_connection(vtx,sg1,temp_cluster);
