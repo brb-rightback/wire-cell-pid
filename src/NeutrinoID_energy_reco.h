@@ -102,7 +102,7 @@ double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::WCShower *shower){
   }
 
 
-  //std::cout << sum_u_charge << " " << sum_v_charge << " " << sum_w_charge << std::endl;
+  std::cout << sum_u_charge << " " << sum_v_charge << " " << sum_w_charge << std::endl;
 
   kine_energy = (0.25 * sum_u_charge + 0.25*sum_v_charge + sum_w_charge)/1.5/recom_factor/fudge_factor*23.6/1e6 * units::MeV;
 

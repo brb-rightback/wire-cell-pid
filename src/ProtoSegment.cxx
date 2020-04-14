@@ -1147,14 +1147,14 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
       std::nth_element(vec_dQ_dx.begin(), vec_dQ_dx.begin() + vec_dQ_dx.size()/2, vec_dQ_dx.end());
       double medium_dQ_dx = *std::next(vec_dQ_dx.begin(), vec_dQ_dx.size()/2);
       if (medium_dQ_dx > 43e3 * 1.75) particle_type = 2212;
-      else if (medium_dQ_dx < 43e3*1.2) particle_type = 221;
+      else if (medium_dQ_dx < 43e3*1.2) particle_type = 211;
     }else if (end_n==1 && start_n>2){
       flag_dir = 1;
       std::vector<double> vec_dQ_dx = dQ_dx;
       std::nth_element(vec_dQ_dx.begin(), vec_dQ_dx.begin() + vec_dQ_dx.size()/2, vec_dQ_dx.end());
       double medium_dQ_dx = *std::next(vec_dQ_dx.begin(), vec_dQ_dx.size()/2);
       if (medium_dQ_dx > 43e3 * 1.75) particle_type = 2212;
-      else if (medium_dQ_dx < 43e3*1.2) particle_type = 221;
+      else if (medium_dQ_dx < 43e3*1.2) particle_type = 211;
     }
   }
 
