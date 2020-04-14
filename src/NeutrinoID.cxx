@@ -68,6 +68,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
     // fit the vertex in 3D 
     improve_vertex(main_cluster);
     clustering_points(main_cluster);
+    examine_direction(main_vertex);
+    
   }
 
  
@@ -109,6 +111,13 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
     // cluster E&M ...
     shower_clustering_with_nv();
   }
+
+  // std::cout << map_vertex_segments[main_vertex].size() << std::endl;
+  // for (auto it = map_vertex_segments[main_vertex].begin(); it!= map_vertex_segments[main_vertex].end(); it++){
+  //   WCPPID::ProtoSegment *seg = (*it);
+  //   bool flag = map_segment_in_shower.find(seg) == map_segment_in_shower.end();
+  //   std::cout << flag << std::endl;
+  // }
   
   // prepare output ...
   fill_fit_parameters();
@@ -550,7 +559,7 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
     WCPPID::ProtoSegment* sg= it->first;
     if (map_segment_in_shower.find(sg)!=map_segment_in_shower.end()) continue;
     fill_reco_tree(sg, rtree);
-    // std::cout << "kak " << sg->get_id() << std::endl;
+    //    std::cout << "kak " << sg->get_cluster_id() << " " << sg->get_id() << std::endl;
   }
   for (auto it = showers.begin(); it!=showers.end();it++){
     fill_reco_tree(*it, rtree);

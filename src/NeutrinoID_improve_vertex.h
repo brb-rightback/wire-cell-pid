@@ -768,6 +768,13 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
     WCPPID::ProtoSegment* sg1 = new WCPPID::ProtoSegment(acc_segment_id, wcp_list, temp_cluster->get_cluster_id()); acc_segment_id++;
     add_proto_connection(v1,sg1,temp_cluster);
     add_proto_connection(vtx,sg1,temp_cluster);
+
+    /* WCPPID::ProtoVertex *start_v=0, *end_v=0; */
+    /* for (auto it = map_segment_vertices[sg1].begin(); it!=map_segment_vertices[sg1].end(); it++){ */
+    /*   if ((*it)->get_wcpt().index == sg1->get_wcpt_vec().front().i   ndex) start_v = *it; */
+    /*   if ((*it)->get_wcpt().index == sg1->get_wcpt_vec().back().index) end_v = *it; */
+    /* } */
+    /* sg1->determine_dir_track(map_vertex_segments[start_v].size(), map_vertex_segments[end_v].size(), false); */
     
     return true;
   }

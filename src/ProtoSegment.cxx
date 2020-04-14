@@ -931,7 +931,7 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
 }
 
 bool WCPPID::ProtoSegment::is_dir_weak(){
-  if (fabs(particle_type)==13 && particle_score > 0.07  || dir_weak ) return true;
+  if (fabs(particle_type)==13 && particle_score > 0.07 || dir_weak ) return true;
   return false;
 }
 
@@ -1092,15 +1092,15 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
   int start_n1 = 0, end_n1 = npoints - 1;
   // if more than one point, exclude the vertex ...
   if (end_n!=1) {
-    npoints -= 1;
     end_n1 = npoints - 2;
+    npoints -= 1;
   }
   if (start_n!=1) {
     npoints -=1;
     start_n1 = 1;
   }
-
   
+  // if (id == 1) std::cout << id << " " << npoints << " " << end_n1 << " " << start_n1 << std::endl;
   
   if (npoints ==0 || end_n1 < start_n1) return;
   std::vector<double> L(npoints,0);
@@ -1134,7 +1134,10 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
     else if (medium_dQ_dx < 43e3 * 1.2) particle_type = 13; //muon type
     else if (medium_dQ_dx < 43e3 * 1.5 && length < 4*units::cm) particle_type = 13;
     //    std::cout << medium_dQ_dx/(43e3) << std::endl;
+    
   }
+
+
   
   // vertex activities ...
   if (length < 1.5*units::cm && (start_n == 1 || end_n == 1)){
@@ -1154,6 +1157,8 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
       else if (medium_dQ_dx < 43e3*1.2) particle_type = 221;
     }
   }
+
+  //if (start_n >1 && end_n >1 && particle_type == 2212) dir_weak = true;
   
   if (particle_type!=0){
     TPCParams& mp = Singleton<TPCParams>::Instance();
