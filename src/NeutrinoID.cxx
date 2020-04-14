@@ -826,6 +826,7 @@ void WCPPID::NeutrinoID::fill_skeleton_info_magnify(int mother_cluster_id, WCPPI
       for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
 	WCPPID::ProtoVertex *vtx = it->first;
 	if (vtx->get_cluster_id() != cluster->get_cluster_id()) continue;
+	if (map_vertex_in_shower.find(vtx)!=map_vertex_in_shower.end()) continue;
 	ptree.reco_cluster_id = vtx->get_cluster_id();
 	ptree.reco_proto_cluster_id = -1;
 	ptree.reco_particle_id = -1;
