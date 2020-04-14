@@ -89,10 +89,23 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
     if (flag_update) flag_update_fit = true;
   }
   //  std::cout << flag_update_fit << std::endl;
-  if (flag_update_fit)
+  if (flag_update_fit){
     // do the overall fit again
     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
 
+    for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+      WCPPID::ProtoSegment *sg1 = it->first;
+      if (sg1->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+      if (sg1->get_particle_type()==0){
+	WCPPID::ProtoVertex *start_v=0, *end_v=0; 
+	for (auto it = map_segment_vertices[sg1].begin(); it!=map_segment_vertices[sg1].end(); it++){
+	  if ((*it)->get_wcpt().index == sg1->get_wcpt_vec().front().index) start_v = *it;
+	  if ((*it)->get_wcpt().index == sg1->get_wcpt_vec().back().index) end_v = *it;
+	}
+	sg1->determine_dir_track(map_vertex_segments[start_v].size(), map_vertex_segments[end_v].size(), false);
+      }
+    }
+  }
   
   
 }
@@ -769,12 +782,7 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
     add_proto_connection(v1,sg1,temp_cluster);
     add_proto_connection(vtx,sg1,temp_cluster);
 
-    /* WCPPID::ProtoVertex *start_v=0, *end_v=0; */
-    /* for (auto it = map_segment_vertices[sg1].begin(); it!=map_segment_vertices[sg1].end(); it++){ */
-    /*   if ((*it)->get_wcpt().index == sg1->get_wcpt_vec().front().i   ndex) start_v = *it; */
-    /*   if ((*it)->get_wcpt().index == sg1->get_wcpt_vec().back().index) end_v = *it; */
-    /* } */
-    /* sg1->determine_dir_track(map_vertex_segments[start_v].size(), map_vertex_segments[end_v].size(), false); */
+  
     
     return true;
   }
