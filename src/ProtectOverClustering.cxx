@@ -54,6 +54,14 @@ void WCPPID::Protect_Over_Clustering(std::vector<int>& to_be_checked, WCPPID::PR
 	    max_number_cells = vec_mcells.at(j).size();
 	  }
 	}
+	// test...
+	// for (size_t j=0;j<vec_mcells.size();j++){
+	//   double sum_q = 0;
+	//   for (size_t k=0;k!=vec_mcells.at(j).size();k++){
+	//     sum_q += vec_mcells.at(j).at(k)->get_q();
+	//   }
+	//   std::cout << j << " " << vec_mcells.at(j).size() << " " << sum_q << std::endl;
+	// }
 	
 	// main cluster replacement 
 	WCPPID::PR3DCluster *new_cluster = new PR3DCluster(curr_main_cluster_id);

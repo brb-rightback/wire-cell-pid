@@ -875,13 +875,15 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
   bool flag_forward = std::round(result_forward.at(0));
   bool flag_backward = std::round(result_backward.at(0));
 
+  double length = get_length();
+  
   int forward_particle_type = 13; // default muon
   double min_forward_val = result_forward.at(1) ;
   if (result_forward.at(2) < min_forward_val){
     min_forward_val = result_forward.at(2);
     forward_particle_type = 2212;
   }
-  if (result_forward.at(3) < min_forward_val){
+  if (result_forward.at(3) < min_forward_val && length < 20*units::cm){
     min_forward_val = result_forward.at(3);
     forward_particle_type = 11;
   }
@@ -891,7 +893,7 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
     min_backward_val = result_backward.at(2);
     backward_particle_type = 2212;
   }
-  if (result_backward.at(3) < min_backward_val){
+  if (result_backward.at(3) < min_backward_val && length < 20*units::cm){
     min_backward_val = result_backward.at(3);
     backward_particle_type = 11;
   }
@@ -1123,6 +1125,7 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
     if (!tmp_flag_pid) do_track_pid(L, dQ_dx, 15*units::cm, 3*units::cm);
   }
 
+  
   double length = get_length();
   // short track what to do???
   if (particle_type == 0){
