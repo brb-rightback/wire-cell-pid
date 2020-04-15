@@ -187,6 +187,9 @@ namespace WCPPID{
     bool examine_maps(WCPPID::PR3DCluster* temp_cluster);
     bool examine_maps(WCPPID::ProtoVertex *temp_vertex);
     bool examine_maps(int temp_cluster_id);
+
+    float calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex);
+    
     void print_segs_info(WCPPID::PR3DCluster* temp_cluster);
     void print_segs_info(WCPPID::ProtoVertex *temp_vertex);
     void print_segs_info(int temp_cluster_id, WCPPID::ProtoVertex *spec_vertex=0);

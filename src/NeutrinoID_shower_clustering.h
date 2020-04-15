@@ -26,7 +26,7 @@ void WCPPID::NeutrinoID::shower_determing_in_main_cluster(){
   // help to change tracks around shower to showers
   improve_maps_no_dir_tracks(main_cluster->get_cluster_id());
   // if one shower in and a track out, change the track to shower
-  improve_maps_shower_in_track_out(main_cluster->get_cluster_id(), true); // use shower information to determine the rest ...
+  improve_maps_shower_in_track_out(main_cluster->get_cluster_id(), false); // use shower information to determine the rest ...
   // if multiple tracks in, change track to shower
   improve_maps_multiple_tracks_in(main_cluster->get_cluster_id());
   

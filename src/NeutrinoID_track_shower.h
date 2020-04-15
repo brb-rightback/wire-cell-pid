@@ -61,7 +61,7 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
     }
 
     bool flag_print = false;
-    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
+    //    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
 
     // std::cout << sg << " " << sg->get_id() << " " << sg->get_flag_shower_trajectory() << " " << sg->get_flag_shower_topology() << std::endl;
     
@@ -141,6 +141,9 @@ void WCPPID::NeutrinoID::improve_maps_one_in(WCPPID::PR3DCluster* temp_cluster, 
 bool WCPPID::NeutrinoID::examine_maps(WCPPID::ProtoVertex *temp_vertex){
   return examine_maps(temp_vertex->get_cluster_id());
 }
+
+
+
 
 bool WCPPID::NeutrinoID::examine_maps(int temp_cluster_id){
   bool flag_return = true;
@@ -648,6 +651,9 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   
 }
 
+
+
+
 WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVertexSelection& vertex_candidates){
   std::map<WCPPID::ProtoVertex*, double> map_vertex_num;
   for (auto it = vertex_candidates.begin(); it!=vertex_candidates.end(); it++){
@@ -713,6 +719,12 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
       map_vertex_num[vtx] +=0.5; // good      // fiducial volume ..
     // std::cout << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
   }
+
+  for (auto it = vertex_candidates.begin(); it != vertex_candidates.end(); it++){
+    WCPPID::ProtoVertex *vtx = *it;
+    map_vertex_num[vtx] -= calc_conflict_maps(vtx)/4.;
+    //    std::cout << calc_conflict_maps(vtx) << " " << map_vertex_num[vtx] << std::endl;
+  }
   
   double max_val = -1e9; WCPPID::ProtoVertex* max_vertex = 0;
   for (auto it = vertex_candidates.begin(); it!=vertex_candidates.end(); it++){
@@ -728,6 +740,100 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
   return max_vertex;
 }
 
+
+float WCPPID::NeutrinoID::calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex){
+  // assume temp_vertex is true, and then calculate the conflict in the system ...
+  float num_conflicts = 0;
+
+  std::map<WCPPID::ProtoSegment*, std::pair<ProtoVertex*, ProtoVertex*> > map_seg_dir;
+  std::set<WCPPID::ProtoVertex* > used_vertices;
+
+  // start ...
+  std::vector<std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> > segments_to_be_examined;
+  for (auto it = map_vertex_segments[temp_vertex].begin(); it != map_vertex_segments[temp_vertex].end(); it++){
+    segments_to_be_examined.push_back(std::make_pair(temp_vertex, *it));
+  }
+  used_vertices.insert(temp_vertex);
+  
+  while(segments_to_be_examined.size()>0){
+    std::vector<std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> > temp_segments;
+    for (auto it = segments_to_be_examined.begin(); it!= segments_to_be_examined.end(); it++){
+      WCPPID::ProtoVertex *prev_vtx = it->first;
+      WCPPID::ProtoSegment *current_sg = it->second;
+      
+      if (map_seg_dir.find(current_sg) != map_seg_dir.end()) continue; //looked at it before ...
+      WCPPID::ProtoVertex* curr_vertex = find_other_vertex(current_sg, prev_vtx);
+
+      map_seg_dir[current_sg] = std::make_pair(prev_vtx, curr_vertex);
+      if (used_vertices.find(curr_vertex) != used_vertices.end()) continue;
+      for (auto it1 = map_vertex_segments[curr_vertex].begin(); it1!= map_vertex_segments[curr_vertex].end(); it1++){
+	temp_segments.push_back(std::make_pair(curr_vertex, *it1));
+      }
+      used_vertices.insert(curr_vertex);
+    }
+    segments_to_be_examined = temp_segments;
+  }
+
+  //  std::cout << used_vertices.size() << " " << map_seg_dir.size() << " " << std::endl;
+  // check segments
+  for (auto it = map_seg_dir.begin(); it!= map_seg_dir.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    WCPPID::ProtoVertex *start_vtx = it->second.first;
+    bool flag_start;
+    if (sg->get_wcpt_vec().front().index == start_vtx->get_wcpt().index)
+      flag_start = true;
+    else if (sg->get_wcpt_vec().back().index == start_vtx->get_wcpt().index)
+      flag_start = false;
+
+    if (sg->get_flag_dir()!=0){
+      if (flag_start && sg->get_flag_dir()==-1 ||
+	  (!flag_start) && sg->get_flag_dir() == 1)
+	if (!sg->is_dir_weak()) 	num_conflicts ++;
+	else num_conflicts += 0.5;
+    }
+    //    std::cout << it->first->get_id() << " " << it->second.first->get_id() << " " << it->second.second->get_id() << std::endl;
+  }
+  
+  // now calculate conflicts based on vertices // two things in, one track in one shower out 
+  for (auto it = used_vertices.begin(); it != used_vertices.end(); it++){
+    WCPPID::ProtoVertex *vtx = *it;
+    if (map_vertex_segments[vtx].size()==1) continue;
+
+    int n_in = 0;
+    int n_in_shower = 0;
+    int n_out_tracks = 0;
+    
+    for (auto it1 = map_vertex_segments[vtx].begin(); it1 != map_vertex_segments[vtx].end(); it1++){
+      WCPPID::ProtoSegment *sg = (*it1);
+      WCPPID::ProtoVertex *vtx1 = map_seg_dir[sg].first;
+      if (vtx!=vtx1){
+	//	std::cout << sg->get_id() << " " << flag_start << " " << vtx->get_id() << " " << vtx1->get_id() << " " << map_seg_dir[sg].second->get_id() << " " << sg->get_flag_dir() << std::endl;
+	n_in ++;
+	if (sg->get_flag_shower()) n_in_shower ++;
+      }else if (vtx==vtx1){
+	if (!sg->get_flag_shower()) n_out_tracks ++;
+      }
+    }
+    //    std::cout << n_in << " " << n_out_tracks << std::endl;
+    
+    if (n_in > 1) {
+      if (n_in != n_in_shower){
+	num_conflicts += (n_in-1);
+      }else{
+	num_conflicts += (n_in-1)/2.;
+      }
+      std::cout << "Wrong: Multiple (" << n_in << ") particles into a vertex! " << std::endl;
+    }
+    if (n_in_shower >0 && n_out_tracks > 0) {
+      num_conflicts += std::min(n_in_shower, n_out_tracks);
+      std::cout << "Wrong: " << n_in_shower << " showers in and " << n_out_tracks << " tracks out! " << std::endl;
+    }
+
+    
+  }
+    
+  return num_conflicts;
+}
 
 
 bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
