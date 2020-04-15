@@ -44,6 +44,8 @@ int main(int argc, char* argv[])
 
   int flag_data = 1; // data
   if(datatier==1 || datatier==2) flag_data=0; // overlay, full mc
+  bool flag_match_data = true;
+  if (datatier == 2) flag_match_data = false; // if MC we do not take into account the dead PMT
   
   WCPPID::ExecMon em("starting");
   cout << em("load geometry") << endl;
@@ -207,16 +209,19 @@ int main(int argc, char* argv[])
   T_match->SetBranchAddress("cluster_length",&cluster_length);
   
   
-  std::map<int, std::pair<int, double> > map_flash_info;
+  //  std::map<int, std::pair<int, double> > map_flash_info;
+  std::map<int, Opflash* > map_flash_info;
   std::map<int, int> map_flash_tpc_ids;
   std::map<int, int> map_tpc_flash_ids;
   std::map<std::pair<int, int>, int> map_flash_tpc_pair_type;
   
-  
+  OpflashSelection flashes;
   for (int i=0;i!=T_flash->GetEntries();i++){
     T_flash->GetEntry(i);
     if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
-    map_flash_info[flash_id] = std::make_pair(type, time);
+    Opflash *flash = new Opflash(type, flash_id, low_time, high_time, time, total_PE, *fired_channels, PE, PE_err, *l1_fired_time, *l1_fired_pe);
+    map_flash_info[flash_id] = flash;
+    //    map_flash_info[flash_id] = std::make_pair(type, time);
   }
   for (int i=0;i!=T_match->GetEntries();i++){
     T_match->GetEntry(i);
@@ -1202,13 +1207,15 @@ int main(int argc, char* argv[])
   ct_point_cloud.build_kdtree_index();
 
   // examine the clustering ... 
-  std::vector<int> to_be_checked;
+  std::vector<std::pair<int, Opflash*> > to_be_checked;
   for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
-    double flash_time = map_flash_info[it->first].second;
+    // double flash_time = map_flash_info[it->first].second;
+    double flash_time = map_flash_info[it->first]->get_time();
     if ( (flash_time < lowerwindow || flash_time > upperwindow)) continue;
-    to_be_checked.push_back(it->second);
+    to_be_checked.push_back(std::make_pair(it->second, map_flash_info[it->first]) );
   }
-  WCPPID::Protect_Over_Clustering(to_be_checked, live_clusters, map_cluster_parent_id, map_parentid_clusters, ct_point_cloud);
+  
+  WCPPID::Protect_Over_Clustering(to_be_checked, live_clusters, map_cluster_parent_id, map_parentid_clusters, ct_point_cloud, flag_match_data, run_no, time_offset, nrebin, time_slice_width);
   
   for (size_t i=0; i!=live_clusters.size();i++){
     if (live_clusters.at(i)->get_point_cloud()==0){
@@ -1221,7 +1228,8 @@ int main(int argc, char* argv[])
   std::vector<WCPPID::NeutrinoID *> neutrino_vec;
   // Code to select nue ...
   for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
-    double flash_time = map_flash_info[it->first].second;
+    //    double flash_time = map_flash_info[it->first].second;
+    double flash_time = map_flash_info[it->first]->get_time();
     //std::cout << flash_time << " " << triggerbits << " " << lowerwindow << " " << upperwindow << std::endl;
     if ( (flash_time < lowerwindow || flash_time > upperwindow)) continue;
     if (map_parentid_clusters.find(it->second) == map_parentid_clusters.end()) continue;
