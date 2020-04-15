@@ -14,9 +14,9 @@ bool sortbydis(const cluster_point_info &a, const cluster_point_info &b){
 
 void WCPPID::NeutrinoID::shower_determing_in_main_cluster(){
 
-  // if one shower in and a good track out, reverse the shower ..
-  fix_maps_multiple_tracks_in(main_cluster->get_cluster_id());
   // if multiple tracks in, make them undetermined ...
+  fix_maps_multiple_tracks_in(main_cluster->get_cluster_id());
+  // if one shower in and a good track out, reverse the shower ..
   fix_maps_shower_in_track_out(main_cluster->get_cluster_id());
  
   // if there is one good track in, turn everything else to out
@@ -29,7 +29,9 @@ void WCPPID::NeutrinoID::shower_determing_in_main_cluster(){
   improve_maps_shower_in_track_out(main_cluster->get_cluster_id(), false); // use shower information to determine the rest ...
   // if multiple tracks in, change track to shower
   improve_maps_multiple_tracks_in(main_cluster->get_cluster_id());
-  
+  // if one shower in and a good track out, reverse the shower ..
+  fix_maps_shower_in_track_out(main_cluster->get_cluster_id());
+    
   // examine map ...
   examine_maps(main_cluster);
   
@@ -100,7 +102,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
 	  }
 	}
 
-	if (mass_diff < 35*units::MeV){
+	if (mass_diff < 25*units::MeV){
 	  pi0_showers.insert(shower_1);
 	  pi0_showers.insert(shower_2);
 	  int pio_id = acc_segment_id; acc_segment_id ++;
