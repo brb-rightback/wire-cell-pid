@@ -61,7 +61,7 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
     }
 
     bool flag_print = false;
-    //    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
+    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
 
     // std::cout << sg << " " << sg->get_id() << " " << sg->get_flag_shower_trajectory() << " " << sg->get_flag_shower_topology() << std::endl;
     
@@ -465,7 +465,7 @@ void WCPPID::NeutrinoID::improve_maps_multiple_tracks_in(int temp_cluster_id){
   } // while
 }
 
-void WCPPID::NeutrinoID::improve_maps_shower_in_track_out(int temp_cluster_id){
+void WCPPID::NeutrinoID::improve_maps_shower_in_track_out(int temp_cluster_id, bool flag_strong_check){
   bool flag_update = true;
   std::set<WCPPID::ProtoVertex* > used_vertices;
   std::set<WCPPID::ProtoSegment* > used_segments;
@@ -497,7 +497,7 @@ void WCPPID::NeutrinoID::improve_maps_shower_in_track_out(int temp_cluster_id){
 	  }
 	}else if (flag_start && sg->get_flag_dir()==1 || (!flag_start) && sg->get_flag_dir()==-1 ){
 	  if ((!sg->get_flag_shower()) ) {
-	    if (sg->is_dir_weak()) out_tracks.push_back(sg);
+	    if (sg->is_dir_weak() || (sg->get_particle_type()==0 && (!flag_strong_check)) ) out_tracks.push_back(sg);
 	  }
 	}else if (sg->get_flag_dir()==0){
 	  map_no_dir_segments[sg] = flag_start;
@@ -608,9 +608,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
     if (!flag_in){
       if (ntracks > 0) 
 	flag_save_only_showers = false;
-      //	std::cout << vtx << " " << ntracks << " " << nshowers << std::endl;
       map_vertex_track_shower[vtx] = std::make_pair(ntracks, nshowers);
-      
     }
   }
 
@@ -624,7 +622,15 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   }
 
 
-  // std::cout << main_vertex_candidates.size() << std::endl;
+  //  std::cout << main_vertex_candidates.size() << std::endl;
+  for (auto it = main_vertex_candidates.begin(); it!= main_vertex_candidates.end(); it++){
+    std::cout << "Candidate main vertex " << (*it)->get_fit_pt() << " connecting to: ";
+    for (auto it1 = map_vertex_segments[*it].begin(); it1!=map_vertex_segments[*it].end(); it1++){
+      std::cout << (*it1)->get_id() << ", ";
+    }
+    std::cout << std::endl;
+  }
+
   
   if (main_vertex_candidates.size()==1){
     main_vertex = main_vertex_candidates.front();
