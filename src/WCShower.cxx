@@ -334,6 +334,31 @@ std::pair<std::set<WCPPID::ProtoSegment*>, std::set<WCPPID::ProtoVertex*> > WCPP
   return std::make_pair(used_segments, used_vertices);
 }
 
+double WCPPID::WCShower::get_dis(WCPPID::ProtoSegment* seg){
+  double min_dis = 1e9;
+  Point min_point;
+  Point test_p = seg->get_point_vec().front();
+  for (auto it = map_seg_vtxs.begin(); it!= map_seg_vtxs.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    std::pair<double, WCP::Point> results = sg->get_closest_point(test_p);
+    if (results.first < min_dis){
+      min_dis = results.first;
+      min_point = results.second;
+    }
+  }
+  std::pair<double, WCP::Point> results1 = seg->get_closest_point(min_point);
+  test_p = results1.second;
+  for (auto it = map_seg_vtxs.begin(); it!= map_seg_vtxs.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    std::pair<double, WCP::Point> results = sg->get_closest_point(test_p);
+    if (results.first < min_dis){
+      min_dis = results.first;
+      min_point = results.second;
+    }
+  }
+  return min_dis;
+}
+
 void WCPPID::WCShower::add_segment(WCPPID::ProtoSegment* seg, Map_Proto_Segment_Vertices& map_segment_vertices){
   for (auto it = map_segment_vertices[seg].begin(); it != map_segment_vertices[seg].end(); it++){
     WCPPID::ProtoVertex *vtx = *it;

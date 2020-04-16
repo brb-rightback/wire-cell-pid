@@ -318,11 +318,11 @@ bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
       if (direct_length == 0 ) length_ratio = 1;
       else length_ratio = direct_length / integrated_length;
       if (tmp_dQ_dx*0.11 + 2*length_ratio < 2.06 && tmp_dQ_dx < 2 && length_ratio < 0.97) n_shower_like ++;
-      //  std::cout << "Xin: " << j << " " << sections.at(j).first << " " << sections.at(j).second <<  " " << length_ratio << " " << tmp_dQ_dx << " " << direct_length << " " << drift_dir.Angle(dir_1)/3.1415926*180. << " " << tmp_dQ_dx*0.11 + 2*length_ratio - 2 << std::endl;  
+      // std::cout << "Xin: " << j << " " << sections.at(j).first << " " << sections.at(j).second <<  " " << length_ratio << " " << tmp_dQ_dx << " " << direct_length << " " << drift_dir.Angle(dir_1)/3.1415926*180. << " " << tmp_dQ_dx*0.11 + 2*length_ratio - 2 << std::endl;  
   }
     
   }
-  //std::cout << "BB " << sections.size() << " " << get_length()/units::cm << " " << n_shower_like << std::endl;
+  //  std::cout << "BB " << sections.size() << " " << get_length()/units::cm << " " << n_shower_like << std::endl;
   if (n_shower_like >=0.5*sections.size()) flag_shower_trajectory = true;
   
   // calculate direct length, accumulated length, medium dQ/dx in each section ...
@@ -490,12 +490,16 @@ std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_ki
     // 		      pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) )/units::cm << std::endl;
     
     if (flag_check){
-      double min_dQ_dx = dQ_vec.at(i)/dx_vec.at(i);
-      for (size_t j = 1;j!=6;j++){
-	if (i+j<fit_pt_vec.size())
-	  if (dQ_vec.at(i+j)/dx_vec.at(i+j) < min_dQ_dx)
-	    min_dQ_dx = dQ_vec.at(i+j)/dx_vec.at(i+j);
+      double ave_dQ_dx = 0; int ave_count = 0;
+      double max_dQ_dx = dQ_vec.at(i)/dx_vec.at(i);
+      for (size_t j = -2;j!=3;j++){
+	if (i+j<fit_pt_vec.size() && i+j>=0){
+	  ave_dQ_dx += dQ_vec.at(i+j)/dx_vec.at(i+j);
+	  ave_count ++;
+	  if (dQ_vec.at(i+j)/dx_vec.at(i+j) > max_dQ_dx) max_dQ_dx = dQ_vec.at(i+j)/dx_vec.at(i+j);
+	}
       }
+      if (ave_count!=0) ave_dQ_dx /= ave_count; 
       
       double sum_angles = 0;
       double nsum = 0;
@@ -512,10 +516,12 @@ std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_ki
       //if (wcpt_vec.front().index >940 && wcpt_vec.front().index < 1200)
 
       // if (fabs(fit_pt_vec.at(i).x-2121.19)<30 && fabs(fit_pt_vec.at(i).y-218.775) < 30 && fabs(fit_pt_vec.at(i).z-715.347)<30)
-      //std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
+      //  std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
       
-      if (para_angles.at(i) > 10 && refl_angles.at(i) > 30 && sum_angles > 15){
-	//	std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
+      if (para_angles.at(i) > 10 && refl_angles.at(i) > 30 && sum_angles > 15 
+	  || para_angles.at(i) > 15 && refl_angles.at(i) > 22 && sum_angles > 19 && max_dQ_dx > 43e3/units::cm*1.5 && ave_dQ_dx > 43e3/units::cm
+	  ){
+	//	std::cout << i << " " << ave_dQ_dx << " " << max_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
 	save_i = i;
 	break;
       }else if (para_angles.at(i) > 15 && refl_angles.at(i) > 27 && sum_angles > 12.5){

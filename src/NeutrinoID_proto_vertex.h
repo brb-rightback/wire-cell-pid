@@ -75,8 +75,8 @@ void WCPPID::NeutrinoID::init_point_segment(WCPPID::PR3DCluster *temp_cluster){
 WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster *temp_cluster){
   // do the first search of the trajectory ...
   std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_two_boundary_wcps(2);
-  wcps.first = temp_cluster->get_local_extension(wcps.first,2);
-  wcps.second =  temp_cluster->get_local_extension(wcps.second,2);
+  //wcps.first = temp_cluster->get_local_extension(wcps.first,2);
+  //wcps.second =  temp_cluster->get_local_extension(wcps.second,2);
   // good for the first track
   temp_cluster->dijkstra_shortest_paths(wcps.first,2); 
   temp_cluster->cal_shortest_path(wcps.second,2);

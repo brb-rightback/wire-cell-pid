@@ -213,7 +213,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
 		  near_center.y - result.second.y,
 		  near_center.z - result.second.z);
       double angle = v1.Angle(v2)/3.1415926*180.;
-      if (angle < 30 || result.first < 5*units::cm && angle <45)
+      if (angle < 30 || result.first < 5*units::cm && angle < 45)
 	angle = std::min(angle , v1.Angle(v3)/3.1415926*180.);
       if (angle < min_pi.min_angle){
 	min_pi.min_angle = angle;
@@ -227,9 +227,9 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
 	main_pi.min_point = result.second;
       }
       
-      // std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << v1.Angle(v3)/3.1415926*180. << " " << result.first/units::cm << std::endl;
+      //      std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << v1.Angle(v3)/3.1415926*180. << " " << result.first/units::cm << std::endl;
     }
-    //std::cout << main_pi.min_angle << " " << min_pi.min_angle << " " << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << std::endl;
+    //    std::cout << main_pi.min_angle << " " << min_pi.min_angle << " " << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << std::endl;
     
     if (main_pi.min_angle < min_pi.min_angle + 3 && min_pi.min_angle > 0.9 * main_pi.min_angle && main_pi.min_dis < min_pi.min_dis * 1.2){
       map_cluster_pi[cluster] = main_pi;
@@ -250,7 +250,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
 
   std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* > map_cluster_associated_vertex;
   for (size_t i=0;i!=vec_pi.size();i++){
-    if (vec_pi.at(i).min_angle < 5)
+    if (vec_pi.at(i).min_angle < 10)
       map_cluster_associated_vertex[vec_pi.at(i).cluster] = vec_pi.at(i).min_vertex;
   }
 
@@ -360,8 +360,9 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
       if (map_segment_in_shower.find(seg1) != map_segment_in_shower.end()) continue;
       if (seg1 == shower->get_start_segment()) continue;
       auto it1 = map_cluster_associated_vertex.find(map_segment_cluster[seg1]);
-      if (it1 != map_cluster_associated_vertex.end())
-	if (it1->second != vertex) continue;
+
+
+	
       // find the closest point 
       // judge the detection ...
       
@@ -373,6 +374,15 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
       
       if (angle/3.1415926*180.< 25 && pair_dis_point.first < 80*units::cm ||
 	  angle/3.1415926*180 < 12.5 && pair_dis_point.first < 120*units::cm ){
+	if (it1 != map_cluster_associated_vertex.end()){
+	  if (it1->second != vertex){ //continue;
+	    double dis1 = shower->get_dis(seg1);
+	    if (dis1 > 25*units::cm && dis1 > pair_dis_point.first * 0.4){
+	    //	    std::cout << shower->get_dis(seg1)/units::cm <<" " << pair_dis_point.first/units::cm << std::endl;
+	      continue;
+	    }
+	  }
+	}
 	//	double dis = pow(pair_dis_point.first*cos(angle),2)/pow(40*units::cm,2) + pow(pair_dis_point.first*sin(angle),2)/pow(5*units::cm,2);
 	//      min_dis = dis;
 	shower->add_segment(seg1, map_segment_vertices);
