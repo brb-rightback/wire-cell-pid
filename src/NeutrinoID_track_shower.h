@@ -695,7 +695,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
     
     // positive is good ...
     map_vertex_num[vtx] -= (n_proton_in - n_proton_out);   // proton information ...
-    //std::cout << map_vertex_num[vtx] << " " << n_proton_in << " " << n_proton_out << std::endl;
+    //    std::cout << map_vertex_num[vtx] << " " << n_proton_in << " " << n_proton_out << std::endl;
   }
 
   // whether the vertex is at beginning or not ...
@@ -717,11 +717,12 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
       }else{
 	map_vertex_num[vtx] += 1/4.; // number of tracks
       }
-      //      std::cout << sg->get_flag_shower() << std::endl;
+      if (sg->get_particle_type()==2212 && sg->get_flag_dir()!=0 && (!sg->is_dir_weak()))
+	map_vertex_num[vtx] += 1/4./2.; // has a clear proton ...
     }
 
     
-    //   std::cout << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(400*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
+    //    std::cout << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(400*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
   }
   
   // whether the vetex is at boundary or not ...
@@ -734,7 +735,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
 
   for (auto it = vertex_candidates.begin(); it != vertex_candidates.end(); it++){
     WCPPID::ProtoVertex *vtx = *it;
-    //std::cout << map_vertex_num[vtx] << " " << calc_conflict_maps(vtx) << " " << map_vertex_num[vtx] << std::endl;
+    //    std::cout << map_vertex_num[vtx] << " " << calc_conflict_maps(vtx) << " " << map_vertex_num[vtx] << std::endl;
     map_vertex_num[vtx] -= calc_conflict_maps(vtx)/4.;
   }
   

@@ -188,9 +188,17 @@ bool WCPPID::ProtoSegment::is_shower_topology(){
       if (std::get<2>(vec_rms_vals.at(i)) > max_spread) max_spread = std::get<2>(vec_rms_vals.at(i));
     }
   }
-  
-  if (max_spread > 0.7*units::cm && large_spread_length > 0.2 * total_effective_length && total_effective_length > 3*units::cm || max_spread > 1.0*units::cm && large_spread_length > 0.4 * total_effective_length) flag_shower_topology = true;
 
+
+  
+  if (max_spread > 0.7*units::cm && large_spread_length > 0.2 * total_effective_length && total_effective_length > 3*units::cm && total_effective_length < 15*units::cm ||
+      max_spread > 0.8*units::cm && large_spread_length > 0.3 * total_effective_length && total_effective_length >= 15*units::cm
+      || max_spread > 1.0*units::cm && large_spread_length > 0.4 * total_effective_length) {
+    //std::cout << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << std::endl;
+    flag_shower_topology = true;
+  }
+
+  
   if (flag_shower_topology){
     std::vector<std::tuple<int, int, double> > threshold_segs;
     for(size_t i=0;i!=vec_dQ_dx.size(); i++){

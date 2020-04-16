@@ -278,6 +278,32 @@ std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> WCPPID::P
   return std::make_pair(highest_wcp,lowest_wcp);
 }
 
+WCP::WCPointCloud<double>::WCPoint WCPPID::PR3DCluster::get_local_extension(WCP::WCPointCloud<double>::WCPoint wcp, int flag){
+  Create_point_cloud();
+  
+  ToyPointCloud *temp_point_cloud = point_cloud;
+  if (flag==2){
+    temp_point_cloud = point_cloud_steiner;
+  }
+  WCP::Point p(wcp.x, wcp.y, wcp.z);
+  
+  TVector3 dir1 = VHoughTrans(p, 10*units::cm);
+  dir1 *= (-1);
+  
+  double max_val = 0;
+  std::vector<WCP::WCPointCloud<double>::WCPoint > wcps = temp_point_cloud->get_closest_wcpoints(p, 10*units::cm);
+  for (size_t i=0;i!=wcps.size();i++){
+    double val = dir1.X() * (wcps.at(i).x -p.x) + dir1.Y() * (wcps.at(i).y - p.y) + dir1.Z() *(wcps.at(i).z - p.z);
+    if (val > max_val){
+      max_val =val;
+      wcp = wcps.at(i);
+    }
+  }
+  
+  
+  return wcp;
+}
+
 std::pair<WCP::WCPointCloud<double>::WCPoint,WCP::WCPointCloud<double>::WCPoint> WCPPID::PR3DCluster::get_two_boundary_wcps(int flag, bool flag_cosmic){
   Create_point_cloud();
   

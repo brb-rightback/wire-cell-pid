@@ -75,11 +75,13 @@ void WCPPID::NeutrinoID::init_point_segment(WCPPID::PR3DCluster *temp_cluster){
 WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster *temp_cluster){
   // do the first search of the trajectory ...
   std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_two_boundary_wcps(2);
+  wcps.first = temp_cluster->get_local_extension(wcps.first,2);
+  wcps.second =  temp_cluster->get_local_extension(wcps.second,2);
   // good for the first track
   temp_cluster->dijkstra_shortest_paths(wcps.first,2); 
   temp_cluster->cal_shortest_path(wcps.second,2);
 
-  //  std::cout << wcps.first.index << " " << wcps.first.x << " " << wcps.first.y << " " << wcps.first.z << " " << wcps.first.index_u << " " << wcps.first.index_v << " " << wcps.first.index_w << " " << wcps.second.index << " " << wcps.second.x << " " << wcps.second.y << " " << wcps.second.z << " " << wcps.second.index_u << " " << wcps.second.index_v << " " << wcps.second.index_w << " " << std::endl;
+  // std::cout << wcps.first.index << " " << wcps.first.x << " " << wcps.first.y << " " << wcps.first.z << " " << wcps.first.index_u << " " << wcps.first.index_v << " " << wcps.first.index_w << " " << wcps.second.index << " " << wcps.second.x << " " << wcps.second.y << " " << wcps.second.z << " " << wcps.second.index_u << " " << wcps.second.index_v << " " << wcps.second.index_w << " " << std::endl;
   
   WCPPID::ProtoVertex *v1=0;
   WCPPID::ProtoVertex *v2=0;
