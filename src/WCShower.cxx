@@ -71,6 +71,53 @@ void WCPPID::WCShower::build_point_clouds(){
   }
 }
 
+void WCPPID::WCShower::calculate_kinematics_long_muon(std::set<WCPPID::ProtoSegment*> segments_in_muons){
+   particle_type = start_segment->get_particle_type();
+   flag_shower = false;
+
+   double L=0;
+   std::vector<double> vec_dQ, vec_dx;
+   for (auto it = map_seg_vtxs.begin(); it != map_seg_vtxs.end(); it++){
+     WCPPID::ProtoSegment *sg = it->first;
+     if (segments_in_muons.find(sg) != segments_in_muons.end())   L += sg->get_length();
+     vec_dQ.insert(vec_dQ.end(), sg->get_dQ_vec().begin(), sg->get_dQ_vec().end());
+     vec_dx.insert(vec_dx.end(), sg->get_dx_vec().begin(), sg->get_dx_vec().end());
+   }
+   kenergy_range = start_segment->cal_kine_range(L);
+   kenergy_dQdx = start_segment->cal_kine_dQdx(vec_dQ, vec_dx);
+   // long muon ...
+   kenergy_best = kenergy_dQdx;
+
+   init_dir = start_segment->cal_dir_3vector();
+   if (start_segment->get_flag_dir()==1){
+     start_point = start_segment->get_point_vec().front();
+   }else if (start_segment->get_flag_dir()==-1){
+     start_point = start_segment->get_point_vec().back();
+   }
+   double max_dis = 0; Point max_point;
+   for (auto it = map_vtx_segs.begin(); it != map_vtx_segs.end(); it++){
+     WCPPID::ProtoVertex *vtx = it->first;
+
+     bool flag_contain = false;
+     
+     for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){ 
+       if (segments_in_muons.find(*it1) != segments_in_muons.end()) {
+	 flag_contain = true;
+	 break;
+       }
+     }
+
+     if (flag_contain){
+       
+       double dis = sqrt(pow(start_point.x - vtx->get_fit_pt().x,2) + pow(start_point.y - vtx->get_fit_pt().y,2) + pow(start_point.z - vtx->get_fit_pt().z,2));
+       if (dis > max_dis){
+	 max_dis = dis;
+	   max_point = vtx->get_fit_pt();
+       }
+     }
+   } // far of the vertex ...
+   end_point = max_point;
+}
 
 
 void WCPPID::WCShower::calculate_kinematics(){

@@ -162,7 +162,8 @@ namespace WCPPID{
     void find_other_segments(WCPPID::PR3DCluster* temp_cluster, bool flag_break_track = true, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
     WCPPID::ProtoSegment* find_incoming_segment(WCPPID::ProtoVertex *vtx);
     ProtoVertex* find_vertex_other_segment(WCPPID::PR3DCluster *temp_cluster, bool flag_forward, WCP::WCPointCloud<double>::WCPoint& wcp);
-
+    std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex* > find_cont_muon_segment(WCPPID::ProtoSegment* sg, WCPPID::ProtoVertex* vtx);
+    
     // calculate charge
     void collect_2D_charges();
     double cal_kine_charge(WCPPID::ProtoSegment *sg);
@@ -300,6 +301,8 @@ namespace WCPPID{
     std::map<int, std::vector<WCShower* > > map_pio_id_showers;
     std::map<int, double> map_pio_id_mass;
     std::map<int, std::pair<int, int> > map_pio_id_saved_pair;
+
+    std::set<WCPPID::ProtoSegment*> segments_in_long_muon;
     
     //    std::map<WCPPID::PR3DCluster*, ProtoSegmentSet> map_cluster_segments;
     //std::map<WCPPID::ProtoSegment*, WCPPID::PR3DCluster*> map_segment_cluster;

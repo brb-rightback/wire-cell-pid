@@ -28,10 +28,12 @@ namespace WCPPID{
     double get_dis(WCPPID::ProtoSegment* seg);
 
     void calculate_kinematics();
-
+    void calculate_kinematics_long_muon(std::set<WCPPID::ProtoSegment*> segments_in_muons);
+    
     void set_flag_kinematics(bool val){flag_kinematics = val;};
     bool get_flag_kinematics(){return flag_kinematics;};
     int get_particle_type(){return particle_type;};
+    void set_particle_type(int val){particle_type = val;};
     bool get_flag_shower(){return flag_shower;};
     double get_kine_range(){return kenergy_range;};
     double get_kine_dQdx(){return kenergy_dQdx;};

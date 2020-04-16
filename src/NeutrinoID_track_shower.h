@@ -652,8 +652,8 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   
 
   
-  std::cout << "Information after main vertex determination: " << std::endl;
-  print_segs_info(main_vertex);
+  //  std::cout << "Information after main vertex determination: " << std::endl;
+  // print_segs_info(main_vertex);
   
 }
 
@@ -896,10 +896,51 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
     }
     segments_to_be_examined = temp_segments;
   }
+
+  
+  // find the long muon candidate ...
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  if (segments_in_long_muon.size()==0){
+    for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
+      WCPPID::ProtoSegment *sg = (*it);
+      WCPPID::ProtoVertex *vtx = find_other_vertex(sg, main_vertex);
+      if (sg->get_medium_dQ_dx()/(43e3/units::cm) > 1.3) continue;
+      std::vector<WCPPID::ProtoSegment* > acc_segments;
+      acc_segments.push_back(sg);
+      //std::cout << sg->get_flag_shower_topology() << " " << sg->get_flag_shower_trajectory() << " " << sg->get_length()/units::cm << " " << " " << sg->get_medium_dQ_dx()/(43e3/units::cm) << std::endl;
+      auto results = find_cont_muon_segment(sg, vtx);
+      while(results.first !=0){
+	acc_segments.push_back(results.first);
+	results = find_cont_muon_segment(results.first, results.second);
+      }
+      double total_length = 0, max_length = 0;
+      for (auto it1 = acc_segments.begin(); it1!=acc_segments.end(); it1++){
+	double length = (*it1)->get_length();
+	total_length += length;
+	if (length > max_length) max_length = length;
+      }
+      if (total_length > 45*units::cm && max_length > 35*units::cm && acc_segments.size()>1){
+	for (auto it1 = acc_segments.begin(); it1!=acc_segments.end(); it1++){
+	  // change to muon ...
+	  //	std::cout << (*it1)->get_id() << std::endl;
+	  (*it1)->set_particle_type(13);
+	  (*it1)->set_flag_shower_trajectory(false);
+	  (*it1)->set_flag_shower_topology(false);
+	  (*it1)->set_particle_mass(mp.get_mass_muon());
+	  if ((*it1)->get_particle_4mom(3)>0)
+	    (*it1)->cal_4mom();
+	  segments_in_long_muon.insert(*it1);
+	}
+      }
+    }
+  }
+  
+
+  
   
   // std::cout << used_vertices.size() << " " << used_segments.size() << std::endl;
 
-  TPCParams& mp = Singleton<TPCParams>::Instance();
+  
   // find the muon candidate, make the other ones connecting to main vertex to be pion
   {
     WCPPID::ProtoSegment *muon_sg = 0;
@@ -923,6 +964,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
 	(*it)->cal_4mom();
     }
   }
+  
 
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
@@ -971,5 +1013,53 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
   // examination ...
   return examine_maps(main_vertex);
   
+  
+}
+
+
+std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex* > WCPPID::NeutrinoID::find_cont_muon_segment(WCPPID::ProtoSegment* sg, WCPPID::ProtoVertex* vtx){
+  WCPPID::ProtoSegment *sg1 = 0;
+  double max_length = 0;
+  double max_angle = 0;
+  double max_ratio = 0;
+  WCPPID::ProtoVertex *vtx1 = 0;
+
+  bool flag_cont = false;
+  
+  for (auto it = map_vertex_segments[vtx].begin(); it!= map_vertex_segments[vtx].end(); it++){
+    WCPPID::ProtoSegment* sg2 = *it;
+    if (sg2 == sg) continue;
+    WCPPID::ProtoVertex* vtx2 = find_other_vertex(sg2, vtx);
+
+    // check ...
+    TVector3 dir1 = sg->cal_dir_3vector(vtx->get_fit_pt(), 15*units::cm);
+    TVector3 dir2 = sg2->cal_dir_3vector(vtx->get_fit_pt(), 15*units::cm);
+
+    double length = sg2->get_length();
+    double angle = (3.1415926-dir1.Angle(dir2))/3.1415926*180.;
+    double ratio = sg2->get_medium_dQ_dx()/(43e3/units::cm);
+
+    //    std::cout << "A: " << angle << " " << length/units::cm << " " << ratio << std::endl;
+    if (angle < 10. &&  ratio < 1.3){
+      flag_cont = true;
+      if (length *cos(angle/180.*3.1415926) > max_length){
+	max_length = length *cos(angle/180.*3.1415926) ;
+	max_angle = angle;
+	max_ratio = ratio;
+	sg1 = sg2;
+	vtx1 = vtx2;
+      }
+    }
+  }
+
+
+  if (flag_cont){
+    //    std::cout << max_angle << " " << max_length/units::cm << " " << max_ratio << std::endl;
+    return std::make_pair(sg1, vtx1);
+  }else{
+    sg1 = 0;
+    vtx1 = 0;
+    return std::make_pair(sg1, vtx1);
+  }
   
 }

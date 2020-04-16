@@ -77,9 +77,10 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
   for (auto it = map_vertex_to_shower.begin(); it!= map_vertex_to_shower.end(); it++){
     std::vector<WCPPID::WCShower*> tmp_showers;
     for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-      if ((*it1)->get_start_vertex().second <3)
+      if ((*it1)->get_start_vertex().second <3 && fabs((*it1)->get_particle_type())!=13)
 	tmp_showers.push_back(*it1);
     }
+    //    std::cout << tmp_showers.size() << std::endl;
     
     if (tmp_showers.size()>1){
       std::map<std::pair<WCPPID::WCShower*, WCPPID::WCShower*>, double> map_shower_pair_mass;
@@ -466,12 +467,19 @@ void WCPPID::NeutrinoID::calculate_shower_kinematics(){
   for (size_t i=0;i!=showers.size();i++){
     WCPPID::WCShower *shower = showers.at(i);
     if (!shower->get_flag_kinematics()){
-      shower->calculate_kinematics();
-      double kine_charge = cal_kine_charge(shower);
-      shower->set_kine_charge(kine_charge);
-      shower->set_flag_kinematics(true);
+      if (fabs(shower->get_particle_type())!=13){
+	shower->calculate_kinematics();
+	double kine_charge = cal_kine_charge(shower);
+	shower->set_kine_charge(kine_charge);
+	shower->set_flag_kinematics(true);
+      }else{
+	// long muon ...
+	shower->calculate_kinematics_long_muon(segments_in_long_muon);
+	double kine_charge = cal_kine_charge(shower);
+	shower->set_kine_charge(kine_charge);
+	shower->set_flag_kinematics(true);
+      }
     }
-    //  std::cout << shower->get_kine_range()/units::MeV << " " << shower->get_kine_dQdx()/units::MeV << " " << shower->get_kine_charge()/units::MeV << std::endl;
   }
 }
 
@@ -605,16 +613,19 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_in_main_cluster(){
       WCPPID::ProtoVertex *daughter_vtx = it->second;
       used_segments.insert(curr_sg);
       
-      if (curr_sg->get_flag_shower() ){
+      if (curr_sg->get_flag_shower() || segments_in_long_muon.find(curr_sg) != segments_in_long_muon.end()){
 	WCPPID::ProtoVertex *parent_vtx = find_other_vertex(curr_sg, daughter_vtx);
 	WCPPID::WCShower *shower = new WCPPID::WCShower();
 	shower->set_start_vertex(parent_vtx, 1);
 	shower->set_start_segment(curr_sg);
 	bool tmp_flag = parent_vtx == main_vertex;
 	showers.push_back(shower);
-	std::cout << "Main-cluster shower " << showers.size() << " : " << curr_sg->get_cluster_id()*1000 + curr_sg->get_id() << " " << curr_sg->get_particle_type() << " " << tmp_flag << " " << curr_sg->get_flag_shower_topology() << std::endl;
-	
-
+	if (fabs(curr_sg->get_particle_type()==13)){
+	  shower->set_particle_type(curr_sg->get_particle_type());
+	  std::cout << "Main-cluster long muon " << showers.size() << " : " << curr_sg->get_cluster_id()*1000 + curr_sg->get_id() << " " << curr_sg->get_particle_type() << " " << tmp_flag << " " << curr_sg->get_flag_shower_topology() << std::endl;
+	}else{
+	  std::cout << "Main-cluster shower " << showers.size() << " : " << curr_sg->get_cluster_id()*1000 + curr_sg->get_id() << " " << curr_sg->get_particle_type() << " " << tmp_flag << " " << curr_sg->get_flag_shower_topology() << std::endl;
+	}
       }else{
 	// keep searching its daughter
 	for (auto it1 = map_vertex_segments[daughter_vtx].begin(); it1 != map_vertex_segments[daughter_vtx].end(); it1++){
@@ -648,6 +659,9 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
     if (map_segment_in_shower.find(seg) == map_segment_in_shower.end()) continue;
     WCPPID::WCShower *shower = map_segment_in_shower[seg];
 
+    if (fabs(shower->get_particle_type())==13) continue;
+    //    std::cout << shower->get_particle_type() << std::endl;
+    
     if (seg == shower->get_start_segment()){
       if ( seg->get_flag_shower_topology() || shower->get_num_segments()>2 || seg->get_medium_dQ_dx(0,100) > 43e3/units::cm * 1.5){
 	TVector3 dir_shower = seg->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 15*units::cm);
@@ -656,7 +670,9 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
     }
   }
 
-  //  std::cout << showers.size() << " " << map_shower_dir.size() << std::endl;
+  //std::cout << showers.size() << " " << map_shower_dir.size() << std::endl;
+
+  if (map_shower_dir.size() == 0) return;
   
   // examine other segments first ... 
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ 

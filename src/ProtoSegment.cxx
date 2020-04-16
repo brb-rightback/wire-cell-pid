@@ -384,6 +384,10 @@ double WCPPID::ProtoSegment::get_rms_dQ_dx(){
   return sqrt((sum[0] - pow(sum[1],2)/sum[2])/(sum[2]-1.));
 }
 
+double WCPPID::ProtoSegment::get_medium_dQ_dx(){
+  return get_medium_dQ_dx(0, fit_pt_vec.size());
+}
+
 double WCPPID::ProtoSegment::get_medium_dQ_dx(int n1, int n2){
   if (n1 < 0) n1 = 0;  if (n1+1 > fit_pt_vec.size()) n1 = int(fit_pt_vec.size())-1;
   if (n2 < 0) n2 = 0;  if (n2+1 > fit_pt_vec.size()) n2 = int(fit_pt_vec.size())-1;

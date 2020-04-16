@@ -38,7 +38,8 @@ namespace WCPPID{
 
     double get_direct_length(int n1, int n2, TVector3 dir_perp);
     double get_length(int n1, int n2, TVector3 dir_perp);
-    
+
+    double get_medium_dQ_dx();
     double get_medium_dQ_dx(int n1, int n2);
     double get_rms_dQ_dx();
 
