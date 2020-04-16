@@ -177,6 +177,8 @@ namespace WCPPID{
     void determine_direction(WCPPID::PR3DCluster* temp_cluster);
     void determine_main_vertex(WCPPID::PR3DCluster* temp_cluster);
 
+    void check_switch_main_cluster(WCPPID::PR3DCluster *max_length_cluster, WCPPID::PR3DClusterSelection& other_clusters, std::set<WCPPID::PR3DCluster*>& skip_clusters );
+    
     // if there is one in, fix the others ...
     void improve_maps_one_in(WCPPID::PR3DCluster* temp_cluster, bool flag_strong_check = true);
     void fix_maps_shower_in_track_out(int temp_cluster_id);

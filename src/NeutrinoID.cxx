@@ -21,12 +21,12 @@ using namespace WCP;
 #include "NeutrinoID_energy_reco.h"
 #include "NeutrinoID_shower_clustering.h"
 
-WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, std::vector<WCPPID::PR3DCluster*>& all_clusters, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x)
+WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<WCPPID::PR3DCluster*>& other_clusters1, std::vector<WCPPID::PR3DCluster*>& all_clusters1, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x)
   : acc_vertex_id(0)
   , acc_segment_id(0)
-  , main_cluster(main_cluster)
-  , other_clusters(other_clusters)
-  , all_clusters(all_clusters)
+  , main_cluster(main_cluster1)
+  , other_clusters(other_clusters1)
+  , all_clusters(all_clusters1)
   , fid(fid)
   , ct_point_cloud(ct_point_cloud)
   , global_wc_map(global_wc_map)
@@ -37,20 +37,45 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
 {
   bool flag_other_clusters = true;
   bool flag_main_cluster = true;
+
+  PR3DCluster* max_length_cluster = 0;
+  double max_length = 0;
   
+  std::map<WCPPID::PR3DCluster*, double> map_cluster_length;
+  std::set<WCPPID::PR3DCluster* > skip_clusters;
   // form id vs. cluster ...
   map_id_cluster[main_cluster->get_cluster_id()] = main_cluster;
-  //std::cout << main_cluster->get_cluster_id() << " " << main_cluster << std::endl;
+  main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+  {
+    std::pair<WCP::WCPointCloud<double>::WCPoint,WCP::WCPointCloud<double>::WCPoint> two_wcps = main_cluster->get_two_boundary_wcps();
+    map_cluster_length[main_cluster] = sqrt(pow(two_wcps.first.x - two_wcps.second.x, 2) + pow(two_wcps.first.y - two_wcps.second.y, 2) + pow(two_wcps.first.z - two_wcps.second.z, 2));
+  }
   for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
     map_id_cluster[(*it)->get_cluster_id()] = *it;
-    //    std::cout << (*it)->get_cluster_id() <<  " " << *it << std::endl;
+    (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+    std::pair<WCP::WCPointCloud<double>::WCPoint,WCP::WCPointCloud<double>::WCPoint> two_wcps = (*it)->get_two_boundary_wcps();
+    double length = sqrt(pow(two_wcps.first.x - two_wcps.second.x, 2) + pow(two_wcps.first.y - two_wcps.second.y, 2) + pow(two_wcps.first.z - two_wcps.second.z, 2));
+    map_cluster_length[*it] = length;
+    if (length > max_length){
+      max_length = length;
+      max_length_cluster = *it;
+    }
   }
-  //  std::cout << map_id_cluster.size() << std::endl;
-
+  
+  // std::cout << main_cluster->get_num_mcells() << " " << map_cluster_length[main_cluster]/units::cm << std::endl;
+  // for  (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
+  //  std::cout << (*it)->get_num_mcells() << " " << map_cluster_length[*it]/units::cm << std::endl;
+  // }
+  
+  // hack switch 
+  // {
+  //   auto it = find(other_clusters.begin(), other_clusters.end(), max_length_cluster);
+  //   other_clusters.erase(it);
+  //   other_clusters.push_back(main_cluster);
+  //   main_cluster = max_length_cluster;
+  // }
   
   if (flag_main_cluster){
-    // create Steiner-inspired graph
-    main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
     // find the proto vertex ...
     find_proto_vertex(main_cluster);    
 
@@ -59,69 +84,79 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WC
     separate_track_shower(main_cluster);
     determine_direction(main_cluster);
     
-    // std::pair<int, int >nums = count_num_tracks_showers(main_cluster);
-    // std::cout << nums.first << " " << nums.second  << std::endl;
-
     shower_determing_in_main_cluster();
     determine_main_vertex(main_cluster);	
     
+    if (max_length > map_cluster_length[main_cluster] * 0.8 ) check_switch_main_cluster(max_length_cluster, other_clusters, skip_clusters);        
     // fit the vertex in 3D 
     improve_vertex(main_cluster);
     clustering_points(main_cluster);
     examine_direction(main_vertex);
-    
   }
 
- 
+  
+  // loop over other clusters ...
   if (flag_other_clusters){
-    //deal with the other clusters ...
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
-      //      std::cout << "A: " << (*it)->get_cluster_id() << std::endl;
-      (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-      
-      //  std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
+      if (skip_clusters.find(*it) != skip_clusters.end()) continue;
       // do not break track and find other tracks ...
       if (!find_proto_vertex(*it, false, 1)) init_point_segment(*it);
-      // std::cout << map_vertex_segments.size() << " " << map_segment_vertices.size() << std::endl;
-      //break;
+      clustering_points(*it);
+      separate_track_shower(*it);
+      determine_direction(*it);
     }
     //  deghost ...
     deghost_clusters();    
   }
 
-  if (flag_other_clusters){
-    //deal with the other clusters ...
-    for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
-      // test ...
-      //(*it)->calc_num_components();
-      //      std::cout << "B: " << (*it)->get_cluster_id() << std::endl;
-      clustering_points(*it);
-      separate_track_shower(*it);
-      determine_direction(*it);
-    }
-  }
+  
 
   if (flag_main_cluster){
     // overall
     separate_track_shower();
-
     // for charge based on calculation ...
     collect_2D_charges();
-    
     // cluster E&M ...
     shower_clustering_with_nv();
   }
-
-  // std::cout << map_vertex_segments[main_vertex].size() << std::endl;
-  // for (auto it = map_vertex_segments[main_vertex].begin(); it!= map_vertex_segments[main_vertex].end(); it++){
-  //   WCPPID::ProtoSegment *seg = (*it);
-  //   bool flag = map_segment_in_shower.find(seg) == map_segment_in_shower.end();
-  //   std::cout << flag << std::endl;
-  // }
+  
   
   // prepare output ...
   fill_fit_parameters();
 }
+
+void WCPPID::NeutrinoID::check_switch_main_cluster(WCPPID::PR3DCluster *max_length_cluster, WCPPID::PR3DClusterSelection& other_clusters, std::set<WCPPID::PR3DCluster*>& skip_clusters ){
+
+  bool flag_switch = false;
+
+  int n_showers = 0;
+  for (auto it = map_vertex_segments[main_vertex].begin(); it!= map_vertex_segments[main_vertex].end(); it++){
+    if ((*it)->get_flag_shower()) n_showers ++;
+  }
+  if (n_showers == map_vertex_segments[main_vertex].size()) flag_switch = true;
+
+  
+  if (flag_switch){
+    std::cout << "Switch Main Cluster! " << std::endl;
+    auto it = find(other_clusters.begin(), other_clusters.end(), max_length_cluster);
+    other_clusters.erase(it);
+    skip_clusters.insert(main_cluster);
+    other_clusters.push_back(main_cluster);
+    main_cluster = max_length_cluster;
+    
+    // find the proto vertex ...
+    find_proto_vertex(main_cluster);    
+    
+    // deal with shower ...
+    clustering_points(main_cluster);
+    separate_track_shower(main_cluster);
+    determine_direction(main_cluster);
+    
+    shower_determing_in_main_cluster();
+    determine_main_vertex(main_cluster);	
+  }
+}
+  
 
 std::pair<int, int> WCPPID::NeutrinoID::count_num_tracks_showers(WCPPID::PR3DCluster* temp_cluster){
   int num[2] = {0,0};

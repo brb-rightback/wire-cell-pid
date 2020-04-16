@@ -213,8 +213,8 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
 		  near_center.y - result.second.y,
 		  near_center.z - result.second.z);
       double angle = v1.Angle(v2)/3.1415926*180.;
-      if (angle < 30)
-	angle = std::min(v1.Angle(v2)/3.1415926*180., v1.Angle(v3)/3.1415926*180.);
+      if (angle < 30 || result.first < 5*units::cm && angle <45)
+	angle = std::min(angle , v1.Angle(v3)/3.1415926*180.);
       if (angle < min_pi.min_angle){
 	min_pi.min_angle = angle;
 	min_pi.min_dis = result.first;
@@ -226,6 +226,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
 	main_pi.min_dis = result.first;
 	main_pi.min_point = result.second;
       }
+      
       // std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << v1.Angle(v3)/3.1415926*180. << " " << result.first/units::cm << std::endl;
     }
     //    std::cout << main_pi.min_angle << " " << min_pi.min_angle << " " << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << std::endl;
