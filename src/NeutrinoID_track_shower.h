@@ -692,7 +692,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
     
     // positive is good ...
     map_vertex_num[vtx] -= (n_proton_in - n_proton_out);   // proton information ...
-    // std::cout << map_vertex_num[vtx] << " " << n_proton_in << " " << n_proton_out << std::endl;
+    //std::cout << map_vertex_num[vtx] << " " << n_proton_in << " " << n_proton_out << std::endl;
   }
 
   // whether the vertex is at beginning or not ...
@@ -706,10 +706,19 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
     // std::cout << vtx->get_fit_pt().z << std::endl;
     map_vertex_num[vtx] -= (vtx->get_fit_pt().z - min_z)/(400*units::cm);   // position information
     //    std::cout << map_vertex_segments[vtx].size() << std::endl;
-    // number of tracks, more is good 
-    map_vertex_num[vtx] += map_vertex_segments[vtx].size()/4.; // number of tracks
+    // number of tracks, more is good
+    for (auto it1 = map_vertex_segments[vtx].begin(); it1!= map_vertex_segments[vtx].end(); it1++){
+      WCPPID::ProtoSegment *sg = (*it1);
+      if (sg->get_flag_shower()){
+	map_vertex_num[vtx] += 1/4./2.; // number of tracks
+      }else{
+	map_vertex_num[vtx] += 1/4.; // number of tracks
+      }
+      //      std::cout << sg->get_flag_shower() << std::endl;
+    }
 
-    //    std::cout << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(400*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
+    
+    //   std::cout << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(400*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
   }
   
   // whether the vetex is at boundary or not ...
@@ -722,8 +731,8 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
 
   for (auto it = vertex_candidates.begin(); it != vertex_candidates.end(); it++){
     WCPPID::ProtoVertex *vtx = *it;
+    //std::cout << map_vertex_num[vtx] << " " << calc_conflict_maps(vtx) << " " << map_vertex_num[vtx] << std::endl;
     map_vertex_num[vtx] -= calc_conflict_maps(vtx)/4.;
-    //    std::cout << calc_conflict_maps(vtx) << " " << map_vertex_num[vtx] << std::endl;
   }
   
   double max_val = -1e9; WCPPID::ProtoVertex* max_vertex = 0;
