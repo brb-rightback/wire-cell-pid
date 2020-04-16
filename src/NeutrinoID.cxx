@@ -710,11 +710,13 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
 	}
       }
     }else{
+
        std::pair<ProtoVertex*, int> pair_vertex = shower->get_start_vertex();
-      // pi0 ...
-      // create a pi0 ...
+       // pi0 ...
+       // create a pi0 ...
        std::pair<int, int> pio_info_pair = fill_pi0_reco_tree(shower, rtree);
        int psuedo_particle_id = fill_psuedo_reco_tree(shower, rtree);
+       
        if (pair_vertex.first == main_vertex){
 	 // pio
 	 rtree.mc_mother[pio_info_pair.first] = 0;
@@ -731,6 +733,9 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
 	 }else{
 	   prev_sg = find_incoming_segment(pair_vertex.first);
 	 }
+	 //	 std::cout << map_sg_sgid[prev_sg] << " " <<  psuedo_particle_id << " " <<  pio_info_pair.first << " " << pio_info_pair.second << std::endl;
+	 rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).clear();
+	 rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(pio_info_pair.second);
 	 // pio
 	 rtree.mc_mother[pio_info_pair.first] = map_sg_sgid[prev_sg];
 	 rtree.mc_daughters->at(pio_info_pair.first).push_back(psuedo_particle_id);

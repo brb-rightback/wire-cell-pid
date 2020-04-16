@@ -94,8 +94,8 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
 	WCPPID::WCShower *shower_1 = 0;
 	WCPPID::WCShower *shower_2 = 0;
 	for (auto it = map_shower_pair_mass.begin(); it!= map_shower_pair_mass.end(); it++){
-	  if (fabs(it->second - 135*units::MeV) < mass_diff){
-	    mass_diff = fabs(it->second - 135*units::MeV);
+	  if (fabs(it->second - 135*units::MeV + 15*units::MeV) < mass_diff){ // hack pi0 mass to a slightly lower value ...
+	    mass_diff = fabs(it->second - 135*units::MeV + 15*units::MeV);// hack pi0 mass to a slightly lower value ...
 	    mass_save = it->second;
 	    shower_1 = it->first.first;
 	    shower_2 = it->first.second;
