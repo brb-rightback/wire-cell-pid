@@ -156,6 +156,7 @@ namespace WCPPID{
     void examine_vertices(WCPPID::PR3DCluster* temp_cluster);
     void examine_vertices_1(WCPPID::PR3DCluster* temp_cluster);
     void examine_vertices_2(WCPPID::PR3DCluster* temp_cluster);
+    void examine_vertices_3(); // main cluster only examine the two initial points 
     bool examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2, double offset_t, double slope_xt, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw);
     
     void find_other_segments(WCPPID::PR3DCluster* temp_cluster, bool flag_break_track = true, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
@@ -249,6 +250,8 @@ namespace WCPPID{
     int acc_segment_id;
     // input ...
     WCPPID::PR3DCluster *main_cluster;
+    std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> main_cluster_initial_pair_vertices;
+    
     std::vector<WCPPID::PR3DCluster*> other_clusters;
     std::vector<WCPPID::PR3DCluster*> all_clusters;
     WCPPID::ToyFiducial* fid;

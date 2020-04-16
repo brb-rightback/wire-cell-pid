@@ -1241,14 +1241,14 @@ int main(int argc, char* argv[])
     WCPPID::PR3DCluster* main_cluster = 0;
     for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
       if ((*it1)->get_cluster_id() == it->second){
-	main_cluster = *it1;
-	break;
+  	main_cluster = *it1;
+  	break;
       }
     }
     std::vector<WCPPID::PR3DCluster*> additional_clusters;
     for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
       if (*it1 != main_cluster)
-	additional_clusters.push_back(*it1);
+  	additional_clusters.push_back(*it1);
     }
 
     double offset_x =     (flash_time - time_offset)*2./nrebin*time_slice_width;

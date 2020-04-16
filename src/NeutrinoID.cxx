@@ -34,6 +34,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   , offset_x(offset_x)
   , type(0)
   , main_vertex(0)
+  , main_cluster_initial_pair_vertices(std::make_pair((WCPPID::ProtoVertex*)0, (WCPPID::ProtoVertex*)0))
 {
   bool flag_other_clusters = true;
   bool flag_main_cluster = true;
@@ -734,8 +735,8 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
 	   prev_sg = find_incoming_segment(pair_vertex.first);
 	 }
 	 //	 std::cout << map_sg_sgid[prev_sg] << " " <<  psuedo_particle_id << " " <<  pio_info_pair.first << " " << pio_info_pair.second << std::endl;
-	 rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).clear();
-	 rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(pio_info_pair.second);
+
+
 	 // pio
 	 rtree.mc_mother[pio_info_pair.first] = map_sg_sgid[prev_sg];
 	 rtree.mc_daughters->at(pio_info_pair.first).push_back(psuedo_particle_id);
@@ -744,7 +745,9 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
 	 rtree.mc_daughters->at(rtree.mc_Ntrack-1).push_back(map_sg_sgid[curr_sg]);
 	 // electron
 	 rtree.mc_mother[ map_sgid_rtid[map_sg_sgid[curr_sg]] ] = psuedo_particle_id;
-	 rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(psuedo_particle_id);
+	 if (find(rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).begin(), rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).end(), pio_info_pair.second) == rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).end())
+	   rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(pio_info_pair.second);
+	 //	 rtree.mc_daughters->at(map_sgid_rtid[map_sg_sgid[prev_sg]]).push_back(psuedo_particle_id);
        }
        
       // create the second psuedo particle

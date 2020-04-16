@@ -289,6 +289,10 @@ WCP::WCPointCloud<double>::WCPoint WCPPID::PR3DCluster::get_local_extension(WCP:
   
   TVector3 dir1 = VHoughTrans(p, 10*units::cm);
   dir1 *= (-1);
+  TVector3 drift_dir(1,0,0);
+
+  if (fabs(dir1.Angle(drift_dir)/3.1415926*180.-90) < 7.5) return wcp;
+  
   
   double max_val = 0;
   std::vector<WCP::WCPointCloud<double>::WCPoint > wcps = temp_point_cloud->get_closest_wcpoints(p, 10*units::cm);

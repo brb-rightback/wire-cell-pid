@@ -14,19 +14,25 @@ bool sortbydis(const cluster_point_info &a, const cluster_point_info &b){
 
 void WCPPID::NeutrinoID::shower_determing_in_main_cluster(){
 
+  //find the longest muon
+  
   // if multiple tracks in, make them undetermined ...
   fix_maps_multiple_tracks_in(main_cluster->get_cluster_id());
   // if one shower in and a good track out, reverse the shower ..
   fix_maps_shower_in_track_out(main_cluster->get_cluster_id());
- 
+  
   // if there is one good track in, turn everything else to out
   improve_maps_one_in(main_cluster); // one in and many out ...
   // if one shower in and a track out, change the track to shower
   improve_maps_shower_in_track_out(main_cluster->get_cluster_id()); // use shower information to determine the rest ...
+  
   // help to change tracks around shower to showers
   improve_maps_no_dir_tracks(main_cluster->get_cluster_id());
   // if one shower in and a track out, change the track to shower
   improve_maps_shower_in_track_out(main_cluster->get_cluster_id(), false); // use shower information to determine the rest ...
+
+  //  print_segs_info(main_cluster);
+  
   // if multiple tracks in, change track to shower
   improve_maps_multiple_tracks_in(main_cluster->get_cluster_id());
   // if one shower in and a good track out, reverse the shower ..
@@ -148,7 +154,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
       else if (sg->get_wcpt_vec().back().index == vtx->get_wcpt().index)
 	flag_start = false;
       
-      if ((flag_start && sg->get_flag_dir()==-1 || (!flag_start) && sg->get_flag_dir()==1) && fabs(sg->get_particle_type())==13){ // muon
+      if ((flag_start && sg->get_flag_dir()==-1 || (!flag_start) && sg->get_flag_dir()==1) && (fabs(sg->get_particle_type())==13 || sg->get_particle_type()==0)){ // muon
 	// in
 	// change to pion ...
 	TPCParams& mp = Singleton<TPCParams>::Instance();

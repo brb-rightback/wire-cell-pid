@@ -576,8 +576,9 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   // examination ...
   // examine_maps(temp_cluster);
   // print ...
+
   //  std::cout << "Information after initial logic examination: " << std::endl;
-  //  print_segs_info(temp_cluster);
+  //print_segs_info(temp_cluster);
 
   
   // find the main vertex ...
@@ -648,9 +649,11 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
     std::cout << (*it)->get_id() << ", ";
   }
   std::cout << std::endl;
+  
 
-  //  std::cout << "Information after main vertex determination: " << std::endl;
-  // print_segs_info(main_vertex);
+  
+  std::cout << "Information after main vertex determination: " << std::endl;
+  print_segs_info(main_vertex);
   
 }
 

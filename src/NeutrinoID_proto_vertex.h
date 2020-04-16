@@ -5,8 +5,10 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
   if (temp_cluster->get_point_cloud_steiner()->get_num_points()<2) return false;
   
   WCPPID::ProtoSegment* sg1 = init_first_segment(temp_cluster);
+
   if (sg1 == 0) return false;
   //  std::cout << "haha1 " << std::endl;
+  if (temp_cluster == main_cluster) main_cluster_initial_pair_vertices = find_vertices(sg1);
   
   if (sg1->get_wcpt_vec().size()>1){
     // break tracks ... 
@@ -26,6 +28,11 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
     //    std::cout << "haha3 " << std::endl;
     // examine the vertices ...
     examine_vertices(temp_cluster);
+
+    // examine the two initial points ...
+    if (temp_cluster == main_cluster && main_cluster_initial_pair_vertices.first!=0)
+      examine_vertices_3();
+    
     return true;
   }
   
@@ -1134,6 +1141,99 @@ void WCPPID::NeutrinoID::examine_vertices(WCPPID::PR3DCluster* temp_cluster){
   if (find_vertices(temp_cluster).size() > 2)
     // merge vertices if they are too close ...
     examine_vertices_2(temp_cluster);
+
+ 
+  
+}
+
+void WCPPID::NeutrinoID::examine_vertices_3(){
+  // examine main_cluster_initial_pair_vertices ...
+  std::vector<WCPPID::ProtoVertex* > temp_vertices;
+  if (main_cluster_initial_pair_vertices.first!=0) temp_vertices.push_back(main_cluster_initial_pair_vertices.first);
+  if (main_cluster_initial_pair_vertices.second!=0) temp_vertices.push_back(main_cluster_initial_pair_vertices.second);
+  bool flag_refit = false;
+  for (size_t i=0;i!=temp_vertices.size();i++){
+    WCPPID::ProtoVertex *vtx = temp_vertices.at(i);
+    auto it = map_vertex_segments.find(vtx);
+    if (it == map_vertex_segments.end()) continue;
+    if (it->second.size()>1) continue; // more than one track ...
+    WCPPID::ProtoSegment *sg = *(it->second.begin());
+
+    bool flag_start;
+    if (sg->get_wcpt_vec().front().index == vtx->get_wcpt().index)
+      flag_start = true;
+    else if (sg->get_wcpt_vec().back().index == vtx->get_wcpt().index)
+      flag_start = false;
+
+    std::vector<WCP::WCPointCloud<double>::WCPoint >& wcps = sg->get_wcpt_vec();
+    
+    WCP::WCPointCloud<double>::WCPoint wcp2;
+    if (flag_start) wcp2 = wcps.back();
+    else wcp2 = wcps.front();
+    
+    auto wcp1 = main_cluster->get_local_extension(vtx->get_wcpt(),2);
+
+    if (wcp1.index == vtx->get_wcpt().index) continue;
+
+    /* { */
+    /*   Point test_p(wcp1.x, wcp1.y, wcp1.z); */
+    /*   double sum_charge=0; */
+    /*   int ncount = 0; */
+    /*   if (!ct_point_cloud->get_closest_dead_chs(test_p,0)){ */
+    /* 	sum_charge += ct_point_cloud->get_ave_charge(test_p, 0.3*units::cm,0); */
+    /* 	ncount ++; */
+    /*   } */
+    /*   if (!ct_point_cloud->get_closest_dead_chs(test_p,1)){ */
+    /* 	sum_charge += ct_point_cloud->get_ave_charge(test_p, 0.3*units::cm,1); */
+    /* 	ncount ++; */
+    /*   } */
+    /*   if (!ct_point_cloud->get_closest_dead_chs(test_p,2)){ */
+    /* 	sum_charge += ct_point_cloud->get_ave_charge(test_p, 0.3*units::cm,2); */
+    /* 	ncount ++; */
+    /*   } */
+    /*   if (ncount!=0) sum_charge /= ncount; */
+    
+    /*   Point test_p1(vtx->get_wcpt().x, vtx->get_wcpt().y, vtx->get_wcpt().z); */
+    /*   double sum_charge1=0; */
+    /*   int ncount1 = 0; */
+    /*   if (!ct_point_cloud->get_closest_dead_chs(test_p1,0)){ */
+    /* 	sum_charge1 += ct_point_cloud->get_ave_charge(test_p1, 0.3*units::cm,0); */
+    /* 	ncount1 ++; */
+    /*   } */
+    /*   if (!ct_point_cloud->get_closest_dead_chs(test_p1,1)){ */
+    /* 	sum_charge1 += ct_point_cloud->get_ave_charge(test_p1, 0.3*units::cm,1); */
+    /* 	ncount1 ++; */
+    /*   } */
+    /*   if (!ct_point_cloud->get_closest_dead_chs(test_p1,2)){ */
+    /* 	sum_charge1 += ct_point_cloud->get_ave_charge(test_p1, 0.3*units::cm,2); */
+    /* 	ncount1 ++; */
+    /*   } */
+    /*   if (ncount1!=0) sum_charge1 /= ncount1; */
+    /*   // if (sum_charge < sum_charge1) continue; */
+    /*   std::cout << sum_charge << " " << sum_charge1 << std::endl; */
+    /* } */
+
+    
+    if (flag_start){
+      main_cluster->dijkstra_shortest_paths(wcp1,2);  
+      main_cluster->cal_shortest_path(wcp2,2);
+    }else{
+      main_cluster->dijkstra_shortest_paths(wcp2,2);  
+      main_cluster->cal_shortest_path(wcp1,2);
+    }
+    if (main_cluster->get_path_wcps().size() < wcps.size()*2){
+      vtx->set_wcpt(wcp1);
+      wcps.clear();
+      for (auto it = main_cluster->get_path_wcps().begin(); it!=main_cluster->get_path_wcps().end(); it++){
+	wcps.push_back(*it);
+      }
+      flag_refit = true;
+    }
+    
+    //    std::cout << wcps.size() << " " << main_cluster->get_path_wcps().size() << std::endl;
+  }
+  if (flag_refit)
+    main_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
 }
 
 void WCPPID::NeutrinoID::examine_vertices_2(WCPPID::PR3DCluster* temp_cluster){
