@@ -63,6 +63,8 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv(){
   calculate_shower_kinematics();
 
   id_pi0_with_vertex();
+
+  
 }
 
 void WCPPID::NeutrinoID::id_pi0_with_vertex(){
@@ -130,6 +132,35 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
       
     }
   }
+
+  // find the pi0 vertex, and the other track coming in, cannot be a muon, change to pion ...
+  std::set<WCPPID::ProtoVertex* > pi0_vertices;
+  for (auto it = pi0_showers.begin(); it!= pi0_showers.end(); it++){
+    pi0_vertices.insert( (*it)->get_start_vertex().first);
+  }
+  for (auto it = pi0_vertices.begin(); it!= pi0_vertices.end(); it++){
+    WCPPID::ProtoVertex *vtx = *it;
+    for (auto it1 = map_vertex_segments[vtx].begin(); it1 != map_vertex_segments[vtx].end(); it1++){
+      WCPPID::ProtoSegment *sg = *it1;
+      bool flag_start;
+      if (sg->get_wcpt_vec().front().index == vtx->get_wcpt().index)
+	flag_start = true;
+      else if (sg->get_wcpt_vec().back().index == vtx->get_wcpt().index)
+	flag_start = false;
+      
+      if ((flag_start && sg->get_flag_dir()==-1 || (!flag_start) && sg->get_flag_dir()==1) && fabs(sg->get_particle_type())==13){ // muon
+	// in
+	// change to pion ...
+	TPCParams& mp = Singleton<TPCParams>::Instance();
+	sg->set_particle_type(211);
+	sg->set_particle_mass(mp.get_mass_pion());
+	if (sg->get_particle_4mom(3)>0)
+	  sg->cal_4mom();
+      }
+    }
+  }
+  //  std::cout << pi0_vertices.size() << std::endl;
+  
 }
 
 void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
