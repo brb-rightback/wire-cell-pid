@@ -78,7 +78,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   
   if (flag_main_cluster){
     // find the proto vertex ...
-    find_proto_vertex(main_cluster);    
+    find_proto_vertex(main_cluster, true, 2);    
     
     // deal with shower ...
     clustering_points(main_cluster);
@@ -147,7 +147,7 @@ void WCPPID::NeutrinoID::check_switch_main_cluster(WCPPID::PR3DCluster *max_leng
     main_cluster = max_length_cluster;
     
     // find the proto vertex ...
-    find_proto_vertex(main_cluster);    
+    find_proto_vertex(main_cluster, true, 2);    
     
     // deal with shower ...
     clustering_points(main_cluster);

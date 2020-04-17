@@ -149,6 +149,7 @@ namespace WCPPID{
     std::vector<std::vector<WCP::WCPointCloud<double>::WCPoint>> get_extreme_wcps(int flag = 1, std::map<int,WCP::SMGCSelection>* old_time_mcells_map=0);
     std::pair<WCP::WCPointCloud<double>::WCPoint,WCP::WCPointCloud<double>::WCPoint> get_two_boundary_wcps(int flag = 1, bool flag_cosmic = false);
     WCP::WCPointCloud<double>::WCPoint get_local_extension(WCP::WCPointCloud<double>::WCPoint wcp, int flag = 1);
+    int get_num_outside_range_points(int flag = 1);
     
     std::pair<WCP::Point,WCP::Point> get_two_extreme_points(int flag = 1);
 

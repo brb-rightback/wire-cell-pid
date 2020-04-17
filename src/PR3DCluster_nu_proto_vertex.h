@@ -65,9 +65,11 @@ WCP::WCPointCloud<double>::WCPoint WCPPID::PR3DCluster::proto_extend_point(WCP::
       
       next_wcp = point_cloud_steiner->get_closest_wcpoint(test_p);
       TVector3 dir2(next_wcp.x - curr_wcp.x, next_wcp.y - curr_wcp.y, next_wcp.z - curr_wcp.z);
-      
+
+      //      std::cout <<  dir2.Angle(dir)/3.1415926*180. << " " << next_wcp.index_u << " " << next_wcp.index_v << " " << next_wcp.index_w << " " << next_wcp.index << std::endl;
       if (dir2.Mag()!=0 && (dir2.Angle(dir)/3.1415926*180. < 25)){
 	//|| (fabs(drift_dir.Angle(dir)/3.1415926*180.-90.)<10. && fabs(drift_dir.Angle(dir2)/3.1415926*180.-90.)<10.) && dir2.Angle(dir)/3.1415926*180. < 60)){
+       
 	flag_continue = true;
 	curr_wcp = next_wcp;
 	dir = dir2 + dir * 5 * units::cm; // momentum trick ...
@@ -80,7 +82,7 @@ WCP::WCPointCloud<double>::WCPoint WCPPID::PR3DCluster::proto_extend_point(WCP::
       
       /* std::cout << dir.X() << " " << dir.Y() << " " << dir.Z() << " " << dir1.X() << " " << dir1.Y() << " " << dir1.Z() << " " << drift_dir.Angle(dir)/3.1415926*180. << " " << drift_dir.Angle(dir1)/3.1415926*180. << std::endl; */
       // std::cout <<curr_wcp.x << " " << curr_wcp.y << " " << curr_wcp.z << " " << i << " " << dir1.Mag() << " " << dir1.Angle(dir)/3.14151926*180. << " " << test_p << " " << next_wcp.x << " " << next_wcp.y << " " << next_wcp.z << std::endl; 
-      
+      //std::cout <<  "A: " << dir1.Angle(dir)/3.1415926*180. << std::endl;
       if (dir1.Mag()!=0 && (dir1.Angle(dir)/3.1415926*180. < 17.5)){
       	//|| (fabs(drift_dir.Angle(dir)/3.1415926*180.-90.)<10. && fabs(drift_dir.Angle(dir1)/3.1415926*180.-90.)<10.) && dir1.Angle(dir)/3.1415926*180. < 60)){
       	flag_continue = true;
@@ -89,16 +91,21 @@ WCP::WCPointCloud<double>::WCPoint WCPPID::PR3DCluster::proto_extend_point(WCP::
       	dir = dir.Unit();
       	break;
       }
-    }
+    } 
   }
 
   /* if (curr_wcp.index != saved_start_wcp.index || sqrt(pow(curr_wcp.x - saved_start_wcp.x,2) + pow(curr_wcp.y - saved_start_wcp.y,2) + pow(curr_wcp.z - saved_start_wcp.z,2)) > 0.01*units::cm){ */
     // forward point ...
     //    std::cout << "Forward search" << std::endl;
+
+
   test_p.x = curr_wcp.x;
   test_p.y = curr_wcp.y;
   test_p.z = curr_wcp.z;
   curr_wcp = point_cloud_steiner->get_closest_wcpoint(test_p);
+
+  //  std::cout << curr_wcp.index << std::endl;
+  
   /* }else{ */
   /*   // backward search ... */
   /*   //std::cout << "Backward search" << std::endl; */

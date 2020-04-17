@@ -308,6 +308,44 @@ WCP::WCPointCloud<double>::WCPoint WCPPID::PR3DCluster::get_local_extension(WCP:
   return wcp;
 }
 
+int WCPPID::PR3DCluster::get_num_outside_range_points(int flag ){
+  Create_point_cloud();
+  
+  ToyPointCloud *temp_point_cloud = point_cloud;
+  if (flag==2){
+    temp_point_cloud = point_cloud_steiner;
+  }
+  //  std::cout << temp_point_cloud << std::endl;
+  WCP::WCPointCloud<double>& cloud = temp_point_cloud->get_cloud();
+
+  double min_x = 1e9, max_x = -1e9;
+  double min_u = 1e9, max_u = -1e9;
+  double min_v = 1e9, max_v = -1e9;
+  double min_w = 1e9, max_w = -1e9;
+  for (auto it = path_wcps.begin(); it!= path_wcps.end(); it++){
+    if ( (*it).x < min_x) min_x = (*it).x;
+    if ( (*it).x > max_x) max_x = (*it).x;
+    if ( (*it).index_u < min_u) min_u = (*it).index_u;
+    if ( (*it).index_u > max_u) max_u = (*it).index_u;
+    if ( (*it).index_v < min_v) min_v = (*it).index_v;
+    if ( (*it).index_v > max_v) max_v = (*it).index_v;
+    if ( (*it).index_w < min_w) min_w = (*it).index_w;
+    if ( (*it).index_w > max_w) max_w = (*it).index_w;
+  }
+
+  int num = 0;
+  for (size_t i=0;i<cloud.pts.size();i++){
+    if (cloud.pts[i].index_u > max_u || cloud.pts[i].index_u < min_u
+	|| cloud.pts[i].index_v > max_v || cloud.pts[i].index_v < min_v
+	|| cloud.pts[i].index_w > max_w || cloud.pts[i].index_w < min_w
+	|| cloud.pts[i].x > max_x || cloud.pts[i].x < min_x)
+      num ++;
+  }
+  
+  //  std::cout << min_u << " " << max_u << " " << min_x << " " << max_x << " " << min_v << " " << max_v << " " << min_w << " " << max_w << std::endl;
+  return num;
+}
+
 std::pair<WCP::WCPointCloud<double>::WCPoint,WCP::WCPointCloud<double>::WCPoint> WCPPID::PR3DCluster::get_two_boundary_wcps(int flag, bool flag_cosmic){
   Create_point_cloud();
   

@@ -471,7 +471,9 @@ std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_ki
 
   bool flag_check = false;
   int save_i = -1;
-  
+  bool flag_switch = false;
+  bool flag_search = false;
+    
   for (int i=0;i!=fit_pt_vec.size();i++){
     if (sqrt(pow(test_p.x - fit_pt_vec.at(i).x,2) +
 	     pow(test_p.y - fit_pt_vec.at(i).y,2) +
@@ -522,15 +524,17 @@ std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_ki
       // if (fabs(fit_pt_vec.at(i).x-2121.19)<30 && fabs(fit_pt_vec.at(i).y-218.775) < 30 && fabs(fit_pt_vec.at(i).z-715.347)<30)
       //  std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
       
-      if (para_angles.at(i) > 10 && refl_angles.at(i) > 30 && sum_angles > 15 
-	  || para_angles.at(i) > 15 && refl_angles.at(i) > 22 && sum_angles > 19 && max_dQ_dx > 43e3/units::cm*1.5 && ave_dQ_dx > 43e3/units::cm
-	  ){
-	//	std::cout << i << " " << ave_dQ_dx << " " << max_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
+      if (para_angles.at(i) > 10 && refl_angles.at(i) > 30 && sum_angles > 15 ){
 	save_i = i;
 	break;
       }else if (para_angles.at(i) > 15 && refl_angles.at(i) > 27 && sum_angles > 12.5){
-	//	std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
+	//std::cout << i << " " << ave_dQ_dx << " " <<max_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
 	save_i = i;
+	break;
+      }else if(para_angles.at(i) > 15 && refl_angles.at(i) > 22 && sum_angles > 19 && max_dQ_dx > 43e3/units::cm*1.5 && ave_dQ_dx > 43e3/units::cm){
+	//	std::cout << i << " " << ave_dQ_dx << " " << max_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
+	save_i = i;
+	flag_search = true;
 	break;
       }
     }
@@ -573,8 +577,7 @@ std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_ki
     double length1_1 = sqrt(pow(last_p1.x - fit_pt_vec.at(save_i).x,2) + pow(last_p1.y - fit_pt_vec.at(save_i).y,2) + pow(last_p1.z - fit_pt_vec.at(save_i).z,2));
     double length2_1 = sqrt(pow(last_p2.x - fit_pt_vec.at(save_i).x,2) + pow(last_p2.y - fit_pt_vec.at(save_i).y,2) + pow(last_p2.z - fit_pt_vec.at(save_i).z,2));
 
-    bool flag_switch = false;
-    bool flag_search = false;
+    
     if (fabs(length2 - length2_1)< 0.03 * length2_1 && length1 * length2_1 > 1.06 * length2 * length1_1){
       flag_switch = true;
       flag_search = true;
@@ -606,6 +609,8 @@ std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_ki
       }
     }
 
+    //    std::cout << sum_dQ/(sum_dx) << " " << flag_search << std::endl;
+    
     if (flag_search){
       if (flag_switch){
 	std::cout << "Cluster: " << cluster_id << " Continue Search True Kink in Backward" << std::endl;

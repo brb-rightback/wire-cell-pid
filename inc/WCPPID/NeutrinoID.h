@@ -146,7 +146,7 @@ namespace WCPPID{
     void fill_skeleton_info(int mother_cluster_id, WCPointTree& ptree, TTree *T, double dQdx_scale, double dQdx_offset, bool flag_skip_vertex = false);
     void fill_point_info(int mother_cluster_id, WCPointTree& ptree, TTree *T);
     
-    
+    void check_end_segments(WCPPID::PR3DCluster* temp_cluster);
     
     // proto-vertex finder
     bool find_proto_vertex(WCPPID::PR3DCluster *cluster, bool flag_break_trak = true, int nrounds_find_other_tracks = 2);
