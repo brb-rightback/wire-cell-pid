@@ -16,6 +16,7 @@ using namespace WCP;
 
 #include "NeutrinoID_proto_vertex.h"
 #include "NeutrinoID_improve_vertex.h"
+#include "NeutrinoID_examine_structure.h"
 #include "NeutrinoID_deghost.h"
 #include "NeutrinoID_track_shower.h"
 #include "NeutrinoID_energy_reco.h"
@@ -79,7 +80,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   if (flag_main_cluster){
     // find the proto vertex ...
     find_proto_vertex(main_cluster, true, 2);    
-    
+
+    /*
     // deal with shower ...
     clustering_points(main_cluster);
     separate_track_shower(main_cluster);
@@ -93,7 +95,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     improve_vertex(main_cluster);
     clustering_points(main_cluster);
     examine_direction(main_vertex);
-    
+    */
   }
 
   
@@ -112,7 +114,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   }
 
   
-  
+  /*  
   if (flag_main_cluster){
     // overall
     separate_track_shower();
@@ -121,6 +123,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     // cluster E&M ...
     shower_clustering_with_nv();
   }
+  */
   
   
   // prepare output ...

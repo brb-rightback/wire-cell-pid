@@ -1209,6 +1209,8 @@ void WCPPID::NeutrinoID::examine_vertices(WCPPID::PR3DCluster* temp_cluster){
   
 }
 
+
+// examine if the initial vertices are not at the extreme location ...
 void WCPPID::NeutrinoID::examine_vertices_3(){
   // examine main_cluster_initial_pair_vertices ...
   std::vector<WCPPID::ProtoVertex* > temp_vertices;
