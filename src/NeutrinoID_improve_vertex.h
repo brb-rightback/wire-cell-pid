@@ -632,7 +632,7 @@ TVector3 WCPPID::NeutrinoID::get_dir(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegm
   return results;
 }
 
-bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster){
+bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster, double search_range){
   
   ToyPointCloud* pcloud = temp_cluster->get_point_cloud_steiner();
   std::vector<bool>& flag_terminals = temp_cluster->get_flag_steiner_terminal();
@@ -645,7 +645,7 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
   }
   //  std::cout << saved_dirs.size() << std::endl;
   
-  std::vector<WCP::WCPointCloud<double>::WCPoint > candidate_wcps = pcloud->get_closest_wcpoints(vtx->get_fit_pt(), 1.5*units::cm);
+  std::vector<WCP::WCPointCloud<double>::WCPoint > candidate_wcps = pcloud->get_closest_wcpoints(vtx->get_fit_pt(), search_range);
   double max_dis = 0;
   WCP::WCPointCloud<double>::WCPoint max_wcp;
   

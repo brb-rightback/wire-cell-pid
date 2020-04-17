@@ -219,3 +219,109 @@ bool WCPPID::NeutrinoID::examine_structure_3(WCPPID::PR3DCluster *temp_cluster){
   }
   return flag_update;
 }
+
+
+bool WCPPID::NeutrinoID::examine_structure_4(WCPPID::PR3DCluster *temp_cluster){
+  bool flag_update = false;
+  for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
+    WCPPID::ProtoVertex *vtx = it->first;
+    if (it->second.size()<2) continue;
+
+    ToyPointCloud* pcloud = temp_cluster->get_point_cloud_steiner();
+    std::vector<bool>& flag_terminals = temp_cluster->get_flag_steiner_terminal();
+    
+    std::vector<TVector3> saved_dirs;
+    int nshowers = 0;
+    for (auto it1 =it->second.begin(); it1!=it->second.end(); it1++){
+      TVector3 dir = get_dir(vtx, *it1);
+      if (dir.Mag()!=0) saved_dirs.push_back(dir);
+    }
+
+    std::vector<WCP::WCPointCloud<double>::WCPoint > candidate_wcps = pcloud->get_closest_wcpoints(vtx->get_fit_pt(), 6*units::cm);
+
+    double max_dis = 0;
+    WCP::WCPointCloud<double>::WCPoint max_wcp;
+
+    for (size_t i=0; i!=candidate_wcps.size(); i++){
+      if (flag_terminals.at(candidate_wcps.at(i).index)){
+	double dis = sqrt(pow(candidate_wcps.at(i).x - vtx->get_fit_pt().x ,2) + pow(candidate_wcps.at(i).y - vtx->get_fit_pt().y,2) + pow(candidate_wcps.at(i).z - vtx->get_fit_pt().z,2));
+	double min_dis = 1e9;
+	double min_dis_u = 1e9;
+	double min_dis_v = 1e9;
+	double min_dis_w = 1e9;
+	Point test_p(candidate_wcps.at(i).x, candidate_wcps.at(i).y, candidate_wcps.at(i).z);
+      
+
+	for (auto it1 = map_segment_vertices.begin(); it1!=map_segment_vertices.end(); it1++){
+	  WCPPID::ProtoSegment *sg = it1->first;
+	  std::pair<double, WCP::Point> results = sg->get_closest_point(test_p);
+	  if (results.first < min_dis) min_dis = results.first;
+	
+	  std::tuple<double, double, double> results_2d = sg->get_closest_2d_dis(test_p);
+	  if (std::get<0>(results_2d) < min_dis_u) min_dis_u = std::get<0>(results_2d);
+	  if (std::get<1>(results_2d) < min_dis_v) min_dis_v = std::get<1>(results_2d);
+	  if (std::get<2>(results_2d) < min_dis_w) min_dis_w = std::get<2>(results_2d);
+	}
+	
+	if (min_dis > 0.9*units::cm   && min_dis_u + min_dis_v + min_dis_w > 1.8*units::cm){
+
+	  double step_size = 0.6*units::cm;
+	  Point start_p = vtx->get_fit_pt();
+	  Point end_p = test_p;
+	  int ncount = std::round(sqrt(pow(start_p.x-end_p.x,2)+pow(start_p.y-end_p.y,2)+pow(start_p.z-end_p.z,2))/step_size);
+	  bool flag_pass = true;
+	  int n_bad = 0;
+	  for (int j=1;j<ncount+1;j++){
+	    Point test_p1;
+	    test_p1.x = start_p.x + (end_p.x - start_p.x)/ncount*j;
+	    test_p1.y = start_p.y + (end_p.y - start_p.y)/ncount*j;
+	    test_p1.z = start_p.z + (end_p.z - start_p.z)/ncount*j;
+	    if (!ct_point_cloud->is_good_point(test_p1, 0.2*units::cm, 0, 0)) n_bad ++;
+	    if (n_bad>1) {
+	      flag_pass = false;
+	      break;
+	    }
+	  }
+
+	  if (flag_pass){
+	    if (max_dis < dis){
+	      max_dis = dis;
+	      max_wcp = candidate_wcps.at(i);
+	    }
+	  }
+	}
+      } // must be steiner terminal
+    } // loop over points ...
+
+    //    std::cout << max_dis/units::cm << std::endl;
+    
+    if (max_dis != 0){
+      WCPPID::ProtoVertex *v1 = new WCPPID::ProtoVertex(acc_vertex_id, max_wcp, temp_cluster->get_cluster_id()); acc_vertex_id++;
+      std::list<WCP::WCPointCloud<double>::WCPoint> wcp_list;
+      wcp_list.push_back(vtx->get_wcpt());
+      
+      double step_size = 1*units::cm;
+      Point start_p = vtx->get_fit_pt();
+      Point end_p(max_wcp.x, max_wcp.y, max_wcp.z);
+      int ncount = std::round(sqrt(pow(start_p.x-end_p.x,2)+pow(start_p.y-end_p.y,2)+pow(start_p.z-end_p.z,2))/step_size);
+      
+      for (size_t j=1; j<ncount;j++){
+	Point tmp_p;
+	tmp_p.x = start_p.x + (end_p.x - start_p.x)/ncount*j;
+	tmp_p.y = start_p.y + (end_p.y - start_p.y)/ncount*j;
+	tmp_p.z = start_p.z + (end_p.z - start_p.z)/ncount*j;
+	WCP::WCPointCloud<double>::WCPoint& wcp =  pcloud->get_closest_wcpoint(tmp_p);
+	if (wcp.index != wcp_list.back().index) wcp_list.push_back(wcp);
+      }
+      if (max_wcp.index != wcp_list.back().index)
+	wcp_list.push_back(max_wcp);
+      
+      std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Add a track to a Vertex" << " " << acc_segment_id << " " << wcp_list.size() << " " << v1->get_wcpt().index << " " << vtx->get_wcpt().index << std::endl;
+      WCPPID::ProtoSegment* sg1 = new WCPPID::ProtoSegment(acc_segment_id, wcp_list, temp_cluster->get_cluster_id()); acc_segment_id++;
+      add_proto_connection(v1,sg1,temp_cluster);
+      add_proto_connection(vtx,sg1,temp_cluster);
+      flag_update = true;
+    }
+  } // loop over vertices ...
+  return flag_update;
+}

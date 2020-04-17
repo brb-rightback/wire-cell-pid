@@ -32,9 +32,15 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
       find_other_segments(temp_cluster, flag_break_track);
     }
 
-    // merge two tracks if their angles are consistent
-    if ( examine_structure_3(temp_cluster) )
-      temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+    if (temp_cluster == main_cluster){
+      // merge two tracks if their angles are consistent
+      if ( examine_structure_3(temp_cluster) )
+	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+      // search for vertex activities ...
+      if ( examine_structure_4(temp_cluster) )
+	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+    }
+    
     
     // examine the vertices ...
     examine_vertices(temp_cluster);

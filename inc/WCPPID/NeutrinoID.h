@@ -166,6 +166,8 @@ namespace WCPPID{
     bool examine_structure_2(WCPPID::PR3DCluster *temp_cluster);
     // merge two tracks into one if their angle are consistent ...
     bool examine_structure_3(WCPPID::PR3DCluster *temp_cluster);
+    // search for missing tracks  ...
+    bool examine_structure_4(WCPPID::PR3DCluster *temp_cluster);
 
     
     void find_other_segments(WCPPID::PR3DCluster* temp_cluster, bool flag_break_track = true, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
@@ -181,7 +183,7 @@ namespace WCPPID{
     // improve vertex ...
     void improve_vertex(WCPPID::PR3DCluster* temp_cluster);
     bool fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster);
-    bool search_for_vertex_activities(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster);
+    bool search_for_vertex_activities(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster, double search_range = 1.5*units::cm);
 
     // get direction 
     TVector3 get_dir(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, double dis = 2*units::cm);
