@@ -180,7 +180,10 @@ void WCPPID::WCShower::calculate_kinematics(){
       flag_shower = start_segment->get_flag_shower();
       // initial direction ...
       if (start_connection_type == 1){
-	init_dir = start_segment->cal_dir_3vector();
+	if (start_segment->get_length() > 8*units::cm)
+	  init_dir = start_segment->cal_dir_3vector();
+	else
+	  init_dir = cal_dir_3vector(start_vertex->get_fit_pt(),12*units::cm);
       }else if (start_connection_type == 2){
 	init_dir.SetXYZ(start_point.x - start_vertex->get_fit_pt().x, start_point.y - start_vertex->get_fit_pt().y, start_point.z - start_vertex->get_fit_pt().z);
       }else if (start_connection_type == 3){
@@ -246,7 +249,10 @@ void WCPPID::WCShower::calculate_kinematics(){
        
       // initial direction ...
       if (start_connection_type == 1){
-	init_dir = start_segment->cal_dir_3vector();
+	if (start_segment->get_length() > 8*units::cm)
+	  init_dir = start_segment->cal_dir_3vector();
+	else
+	  init_dir = cal_dir_3vector(start_vertex->get_fit_pt(),12*units::cm);
       }else if (start_connection_type == 2){
 	init_dir.SetXYZ(start_point.x - start_vertex->get_fit_pt().x, start_point.y - start_vertex->get_fit_pt().y, start_point.z - start_vertex->get_fit_pt().z);
       }else if (start_connection_type == 3){
@@ -319,6 +325,29 @@ void WCPPID::WCShower::update_particle_type(){
     }
     //    std::cout << shower_length << " " << track_length << std::endl;
   }
+}
+
+TVector3 WCPPID::WCShower::cal_dir_3vector(WCP::Point p, double dis_cut ){
+  WCP::Point p1(0,0,0);
+  Int_t ncount = 0;
+  
+  for (auto it = map_seg_vtxs.begin(); it != map_seg_vtxs.end(); it++){
+    PointVector& pts = it->first->get_point_vec();
+    for (size_t i=0;i!=pts.size();i++){
+      double dis = sqrt(pow(pts.at(i).x - p.x,2)+pow(pts.at(i).y - p.y,2)+pow(pts.at(i).z - p.z,2));
+      //    std::cout << dis/units::cm << std::endl;
+      if (dis < dis_cut){
+	p1.x += pts.at(i).x;
+	p1.y += pts.at(i).y;
+	p1.z += pts.at(i).z;
+	ncount ++;
+      }
+    }
+  }
+  
+  TVector3 v1(p1.x/ncount - p.x, p1.y/ncount - p.y, p1.z/ncount - p.z);
+  v1 = v1.Unit();
+  return v1;
 }
 
 void WCPPID::WCShower::fill_sets( std::set<WCPPID::ProtoVertex* >& used_vertices,  std::set<WCPPID::ProtoSegment* >& used_segments, bool flag_exclude_start_segment){

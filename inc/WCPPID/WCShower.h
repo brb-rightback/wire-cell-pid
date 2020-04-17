@@ -29,6 +29,7 @@ namespace WCPPID{
 
     void calculate_kinematics();
     void calculate_kinematics_long_muon(std::set<WCPPID::ProtoSegment*> segments_in_muons);
+    TVector3 cal_dir_3vector(WCP::Point p, double dis_cut = 15*units::cm);
     
     void set_flag_kinematics(bool val){flag_kinematics = val;};
     bool get_flag_kinematics(){return flag_kinematics;};
