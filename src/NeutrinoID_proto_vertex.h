@@ -20,7 +20,7 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
       break_segments(remaining_segments, temp_cluster);
       //      if (flag_check_end_segments)	check_end_segments(temp_cluster);
       // if a straight length is better for a segment ...
-      examine_structure_1(temp_cluster);
+      examine_structure(temp_cluster);
       
     }else{
       temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
@@ -32,7 +32,9 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
       find_other_segments(temp_cluster, flag_break_track);
     }
 
-
+    // merge two tracks if their angles are consistent
+    if ( examine_structure_3(temp_cluster) )
+      temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
     
     // examine the vertices ...
     examine_vertices(temp_cluster);
@@ -128,12 +130,12 @@ WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster
   // do the first search of the trajectory ...
   std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_two_boundary_wcps(2);
 
-  {
-    auto wcp1 = wcps.first;
-    auto wcp2 = wcps.second;
-    wcps.first = wcp2;
-    wcps.second = wcp1;
-  }
+  /* { */
+  /*   auto wcp1 = wcps.first; */
+  /*   auto wcp2 = wcps.second; */
+  /*   wcps.first = wcp2; */
+  /*   wcps.second = wcp1; */
+  /* } */
   
   
   // good for the first track

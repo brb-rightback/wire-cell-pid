@@ -160,8 +160,12 @@ namespace WCPPID{
     bool examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2, double offset_t, double slope_xt, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw);
 
     void examine_structure(WCPPID::PR3DCluster *temp_cluster);
+    // straighten one short wiggled track with high dQ/dx 
     bool examine_structure_1(WCPPID::PR3DCluster *temp_cluster);
-
+    // merge two short tracks into a straight one
+    bool examine_structure_2(WCPPID::PR3DCluster *temp_cluster);
+    // merge two tracks into one if their angle are consistent ...
+    bool examine_structure_3(WCPPID::PR3DCluster *temp_cluster);
 
     
     void find_other_segments(WCPPID::PR3DCluster* temp_cluster, bool flag_break_track = true, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
