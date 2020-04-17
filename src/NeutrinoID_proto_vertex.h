@@ -19,6 +19,8 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
       remaining_segments.push_back(sg1);
       break_segments(remaining_segments, temp_cluster);
       //      if (flag_check_end_segments)	check_end_segments(temp_cluster);
+      // if a straight length is better for a segment ...
+      examine_structure_1(temp_cluster);
       
     }else{
       temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
@@ -29,14 +31,20 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
     for (size_t i=0;i!=nrounds_find_other_tracks;i++){
       find_other_segments(temp_cluster, flag_break_track);
     }
+
+
     
     // examine the vertices ...
     examine_vertices(temp_cluster);
-    //    std::cout << "haha3 " << std::endl;
     
     // examine the two initial points ...
     if (temp_cluster == main_cluster && main_cluster_initial_pair_vertices.first!=0)
       examine_vertices_3();
+
+
+    //
+    //examine_structure(temp_cluster);
+    //    temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
     
     return true;
   }
@@ -340,7 +348,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	  // std::cout << min_dis_u/units::cm << " " << min_dis_v/units::cm << " " << min_dis_w/units::cm << std::endl;
     }
     
-    //    if (cloud.pts[i].index_v>4440-2400 && cloud.pts[i].index_v < 4460-2400 && cloud.pts[i].index_w > 7895-4800 && cloud.pts[i].index_w < 7910-4800 && p.x < 980){
+    //    if (cloud.pts[i].index_u< 820 && cloud.pts[i].index_u >800 && cloud.pts[i].index_w < 5525-4800 && cloud.pts[i].index_w > 5505-4800 && p.x < 200*units::cm && p.x > 193*units::cm && min_dis_v < 0.6*units::cm){
     //std::cout << p << " " << cloud.pts[i].index << " " << cloud.pts[i].index_u << " " << cloud.pts[i].index_v+2400 << " " << cloud.pts[i].index_w+4800 << " " << min_dis_u/units::cm << " " << min_dis_v/units::cm << " " << min_dis_w/units::cm << " " <<  min_3d_dis/units::cm << " " << flag_tagged[i] << std::endl;
     //}
     
@@ -548,6 +556,9 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
       if (min_dis_u > scaling_2d * search_range   && (!ct_point_cloud->get_closest_dead_chs(p, 0))) flag_num ++;
       if (min_dis_v > scaling_2d * search_range   && (!ct_point_cloud->get_closest_dead_chs(p, 1))) flag_num ++;
       if (min_dis_w > scaling_2d * search_range   && (!ct_point_cloud->get_closest_dead_chs(p, 2))) flag_num ++;
+
+      //      std::cout << cloud.pts[sep_clusters[i].at(j)].index << " " << min_dis_u/units::cm << " " << min_dis_v/units::cm << " " << min_dis_w/units::cm << " " << ct_point_cloud->get_closest_dead_chs(p, 0) << " " << ct_point_cloud->get_closest_dead_chs(p, 1) << " " << ct_point_cloud->get_closest_dead_chs(p, 2) << std::endl;
+
       if (min_dis_u > max_dis_u && (!ct_point_cloud->get_closest_dead_chs(p, 0))) max_dis_u = min_dis_u;
       if (min_dis_v > max_dis_v && (!ct_point_cloud->get_closest_dead_chs(p, 1))) max_dis_v = min_dis_v;
       if (min_dis_w > max_dis_w && (!ct_point_cloud->get_closest_dead_chs(p, 2))) max_dis_w = min_dis_w;
@@ -582,20 +593,21 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     temp_segments.at(i).max_dis_v = max_dis_v;
     temp_segments.at(i).max_dis_w = max_dis_w;
 
-    //    std::cout << special_A << " " << special_B << " " << length/units::cm << std::endl;
+    //    std::cout << special_A << " " << special_B << " " << length/units::cm << " " << temp_segments.at(i).number_points << " "  << number_not_faked << std::endl;
     
     if (temp_segments.at(i).number_points ==1  //  only one point 
     	|| number_not_faked == 0 &&
 	(length < 3.5*units::cm  // very short & fake
 	 || (number_not_faked < 0.25 * temp_segments.at(i).number_points || number_not_faked < 0.4 * temp_segments.at(i).number_points && length < 7 * units::cm) && max_dis_u/units::cm < 3 && max_dis_v/units::cm < 3 && max_dis_w/units::cm < 3 && max_dis_u + max_dis_v + max_dis_w < 6*units::cm)  // many fake things and very close to each other ...
-     	)
+     	){
       remaining_segments.erase(i);
+    }
   }
 
   /* for (auto it = remaining_segments.begin(); it!=remaining_segments.end(); it++){  */
   /*   std::cout << "jaja1: " << *it << " " << temp_segments.at(*it).number_not_faked << " " << temp_segments.at(*it).number_points << " " <<  temp_segments.at(*it).max_dis_u/units::cm << " " << temp_segments.at(*it).max_dis_v/units::cm << " " << temp_segments.at(*it).max_dis_w/units::cm << " " << temp_segments.at(*it).length/units::cm << std::endl;  */
   /* }  */
-  
+  // std::cout << remaining_segments.size() << std::endl;
 
   // plan to examine things ... 
   std::vector<int> saved_clusters;
@@ -1205,7 +1217,7 @@ void WCPPID::NeutrinoID::examine_vertices(WCPPID::PR3DCluster* temp_cluster){
     // merge vertices if they are too close ...
     examine_vertices_2(temp_cluster);
 
- 
+
   
 }
 

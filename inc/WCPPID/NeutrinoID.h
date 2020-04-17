@@ -159,8 +159,8 @@ namespace WCPPID{
     void examine_vertices_3(); // main cluster only examine the two initial points 
     bool examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2, double offset_t, double slope_xt, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw);
 
-
-    bool examine_structure_1(int temp_cluster_id);
+    void examine_structure(WCPPID::PR3DCluster *temp_cluster);
+    bool examine_structure_1(WCPPID::PR3DCluster *temp_cluster);
 
 
     
