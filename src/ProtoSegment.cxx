@@ -900,6 +900,7 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
   bool flag_backward = std::round(result_backward.at(0));
 
   double length = get_length();
+  double length1 = sqrt(pow(fit_pt_vec.front().x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.front().y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.front().z - fit_pt_vec.back().z,2));
   
   int forward_particle_type = 13; // default muon
   double min_forward_val = result_forward.at(1) ;
@@ -910,10 +911,12 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
   if (result_forward.at(3) < min_forward_val && length < 20*units::cm){
     min_forward_val = result_forward.at(3);
     forward_particle_type = 11;
-  }// else if (result_forward.at(3) < min_forward_val *0.8 && length < 40*units::cm){
-  //   min_forward_val = result_forward.at(3);
-  //   forward_particle_type = 11;
-  // }
+  }else if (result_forward.at(3) < min_forward_val *0.8 && length < 40*units::cm&& length1 < length * 0.92){
+    min_forward_val = result_forward.at(3);
+    forward_particle_type = 11;
+  }
+
+  //  std::cout << length/units::cm << " " << length1/units::cm << std::endl;
   
   int backward_particle_type  =13; // default muon
   double min_backward_val = result_backward.at(1);
@@ -924,10 +927,10 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
   if (result_backward.at(3) < min_backward_val && length < 20*units::cm){
     min_backward_val = result_backward.at(3);
     backward_particle_type = 11;
-  }// else if (result_backward.at(3) < min_backward_val*0.8 && length < 40*units::cm){
-  //   min_backward_val = result_backward.at(3);
-  //   backward_particle_type = 11;
-  // }
+  } else if (result_backward.at(3) < min_backward_val*0.8 && length < 40*units::cm && length1 < length * 0.92){
+    min_backward_val = result_backward.at(3);
+    backward_particle_type = 11;
+  }
 
   // std::cout << id << " " << get_length()/units::cm << " " << result_forward.at(0) << " m: " << result_forward.at(1)  << " p: " << result_forward.at(2) << " e: " << result_forward.at(3)  << std::endl;
   // std::cout << id << " " << get_length()/units::cm << " " << result_backward.at(0) << " m: " << result_backward.at(1)  << " p: " << result_backward.at(2)  << " e: " << result_backward.at(3) <<  std::endl;
