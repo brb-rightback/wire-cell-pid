@@ -84,7 +84,8 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
       if ((*it1)->get_flag_shower()) nshowers ++;
       else ntracks ++;
     }
-    if (ntracks == 0 && vtx != main_vertex) continue;
+    //    std::cout << ntracks << " " << nshowers << " " << vtx << " " << main_vertex << std::endl;
+    if (ntracks == 0 && vtx != main_vertex ) continue;
     bool flag_update = search_for_vertex_activities(vtx, it->second, temp_cluster);
     if (flag_update) flag_update_fit = true;
   }
@@ -777,14 +778,14 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
 
     if (max_wcp.index != wcp_list.back().index)
       wcp_list.push_back(max_wcp);
-    std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Vertex Activity Found" << " " << tmp_p << " " << acc_segment_id << " " << wcp_list.size() << " " << v1->get_wcpt().index << " " << vtx->get_wcpt().index << std::endl;
-    WCPPID::ProtoSegment* sg1 = new WCPPID::ProtoSegment(acc_segment_id, wcp_list, temp_cluster->get_cluster_id()); acc_segment_id++;
-    add_proto_connection(v1,sg1,temp_cluster);
-    add_proto_connection(vtx,sg1,temp_cluster);
-
-  
+    if (wcp_list.size()>1){
+      std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Vertex Activity Found" << " " << tmp_p << " " << acc_segment_id << " " << wcp_list.size() << " " << v1->get_wcpt().index << " " << vtx->get_wcpt().index << std::endl;
+      WCPPID::ProtoSegment* sg1 = new WCPPID::ProtoSegment(acc_segment_id, wcp_list, temp_cluster->get_cluster_id()); acc_segment_id++;
+      add_proto_connection(v1,sg1,temp_cluster);
+      add_proto_connection(vtx,sg1,temp_cluster);
     
-    return true;
+      return true;
+    }
   }
   
   return false;

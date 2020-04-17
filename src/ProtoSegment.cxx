@@ -872,6 +872,7 @@ std::vector<double> WCPPID::ProtoSegment::do_track_comp(std::vector<double>& L ,
 }
 
 bool WCPPID::ProtoSegment::eval_ks_ratio(double ks1, double ks2, double ratio1, double ratio2){
+  //  std::cout << ks1 << " " << ks2 << " " << ratio1 << " " << ratio2 << " " << sqrt(pow(ks2/0.06,2)+pow((ratio2-1)/0.06,2)) << " " << ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << " " <<  ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 << " " << std::endl;
   if (ks1-ks2 >= 0.0) return false;
   if (sqrt(pow(ks2/0.06,2)+pow((ratio2-1)/0.06,2))< 1.4 && ks1-ks2 + (fabs(ratio1-1)-fabs(ratio2-1))/1.5*0.3 > -0.02) return false;
 
@@ -909,7 +910,11 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
   if (result_forward.at(3) < min_forward_val && length < 20*units::cm){
     min_forward_val = result_forward.at(3);
     forward_particle_type = 11;
-  }
+  }// else if (result_forward.at(3) < min_forward_val *0.8 && length < 40*units::cm){
+  //   min_forward_val = result_forward.at(3);
+  //   forward_particle_type = 11;
+  // }
+  
   int backward_particle_type  =13; // default muon
   double min_backward_val = result_backward.at(1);
   if (result_backward.at(2) < min_backward_val){
@@ -919,10 +924,13 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
   if (result_backward.at(3) < min_backward_val && length < 20*units::cm){
     min_backward_val = result_backward.at(3);
     backward_particle_type = 11;
-  }
+  }// else if (result_backward.at(3) < min_backward_val*0.8 && length < 40*units::cm){
+  //   min_backward_val = result_backward.at(3);
+  //   backward_particle_type = 11;
+  // }
 
-  //  std::cout << id << " " << get_length()/units::cm << " " << result_forward.at(0) << " m: " << result_forward.at(1)  << " p: " << result_forward.at(2) << " e: " << result_forward.at(3)  << std::endl;
-  //std::cout << id << " " << get_length()/units::cm << " " << result_backward.at(0) << " m: " << result_backward.at(1)  << " p: " << result_backward.at(2)  << " e: " << result_backward.at(3) <<  std::endl;
+  // std::cout << id << " " << get_length()/units::cm << " " << result_forward.at(0) << " m: " << result_forward.at(1)  << " p: " << result_forward.at(2) << " e: " << result_forward.at(3)  << std::endl;
+  // std::cout << id << " " << get_length()/units::cm << " " << result_backward.at(0) << " m: " << result_backward.at(1)  << " p: " << result_backward.at(2)  << " e: " << result_backward.at(3) <<  std::endl;
 
   
   if (flag_forward == 1 && flag_backward == 0){
@@ -946,7 +954,15 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
       particle_score = min_backward_val;
     }
     return true;
-  }  
+  }else if (flag_forward ==0 && flag_backward == 0){
+    if (forward_particle_type == backward_particle_type){
+      particle_score = std::min(min_forward_val, min_backward_val);
+      particle_type = forward_particle_type;
+      flag_dir = 0;
+      return false;
+    }
+    
+  }
 
   // reset before return ...
   flag_dir = 0;
@@ -1143,9 +1159,9 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
   if (npoints >=2){ // reasonably long ...
     // can use the dQ/dx to do PID and direction ...
     bool tmp_flag_pid = do_track_pid(L, dQ_dx);
-    if (!tmp_flag_pid) do_track_pid(L, dQ_dx, 15*units::cm);
-    if (!tmp_flag_pid) do_track_pid(L, dQ_dx, 35*units::cm, 3*units::cm);
-    if (!tmp_flag_pid) do_track_pid(L, dQ_dx, 15*units::cm, 3*units::cm);
+    if (!tmp_flag_pid) tmp_flag_pid =do_track_pid(L, dQ_dx, 15*units::cm);
+    if (!tmp_flag_pid) tmp_flag_pid = do_track_pid(L, dQ_dx, 35*units::cm, 3*units::cm);
+    if (!tmp_flag_pid) tmp_flag_pid =do_track_pid(L, dQ_dx, 15*units::cm, 3*units::cm);
   }
 
   

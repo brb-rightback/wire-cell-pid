@@ -93,7 +93,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
 	  double angle = dir1.Angle(dir2);
 	  double mass_pio = sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2));
 	  map_shower_pair_mass[std::make_pair(shower_1, shower_2)] = mass_pio;
-	  // std::cout << it->first << " " << i << " " << j << " " << shower_1->get_kine_charge()/units::MeV << " " << shower_2->get_kine_charge()/units::MeV << " " << dir1.Mag() << " " << dir2.Mag() << " " << angle/3.1415926*180. << " " << sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2))/units::MeV<< std::endl;
+	  //	  std::cout << it->first << " " << i << " " << j << " " << shower_1->get_kine_charge()/units::MeV << " " << shower_2->get_kine_charge()/units::MeV << " " << dir1.Mag() << " " << dir2.Mag() << " " << angle/3.1415926*180. << " " << sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2))/units::MeV<< std::endl;
 	}
       }
       while(map_shower_pair_mass.size()>0){
@@ -267,11 +267,12 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
       
       //      std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << v1.Angle(v3)/3.1415926*180. << " " << result.first/units::cm << std::endl;
     }
-    //    std::cout << main_pi.min_angle << " " << min_pi.min_angle << " " << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << std::endl;
+    //   std::cout <<main_pi.min_point  << " " << main_vertex->get_fit_pt() << " " <<  main_pi.min_angle << " " << min_pi.min_angle << " " << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << std::endl;
     
-    if (main_pi.min_angle < min_pi.min_angle + 3 && min_pi.min_angle > 0.9 * main_pi.min_angle && main_pi.min_dis < min_pi.min_dis * 1.2){
+    if (main_pi.min_angle < min_pi.min_angle + 3 && min_pi.min_angle > 0.9 * main_pi.min_angle && main_pi.min_dis < min_pi.min_dis * 1.2 
+	//	||  min_pi.min_angle > 15 && main_pi.min_angle < min_pi.min_angle + 15
+	){
       map_cluster_pi[cluster] = main_pi;
-      //
     }else{
       map_cluster_pi[cluster] = min_pi;
     }
