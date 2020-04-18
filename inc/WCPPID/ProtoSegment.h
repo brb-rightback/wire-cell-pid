@@ -32,7 +32,7 @@ namespace WCPPID{
     std::vector<bool>& get_fit_flag_skip(){return fit_flag_skip;};
 
     double get_length();
-    
+    double get_direct_length();
     double get_direct_length(int n1, int n2);
     double get_length(int n1, int n2);
 
