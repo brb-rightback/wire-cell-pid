@@ -66,6 +66,8 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
       else ntracks ++;
     }
     if (ntracks == 0 && (vtx != main_vertex) ) continue;
+
+    
     
     bool flag_update = fit_vertex(vtx, it->second, temp_cluster);
     if (flag_update) {
@@ -84,7 +86,9 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
     examine_vertices(temp_cluster);
   }
-    
+
+  std::vector<WCPPID::ProtoVertex* > refit_vertices;
+  
   flag_update_fit = false;
   for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end();it++){
     WCPPID::ProtoVertex *vtx = it->first;
@@ -98,14 +102,23 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
     //    std::cout << ntracks << " " << nshowers << " " << vtx << " " << main_vertex << std::endl;
     if (ntracks == 0 && vtx != main_vertex ) continue;
     bool flag_update = search_for_vertex_activities(vtx, it->second, temp_cluster);
-    if (flag_update) flag_update_fit = true;
+    if (flag_update) {
+      // if there are only two tracks starting, the fit is not precise, plan for refit
+      if (map_vertex_segments[vtx].size()==3) refit_vertices.push_back(vtx);
+      flag_update_fit = true;
+    }
   }
   //  std::cout << flag_update_fit << std::endl;
   if (flag_update_fit){
     // do the overall fit again
     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
-
-   
+    flag_update_fit = false;
+    // redo the fit ...
+    for (auto it = refit_vertices.begin(); it!= refit_vertices.end(); it++){
+      bool flag_update = fit_vertex(*it, map_vertex_segments[*it], temp_cluster);
+      if (flag_update) 	flag_update_fit = true;
+    }
+    if (flag_update_fit)     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
   }
   
   for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
