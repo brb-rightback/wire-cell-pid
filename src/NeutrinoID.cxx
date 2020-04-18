@@ -372,7 +372,7 @@ void WCPPID::NeutrinoID::fill_reco_tree(WCPPID::ProtoSegment* sg, WCRecoTree& rt
   rtree.mc_kine_range[rtree.mc_Ntrack] = sg->cal_kine_range()/units::MeV;
   rtree.mc_kine_dQdx[rtree.mc_Ntrack] = sg->cal_kine_dQdx()/units::MeV;
   rtree.mc_kine_charge[rtree.mc_Ntrack] = cal_kine_charge(sg)/units::MeV;
-
+  rtree.mc_length[rtree.mc_Ntrack] = sg->get_length()/units::cm;
   // std::cout << rtree.mc_id[rtree.mc_Ntrack] << " " << rtree.mc_dir_weak[rtree.mc_Ntrack] << " " << rtree.mc_kine_range[rtree.mc_Ntrack] << " " << rtree.mc_kine_dQdx[rtree.mc_Ntrack] << " " << rtree.mc_kine_charge[rtree.mc_Ntrack] << std::endl;
   
   sg->set_kine_charge( rtree.mc_kine_charge[rtree.mc_Ntrack] * units::MeV);
@@ -440,6 +440,7 @@ void WCPPID::NeutrinoID::fill_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rt
   rtree.mc_kine_range[rtree.mc_Ntrack] = shower->get_kine_range()/units::MeV;
   rtree.mc_kine_dQdx[rtree.mc_Ntrack] = shower->get_kine_dQdx()/units::MeV;
   rtree.mc_kine_charge[rtree.mc_Ntrack] = shower->get_kine_charge()/units::MeV;
+  rtree.mc_length[rtree.mc_Ntrack] = shower->get_total_length()/units::cm;
   
   rtree.mc_startXYZT[rtree.mc_Ntrack][0] = shower->get_start_point().x/units::cm;
   rtree.mc_startXYZT[rtree.mc_Ntrack][1] = shower->get_start_point().y/units::cm;
@@ -451,6 +452,7 @@ void WCPPID::NeutrinoID::fill_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rt
   rtree.mc_endXYZT[rtree.mc_Ntrack][2] = shower->get_end_point().z/units::cm;
   rtree.mc_endXYZT[rtree.mc_Ntrack][3] = 0;
 
+  
   std::pair<ProtoVertex*, int> pair_start_vertex = shower->get_start_vertex();
   if (pair_start_vertex.second ==4 ){
     rtree.mc_dir_weak[rtree.mc_Ntrack] = 1;
@@ -487,6 +489,8 @@ std::pair<int, int> WCPPID::NeutrinoID::fill_pi0_reco_tree(WCPPID::WCShower* sho
     rtree.mc_kine_range[rtree.mc_Ntrack] = 0;
     rtree.mc_kine_dQdx[rtree.mc_Ntrack] = 0;
     rtree.mc_kine_charge[rtree.mc_Ntrack] = 0;
+    rtree.mc_length[rtree.mc_Ntrack] = 0;
+    rtree.mc_stopped[rtree.mc_Ntrack-1] = 0;
     
     rtree.mc_startXYZT[rtree.mc_Ntrack][0] = shower->get_start_vertex().first->get_fit_pt().x/units::cm;
     rtree.mc_startXYZT[rtree.mc_Ntrack][1] = shower->get_start_vertex().first->get_fit_pt().y/units::cm;
@@ -535,6 +539,8 @@ int WCPPID::NeutrinoID::fill_psuedo_reco_tree(WCPPID::WCShower* shower, WCRecoTr
   rtree.mc_kine_range[rtree.mc_Ntrack] = 0;
   rtree.mc_kine_dQdx[rtree.mc_Ntrack] = 0;
   rtree.mc_kine_charge[rtree.mc_Ntrack] = 0;
+  rtree.mc_length[rtree.mc_Ntrack] = 0;
+  rtree.mc_stopped[rtree.mc_Ntrack-1] = 0;
   
   rtree.mc_startXYZT[rtree.mc_Ntrack][0] = shower->get_start_vertex().first->get_fit_pt().x/units::cm;
   rtree.mc_startXYZT[rtree.mc_Ntrack][1] = shower->get_start_vertex().first->get_fit_pt().y/units::cm;
@@ -587,7 +593,14 @@ void WCPPID::NeutrinoID::fill_reco_simple_tree(WCPPID::WCRecoTree& rtree){
     WCPPID::ProtoSegment* sg= it->first;
     // only save the main cluster
     if (sg->get_cluster_id() != main_cluster->get_cluster_id()) continue;
+   
     fill_reco_tree(sg, rtree);
+    std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> pair_vertices = find_vertices(sg);
+    if (map_vertex_segments[pair_vertices.first].size()==1 || map_vertex_segments[pair_vertices.second].size()==1 ){
+      rtree.mc_stopped[rtree.mc_Ntrack-1] = 1;
+    }else{
+      rtree.mc_stopped[rtree.mc_Ntrack-1] = 0;
+    }
   }
   // std::cout << rtree.mc_Ntrack << std::endl;
 }
@@ -599,10 +612,17 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
     WCPPID::ProtoSegment* sg= it->first;
     if (map_segment_in_shower.find(sg)!=map_segment_in_shower.end()) continue;
     fill_reco_tree(sg, rtree);
+    std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> pair_vertices = find_vertices(sg);
+    if (map_vertex_segments[pair_vertices.first].size()==1 || map_vertex_segments[pair_vertices.second].size()==1 ){
+      rtree.mc_stopped[rtree.mc_Ntrack-1] = 1;
+    }else{
+      rtree.mc_stopped[rtree.mc_Ntrack-1] = 0;
+    }
     //    std::cout << "kak " << sg->get_cluster_id() << " " << sg->get_id() << std::endl;
   }
   for (auto it = showers.begin(); it!=showers.end();it++){
     fill_reco_tree(*it, rtree);
+    rtree.mc_stopped[rtree.mc_Ntrack-1] = 0;
     //std::cout << "gag " << *it << " " << (*it)->get_start_segment()->get_id() << std::endl;
   }
 
@@ -695,6 +715,7 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
 	}
       }else if (pair_vertex.second == 2 || pair_vertex.second == 3){
 	int psuedo_particle_id = fill_psuedo_reco_tree(shower, rtree);
+
 	if (pair_vertex.first == main_vertex){
 	  rtree.mc_mother[rtree.mc_Ntrack-1] = 0;
 	  rtree.mc_daughters->at(rtree.mc_Ntrack-1).push_back(map_sg_sgid[curr_sg]);
@@ -720,7 +741,9 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
        // pi0 ...
        // create a pi0 ...
        std::pair<int, int> pio_info_pair = fill_pi0_reco_tree(shower, rtree);
+       
        int psuedo_particle_id = fill_psuedo_reco_tree(shower, rtree);
+       
        
        if (pair_vertex.first == main_vertex){
 	 // pio

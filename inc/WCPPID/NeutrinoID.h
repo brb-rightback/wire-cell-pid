@@ -48,6 +48,8 @@ namespace WCPPID{
     int mc_mother[1000];  // mother id of this track; size == mc_Ntrack
 
     int mc_dir_weak[1000]; // weak direction ...
+    int mc_stopped[1000]; // if things are stopped
+    float mc_length[1000]; // length
     float mc_kine_range[1000];
     float mc_kine_dQdx[1000];
     float mc_kine_charge[1000];
