@@ -1399,6 +1399,9 @@ int main(int argc, char* argv[])
   TMC->Branch("mc_kine_range",&reco_tree.mc_kine_range,"mc_kine_range[mc_Ntrack]/F");
   TMC->Branch("mc_kine_dQdx",&reco_tree.mc_kine_dQdx,"mc_kine_dQdx[mc_Ntrack]/F");
   TMC->Branch("mc_kine_charge",&reco_tree.mc_kine_charge,"mc_kine_charge[mc_Ntrack]/F");
+
+  TMC->Branch("mc_length",&reco_tree.mc_length,"mc_length[mc_Ntrack]/F");
+  TMC->Branch("mc_stopped",&reco_tree.mc_stopped,"mc_stopped[mc_Ntrack]/I");
   
   TMC->Branch("mc_daughters", reco_tree.mc_daughters);  // daughters id of this track; vector
   TMC->Branch("mc_startXYZT", &reco_tree.mc_startXYZT, "mc_startXYZT[mc_Ntrack][4]/F");  // start position of this track; size == mc_Ntrack
