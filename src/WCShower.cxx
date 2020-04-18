@@ -40,6 +40,15 @@ void WCPPID::WCShower::rebuild_point_clouds(){
   pcloud_fit = 0;
   pcloud_associated = 0;
   build_point_clouds();
+
+}
+double WCPPID::WCShower::get_total_length(){
+  double total_length = 0;
+  for (auto it = map_seg_vtxs.begin(); it!= map_seg_vtxs.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    total_length += sg->get_length();
+  }
+  return total_length;
 }
 
 void WCPPID::WCShower::build_point_clouds(){

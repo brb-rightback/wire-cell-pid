@@ -105,20 +105,28 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
     // do the overall fit again
     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
 
-    for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
-      WCPPID::ProtoSegment *sg1 = it->first;
-      if (sg1->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
-      if (sg1->get_particle_type()==0){
-	WCPPID::ProtoVertex *start_v=0, *end_v=0; 
-	for (auto it = map_segment_vertices[sg1].begin(); it!=map_segment_vertices[sg1].end(); it++){
-	  if ((*it)->get_wcpt().index == sg1->get_wcpt_vec().front().index) start_v = *it;
-	  if ((*it)->get_wcpt().index == sg1->get_wcpt_vec().back().index) end_v = *it;
-	}
+   
+  }
+  
+  for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg1 = it->first;
+    if (sg1->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+    if (sg1->get_particle_type()==0){
+      sg1->is_shower_topology();
+      
+      WCPPID::ProtoVertex *start_v=0, *end_v=0; 
+      for (auto it = map_segment_vertices[sg1].begin(); it!=map_segment_vertices[sg1].end(); it++){
+	if ((*it)->get_wcpt().index == sg1->get_wcpt_vec().front().index) start_v = *it;
+	if ((*it)->get_wcpt().index == sg1->get_wcpt_vec().back().index) end_v = *it;
+      }
+      if (sg1->get_flag_shower_trajectory()){
+	// trajectory shower
+	sg1->determine_dir_shower_trajectory(map_vertex_segments[start_v].size(), map_vertex_segments[end_v].size(), false);
+      }else{
 	sg1->determine_dir_track(map_vertex_segments[start_v].size(), map_vertex_segments[end_v].size(), false);
       }
     }
   }
-  
   
 }
 

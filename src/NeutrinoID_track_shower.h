@@ -323,10 +323,17 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	  }
 	}else if (fabs(sg->get_particle_type())==13 &&
 		  (nprotons[0]>=0 && nmuons[0] == 1 && nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() && nshowers[1]>=2 ||
-		   nprotons[1]>=0 && nmuons[1] == 1 && nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() && nshowers[0]>=2)){
+		   nprotons[1]>=0 && nmuons[1] == 1 && nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() && nshowers[0]>=2 ||
+		   (nprotons[0]>=0 && nmuons[0] == 1 && nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() && nshowers[1]>=1 ||
+		    nprotons[1]>=0 && nmuons[1] == 1 && nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() && nshowers[0]>=1)
+		   && (sg->get_flag_dir()==0 || sg->is_dir_weak())
+		   )){
+	 
 	  double length = sg->get_length();
 	  double direct_length = sg->get_direct_length();
+	  // std::cout << length << " " << direct_length << std::endl;
 	  if (length < 40*units::cm && direct_length < 0.92 * length
+	      || length < 40*units::cm && direct_length < 0.94 * length
 	      || length < 5*units::cm && (nprotons[0] + nshowers[0] ==0 || nprotons[1] + nshowers[1]==0)
 	      ){
 	    sg->set_particle_type(11);

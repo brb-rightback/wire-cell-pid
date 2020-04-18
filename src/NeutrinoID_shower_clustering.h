@@ -667,6 +667,12 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
       if ( seg->get_flag_shower_topology() || shower->get_num_segments()>2 || seg->get_medium_dQ_dx(0,100) > 43e3/units::cm * 1.5){
 	TVector3 dir_shower = seg->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 15*units::cm);
 	map_shower_dir[shower] = dir_shower;
+      }else if (shower->get_num_segments()<=2){
+	double total_length = shower->get_total_length();
+	if (total_length > 30*units::cm){
+	  TVector3 dir_shower = seg->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 15*units::cm);
+	  map_shower_dir[shower] = dir_shower;
+	}
       }
     }
   }
