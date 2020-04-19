@@ -67,11 +67,19 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
     }
     if (ntracks == 0 && (vtx != main_vertex) ) continue;
 
-    
+    auto wcp_save = vtx->get_wcpt();
     
     bool flag_update = fit_vertex(vtx, it->second, temp_cluster);
     if (flag_update) {
       flag_update_fit = true;
+
+      double tmp_dis = sqrt(pow(wcp_save.x - vtx->get_wcpt().x,2)+pow(wcp_save.y - vtx->get_wcpt().y,2)+pow(wcp_save.z - vtx->get_wcpt().z,2));
+      // std::cout << tmp_dis/units::cm << std::endl;
+      if (tmp_dis > 0.5*units::cm){// if the vertex is moving far, refit ...
+	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+	fit_vertex(vtx, map_vertex_segments[vtx], temp_cluster);
+      }
+      
       //    for (auto it1 = map_vertex_segments[vtx].begin(); it1 != map_vertex_segments[vtx].end(); it1++){
       //	std::cout << (*it1)->get_wcpt_vec().size() << " ";
       //}
