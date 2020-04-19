@@ -1185,6 +1185,14 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
     //    std::cout << medium_dQ_dx/(43e3) << std::endl;
   }
 
+  // electron and both end contain stuff
+  if (abs(particle_type)==11 && (start_n>1 && end_n >1)){
+    dir_weak = true;
+    flag_dir = 0;
+  }else if (length < 1.5*units::cm){
+    dir_weak = true;
+  }
+  //	    start_n >1 && end_n >1 && particle_type == 2212) dir_weak = true;
 
   
   // vertex activities ...
@@ -1206,7 +1214,7 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
     }
   }
 
-  //if (start_n >1 && end_n >1 && particle_type == 2212) dir_weak = true;
+  //
   
   if (particle_type!=0){
     TPCParams& mp = Singleton<TPCParams>::Instance();

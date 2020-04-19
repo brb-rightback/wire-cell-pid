@@ -47,10 +47,7 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
     if (temp_cluster == main_cluster && main_cluster_initial_pair_vertices.first!=0)
       examine_vertices_3();
 
-
-    //
-    //examine_structure(temp_cluster);
-    //    temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+    
     
     return true;
   }
@@ -1217,7 +1214,7 @@ bool WCPPID::NeutrinoID::del_proto_segment(WCPPID::ProtoSegment *ps){
 void WCPPID::NeutrinoID::examine_vertices(WCPPID::PR3DCluster* temp_cluster){
   // merge vertex if the kink is not at right location
   examine_vertices_1(temp_cluster);
-
+  
   //  std::cout << "haha2 " << std::endl;
   if (find_vertices(temp_cluster).size() > 2)
     // merge vertices if they are too close ...
@@ -1402,6 +1399,7 @@ void WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
 	    WCPPID::ProtoVertex *vtx1 = (*it2);
 	    if (vtx1 == vtx) continue;
 	    if (map_vertex_segments[vtx1].size() > 2){ // the other track needs to be larger than 2
+	      //	      std::cout << sg->get_id() << " " << vtx->get_id() << " " << vtx1->get_id() << std::endl;
 	      //std::cout << sg->get_length() << std::endl;
 	      if (examine_vertices(vtx, vtx1, offset_t, slope_xt, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw)){
 		v1 = vtx;
@@ -1429,7 +1427,7 @@ void WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
     //    std::cout << map_vertex_replace.size() << std::endl;
     // replace ...
     if (v1!=0 && v2!=0){
-      std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Merge Vertices Type I" << std::endl;
+
       
       ProtoSegment *sg = find_segment(v1,v2);
       ProtoSegment *sg1 = find_segment(v1,v3);
@@ -1440,6 +1438,8 @@ void WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
       temp_cluster->dijkstra_shortest_paths(v3->get_wcpt(),2); 
       temp_cluster->cal_shortest_path(v2->get_wcpt(),2);
       ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
+
+      std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Merge Vertices Type I " << sg->get_id() << " + " << sg1->get_id() << " -> " << sg2->get_id() << std::endl;
       add_proto_connection(v2, sg2, temp_cluster);
       add_proto_connection(v3, sg2, temp_cluster);
       
@@ -1507,6 +1507,8 @@ bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::Proto
       TVector3 v1(v2_u-v1_u, v2_t-v1_t, 0);
       TVector3 v2(0,0,0);
       double min_dis = 1e9;
+      Point start_p = v2_p;
+      Point end_p ;
       
       for (size_t i=0;i!=pts_2.size();i++){
 	double p_t = offset_t + slope_xt * pts_2.at(i).x;
@@ -1516,10 +1518,23 @@ bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::Proto
 	if (dis < min_dis){
 	  min_dis = dis;
 	  v2 = v3;
+	  end_p = pts_2.at(i);
 	}
       }
 
       if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()<5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
+      else{
+	double step_size = 0.6*units::cm;
+	int ncount = std::round(sqrt(pow(start_p.x - end_p.x,2) + pow(start_p.y - end_p.y,2) + pow(start_p.z - end_p.z,2))/step_size);
+	int n_bad = 0;
+	for (int i=1;i!=ncount;i++){
+	  Point test_p(start_p.x + (end_p.x - start_p.x)/ncount*i,
+		       start_p.y + (end_p.y - start_p.y)/ncount*i,
+		       start_p.z + (end_p.z - start_p.z)/ncount*i);
+	  if (!ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0)) n_bad ++;
+	}
+	if (n_bad<=1) ncount_line ++;
+      }
       //      std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
     }
   }
@@ -1551,6 +1566,10 @@ bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::Proto
       TVector3 v1(v2_v-v1_v, v2_t-v1_t, 0);
       TVector3 v2(0,0,0);
       double min_dis = 1e9;
+
+      Point start_p = v2_p;
+      Point end_p ;
+      
       
       for (size_t i=0;i!=pts_2.size();i++){
 	double p_t = offset_t + slope_xt * pts_2.at(i).x;
@@ -1560,11 +1579,24 @@ bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::Proto
 	if (dis < min_dis){
 	  min_dis = dis;
 	  v2 = v3;
+	  end_p = pts_2.at(i);
 	}
       }
 
       if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()<5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
-      //      std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
+      else{
+	double step_size = 0.6*units::cm;
+	int ncount = std::round(sqrt(pow(start_p.x - end_p.x,2) + pow(start_p.y - end_p.y,2) + pow(start_p.z - end_p.z,2))/step_size);
+	int n_bad = 0;
+	for (int i=1;i!=ncount;i++){
+	  Point test_p(start_p.x + (end_p.x - start_p.x)/ncount*i,
+		       start_p.y + (end_p.y - start_p.y)/ncount*i,
+		       start_p.z + (end_p.z - start_p.z)/ncount*i);
+	  if (!ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0)) n_bad ++;
+	}
+	if (n_bad<=1) ncount_line ++;
+      }
+      //std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
     }
   }
 
@@ -1599,7 +1631,8 @@ bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::Proto
       TVector3 v1(v2_w-v1_w, v2_t-v1_t, 0);
       TVector3 v2(0,0,0);
       double min_dis = 1e9;
-      
+      Point start_p = v2_p;
+      Point end_p ;
       for (size_t i=0;i!=pts_2.size();i++){
 	double p_t = offset_t + slope_xt * pts_2.at(i).x;
 	double p_w = offset_w + slope_yw * pts_2.at(i).y + slope_zw * pts_2.at(i).z;
@@ -1608,23 +1641,35 @@ bool WCPPID::NeutrinoID::examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::Proto
 	if (dis < min_dis){
 	  min_dis = dis;
 	  v2 = v3;
+	  end_p = pts_2.at(i);
 	}
       }
 
       if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()<5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
-
+      else{
+	double step_size = 0.6*units::cm;
+	int ncount = std::round(sqrt(pow(start_p.x - end_p.x,2) + pow(start_p.y - end_p.y,2) + pow(start_p.z - end_p.z,2))/step_size);
+	int n_bad = 0;
+	for (int i=1;i!=ncount;i++){
+	  Point test_p(start_p.x + (end_p.x - start_p.x)/ncount*i,
+		       start_p.y + (end_p.y - start_p.y)/ncount*i,
+		       start_p.z + (end_p.z - start_p.z)/ncount*i);
+	  if (!ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0)) n_bad ++;
+	}
+	if (n_bad<=1) ncount_line ++;
+      }
       //      std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
     }
   }
 
 
-  // std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
+  //  std::cout << ncount_close << " " << ncount_dead << " " << ncount_line << std::endl;
   
   if (ncount_close >=2 ||
-      ncount_close ==1 && ncount_dead ==1 & ncount_line==1 ||
+      ncount_close ==1 && ncount_dead ==1 & ncount_line>=1 ||
       ncount_close ==1 && ncount_dead == 2 ||
-      ncount_close ==1 && ncount_line==2 || 
-      ncount_line == 3)
+      ncount_close ==1 && ncount_line>=2 || 
+      ncount_line >= 3)
     return true;
 
   
