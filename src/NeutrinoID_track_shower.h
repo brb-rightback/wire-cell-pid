@@ -61,7 +61,7 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
     }
 
     bool flag_print = false;
-    //if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
+    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
     
     
     if (sg->get_flag_shower_trajectory()){
@@ -670,8 +670,8 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   
 
   
-  //  std::cout << "Information after main vertex determination: " << std::endl;
-  // print_segs_info(main_vertex);
+  std::cout << "Information after main vertex determination: " << std::endl;
+  print_segs_info(main_vertex);
   
 }
 
@@ -730,7 +730,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
   for (auto it = vertex_candidates.begin(); it!=vertex_candidates.end(); it++){
     WCPPID::ProtoVertex *vtx = *it;
     // std::cout << vtx->get_fit_pt().z << std::endl;
-    map_vertex_num[vtx] -= (vtx->get_fit_pt().z - min_z)/(400*units::cm);   // position information
+    map_vertex_num[vtx] -= (vtx->get_fit_pt().z - min_z)/(200*units::cm);   // position information
     //    std::cout << map_vertex_segments[vtx].size() << std::endl;
     // number of tracks, more is good
     for (auto it1 = map_vertex_segments[vtx].begin(); it1!= map_vertex_segments[vtx].end(); it1++){
@@ -748,7 +748,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
     }
 
     
-    //    std::cout << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(400*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
+    //std::cout << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(200*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
   }
   
   // whether the vetex is at boundary or not ...
@@ -756,7 +756,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
     WCPPID::ProtoVertex *vtx = *it;
     if (fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x))
       map_vertex_num[vtx] +=0.5; // good      // fiducial volume ..
-    //  std::cout << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
+    //    std::cout << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
   }
 
   for (auto it = vertex_candidates.begin(); it != vertex_candidates.end(); it++){
@@ -1001,7 +1001,14 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
     for (auto it = map_vertex_segments[main_vertex].begin(); it!=map_vertex_segments[main_vertex].end(); it++){
       WCPPID::ProtoSegment *sg = *it;
       if (abs(sg->get_particle_type()) == 13){
-	if (sg->get_length() > muon_length){
+	WCPPID::ProtoVertex *other_vertex = find_other_vertex(sg, main_vertex);
+	int n_proton = 0;
+	for (auto it1 = map_vertex_segments[other_vertex].begin(); it1 != map_vertex_segments[other_vertex].end(); it1++){
+	  if (abs((*it1)->get_particle_type())==2212){
+	    n_proton ++;
+	  }
+	}
+	if (sg->get_length() > muon_length && n_proton == 0){
 	  muon_length = sg->get_length();
 	  muon_sg = sg;
 	}
