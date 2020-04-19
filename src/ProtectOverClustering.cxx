@@ -30,16 +30,17 @@ void WCPPID::Protect_Over_Clustering(std::vector<std::pair<int, Opflash*> >& to_
     double offset_x = (to_be_checked.at(i).second->get_time() - time_offset)*2./nrebin*time_slice_width;
 
     // create a total cluster holding all mcells ...
-    WCPPID::PR3DCluster *total_cluster = new PR3DCluster(-1);
-    
+    //    WCPPID::PR3DCluster *total_cluster = new PR3DCluster(-1);
+
+    std::set<WCPPID::PR3DCluster*> examined_clusters_1;
     for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
       WCPPID::PR3DCluster *temp_cluster = *it1;
       examined_clusters.insert(temp_cluster);
-
-      WCP::SMGCSelection& mcells = temp_cluster->get_mcells();
-      for (size_t i=0;i!=mcells.size();i++){
-	total_cluster->AddCell(mcells.at(i), mcells.at(i)->GetTimeSlice());
-      }
+      examined_clusters_1.insert(temp_cluster);
+      //WCP::SMGCSelection& mcells = temp_cluster->get_mcells();
+      //for (size_t i=0;i!=mcells.size();i++){
+      //	total_cluster->AddCell(mcells.at(i), mcells.at(i)->GetTimeSlice());
+      //}
       
       map_cluster_parent_id.erase(temp_cluster);
       used_cluster_ids.erase(temp_cluster->get_cluster_id());
@@ -47,95 +48,91 @@ void WCPPID::Protect_Over_Clustering(std::vector<std::pair<int, Opflash*> >& to_
     used_cluster_ids.insert(curr_main_cluster_id);
     map_parentid_clusters[curr_main_cluster_id].clear();
 
-
-
     
     // examine these clusters ...
-    //    for (auto it1 = examined_clusters.begin(); it1 != examined_clusters.end(); it1++){
-    {
-      WCPPID::PR3DCluster *temp_cluster = total_cluster;
+    for (auto it1 = examined_clusters_1.begin(); it1 != examined_clusters_1.end(); it1++){
+      WCPPID::PR3DCluster *temp_cluster = *it1;
       std::vector<WCP::SMGCSelection> vec_mcells;
-
       vec_mcells = temp_cluster->Examine_graph(ct_point_cloud);
 
       //      std::cout << examined_clusters.size() << " " << vec_mcells.size() << std::endl;
-      
-      // first round examination ...
-      int max_number_cells = vec_mcells.front().size();
-      int second_max = 0;
-      int main_id = 0;
-      for (size_t j=1;j<vec_mcells.size();j++){
-	if (vec_mcells.at(j).size() > max_number_cells){
-	  main_id = j;
-	  second_max = max_number_cells;
-	  max_number_cells = vec_mcells.at(j).size();
-	}
-      }
-      
-      if (second_max > 0.7 * max_number_cells){
-	if (pl == 0 ) pl = new Photon_Library(run_no,flag_match_data);
-	std::pair<double, double> results = WCPPID::compare_pe_pattern(run_no, offset_x, pl, vec_mcells.at(main_id), flash ,flag_match_data);
-	double min_score = results.first;
-	double min_ratio = results.second;
-	
-	// second round of examination ...
-	for (size_t j=0;j<vec_mcells.size();j++){
-	  if (vec_mcells.at(j).size() < 0.7 * max_number_cells || j==main_id) continue;
-	  results = WCPPID::compare_pe_pattern(run_no, offset_x, pl, vec_mcells.at(j), flash ,flag_match_data);
-	  double score = sqrt(pow(results.first,2) + pow(results.second - min_ratio,2));
-	  //	    std::cout << score << " " <<  min_score << " " << std::endl;
-	  
-	  if (score < min_score){
-	    min_score = score;
+      if (temp_cluster->get_cluster_id() == curr_main_cluster_id){
+	// first round examination ...
+	int max_number_cells = vec_mcells.front().size();
+	int second_max = 0;
+	int main_id = 0;
+	for (size_t j=1;j<vec_mcells.size();j++){
+	  if (vec_mcells.at(j).size() > max_number_cells){
 	    main_id = j;
+	    second_max = max_number_cells;
 	    max_number_cells = vec_mcells.at(j).size();
 	  }
 	}
-      }
-      
-      
-      // main cluster replacement 
-      WCPPID::PR3DCluster *new_cluster = new WCPPID::PR3DCluster(curr_main_cluster_id);
-      for (auto it2 = vec_mcells.at(main_id).begin(); it2!=vec_mcells.at(main_id).end();it2++){
-	new_cluster->AddCell(*it2, (*it2)->GetTimeSlice());
-      }
-      temp_live_clusters.push_back(new_cluster);
-      map_cluster_parent_id[new_cluster] = curr_main_cluster_id;
-      map_parentid_clusters[curr_main_cluster_id].push_back(new_cluster);
-      
-      // rest ...
-      for (size_t j = 0; j!=vec_mcells.size(); j++){
-	if (j==main_id) continue;
-	acc_cluster_id = get_next_cluster_id(acc_cluster_id, used_cluster_ids);
-	WCPPID::PR3DCluster *new_cluster = new WCPPID::PR3DCluster(acc_cluster_id);
-	for (auto it2 = vec_mcells.at(j).begin(); it2!=vec_mcells.at(j).end();it2++){
-	    new_cluster->AddCell(*it2, (*it2)->GetTimeSlice());
+	
+	if (second_max > 0.7 * max_number_cells){
+	  if (pl == 0 ) pl = new Photon_Library(run_no,flag_match_data);
+	  std::pair<double, double> results = WCPPID::compare_pe_pattern(run_no, offset_x, pl, vec_mcells.at(main_id), flash ,flag_match_data);
+	  double min_score = results.first;
+	  double min_ratio = results.second;
+	  
+	  // second round of examination ...
+	  for (size_t j=0;j<vec_mcells.size();j++){
+	    if (vec_mcells.at(j).size() < 0.7 * max_number_cells || j==main_id) continue;
+	    results = WCPPID::compare_pe_pattern(run_no, offset_x, pl, vec_mcells.at(j), flash ,flag_match_data);
+	    double score = sqrt(pow(results.first,2) + pow(results.second - min_ratio,2));
+	    //	    std::cout << score << " " <<  min_score << " " << std::endl;
+	    
+	    if (score < min_score){
+	      min_score = score;
+	      main_id = j;
+	      max_number_cells = vec_mcells.at(j).size();
+	    }
+	  }
 	}
-	used_cluster_ids.insert(acc_cluster_id);
+	
+	
+	// main cluster replacement 
+	WCPPID::PR3DCluster *new_cluster = new WCPPID::PR3DCluster(curr_main_cluster_id);
+	for (auto it2 = vec_mcells.at(main_id).begin(); it2!=vec_mcells.at(main_id).end();it2++){
+	  new_cluster->AddCell(*it2, (*it2)->GetTimeSlice());
+	}
 	temp_live_clusters.push_back(new_cluster);
 	map_cluster_parent_id[new_cluster] = curr_main_cluster_id;
 	map_parentid_clusters[curr_main_cluster_id].push_back(new_cluster);
-      }
-      
-      //    }else{
-      //for (size_t j = 0; j!=vec_mcells.size(); j++){
-      //	acc_cluster_id = get_next_cluster_id(acc_cluster_id, used_cluster_ids);
-      //	  WCPPID::PR3DCluster *new_cluster = new WCPPID::PR3DCluster(acc_cluster_id);
-      //	  for (auto it2 = vec_mcells.at(j).begin(); it2!=vec_mcells.at(j).end();it2++){
-      //	    new_cluster->AddCell(*it2, (*it2)->GetTimeSlice());
-      //	  }
-      //  used_cluster_ids.insert(acc_cluster_id);
-      //	  temp_live_clusters.push_back(new_cluster);
-      //	  map_cluster_parent_id[new_cluster] = curr_main_cluster_id;
-      //	  map_parentid_clusters[curr_main_cluster_id].push_back(new_cluster);
-      //	}
-      // } // main or other ...
+	
+	// rest ...
+	for (size_t j = 0; j!=vec_mcells.size(); j++){
+	  if (j==main_id) continue;
+	  acc_cluster_id = get_next_cluster_id(acc_cluster_id, used_cluster_ids);
+	  WCPPID::PR3DCluster *new_cluster = new WCPPID::PR3DCluster(acc_cluster_id);
+	  for (auto it2 = vec_mcells.at(j).begin(); it2!=vec_mcells.at(j).end();it2++){
+	    new_cluster->AddCell(*it2, (*it2)->GetTimeSlice());
+	  }
+	  used_cluster_ids.insert(acc_cluster_id);
+	  temp_live_clusters.push_back(new_cluster);
+	  map_cluster_parent_id[new_cluster] = curr_main_cluster_id;
+	  map_parentid_clusters[curr_main_cluster_id].push_back(new_cluster);
+	}
+	
+      }else{
+	for (size_t j = 0; j!=vec_mcells.size(); j++){
+	  acc_cluster_id = get_next_cluster_id(acc_cluster_id, used_cluster_ids);
+	  WCPPID::PR3DCluster *new_cluster = new WCPPID::PR3DCluster(acc_cluster_id);
+	  for (auto it2 = vec_mcells.at(j).begin(); it2!=vec_mcells.at(j).end();it2++){
+	    new_cluster->AddCell(*it2, (*it2)->GetTimeSlice());
+	  }
+	  used_cluster_ids.insert(acc_cluster_id);
+	  temp_live_clusters.push_back(new_cluster);
+	  map_cluster_parent_id[new_cluster] = curr_main_cluster_id;
+	  map_parentid_clusters[curr_main_cluster_id].push_back(new_cluster);
+	}
+      } // main or other ...
     } // examine each cluster
-
-    delete total_cluster;
+    
+    //    delete total_cluster;
     
   } // to be checked loop
-
+  
 
   
   for (auto it = live_clusters.begin(); it != live_clusters.end(); it++){
