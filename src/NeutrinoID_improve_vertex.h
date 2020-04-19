@@ -127,6 +127,8 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
       if (flag_update) 	flag_update_fit = true;
     }
     if (flag_update_fit)     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+    // eliminate the short tracks ...
+    eliminate_short_vertex_activities(temp_cluster);
   }
   
   for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
@@ -150,6 +152,46 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
   }
   
 }
+
+bool WCPPID::NeutrinoID::eliminate_short_vertex_activities(WCPPID::PR3DCluster *temp_cluster){
+  std::vector<WCPPID::ProtoSegment*> to_be_removed_segments;
+  std::vector<WCPPID::ProtoVertex*> to_be_removed_vertices;
+  
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+    WCPPID::ProtoVertex *v1 = *it->second.begin();
+    WCPPID::ProtoVertex *v2 = *it->second.rbegin();
+    if (map_vertex_segments[v1].size()==1 && map_vertex_segments[v2].size()>=3){
+      double length = sg->get_direct_length();
+      // std::cout << length/units::cm << std::endl;
+      if (length < 0.36*units::cm){
+	to_be_removed_segments.push_back(sg);
+	to_be_removed_vertices.push_back(v1);
+      }else if (length < 0.5*units::cm && map_vertex_segments[v2].size()>3){
+	to_be_removed_segments.push_back(sg);
+	to_be_removed_vertices.push_back(v1);
+      }
+    }else if (map_vertex_segments[v1].size()>=3 && map_vertex_segments[v2].size()==1){
+      double length = sg->get_direct_length();
+      if (length < 0.36*units::cm){
+	to_be_removed_segments.push_back(sg);
+	to_be_removed_vertices.push_back(v2);
+      }else if (length < 0.5*units::cm && map_vertex_segments[v1].size()>3){
+	to_be_removed_segments.push_back(sg);
+	to_be_removed_vertices.push_back(v2);
+      }
+    }
+  }
+  for (auto it = to_be_removed_segments.begin(); it!=to_be_removed_segments.end(); it++){
+    del_proto_segment(*it);
+  }
+  for (auto it = to_be_removed_vertices.begin(); it!=to_be_removed_vertices.end(); it++){
+    del_proto_vertex(*it);
+  }
+  
+}
+
 
 WCPPID::MyFCN::MyFCN(WCPPID::ProtoVertex* vtx, bool flag_vtx_constraint, double vtx_constraint_range, double vertex_protect_dis, double vertex_protect_dis_short_track, double fit_dis) 
 : vtx(vtx)
@@ -753,7 +795,7 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
 	}
 	if (ncount!=0) sum_charge /= ncount;
 	
-	//std::cout << i << " " << dis/units::cm << " " << min_dis/units::cm << " " << flag_terminals.at(candidate_wcps.at(i).index)  << min_angle << " " << sum_angle << " " << sum_charge << " " << (sum_angle)  * (sum_charge+1e-9) << " " << min_dis_u << " " << min_dis_v << " " << min_dis_w << " " << min_dis_u + min_dis_v + min_dis_w << std::endl; 
+	//	std::cout << i << " " << dis/units::cm << " " << min_dis/units::cm << " " << flag_terminals.at(candidate_wcps.at(i).index)  << min_angle << " " << sum_angle << " " << sum_charge << " " << (sum_angle)  * (sum_charge+1e-9) << " " << min_dis_u << " " << min_dis_v << " " << min_dis_w << " " << min_dis_u + min_dis_v + min_dis_w << std::endl; 
 	
 	if ((sum_angle)  * (sum_charge+1e-9) > max_dis){
 	  max_dis = (sum_angle)  * (sum_charge+1e-9);
@@ -818,9 +860,13 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
       }
     }
   }
-  
+
+  //  std::cout << max_dis/units::cm << std::endl;
   
   if (max_dis !=0){
+    /* double tmp_dis = sqrt(pow(vtx->get_wcpt().x-max_wcp.x,2) + pow(vtx->get_wcpt().y-max_wcp.y,2) + pow(vtx->get_wcpt().z-max_wcp.z,2)); */
+    /* std::cout << tmp_dis/units::cm << std::endl; */
+
     WCPPID::ProtoVertex *v1 = new WCPPID::ProtoVertex(acc_vertex_id, max_wcp, temp_cluster->get_cluster_id()); acc_vertex_id++;
     std::list<WCP::WCPointCloud<double>::WCPoint> wcp_list;
     wcp_list.push_back(vtx->get_wcpt());

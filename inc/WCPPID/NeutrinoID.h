@@ -186,6 +186,8 @@ namespace WCPPID{
     void improve_vertex(WCPPID::PR3DCluster* temp_cluster);
     bool fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster);
     bool search_for_vertex_activities(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster, double search_range = 1.5*units::cm);
+    bool eliminate_short_vertex_activities(WCPPID::PR3DCluster *temp_cluster);
+
 
     // get direction 
     TVector3 get_dir(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, double dis = 2*units::cm);

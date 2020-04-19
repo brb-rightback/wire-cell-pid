@@ -80,7 +80,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
       if ((*it1)->get_start_vertex().second <3 && fabs((*it1)->get_particle_type())!=13)
 	tmp_showers.push_back(*it1);
     }
-    //    std::cout << tmp_showers.size() << std::endl;
+    std::cout << tmp_showers.size() << std::endl;
     
     if (tmp_showers.size()>1){
       std::map<std::pair<WCPPID::WCShower*, WCPPID::WCShower*>, double> map_shower_pair_mass;
