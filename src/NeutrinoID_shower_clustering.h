@@ -80,7 +80,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
       if ((*it1)->get_start_vertex().second <3 && fabs((*it1)->get_particle_type())!=13)
 	tmp_showers.push_back(*it1);
     }
-    std::cout << tmp_showers.size() << std::endl;
+    //    std::cout << tmp_showers.size() << std::endl;
     
     if (tmp_showers.size()>1){
       std::map<std::pair<WCPPID::WCShower*, WCPPID::WCShower*>, double> map_shower_pair_mass;
@@ -231,7 +231,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
 
     cluster_point_info min_pi;
     min_pi.cluster = cluster;
-    min_pi.min_angle = 1e9;
+    min_pi.min_angle = 90;
     min_pi.min_dis = 1e9;
     min_pi.min_vertex = 0;
     cluster_point_info main_pi;
@@ -253,21 +253,31 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
       double angle = v1.Angle(v2)/3.1415926*180.;
       if (angle < 30 || result.first < 5*units::cm && angle < 45)
 	angle = std::min(angle , v1.Angle(v3)/3.1415926*180.);
-      if (angle < min_pi.min_angle){
-	min_pi.min_angle = angle;
-	min_pi.min_dis = result.first;
-	min_pi.min_vertex = main_cluster_vertices.at(i);
-	min_pi.min_point = result.second;
+      if (angle < 7.5){
+	if (result.first*sin(angle/180.*3.1415926) < min_pi.min_dis*sin(min_pi.min_angle/180.*3.1415926) && angle < 90){
+	  min_pi.min_angle = angle;
+	  min_pi.min_dis = result.first;
+	  min_pi.min_vertex = main_cluster_vertices.at(i);
+	  min_pi.min_point = result.second;
+	}
+      }else{
+	if (angle < min_pi.min_angle){
+	  min_pi.min_angle = angle;
+	  min_pi.min_dis = result.first;
+	  min_pi.min_vertex = main_cluster_vertices.at(i);
+	  min_pi.min_point = result.second;
+	}
       }
+      
       if (main_cluster_vertices.at(i) == main_vertex) {
 	main_pi.min_angle = angle;
 	main_pi.min_dis = result.first;
 	main_pi.min_point = result.second;
       }
       
-      //      std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << v1.Angle(v3)/3.1415926*180. << " " << result.first/units::cm << std::endl;
+      // std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << v1.Angle(v3)/3.1415926*180. << " " << result.first/units::cm << std::endl;
     }
-    //   std::cout <<main_pi.min_point  << " " << main_vertex->get_fit_pt() << " " <<  main_pi.min_angle << " " << min_pi.min_angle << " " << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << std::endl;
+    //    std::cout <<main_pi.min_point  << " " << main_vertex->get_fit_pt() << " " <<  main_pi.min_angle << " " << min_pi.min_angle << " " << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << std::endl;
     
     if (main_pi.min_angle < min_pi.min_angle + 3 && min_pi.min_angle > 0.9 * main_pi.min_angle && main_pi.min_dis < min_pi.min_dis * 1.2 
 	//	||  min_pi.min_angle > 15 && main_pi.min_angle < min_pi.min_angle + 15
