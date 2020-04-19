@@ -104,11 +104,48 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	// closest distance ...
 	std::tuple<int, int, double>  temp_index_index_dis = pt_clouds.at(j)->get_closest_points(pt_clouds.at(k));
 	
+	
 	// close distance ...
 	if (std::get<0>(temp_index_index_dis) != -1){
 	  index_index_dis[j][k] = temp_index_index_dis; 
 	  
 	  bool flag = check_connectivity(index_index_dis[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k));
+
+	  
+	  if ( std::get<2>(temp_index_index_dis) < 0.9*units::cm && pt_clouds.at(j)->get_num_points() > 200 && pt_clouds.at(k)->get_num_points() > 200){
+	    // check j against k
+	    if (!flag){ 
+ 	      Point test_p(cloud.pts[std::get<1>(temp_index_index_dis)].x, cloud.pts[std::get<1>(temp_index_index_dis)].y, cloud.pts[std::get<1>(temp_index_index_dis)].z);
+	      std::vector<WCP::WCPointCloud<double>::WCPoint > temp_wcps = pt_clouds.at(j)->get_closest_wcpoints(test_p, std::get<2>(temp_index_index_dis) + 0.6*units::cm);
+	      for (size_t kk = 0; kk!=temp_wcps.size(); kk++){
+		double dis = sqrt(pow(test_p.x - temp_wcps.at(kk).x,2) + pow(test_p.y - temp_wcps.at(kk).y,2) +pow(test_p.z - temp_wcps.at(kk).z,2));
+		std::tuple<int,int,double> temp_tuple = std::make_tuple(temp_wcps.at(kk).index, std::get<1>(temp_index_index_dis), dis);
+		if (check_connectivity(temp_tuple, cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k))){
+		  flag = true;
+		  index_index_dis[j][k] = temp_tuple;
+		  break;
+		}
+	      }
+	    }
+	    // check k against j
+	    if (!flag){
+	      Point test_p(cloud.pts[std::get<0>(temp_index_index_dis)].x, cloud.pts[std::get<0>(temp_index_index_dis)].y, cloud.pts[std::get<0>(temp_index_index_dis)].z);
+	      std::vector<WCP::WCPointCloud<double>::WCPoint > temp_wcps = pt_clouds.at(k)->get_closest_wcpoints(test_p, std::get<2>(temp_index_index_dis) + 0.6*units::cm);
+	      for (size_t kk = 0; kk!=temp_wcps.size(); kk++){
+		double dis = sqrt(pow(test_p.x - temp_wcps.at(kk).x,2) + pow(test_p.y - temp_wcps.at(kk).y,2) +pow(test_p.z - temp_wcps.at(kk).z,2));
+		std::tuple<int,int,double> temp_tuple = std::make_tuple(std::get<0>(temp_index_index_dis), temp_wcps.at(kk).index,  dis);
+		if (check_connectivity(temp_tuple, cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k))){
+		  flag = true;
+		  index_index_dis[j][k] = temp_tuple;
+		  break;
+		}
+	      }
+	    }
+	  }
+	  
+	  /* if (std::get<2>(temp_index_index_dis)  < 1.5*units::cm) */
+	  /*   std::cout << j << " " << k << " " << pt_clouds.at(j)->get_num_points() << " " << pt_clouds.at(k)->get_num_points() << " " << std::get<2>(temp_index_index_dis)/units::cm << " " << flag << std::endl; */
+	  
 	  if (!flag) index_index_dis[j][k] = std::make_tuple(-1,-1,1e9);
 	  index_index_dis[k][j] = index_index_dis[j][k];
 	  
@@ -448,7 +485,7 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
     //    std::cout << i << " " << scores.at(0) << " " << scores.at(1) << " " << scores.at(2) << " " << scores.at(3) << " " << scores.at(4) << " " << scores.at(5) << std::endl;
   }
   //  if (flag_parallel && dis > 15*units::cm && dis < 25*units::cm && p1.y > 45*units::cm && p2.y > 45*units::cm && p1.y < 70*units::cm && p2.y < 70*units::cm)
-  // std::cout << p1 << " " << p2 << " " << num_bad[0] << " " << num_bad[1] << " " << num_bad[2] << " " << num_bad[3] << " " << num_steps << std::endl;
+  //  std::cout << p1 << " " << p2 << " " << num_bad[0] << " " << num_bad[1] << " " << num_bad[2] << " " << num_bad[3] << " " << num_steps << std::endl;
 
   
   

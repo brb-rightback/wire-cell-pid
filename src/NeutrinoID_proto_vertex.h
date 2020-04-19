@@ -599,7 +599,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     temp_segments.at(i).max_dis_v = max_dis_v;
     temp_segments.at(i).max_dis_w = max_dis_w;
 
-    //    std::cout << special_A << " " << special_B << " " << length/units::cm << " " << temp_segments.at(i).number_points << " "  << number_not_faked << std::endl;
+    // std::cout << special_A << " " << special_B << " " << length/units::cm << " " << temp_segments.at(i).number_points << " "  << number_not_faked << std::endl;
     
     if (temp_segments.at(i).number_points ==1  //  only one point 
     	|| number_not_faked == 0 &&
@@ -913,7 +913,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::find_vertex_other_segment(WCPPID::PR3DC
     check_results = check_end_point(temp_cluster, temp_cluster->get_fine_tracking_path(), flag_forward, 1.5*units::cm, 3.0*units::cm);
   }
 
-  //  std::cout << std::get<0>(check_results) << " " << std::get<1>(check_results) << " " << std::get<2>(check_results) << std::endl;
+  // std::cout << std::get<0>(check_results) << " " << std::get<1>(check_results) << " " << std::get<2>(check_results) << std::endl;
  // hack ...
  // std::get<0>(check_results) = 0;
  //std::get<1>(check_results) = 0;
