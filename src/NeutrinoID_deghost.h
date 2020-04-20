@@ -5,6 +5,16 @@ bool sortbysec(const std::pair<WCPPID::PR3DCluster*,double> &a,
   return (a.second > b.second);
 }
 
+void WCPPID::NeutrinoID::deghosting(){
+  deghost_clusters();
+
+  deghost_segments();
+}
+
+void WCPPID::NeutrinoID::deghost_segments(){
+  
+}
+
 
 void WCPPID::NeutrinoID::deghost_clusters(){
   std::map<int, WCPPID::ProtoSegmentSelection> map_cluster_id_segments;  // ID segments
@@ -123,14 +133,12 @@ void WCPPID::NeutrinoID::deghost_clusters(){
 	  }
 	} // loop over segments
       }else{
-	// no segments ...
+	// no segments identified ...
 	
       }
       
       bool flag_add = true;
       
-      
-
       double unique_percent_u = num_unique[0]*1.0/num_total_points;
       double unique_percent_v = num_unique[1]*1.0/num_total_points;
       double unique_percent_w = num_unique[2]*1.0/num_total_points;
@@ -169,6 +177,7 @@ void WCPPID::NeutrinoID::deghost_clusters(){
       }else{
 	to_be_removed_clusters.push_back(cluster);
       }
+      
     }
   } // loop over cluster
 
