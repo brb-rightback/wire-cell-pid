@@ -238,6 +238,7 @@ namespace WCPPID{
     void deghost_segments();
     
     void order_clusters(WCPPID::PR3DClusterSelection& ordered_clusters, std::map<int, WCPPID::ProtoSegmentSelection>& map_cluster_id_segments, std::map<WCPPID::PR3DCluster*, double>& map_cluster_total_length);
+    void order_segments(WCPPID::ProtoSegmentSelection& ordered_segments, WCPPID::ProtoSegmentSelection& segments);
     
     // track shower separation
     void separate_track_shower();
