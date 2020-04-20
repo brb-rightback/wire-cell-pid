@@ -110,7 +110,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
       determine_direction(*it);
     }
     //  deghost ...
-    deghost_clusters();    
+    deghosting();
   }
 
   
