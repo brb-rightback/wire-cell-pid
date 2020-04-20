@@ -69,21 +69,22 @@ void WCPPID::NeutrinoID::deghost_segments(){
 	PointVector& pts = sg->get_point_vec();
 	num_total_points += pts.size();
 	
-	for (size_t j=0;j!=pts.size();j++){
-	  Point test_point = pts.at(j);
+	for (size_t k=0;k!=pts.size();k++){
+	  Point test_point = pts.at(k);
 	  bool flag_dead = ct_point_cloud->get_closest_dead_chs(test_point,0);
 	  if (!flag_dead){
+	    bool flag_in = false;
 	    std::tuple<double, WCP::PR3DCluster*, size_t> results = global_point_cloud.get_closest_2d_point_info(test_point, 0);
-	    if (std::get<0>(results)<=dis_cut/2.) continue;
+	    if (std::get<0>(results)<=dis_cut/2.) flag_in = true;
 	    if (global_steiner_point_cloud.get_num_points()!=0){
 	      results = global_steiner_point_cloud.get_closest_2d_point_info(test_point, 0);
-	      if (std::get<0>(results)<=dis_cut/3.*2.) continue;
+	      if (std::get<0>(results)<=dis_cut*2./3.) flag_in = true;
 	    }
 	    if ( global_skeleton_cloud.get_num_points()!=0){
 	      results = global_skeleton_cloud.get_closest_2d_point_info(test_point, 0);
-	      if (std::get<0>(results)<=dis_cut*5/4.) continue;
+	      if (std::get<0>(results)> dis_cut*3./4.) flag_in = true;
 	    }
-	    num_unique[0]++;
+	    if (!flag_in) num_unique[0]++;
 	  }else{
 	    num_dead[0]++;
 	  }
@@ -92,17 +93,18 @@ void WCPPID::NeutrinoID::deghost_segments(){
 	  // V plane ...
 	  flag_dead = ct_point_cloud->get_closest_dead_chs(test_point,1);
 	  if (!flag_dead){
+	    bool flag_in = false;
 	    std::tuple<double, WCP::PR3DCluster*, size_t> results = global_point_cloud.get_closest_2d_point_info(test_point, 1);
-	    if (std::get<0>(results)<=dis_cut/2.) continue;
+	    if (std::get<0>(results)<=dis_cut/2.) flag_in = true;
 	    if (global_steiner_point_cloud.get_num_points()!=0){
 	      results = global_steiner_point_cloud.get_closest_2d_point_info(test_point, 1);
-	      if (std::get<0>(results)<=dis_cut/3.*2.) continue;
+	      if (std::get<0>(results)<=dis_cut*2/3.) flag_in = true;
 	    }
 	    if ( global_skeleton_cloud.get_num_points()!=0){
 	      results = global_skeleton_cloud.get_closest_2d_point_info(test_point, 1);
-	      if (std::get<0>(results)<=dis_cut*5/4.) continue;
+	      if (std::get<0>(results)<=dis_cut*3./4.) flag_in = true;
 	    }
-	    num_unique[1]++;
+	    if (!flag_in) num_unique[1]++;
 	  }else{
 	    num_dead[1]++;
 	  }
@@ -110,24 +112,28 @@ void WCPPID::NeutrinoID::deghost_segments(){
 	  // W plane ...
 	  flag_dead = ct_point_cloud->get_closest_dead_chs(test_point,2);
 	  if (!flag_dead){
+	    bool flag_in = false;
 	    std::tuple<double, WCP::PR3DCluster*, size_t> results = global_point_cloud.get_closest_2d_point_info(test_point, 2);
-	    if (std::get<0>(results)<=dis_cut/2.) continue;
+	    //	    std::cout << "A: " << std::get<0>(results)/units::cm << std::endl;
+	    if (std::get<0>(results)<=dis_cut/2.) flag_in = true;
 	    if (global_steiner_point_cloud.get_num_points()!=0){
 	      results = global_steiner_point_cloud.get_closest_2d_point_info(test_point, 2);
-	      if (std::get<0>(results)<=dis_cut/3.*2.) continue;
+	      //	      std::cout << "B: " << std::get<0>(results)/units::cm << std::endl;
+	      if (std::get<0>(results)<=dis_cut*2./3.) flag_in = true;
 	    }
 	    if ( global_skeleton_cloud.get_num_points()!=0){
 	      results = global_skeleton_cloud.get_closest_2d_point_info(test_point, 2);
-	      if (std::get<0>(results)<=dis_cut*5/4.) continue;
+	      //	      std::cout << "C: " << std::get<0>(results)/units::cm << std::endl;
+	      if (std::get<0>(results)<=dis_cut*3./4.) flag_in = true;
 	    }
-	    num_unique[2]++;
+	    if (!flag_in) num_unique[2]++;
 	  }else{
 	    num_dead[2]++;
 	  }
 	  
 	}  
 	
-	//	std::cout << sg->get_cluster_id() << " " << sg->get_id() << " " << medium_dQ_dx/(43e3/units::cm) << " " << length/units::cm << " " << num_dead[0] << " " << num_dead[1] << " " << num_dead[2] << " " << num_unique[0] << " " << num_unique[1] << " " << num_unique[2] << " " << num_total_points<< std::endl;
+	//	std::cout << sg->get_cluster_id() << " " << sg->get_id() << " " <<start_n << " " << end_n << " " << pts.size() << " " << medium_dQ_dx/(43e3/units::cm) << " " << length/units::cm << " " << num_dead[0] << " " << num_dead[1] << " " << num_dead[2] << " " << num_unique[0] << " " << num_unique[1] << " " << num_unique[2] << " " << num_total_points<< std::endl;
 	if (num_unique[0] + num_unique[1] + num_unique[2] == 0){
 	  flag_add_seg = false;
 	}
@@ -136,6 +142,7 @@ void WCPPID::NeutrinoID::deghost_segments(){
       if (flag_add_seg){
 	global_skeleton_cloud.AddPoints(sg->get_point_vec());
       }else{
+	std::cout << "Remove Cluster ID " << sg->get_cluster_id() << " segment id " << sg->get_id() << std::endl;
 	// remove segment
 	del_proto_segment(sg);
       }
