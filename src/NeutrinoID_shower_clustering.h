@@ -277,11 +277,14 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
       
       // std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << v1.Angle(v3)/3.1415926*180. << " " << result.first/units::cm << std::endl;
     }
-    //    std::cout <<main_pi.min_point  << " " << main_vertex->get_fit_pt() << " " <<  main_pi.min_angle << " " << min_pi.min_angle << " " << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << std::endl;
     
-    if (main_pi.min_angle < min_pi.min_angle + 3 && min_pi.min_angle > 0.9 * main_pi.min_angle && main_pi.min_dis < min_pi.min_dis * 1.2 
-	//	||  min_pi.min_angle > 15 && main_pi.min_angle < min_pi.min_angle + 15
+    double vtx_dis = sqrt(pow(main_vertex->get_fit_pt().x - min_pi.min_vertex->get_fit_pt().x,2) + pow(main_vertex->get_fit_pt().y - min_pi.min_vertex->get_fit_pt().y,2) + pow(main_vertex->get_fit_pt().z - min_pi.min_vertex->get_fit_pt().z,2));
+    // std::cout <<main_pi.min_point  << " " << main_vertex->get_fit_pt() << " " <<  main_pi.min_angle << " " << min_pi.min_angle << " " << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << " " << vtx_dis/units::cm << std::endl;
+    
+    if (main_pi.min_angle < min_pi.min_angle + 3  && main_pi.min_dis < min_pi.min_dis * 1.2 &&
+	(min_pi.min_angle > 0.9 * main_pi.min_angle || vtx_dis < 1.5*units::cm)
 	){
+      //      std::cout << "haha " << std::endl;
       map_cluster_pi[cluster] = main_pi;
     }else{
       map_cluster_pi[cluster] = min_pi;
