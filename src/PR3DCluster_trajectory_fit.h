@@ -1146,11 +1146,15 @@ std::vector<float> WCPPID::PR3DCluster::examine_point_association(std::vector<in
 	results.at(1) = 0;
       }
     }
+  }else if (saved_2dwt.size()==0 && saved_2dut.size()==0 && saved_2dvt.size()==0){
+    saved_2dut.insert(std::make_pair(temp_results.at(1), temp_results.at(0)));
+    saved_2dvt.insert(std::make_pair(temp_results.at(2), temp_results.at(0)));
+    saved_2dwt.insert(std::make_pair(temp_results.at(3), temp_results.at(0)));
   }
   
   
 
-  //  std::cout << " " << saved_2dut.size() << " " << saved_2dvt.size() << " " << saved_2dwt.size() << " " << temp_2dut.size() << " " << temp_2dvt.size() << " " << temp_2dwt.size() << std::endl;
+  // std::cout << " " << saved_2dut.size() << " " << saved_2dvt.size() << " " << saved_2dwt.size() << " " << temp_2dut.size() << " " << temp_2dvt.size() << " " << temp_2dwt.size() << std::endl;
   
   temp_2dut = saved_2dut;
   temp_2dvt = saved_2dvt;

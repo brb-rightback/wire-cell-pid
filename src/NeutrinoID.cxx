@@ -104,15 +104,31 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
       if (skip_clusters.find(*it) != skip_clusters.end()) continue;
       // do not break track and find other tracks ...
+      //      if ((*it)->get_cluster_id()!=50) continue;
       if (!find_proto_vertex(*it, false, 1)) init_point_segment(*it);
+
+     
+
+
+      
       clustering_points(*it);
       separate_track_shower(*it);
       determine_direction(*it);
+
+      //      std::cout << (*it)->get_cluster_id() << " " << map_segment_vertices.size() << " " << map_vertex_segments.size() << std::endl;
+      
     }
     //  deghost ...
     deghosting();
   }
 
+  
+  // for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
+  //   WCPPID::ProtoVertex *vtx = it->first;
+  //   if (vtx->get_cluster_id() == 50){
+  //     std::cout << vtx->get_id() << " " << vtx->get_fit_pt() << " " << vtx->get_wcpt().x << " " << vtx->get_wcpt().y << " " << vtx->get_wcpt().z << std::endl;
+  //   }
+  // }
   
   
   if (flag_main_cluster){
@@ -124,7 +140,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     shower_clustering_with_nv();
   }
   
-  
+
+
   
   // prepare output ...
   fill_fit_parameters();
@@ -608,6 +625,8 @@ void WCPPID::NeutrinoID::fill_reco_simple_tree(WCPPID::WCRecoTree& rtree){
 
 
 void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
+  if (main_vertex ==0 ) return;
+
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment* sg= it->first;
     if (map_segment_in_shower.find(sg)!=map_segment_in_shower.end()) continue;
@@ -1089,6 +1108,9 @@ void WCPPID::NeutrinoID::fill_skeleton_info(int mother_cluster_id, WCPPID::WCPoi
      ptree.reco_pt = vtx->get_pt();    
      ptree.reco_reduced_chi2 = vtx->get_reduced_chi2();
 
+     
+     // std::cout << vtx->get_cluster_id() << " " << vtx->get_id() << " " << vtx->get_fit_pt() << " " << shower->get_start_segment()->get_cluster_id() << " " << shower->get_start_segment()->get_id() << std::endl;
+     
      // std::cout <<  ptree.reco_proto_cluster_id << std::endl;
      // std::cout << shower->get_start_segment()->get_length()/units::cm << " " << vtx << " " << shower << std::endl;
      T->Fill();

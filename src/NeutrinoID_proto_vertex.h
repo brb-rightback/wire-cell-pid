@@ -6,7 +6,7 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
   
   WCPPID::ProtoSegment* sg1 = init_first_segment(temp_cluster);
 
-
+ 
   
   if (sg1 == 0) return false;
   //  std::cout << "haha1 " << std::endl;
@@ -18,14 +18,27 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
       std::vector<WCPPID::ProtoSegment*> remaining_segments;
       remaining_segments.push_back(sg1);
       break_segments(remaining_segments, temp_cluster);
+
+      
+      
       //      if (flag_check_end_segments)	check_end_segments(temp_cluster);
       // if a straight length is better for a segment ...
       examine_structure(temp_cluster);
       
     }else{
+      
       temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+
+      
     }
     // std::cout << "haha2 " << std::endl;
+    
+    /* for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){ */
+    /*   WCPPID::ProtoVertex *vtx = it->first; */
+    /*   if (vtx->get_cluster_id() == 50){ */
+    /* 	std::cout << vtx->get_id() << " " << vtx->get_fit_pt() << " " << vtx->get_wcpt().x << " " << vtx->get_wcpt().y << " " << vtx->get_wcpt().z << std::endl; */
+    /*   } */
+    /* } */
     
     // find other segments ...
     for (size_t i=0;i!=nrounds_find_other_tracks;i++){
@@ -38,6 +51,8 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
 	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
       
     }
+    
+    
     
     
     // examine the vertices ...

@@ -679,8 +679,10 @@ Point WCPPID::PR3DCluster::fit_point(Point& init_p, int i, std::map<int, std::pa
   for (size_t i=0;i!=n_2D_w;i++){
     data_w_2D(i) = 0;
   }
+
+  //  std::cout << map_3D_2DU_set[i].first.size() << " " << map_3D_2DV_set[i].first.size() << " " << map_3D_2DW_set[i].first.size() << std::endl;
   
-  int index = 0;
+  int index = 0; 
   for (auto it = map_3D_2DU_set[i].first.begin(); it!=map_3D_2DU_set[i].first.end(); it++){
     double charge, charge_err;
     if (map_2D_ut_charge.find(*it)!=map_2D_ut_charge.end()){
@@ -703,6 +705,8 @@ Point WCPPID::PR3DCluster::fit_point(Point& init_p, int i, std::map<int, std::pa
       else
 	scaling *= 0.05;
     }
+
+    //    std::cout << "U: " << scaling << std::endl;
     
     if (scaling!=0){
       data_u_2D(2*index) =  scaling * (it->first - offset_u);
@@ -714,6 +718,7 @@ Point WCPPID::PR3DCluster::fit_point(Point& init_p, int i, std::map<int, std::pa
     }
     index ++;
   }
+
   index = 0;
   for (auto it = map_3D_2DV_set[i].first.begin(); it!=map_3D_2DV_set[i].first.end(); it++){
     double charge, charge_err;
@@ -736,7 +741,8 @@ Point WCPPID::PR3DCluster::fit_point(Point& init_p, int i, std::map<int, std::pa
       else
 	scaling *= 0.05;
     }
-    
+
+    //    std::cout << "V: " << scaling << std::endl;
     if (scaling!=0){
       data_v_2D(2*index) =  scaling * (it->first - offset_v);
       data_v_2D(2*index+1) = scaling * (it->second - offset_t);
@@ -747,7 +753,7 @@ Point WCPPID::PR3DCluster::fit_point(Point& init_p, int i, std::map<int, std::pa
     }
     index ++;
   }
-  
+
   index = 0;
   for (auto it = map_3D_2DW_set[i].first.begin(); it!=map_3D_2DW_set[i].first.end(); it++){
     double charge, charge_err;
@@ -771,6 +777,7 @@ Point WCPPID::PR3DCluster::fit_point(Point& init_p, int i, std::map<int, std::pa
       else
 	scaling *= 0.05;
     }
+    //std::cout << "W: " << scaling << std::endl;
     if (scaling!=0){
       data_w_2D(2*index) =  scaling * (it->first - offset_w);
       data_w_2D(2*index+1) = scaling * (it->second - offset_t);
@@ -780,6 +787,9 @@ Point WCPPID::PR3DCluster::fit_point(Point& init_p, int i, std::map<int, std::pa
     }
     index ++;
   }
+  
+
+  Point final_p;
   
   Eigen::SparseMatrix<double> RUT = Eigen::SparseMatrix<double>(RU.transpose());
   Eigen::SparseMatrix<double> RVT = Eigen::SparseMatrix<double>(RV.transpose());
@@ -793,7 +803,7 @@ Point WCPPID::PR3DCluster::fit_point(Point& init_p, int i, std::map<int, std::pa
   
   temp_pos_3D = solver.solveWithGuess(b,temp_pos_3D_init);
   
-  Point final_p;
+  
   if (std::isnan(solver.error())){
     final_p.x = temp_pos_3D_init(0);
     final_p.y = temp_pos_3D_init(1);
@@ -802,9 +812,10 @@ Point WCPPID::PR3DCluster::fit_point(Point& init_p, int i, std::map<int, std::pa
     final_p.x = temp_pos_3D(0);
     final_p.y = temp_pos_3D(1);
     final_p.z = temp_pos_3D(2);
-  }
+    }
   
-  //std::cout << init_p << " " << final_p << std::endl;
+    
+  //  std::cout << init_p << " " << final_p << " " << std::isnan(solver.error()) << std::endl;
   
   return final_p;
 }
@@ -994,8 +1005,11 @@ void WCPPID::PR3DCluster::form_map_multi_segments(WCPPID::Map_Proto_Vertex_Segme
     temp_results.at(3)-=4800; 
     std::vector<float> temp_flag;
 
+    //    std::cout << temp_2dut.size() << " " << temp_2dvt.size() << " " << temp_2dwt.size() << std::endl;
+    
     temp_flag = examine_point_association(temp_results, temp_2dut, temp_2dvt, temp_2dwt, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_charge,true,charge_cut); 
-  
+
+    //    std::cout << temp_2dut.size() << " " << temp_2dvt.size() << " " << temp_2dwt.size() << std::endl;
     
     map_3D_2DU_set[count] = std::make_pair(temp_2dut,temp_flag.at(0)); 
     map_3D_2DV_set[count] = std::make_pair(temp_2dvt,temp_flag.at(1)); 
