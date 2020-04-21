@@ -1212,6 +1212,28 @@ bool WCPPID::NeutrinoID::del_proto_segment(WCPPID::ProtoSegment *ps){
 }
 
 void WCPPID::NeutrinoID::examine_vertices(WCPPID::PR3DCluster* temp_cluster){
+  std::set<WCPPID::ProtoSegment*> segments_to_be_removed;
+  for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
+    WCPPID::ProtoVertex *vtx = it->first;
+    std::vector<WCPPID::ProtoSegment*> tmp_segments(it->second.begin(), it->second.end());
+    for (size_t i=0;i!=tmp_segments.size();i++){
+      auto it1 = find_vertices(tmp_segments.at(i));
+      for (size_t j=i+1;j<tmp_segments.size();j++){
+	auto it2 = find_vertices(tmp_segments.at(j));
+	if (it1.first->get_wcpt().index == it2.first->get_wcpt().index &&
+	    it1.second->get_wcpt().index == it2.second->get_wcpt().index ||
+	    it1.first->get_wcpt().index == it2.second->get_wcpt().index &&
+	    it1.second->get_wcpt().index == it2.first->get_wcpt().index){
+	  segments_to_be_removed.insert(tmp_segments.at(j));
+	}
+      }
+    }
+  }
+  for (auto it = segments_to_be_removed.begin(); it != segments_to_be_removed.end(); it++){
+    del_proto_segment(*it);
+  }
+
+
   // merge vertex if the kink is not at right location
   examine_vertices_1(temp_cluster);
   
@@ -1377,6 +1399,15 @@ void WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
   double first_t_dis = temp_cluster->get_point_cloud()->get_cloud().pts[0].mcell->GetTimeSlice()*time_slice_width - temp_cluster->get_point_cloud()->get_cloud().pts[0].x;
   double slope_xt = 1./time_slice_width;
   double offset_t =  first_t_dis/time_slice_width + 0.5;
+
+  /* for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){ */
+  /*   WCPPID::ProtoSegment *sg = it->first; */
+  /*   if (sg->get_cluster_id()!=temp_cluster->get_cluster_id()) continue; */
+  /*   auto it1 = find_vertices(sg); */
+  /*   std::cout << it1.first->get_wcpt().index << " " << it1.second->get_wcpt().index << std::endl; */
+  /* } */
+
+
   
   bool flag_continue = true;
 
@@ -1408,7 +1439,7 @@ void WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
 		for (auto it3 = it->second.begin(); it3 != it->second.end(); it3++){
 		  if (*it3 == sg) continue;
 		  for (auto it4 = map_segment_vertices[*it3].begin(); it4!=map_segment_vertices[*it3].end();it4++){
-		    if (*it4 == v1) continue;
+		    if (*it4 == v1 ) continue;
 		    v3 = *it4;
 		  }
 		}
@@ -1428,7 +1459,7 @@ void WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
     // replace ...
     if (v1!=0 && v2!=0){
 
-      
+      //      std::cout << v1 << " " << v2 << " " << v3 << std::endl;
       ProtoSegment *sg = find_segment(v1,v2);
       ProtoSegment *sg1 = find_segment(v1,v3);
 
