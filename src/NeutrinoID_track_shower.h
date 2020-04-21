@@ -402,8 +402,8 @@ int WCPPID::NeutrinoID::calculate_num_daughter_showers(WCPPID::ProtoVertex *vtx,
       WCPPID::ProtoVertex *prev_vtx = it->first;
       WCPPID::ProtoSegment *current_sg = it->second;
       if (used_segments.find(current_sg)!=used_segments.end()) continue; // looked at it before ...
-
-      number_showers ++;
+      if (current_sg->get_flag_shower())
+	  number_showers ++;
       used_segments.insert(current_sg);
 
       WCPPID::ProtoVertex* curr_vertex = find_other_vertex(current_sg, prev_vtx);
@@ -665,8 +665,8 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   // examine_maps(temp_cluster);
   // print ...
 
-  //  std::cout << "Information after initial logic examination: " << std::endl;
-  //print_segs_info(temp_cluster);
+  // std::cout << "Information after initial logic examination: " << std::endl;
+  // print_segs_info(temp_cluster);
 
   
   // find the main vertex ...
@@ -983,7 +983,7 @@ float WCPPID::NeutrinoID::calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex){
 
 bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
   
-
+  TPCParams& mp = Singleton<TPCParams>::Instance();
   std::set<WCPPID::ProtoVertex* > used_vertices;
   std::set<WCPPID::ProtoSegment* > used_segments;
 
@@ -999,6 +999,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
       WCPPID::ProtoVertex *prev_vtx = it->first;
       bool flag_shower_in = false;
 
+      std::vector<ProtoSegment*> in_showers;
       for (auto it1 = map_vertex_segments[prev_vtx].begin(); it1 != map_vertex_segments[prev_vtx].end(); it1++){
 	WCPPID::ProtoSegment *sg = (*it1);
 	bool flag_start;
@@ -1009,6 +1010,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
 	if (flag_start && sg->get_flag_dir()==-1 || (!flag_start) && sg->get_flag_dir()==1){
 	  if (sg->get_flag_shower() ){
 	    flag_shower_in = true;
+	    in_showers.push_back(sg);
 	    break;
 	  }
 	}
@@ -1029,11 +1031,9 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
 
 	if (flag_shower_in && current_sg->get_flag_dir()==0 && (!current_sg->get_flag_shower())){
 	  current_sg->set_particle_type(11);
-	  TPCParams& mp = Singleton<TPCParams>::Instance();
 	  current_sg->set_particle_mass(mp.get_mass_electron());
 	}else if (flag_shower_in && current_sg->get_length()<2.0*units::cm && (!current_sg->get_flag_shower())){
 	  current_sg->set_particle_type(11);
-	  TPCParams& mp = Singleton<TPCParams>::Instance();
 	  current_sg->set_particle_mass(mp.get_mass_electron());
 	}
 	
@@ -1043,7 +1043,31 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
 	
 	current_sg->cal_4mom();
 	current_sg->set_dir_weak(true);
+      }else if (current_sg->get_flag_dir() !=0 && (!current_sg->is_dir_weak())){
+	int num_daughter_showers = calculate_num_daughter_showers(prev_vtx, current_sg);
+	//std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << " " << flag_shower_in << " " << num_daughter_showers << " " << std::endl;
+	if (current_sg->get_particle_type()==2212 && flag_shower_in && num_daughter_showers == 0){
+	  for (auto it1 = in_showers.begin(); it1!= in_showers.end(); it1++){
+	    if ((*it1)->get_medium_dQ_dx()/(43e3/units::cm) > 1.3){
+	      (*it1)->set_particle_type(2212);
+	      (*it1)->set_flag_shower_trajectory(false);
+	      (*it1)->set_flag_shower_topology(false);
+	      (*it1)->set_particle_mass(mp.get_mass_proton());
+	      if ((*it1)->get_particle_4mom(3)>0)
+		(*it1)->cal_4mom();
+	    }else{
+	      (*it1)->set_particle_type(211);
+	      (*it1)->set_flag_shower_trajectory(false);
+	      (*it1)->set_flag_shower_topology(false);
+	      (*it1)->set_particle_mass(mp.get_mass_pion());
+	      if ((*it1)->get_particle_4mom(3)>0)
+		(*it1)->cal_4mom();
+	    }
+	  }
+	}
       }
+
+      
       used_segments.insert(current_sg);
 
       WCPPID::ProtoVertex* curr_vertex = find_other_vertex(current_sg, prev_vtx);
@@ -1058,7 +1082,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
 
   
   // find the long muon candidate ...
-  TPCParams& mp = Singleton<TPCParams>::Instance();
+
   if (segments_in_long_muon.size()==0){
     for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
       WCPPID::ProtoSegment *sg = (*it);
@@ -1150,11 +1174,9 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
       if ((*it)->get_particle_4mom(3)>0)
 	(*it)->cal_4mom();
     }
-    
-
   }
   
-
+  // find the Michel electron 
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != main_vertex->get_cluster_id()) continue;
