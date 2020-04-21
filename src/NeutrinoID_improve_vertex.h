@@ -882,7 +882,8 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
       WCPPID::ProtoSegment* sg1 = new WCPPID::ProtoSegment(acc_segment_id, wcp_list, temp_cluster->get_cluster_id()); acc_segment_id++;
       add_proto_connection(v1,sg1,temp_cluster);
       add_proto_connection(vtx,sg1,temp_cluster);
-    
+     
+      
       return true;
     }
   }
