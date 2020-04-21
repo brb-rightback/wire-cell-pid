@@ -92,6 +92,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
 	  TVector3 dir2 = shower_2->get_init_dir();
 	  double angle = dir1.Angle(dir2);
 	  double mass_pio = sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2));
+	  if (shower_1->get_start_vertex().second==1 && shower_2->get_start_vertex().second==1) continue;
 	  map_shower_pair_mass[std::make_pair(shower_1, shower_2)] = mass_pio;
 	  //	  std::cout << it->first << " " << i << " " << j << " " << shower_1->get_kine_charge()/units::MeV << " " << shower_2->get_kine_charge()/units::MeV << " " << dir1.Mag() << " " << dir2.Mag() << " " << angle/3.1415926*180. << " " << sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2))/units::MeV<< std::endl;
 	}
