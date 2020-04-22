@@ -57,7 +57,7 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
       if ((*it)->get_wcpt().index == sg->get_wcpt_vec().back().index) end_v = *it;
     }
     if (start_v==0 || end_v==0){
-      std::cout << "Error in finding vertices for a segment" << std::endl; 
+      std::cout << "Error in finding vertices for a segment " << std::endl; 
     }
 
     bool flag_print = false;
@@ -230,7 +230,8 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	}
 	
 	//	std::cout << sg->get_id() << " " << nshowers[0] << " " << nshowers[1] << " " << map_vertex_segments[two_vertices.first].size() << " " << map_vertex_segments[two_vertices.second].size() << " " << sg->get_particle_type()  << " " << nmuons[0] << " " << nmuons[1] << " " << nprotons[0] << " " << nprotons[1] << std::endl;
-	if (nshowers[0] + nshowers[1] >2 && sg->get_length()<5*units::cm){ // 2 shower, muon, very short track ...
+	if (nshowers[0] + nshowers[1] >2 && sg->get_length()<5*units::cm ||
+	    nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() && (nshowers[1]+1 == map_vertex_segments[two_vertices.second].size()) && nshowers[0]>0 && nshowers[1]>0 && sg->get_length()<5*units::cm){ // 2 shower, muon, very short track ...
 		sg->set_particle_type(11);
 		TPCParams& mp = Singleton<TPCParams>::Instance();
 		sg->set_particle_mass(mp.get_mass_electron());
@@ -665,7 +666,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   // examine_maps(temp_cluster);
   // print ...
 
-  // std::cout << "Information after initial logic examination: " << std::endl;
+  //  std::cout << "Information after initial logic examination: " << std::endl;
   // print_segs_info(temp_cluster);
 
   
@@ -741,7 +742,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
 
   
   //  std::cout << "Information after main vertex determination: " << std::endl;
-  //print_segs_info(main_vertex);
+  // print_segs_info(main_vertex);
   
 }
 
@@ -954,7 +955,7 @@ float WCPPID::NeutrinoID::calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex){
       if (sg2->get_flag_shower_trajectory() || sg1->get_flag_shower() && sg2->get_flag_shower())
 	flag_check = false;
 
-      // std::cout << max_angle << std::endl;
+      //      std::cout << max_angle << " " << sg1->get_id() << " " << sg2->get_id() << std::endl;
       if (max_angle >=0 && flag_check){
 	if (max_angle < 35) num_conflicts += 5;
 	else if (max_angle < 70) num_conflicts += 3; // angle does not look right ...

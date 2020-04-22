@@ -124,7 +124,9 @@ namespace WCPPID{
     void organize_vertices_segments();
     
     std::tuple<ProtoVertex*, ProtoSegment*, WCP::Point> check_end_point(WCPPID::PR3DCluster* temp_cluster, WCP::PointVector& tracking_path, bool flag_front = true, double vtx_cut1 = 0.9*units::cm, double vtx_cut2 = 2.0*units::cm, double sg_cut1 = 2.0 * units::cm, double sg_cut2 = 1.2*units::cm);
-    
+
+    bool modify_vertex_isochronous(WCPPID::ProtoVertex* vtx, WCPPID::ProtoVertex *v1, WCPPID::ProtoSegment* sg, WCPPID::ProtoVertex *v2, WCPPID::PR3DCluster* temp_cluster);
+    bool modify_segment_isochronous(WCPPID::ProtoSegment* sg1, WCPPID::ProtoVertex *v1, WCPPID::ProtoSegment* sg, WCPPID::ProtoVertex *v2, WCPPID::PR3DCluster* temp_cluster);
     // get segments
     int get_num_segments(ProtoVertex *pv);
 
@@ -179,7 +181,7 @@ namespace WCPPID{
     // merge two tracks into one if their angle are consistent ...
     bool examine_structure_3(WCPPID::PR3DCluster *temp_cluster);
     // search for missing tracks  ...
-    bool examine_structure_4(WCPPID::PR3DCluster *temp_cluster);
+    bool examine_structure_4(WCPPID::ProtoVertex *vertex, WCPPID::PR3DCluster *temp_cluster);
 
     
     void find_other_segments(WCPPID::PR3DCluster* temp_cluster, bool flag_break_track = true, double search_range = 1.5*units::cm, double scaling_2d = 0.8);

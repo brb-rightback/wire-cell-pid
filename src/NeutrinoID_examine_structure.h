@@ -217,16 +217,21 @@ bool WCPPID::NeutrinoID::examine_structure_3(WCPPID::PR3DCluster *temp_cluster){
       }
     }
   }
+
+
+  
+  
+  
   return flag_update;
 }
 
 
-bool WCPPID::NeutrinoID::examine_structure_4(WCPPID::PR3DCluster *temp_cluster){
+bool WCPPID::NeutrinoID::examine_structure_4(WCPPID::ProtoVertex* vertex, WCPPID::PR3DCluster *temp_cluster){
   bool flag_update = false;
   for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
     WCPPID::ProtoVertex *vtx = it->first;
     if (it->second.size()<2) continue;
-    if (vtx != main_vertex) continue;
+    if (vtx != vertex) continue;
 
     ToyPointCloud* pcloud = temp_cluster->get_point_cloud_steiner();
     std::vector<bool>& flag_terminals = temp_cluster->get_flag_steiner_terminal();
@@ -305,9 +310,9 @@ bool WCPPID::NeutrinoID::examine_structure_4(WCPPID::PR3DCluster *temp_cluster){
       } // must be steiner terminal
     } // loop over points ...
 
-
+    //    std::cout << max_dis/units::cm << std::endl;
     
-    if (max_dis > 2.0*units::cm){
+    if (max_dis > 1.6*units::cm){
       WCPPID::ProtoVertex *v1 = new WCPPID::ProtoVertex(acc_vertex_id, max_wcp, temp_cluster->get_cluster_id()); acc_vertex_id++;
       std::list<WCP::WCPointCloud<double>::WCPoint> wcp_list;
       wcp_list.push_back(vtx->get_wcpt());

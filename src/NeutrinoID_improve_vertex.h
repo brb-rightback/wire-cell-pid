@@ -50,7 +50,7 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
   /* } */
 
   // search for vertex activities ...
-  if ( examine_structure_4(temp_cluster) )
+  if ( examine_structure_4(main_vertex, temp_cluster) )
     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
   
 
