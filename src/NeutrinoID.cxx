@@ -79,7 +79,9 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   
   if (flag_main_cluster){
     // find the proto vertex ...
-    find_proto_vertex(main_cluster, true, 2);    
+    find_proto_vertex(main_cluster, true, 2);
+    
+    
 
     
     // deal with shower ...

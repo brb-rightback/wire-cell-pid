@@ -156,10 +156,20 @@ namespace WCPPID{
     void init_point_segment(WCPPID::PR3DCluster *cluster);
     void break_segments(std::vector<WCPPID::ProtoSegment*>& remaining_segments, WCPPID::PR3DCluster* temp_cluster);
     void examine_vertices(WCPPID::PR3DCluster* temp_cluster);
-    void examine_vertices_1(WCPPID::PR3DCluster* temp_cluster);
-    void examine_vertices_2(WCPPID::PR3DCluster* temp_cluster);
-    void examine_vertices_3(); // main cluster only examine the two initial points 
-    bool examine_vertices(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2, double offset_t, double slope_xt, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw);
+    bool examine_vertices_1(WCPPID::PR3DCluster* temp_cluster); // one segment can be skipped ...
+    bool examine_vertices_1(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2, double offset_t, double slope_xt, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw);
+    
+    bool examine_vertices_2(WCPPID::PR3DCluster* temp_cluster); // two close vertices  ...
+    void examine_segment(WCPPID::PR3DCluster* temp_cluster);
+
+    bool examine_vertices_4(WCPPID::PR3DCluster* temp_cluster); // two close vertices with multiple segments
+    bool examine_vertices_4(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2); // check v1's segment against v2 ...
+    
+    void examine_vertices_3(); // main cluster only examine the two initial points
+
+    
+
+    
 
     void examine_structure(WCPPID::PR3DCluster *temp_cluster);
     // straighten one short wiggled track with high dQ/dx 
