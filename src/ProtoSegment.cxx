@@ -322,7 +322,8 @@ bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
   }
     
   }
-  //  std::cout << "BB " << sections.size() << " " << get_length()/units::cm << " " << n_shower_like << std::endl;
+  //std::cout << "BB " << id << " " << sections.size() << " " << get_length()/units::cm << " " << n_shower_like << std::endl;
+  
   if (n_shower_like >=0.5*sections.size()) flag_shower_trajectory = true;
   
   // calculate direct length, accumulated length, medium dQ/dx in each section ...

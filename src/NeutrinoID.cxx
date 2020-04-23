@@ -80,10 +80,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   if (flag_main_cluster){
     // find the proto vertex ...
     find_proto_vertex(main_cluster, true, 2);
-    
-    
-
-    
+      
     // deal with shower ...
     clustering_points(main_cluster);
     separate_track_shower(main_cluster);
@@ -97,7 +94,6 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     improve_vertex(main_cluster);
     clustering_points(main_cluster);
     examine_direction(main_vertex);
-    
   }
 
   
@@ -108,10 +104,6 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
       // do not break track and find other tracks ...
       //      if ((*it)->get_cluster_id()!=50) continue;
       if (!find_proto_vertex(*it, false, 1)) init_point_segment(*it);
-
-     
-
-
       
       clustering_points(*it);
       separate_track_shower(*it);
@@ -142,7 +134,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     shower_clustering_with_nv();
   }
   
-
+  //  std::cout << "Final Information: " << std::endl;
+  //print_segs_info(main_vertex);
 
   
   // prepare output ...

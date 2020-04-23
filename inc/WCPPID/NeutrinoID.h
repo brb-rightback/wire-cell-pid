@@ -335,6 +335,7 @@ namespace WCPPID{
     std::map<int, std::pair<int, int> > map_pio_id_saved_pair;
 
     std::set<WCPPID::ProtoSegment*> segments_in_long_muon;
+    std::set<WCPPID::ProtoVertex*> vertices_in_long_muon;
     
     //    std::map<WCPPID::PR3DCluster*, ProtoSegmentSet> map_cluster_segments;
     //std::map<WCPPID::ProtoSegment*, WCPPID::PR3DCluster*> map_segment_cluster;

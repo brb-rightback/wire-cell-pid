@@ -109,6 +109,9 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
     }
     //    std::cout << ntracks << " " << nshowers << " " << vtx << " " << main_vertex << std::endl;
     if (ntracks == 0 && vtx != main_vertex ) continue;
+    if (vertices_in_long_muon.find(vtx)!=vertices_in_long_muon.end()) continue;
+    
+    
     bool flag_update = search_for_vertex_activities(vtx, it->second, temp_cluster);
     if (flag_update) {
       // if there are only two tracks starting, the fit is not precise, plan for refit
