@@ -204,9 +204,11 @@ namespace WCPPID{
     // get direction 
     TVector3 get_dir(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, double dis = 2*units::cm);
     void determine_direction(WCPPID::PR3DCluster* temp_cluster);
-    void determine_main_vertex(WCPPID::PR3DCluster* temp_cluster);
+    void determine_main_vertex(WCPPID::PR3DCluster* temp_cluster, bool flag_print = true);
 
-    void check_switch_main_cluster(WCPPID::PR3DCluster *max_length_cluster, WCPPID::PR3DClusterSelection& other_clusters, std::set<WCPPID::PR3DCluster*>& skip_clusters );
+    void determine_overall_main_vertex(std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* > map_cluster_main_vertices, std::map<WCPPID::PR3DCluster*, double>& map_cluster_length);
+
+    void check_switch_main_cluster(WCPPID::ProtoVertex *temp_main_vertex, WCPPID::PR3DCluster *max_length_cluster,  std::set<WCPPID::PR3DCluster*>& skip_clusters );
     
     // if there is one in, fix the others ...
     void improve_maps_one_in(WCPPID::PR3DCluster* temp_cluster, bool flag_strong_check = true);
@@ -232,7 +234,7 @@ namespace WCPPID{
     
     WCPPID::ProtoVertex* compare_main_vertices(WCPPID::ProtoVertexSelection& vertex_candidates);
     
-    bool examine_direction(WCPPID::ProtoVertex* main_vertex);
+    bool examine_direction(WCPPID::ProtoVertex* vertex);
     
     // clustering points
     void clustering_points(WCPPID::PR3DCluster* temp_cluster);
@@ -248,7 +250,7 @@ namespace WCPPID{
     Map_Proto_Segment_Vertices& get_map_segment_verteices(){return map_segment_vertices;};
 
     // deghost
-    void deghosting();
+    void deghosting(std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* >& map_cluster_main_vertices);
     void deghost_clusters();
     void deghost_segments();
     
@@ -261,7 +263,7 @@ namespace WCPPID{
     std::pair<int,int> count_num_tracks_showers(WCPPID::PR3DCluster* temp_cluster);
     
     // particle_clustering
-    void shower_determing_in_main_cluster();
+    void shower_determing_in_main_cluster(WCPPID::PR3DCluster *temp_cluster);
     void shower_clustering_with_nv();
     void shower_clustering_with_nv_in_main_cluster();
     void shower_clustering_with_nv_from_main_cluster();

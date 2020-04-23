@@ -298,9 +298,9 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
       bool flag_break = temp_cluster->proto_break_tracks(start_v->get_wcpt(), break_wcp, end_v->get_wcpt(), wcps_list1, wcps_list2);
 
       //      std::cout << break_wcp.index_u << " " << break_wcp.index_v << " " << break_wcp.index_w << " " << break_wcp.mcell->GetTimeSlice() << std::endl;
-      std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " breaking point: " << flag_break << " " << wcps_list1.front().index << " " << wcps_list1.back().index << " " << wcps_list2.front().index << " " << wcps_list2.back().index << std::endl;
-	  
+      
       if (flag_break){
+	std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " breaking point: " << flag_break << " " << wcps_list1.front().index << " " << wcps_list1.back().index << " " << wcps_list2.front().index << " " << wcps_list2.back().index << std::endl;
 	TVector3 tv1(end_v->get_wcpt().x - start_v->get_wcpt().x, end_v->get_wcpt().y - start_v->get_wcpt().y, end_v->get_wcpt().z - start_v->get_wcpt().z);
 	TVector3 tv2(end_v->get_wcpt().x - break_wcp.x, end_v->get_wcpt().y - break_wcp.y, end_v->get_wcpt().z - break_wcp.z);
 

@@ -10,12 +10,25 @@ bool sortbysec1(const std::pair<WCPPID::ProtoSegment*,double> &a,
   return (a.second > b.second);
 }
 
-void WCPPID::NeutrinoID::deghosting(){
+void WCPPID::NeutrinoID::deghosting(std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* >& map_cluster_main_vertices){
   //std::cout << "B " << std::endl;
   deghost_clusters();
 
   //  std::cout << "A " << std::endl;
   deghost_segments();
+
+  std::set<WCPPID::PR3DCluster*> temp_clusters;
+  for (auto it = map_cluster_main_vertices.begin(); it!= map_cluster_main_vertices.end(); it++){
+    WCPPID::PR3DCluster *cluster = it->first;
+    WCPPID::ProtoVertex *vertex = it->second;
+    if (map_vertex_segments.find(vertex)==map_vertex_segments.end()){
+      temp_clusters.insert(cluster);
+    }
+  }
+  for (auto it = temp_clusters.begin(); it != temp_clusters.end(); it++){
+    map_cluster_main_vertices.erase(*it);
+  }
+  
 }
 
 void WCPPID::NeutrinoID::deghost_segments(){

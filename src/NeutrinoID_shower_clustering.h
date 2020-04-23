@@ -12,7 +12,7 @@ bool sortbydis(const cluster_point_info &a, const cluster_point_info &b){
 }
 
 
-void WCPPID::NeutrinoID::shower_determing_in_main_cluster(){
+void WCPPID::NeutrinoID::shower_determing_in_main_cluster(WCPPID::PR3DCluster *temp_cluster){
 
   //hack for now 
   /* for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){ */
@@ -27,36 +27,36 @@ void WCPPID::NeutrinoID::shower_determing_in_main_cluster(){
   /*   } */
   /* } */
 
-  examine_good_tracks(main_cluster->get_cluster_id());
+  examine_good_tracks(temp_cluster->get_cluster_id());
 
-  // print_segs_info(main_cluster->get_cluster_id());
+  // print_segs_info(temp_cluster->get_cluster_id());
   
   // if multiple tracks in, make them undetermined ...
-  fix_maps_multiple_tracks_in(main_cluster->get_cluster_id());
+  fix_maps_multiple_tracks_in(temp_cluster->get_cluster_id());
   // if one shower in and a good track out, reverse the shower ..
-  fix_maps_shower_in_track_out(main_cluster->get_cluster_id());
+  fix_maps_shower_in_track_out(temp_cluster->get_cluster_id());
   
   // if there is one good track in, turn everything else to out
-  improve_maps_one_in(main_cluster); // one in and many out ...
+  improve_maps_one_in(temp_cluster); // one in and many out ...
   // if one shower in and a track out, change the track to shower
-  improve_maps_shower_in_track_out(main_cluster->get_cluster_id()); // use shower information to determine the rest ...
+  improve_maps_shower_in_track_out(temp_cluster->get_cluster_id()); // use shower information to determine the rest ...
 
-  //  print_segs_info(main_cluster->get_cluster_id());
+  //  print_segs_info(temp_cluster->get_cluster_id());
   
   // help to change tracks around shower to showers
-  improve_maps_no_dir_tracks(main_cluster->get_cluster_id());    
+  improve_maps_no_dir_tracks(temp_cluster->get_cluster_id());    
   // if one shower in and a track out, change the track to shower
-  improve_maps_shower_in_track_out(main_cluster->get_cluster_id(), false); // use shower information to determine the rest ...
+  improve_maps_shower_in_track_out(temp_cluster->get_cluster_id(), false); // use shower information to determine the rest ...
 
 
   
   // if multiple tracks in, change track to shower
-  improve_maps_multiple_tracks_in(main_cluster->get_cluster_id());
+  improve_maps_multiple_tracks_in(temp_cluster->get_cluster_id());
   // if one shower in and a good track out, reverse the shower ..
-  fix_maps_shower_in_track_out(main_cluster->get_cluster_id());
+  fix_maps_shower_in_track_out(temp_cluster->get_cluster_id());
     
   // examine map ...
-  examine_maps(main_cluster);
+  examine_maps(temp_cluster);
   
   //  print_segs_info(main_cluster->get_cluster_id());
   /* std::cout << std::endl << std::endl; */
@@ -298,6 +298,13 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
       
       // std::cout << i << " " << v1.Angle(v2)/3.1415926*180. << " " << v1.Angle(v3)/3.1415926*180. << " " << result.first/units::cm << std::endl;
     }
+    if (min_pi.min_vertex ==0){
+      min_pi.min_angle = main_pi.min_angle;
+      min_pi.min_vertex = main_vertex;
+      min_pi.min_point = main_pi.min_point;
+      min_pi.min_dis = main_pi.min_dis;
+    }
+    //    std::cout << main_vertex << " " << min_pi.min_vertex << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << std::endl;
     
     double vtx_dis = sqrt(pow(main_vertex->get_fit_pt().x - min_pi.min_vertex->get_fit_pt().x,2) + pow(main_vertex->get_fit_pt().y - min_pi.min_vertex->get_fit_pt().y,2) + pow(main_vertex->get_fit_pt().z - min_pi.min_vertex->get_fit_pt().z,2));
     // std::cout <<main_pi.min_point  << " " << main_vertex->get_fit_pt() << " " <<  main_pi.min_angle << " " << min_pi.min_angle << " " << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << " " << vtx_dis/units::cm << std::endl;

@@ -3,7 +3,7 @@ bool WCPPID::PR3DCluster::proto_break_tracks(WCP::WCPointCloud<double>::WCPoint&
   double dis1 = sqrt(pow(curr_wcp.x-first_wcp.x,2) + pow(curr_wcp.y-first_wcp.y,2) + pow(curr_wcp.z-first_wcp.z,2));
   double dis2 = sqrt(pow(curr_wcp.x-last_wcp.x,2) + pow(curr_wcp.y-last_wcp.y,2) + pow(curr_wcp.z-last_wcp.z,2));
 
-  //  std::cout << first_wcp.index << " " << curr_wcp.index << " " << last_wcp.index << " " << dis1/units::cm << " " << dis2/units::cm << " " << flag_pass_check << std::endl;
+  //std::cout << first_wcp.index << " " << curr_wcp.index << " " << last_wcp.index << " " << dis1/units::cm << " " << dis2/units::cm << " " << flag_pass_check << std::endl;
   
   if (dis1 > 1*units::cm && dis2 > 1*units::cm || flag_pass_check){
     dijkstra_shortest_paths(first_wcp,2);
@@ -29,7 +29,7 @@ bool WCPPID::PR3DCluster::proto_break_tracks(WCP::WCPointCloud<double>::WCPoint&
       }
     }
     for (int i=0;i!=count;i++){
-      if (i!=count-1){
+      if (i+1!=count){
 	wcps_list1.pop_back();
 	wcps_list2.pop_front();
       }

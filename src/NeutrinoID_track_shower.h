@@ -771,7 +771,7 @@ void WCPPID::NeutrinoID::print_segs_info(WCPPID::PR3DCluster* temp_cluster){
 }
 
 
-void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster){
+void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster, bool flag_print){
   // update directions ... 
   // improve_maps_one_in(temp_cluster);  
   // examination ...
@@ -826,14 +826,15 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
     }
   }
 
-
-  //  std::cout << main_vertex_candidates.size() << std::endl;
-  for (auto it = main_vertex_candidates.begin(); it!= main_vertex_candidates.end(); it++){
-    std::cout << "Candidate main vertex " << (*it)->get_fit_pt() << " connecting to: ";
-    for (auto it1 = map_vertex_segments[*it].begin(); it1!=map_vertex_segments[*it].end(); it1++){
-      std::cout << (*it1)->get_id() << ", ";
+  if (flag_print){
+    //  std::cout << main_vertex_candidates.size() << std::endl;
+    for (auto it = main_vertex_candidates.begin(); it!= main_vertex_candidates.end(); it++){
+      std::cout << "Candidate main vertex " << (*it)->get_fit_pt() << " connecting to: ";
+      for (auto it1 = map_vertex_segments[*it].begin(); it1!=map_vertex_segments[*it].end(); it1++){
+	std::cout << (*it1)->get_id() << ", ";
+      }
+      std::cout << std::endl;
     }
-    std::cout << std::endl;
   }
 
   
@@ -843,14 +844,15 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
     main_vertex = compare_main_vertices(main_vertex_candidates);
   }
   bool flag_check = examine_direction(main_vertex);
-  if (!flag_check) std::cout << "Wrong: inconsistency for track directions! " << std::endl;
+  if (!flag_check) std::cout << "Wrong: inconsistency for track directions in cluster " << main_vertex->get_cluster_id() << std::endl;
 
-  std::cout << "Main Vertex " << main_vertex->get_fit_pt() << " connecting to: ";
-  for (auto it = map_vertex_segments[main_vertex].begin(); it!=map_vertex_segments[main_vertex].end(); it++){
-    std::cout << (*it)->get_id() << ", ";
+  if (flag_print){
+    std::cout << "Main Vertex " << main_vertex->get_fit_pt() << " connecting to: ";
+    for (auto it = map_vertex_segments[main_vertex].begin(); it!=map_vertex_segments[main_vertex].end(); it++){
+      std::cout << (*it)->get_id() << ", ";
+    }
+    std::cout << std::endl;
   }
-  std::cout << std::endl;
-  
 
   
   //  std::cout << "Information after main vertex determination: " << std::endl;
@@ -1094,17 +1096,17 @@ float WCPPID::NeutrinoID::calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex){
 }
 
 
-bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
+bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex){
   
   TPCParams& mp = Singleton<TPCParams>::Instance();
   std::set<WCPPID::ProtoVertex* > used_vertices;
   std::set<WCPPID::ProtoSegment* > used_segments;
 
   std::vector<std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> > segments_to_be_examined;
-  for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
-    segments_to_be_examined.push_back(std::make_pair(main_vertex, *it));
+  for (auto it = map_vertex_segments[temp_vertex].begin(); it != map_vertex_segments[temp_vertex].end(); it++){
+    segments_to_be_examined.push_back(std::make_pair(temp_vertex, *it));
   }
-  used_vertices.insert(main_vertex);
+  used_vertices.insert(temp_vertex);
 
   while(segments_to_be_examined.size()>0){
     std::vector<std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> > temp_segments;
@@ -1228,12 +1230,18 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
     segments_to_be_examined = temp_segments;
   }
 
+  bool flag_fill_long_muon = true;
+  for (auto it = segments_in_long_muon.begin(); it != segments_in_long_muon.end(); it++){
+    WCPPID::ProtoSegment *sg = *it;
+    if (sg->get_cluster_id() == temp_vertex->get_cluster_id())
+      flag_fill_long_muon = false;
+  }
   
   // find the long muon candidate ...
-  if (segments_in_long_muon.size()==0){
-    for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
+  if (flag_fill_long_muon){
+    for (auto it = map_vertex_segments[temp_vertex].begin(); it != map_vertex_segments[temp_vertex].end(); it++){
       WCPPID::ProtoSegment *sg = (*it);
-      WCPPID::ProtoVertex *vtx = find_other_vertex(sg, main_vertex);
+      WCPPID::ProtoVertex *vtx = find_other_vertex(sg, temp_vertex);
       if (sg->get_medium_dQ_dx()/(43e3/units::cm) > 1.3) continue;
       std::vector<WCPPID::ProtoSegment* > acc_segments;
       std::vector<WCPPID::ProtoVertex* > acc_vertices;
@@ -1283,11 +1291,11 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
     WCPPID::ProtoSegment *muon_sg = 0;
     double muon_length = 0;
     WCPPID::ProtoSegmentSelection pion_sgs;
-    for (auto it = map_vertex_segments[main_vertex].begin(); it!=map_vertex_segments[main_vertex].end(); it++){
+    for (auto it = map_vertex_segments[temp_vertex].begin(); it!=map_vertex_segments[temp_vertex].end(); it++){
       WCPPID::ProtoSegment *sg = *it;
       if (abs(sg->get_particle_type()) == 13){
 	if (segments_in_long_muon.find(sg)!= segments_in_long_muon.end()) continue;
-	WCPPID::ProtoVertex *other_vertex = find_other_vertex(sg, main_vertex);
+	WCPPID::ProtoVertex *other_vertex = find_other_vertex(sg, temp_vertex);
 	int n_proton = 0;
 	for (auto it1 = map_vertex_segments[other_vertex].begin(); it1 != map_vertex_segments[other_vertex].end(); it1++){
 	  if (abs((*it1)->get_particle_type())==2212){
@@ -1301,7 +1309,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
 	}
 	pion_sgs.push_back(sg);
       }else if (sg->get_particle_type()==0){
-      	WCPPID::ProtoVertex *other_vertex = find_other_vertex(sg, main_vertex);
+      	WCPPID::ProtoVertex *other_vertex = find_other_vertex(sg, temp_vertex);
       	int n_proton = 0;
       	for (auto it1 = map_vertex_segments[other_vertex].begin(); it1 != map_vertex_segments[other_vertex].end(); it1++){
       	  if (abs((*it1)->get_particle_type())==2212){
@@ -1335,7 +1343,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
   // find the Michel electron 
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
-    if (sg->get_cluster_id() != main_vertex->get_cluster_id()) continue;
+    if (sg->get_cluster_id() != temp_vertex->get_cluster_id()) continue;
     if (sg->get_particle_4mom(3)==0 && sg->get_particle_mass() > 0&& (!sg->get_flag_shower_topology())){
       if (!sg->is_dir_weak() ){  // weak direction and not shower
 	//      std::cout << sg->get_id() << std::endl;
@@ -1378,7 +1386,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* main_vertex){
   // print ...
    
   // examination ...
-  return examine_maps(main_vertex);
+  return examine_maps(temp_vertex);
   
   
 }

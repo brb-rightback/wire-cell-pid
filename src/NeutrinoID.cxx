@@ -40,11 +40,9 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   bool flag_other_clusters = true;
   bool flag_main_cluster = true;
 
-  PR3DCluster* max_length_cluster = 0;
-  double max_length = 0;
   
   std::map<WCPPID::PR3DCluster*, double> map_cluster_length;
-  std::set<WCPPID::PR3DCluster* > skip_clusters;
+  
   // form id vs. cluster ...
   map_id_cluster[main_cluster->get_cluster_id()] = main_cluster;
   main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
@@ -57,18 +55,13 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
     std::pair<WCP::WCPointCloud<double>::WCPoint,WCP::WCPointCloud<double>::WCPoint> two_wcps = (*it)->get_two_boundary_wcps();
     double length = sqrt(pow(two_wcps.first.x - two_wcps.second.x, 2) + pow(two_wcps.first.y - two_wcps.second.y, 2) + pow(two_wcps.first.z - two_wcps.second.z, 2));
-    map_cluster_length[*it] = length;
-    if (length > max_length){
-      max_length = length;
-      max_length_cluster = *it;
-    }
+    map_cluster_length[*it] = length;    
   }
   
   // std::cout << main_cluster->get_num_mcells() << " " << map_cluster_length[main_cluster]/units::cm << std::endl;
   // for  (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
   //  std::cout << (*it)->get_num_mcells() << " " << map_cluster_length[*it]/units::cm << std::endl;
   // }
-  
   // hack switch 
   // {
   //   auto it = find(other_clusters.begin(), other_clusters.end(), max_length_cluster);
@@ -76,6 +69,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   //   other_clusters.push_back(main_cluster);
   //   main_cluster = max_length_cluster;
   // }
+
+  std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* > map_cluster_main_vertices;
   
   if (flag_main_cluster){
     // find the proto vertex ...
@@ -86,65 +81,66 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     separate_track_shower(main_cluster);
     determine_direction(main_cluster);
     
-    shower_determing_in_main_cluster();
+    shower_determing_in_main_cluster(main_cluster);
     determine_main_vertex(main_cluster);	
     
-    if (max_length > map_cluster_length[main_cluster] * 0.8 )
-      check_switch_main_cluster(max_length_cluster, other_clusters, skip_clusters);
-    
-    // fit the vertex in 3D 
-    improve_vertex(main_cluster);
-    clustering_points(main_cluster);
-    examine_direction(main_vertex);
+    map_cluster_main_vertices[main_cluster] = main_vertex;
+    main_vertex = 0;
   }
 
   
   // loop over other clusters ...
   if (flag_other_clusters){
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
-      if (skip_clusters.find(*it) != skip_clusters.end()) continue;
-      // do not break track and find other tracks ...
-      //      if ((*it)->get_cluster_id()!=50) continue;
-      if (!find_proto_vertex(*it, false, 1)) init_point_segment(*it);
-      
-      clustering_points(*it);
-      separate_track_shower(*it);
-      determine_direction(*it);
+      //if (skip_clusters.find(*it) != skip_clusters.end()) continue;
 
-      //      std::cout << (*it)->get_cluster_id() << " " << map_segment_vertices.size() << " " << map_vertex_segments.size() << std::endl;
-      
+      if (map_cluster_length[*it] > 6*units::cm){
+	// find the proto vertex ...
+	find_proto_vertex(*it, true, 2);
+	// deal with shower ...
+	clustering_points(*it);
+	separate_track_shower(*it);
+	determine_direction(*it);    
+	shower_determing_in_main_cluster(*it);
+	determine_main_vertex(*it, false);
+	
+    
+	map_cluster_main_vertices[*it] = main_vertex;
+	main_vertex = 0;
+      }else{
+	if (!find_proto_vertex(*it, false, 1)) init_point_segment(*it);
+	
+	clustering_points(*it);
+	separate_track_shower(*it);
+	determine_direction(*it);
+	determine_main_vertex(*it, false);	
+
+	map_cluster_main_vertices[*it] = main_vertex;
+	main_vertex = 0;
+      }
     }
-    //  deghost ...
 
-    //std::cout << "CC " << std::endl;
-    deghosting();
-    //std::cout << "DD " << std::endl;
+    //  deghost ...
+    deghosting(map_cluster_main_vertices);
   }
 
+  determine_overall_main_vertex(map_cluster_main_vertices, map_cluster_length);  
   
-  // for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
-  //   WCPPID::ProtoVertex *vtx = it->first;
-  //   if (vtx->get_cluster_id() == 50){
-  //     std::cout << vtx->get_id() << " " << vtx->get_fit_pt() << " " << vtx->get_wcpt().x << " " << vtx->get_wcpt().y << " " << vtx->get_wcpt().z << std::endl;
-  //   }
-  // }
-  
-  
-  if (flag_main_cluster){
+  if (flag_main_cluster && main_vertex !=0){
+    // fit the vertex in 3D 
+    improve_vertex(main_cluster);
+    clustering_points(main_cluster);
+    examine_direction(main_vertex);
+    
     // overall
     separate_track_shower();
-
-    //    std::cout << "AA " << std::endl;
-    
     // for charge based on calculation ...
     collect_2D_charges();
-
-    //    std::cout << "BB " << std::endl;
     // cluster E&M ...
     shower_clustering_with_nv();
   }
   
-  // std::cout << "Final Information: " << std::endl;
+  //  std::cout << "Final Information: " << std::endl;
   // print_segs_info(main_vertex);
 
   
@@ -152,15 +148,43 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   fill_fit_parameters();
 }
 
-void WCPPID::NeutrinoID::check_switch_main_cluster(WCPPID::PR3DCluster *max_length_cluster, WCPPID::PR3DClusterSelection& other_clusters, std::set<WCPPID::PR3DCluster*>& skip_clusters ){
+void WCPPID::NeutrinoID::determine_overall_main_vertex(std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* > map_cluster_main_vertices, std::map<WCPPID::PR3DCluster*, double>& map_cluster_length){
+  PR3DCluster* max_length_cluster = 0;
+  double max_length = 0;
+  for (auto it = map_cluster_length.begin(); it!= map_cluster_length.end(); it++){
+    double length = it->second;
+    if (length > max_length){
+      max_length = length;
+      max_length_cluster = it->first;
+    }
+  }
+
+  std::set<WCPPID::PR3DCluster* > skip_clusters;
+  
+  if (max_length > map_cluster_length[main_cluster] * 0.8 )
+    check_switch_main_cluster(map_cluster_main_vertices[main_cluster], max_length_cluster, skip_clusters);
+
+  main_vertex = map_cluster_main_vertices[main_cluster];
+  
+  std::cout << "Overall main Vertex " << main_vertex->get_fit_pt() << " connecting to: ";
+  for (auto it = map_vertex_segments[main_vertex].begin(); it!=map_vertex_segments[main_vertex].end(); it++){
+    std::cout << (*it)->get_id() << ", ";
+  }
+  std::cout << " in cluster " << main_vertex->get_cluster_id() << std::endl;
+  
+}
+
+
+
+void WCPPID::NeutrinoID::check_switch_main_cluster(WCPPID::ProtoVertex *temp_main_vertex, WCPPID::PR3DCluster *max_length_cluster, std::set<WCPPID::PR3DCluster*>& skip_clusters ){
 
   bool flag_switch = false;
 
   int n_showers = 0;
-  for (auto it = map_vertex_segments[main_vertex].begin(); it!= map_vertex_segments[main_vertex].end(); it++){
+  for (auto it = map_vertex_segments[temp_main_vertex].begin(); it!= map_vertex_segments[temp_main_vertex].end(); it++){
     if ((*it)->get_flag_shower()) n_showers ++;
   }
-  if (n_showers == map_vertex_segments[main_vertex].size()) flag_switch = true;
+  if (n_showers == map_vertex_segments[temp_main_vertex].size()) flag_switch = true;
 
   
   if (flag_switch){
@@ -172,15 +196,13 @@ void WCPPID::NeutrinoID::check_switch_main_cluster(WCPPID::PR3DCluster *max_leng
     main_cluster = max_length_cluster;
     
     // find the proto vertex ...
-    find_proto_vertex(main_cluster, true, 2);    
-    
+    // find_proto_vertex(main_cluster, true, 2);    
     // deal with shower ...
-    clustering_points(main_cluster);
-    separate_track_shower(main_cluster);
-    determine_direction(main_cluster);
-    
-    shower_determing_in_main_cluster();
-    determine_main_vertex(main_cluster);	
+    // clustering_points(main_cluster);
+    // separate_track_shower(main_cluster);
+    // determine_direction(main_cluster);
+    // shower_determing_in_main_cluster(main_cluster);
+    // determine_main_vertex(main_cluster);	
   }
 }
   
