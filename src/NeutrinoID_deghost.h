@@ -11,8 +11,10 @@ bool sortbysec1(const std::pair<WCPPID::ProtoSegment*,double> &a,
 }
 
 void WCPPID::NeutrinoID::deghosting(){
+  //std::cout << "B " << std::endl;
   deghost_clusters();
 
+  //  std::cout << "A " << std::endl;
   deghost_segments();
 }
 
@@ -194,6 +196,7 @@ void WCPPID::NeutrinoID::deghost_clusters(){
   std::vector<WCPPID::PR3DCluster*> to_be_removed_clusters;
 
   for (size_t i=0;i!= ordered_clusters.size(); i++){
+    //  std::cout << i << " " << ordered_clusters.size() << std::endl;
     if (i==0){
       // fill anyway ...
       global_point_cloud.AddPoints(ordered_clusters.at(i)->get_point_cloud());
@@ -332,20 +335,26 @@ void WCPPID::NeutrinoID::deghost_clusters(){
   } // loop over cluster
 
 
+  //  std::cout << to_be_removed_clusters.size() << std::endl;
+  
   for (auto it = to_be_removed_clusters.begin(); it!= to_be_removed_clusters.end(); it++){
     auto it2 = map_cluster_id_segments.find((*it)->get_cluster_id());
     if (it2 != map_cluster_id_segments.end()){
+      //  std::cout << it2->second.size() << std::endl;
       for (auto it1 = it2->second.begin(); it1 != it2->second.end(); it1++){
     	del_proto_segment(*it1);
       }
     }
   }
   
+  
   WCPPID::ProtoVertexSelection tmp_vertices;
   for (auto it1 = map_vertex_segments.begin(); it1!=map_vertex_segments.end(); it1++){
     if (it1->second.size()==0) tmp_vertices.push_back(it1->first);
   }
+  //  std::cout << "A: " << tmp_vertices.size() << std::endl;
   for (auto it1 = tmp_vertices.begin(); it1!=tmp_vertices.end(); it1++){
+    //std::cout << (*it1)->get_id() << " " << (*it1)->get_cluster_id() << std::endl;
     del_proto_vertex(*it1);
   }
   

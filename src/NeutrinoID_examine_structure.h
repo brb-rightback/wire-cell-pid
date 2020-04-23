@@ -82,7 +82,7 @@ bool WCPPID::NeutrinoID::examine_structure_2(WCPPID::PR3DCluster *temp_cluster){
 
 
       
-      //      if (length1 > 5*units::cm || length2 > 5*units::cm) continue;
+      //if (length1 > 5*units::cm || length2 > 5*units::cm) continue;
 
       //      std::cout << "asd " << std::endl;
       WCPPID::ProtoVertex *vtx1 = find_other_vertex(sg1, vtx);
@@ -108,11 +108,12 @@ bool WCPPID::NeutrinoID::examine_structure_2(WCPPID::PR3DCluster *temp_cluster){
 	if (n_bad>1) flag_replace = false;
 	//	 std::cout << i << " " << test_p << " " << ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0) << " " << sg->get_closest_point(test_p).first/units::cm << std::endl;
       }
-      //   std::cout << flag_replace << " " << sg1->get_id() << " " << sg2->get_id() << " " << length1/units::cm << " " << length2/units::cm << std::endl;
+
+      //      std::cout << flag_replace << " " << sg1->get_id() << " " << sg2->get_id() << " " << length1/units::cm << " " << length2/units::cm << std::endl;
       
       if (flag_replace){
 	// form a new segment
-	std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Merge two short segments: " << sg1->get_id() << " " << sg2->get_id() << " with a straight one "  << std::endl;
+	std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Merge two short segments: " << sg1->get_id() << " " << sg2->get_id() << " with a straight one, vtx id "  << vtx->get_id() << std::endl;
 	
 	WCP::ToyPointCloud* pcloud_steiner = temp_cluster->get_point_cloud_steiner();
 	std::list<WCP::WCPointCloud<double>::WCPoint > wcps;

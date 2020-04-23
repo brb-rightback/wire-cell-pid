@@ -1371,15 +1371,16 @@ bool WCPPID::NeutrinoID::add_proto_connection(WCPPID::ProtoVertex *pv, WCPPID::P
 bool WCPPID::NeutrinoID::del_proto_vertex(WCPPID::ProtoVertex *pv){
   if (map_vertex_segments.find(pv)!=map_vertex_segments.end()){
     // overall
-    //    proto_vertices.erase(proto_vertices.find(pv));
-    // map between vertex and segment
     for (auto it = map_vertex_segments[pv].begin(); it!= map_vertex_segments[pv].end(); it++){ // loop very semeng *it
       map_segment_vertices[*it].erase(map_segment_vertices[*it].find(pv));
     }
     map_vertex_segments.erase(pv);
     // map between cluster and vertices
-    map_cluster_vertices[map_vertex_cluster[pv]].erase(map_cluster_vertices[map_vertex_cluster[pv]].find(pv));
-    map_vertex_cluster.erase(pv);
+    if (map_vertex_cluster.find(pv) != map_vertex_cluster.end()){
+      if (map_cluster_vertices.find(map_vertex_cluster[pv])!=map_cluster_vertices.end())
+	map_cluster_vertices[map_vertex_cluster[pv]].erase(map_cluster_vertices[map_vertex_cluster[pv]].find(pv));
+      map_vertex_cluster.erase(pv);
+    }
     
     return true;
   }else{
@@ -1397,8 +1398,11 @@ bool WCPPID::NeutrinoID::del_proto_segment(WCPPID::ProtoSegment *ps){
     }
     map_segment_vertices.erase(ps);
     //map between cluster and segment
-    map_cluster_segments[map_segment_cluster[ps]].erase(map_cluster_segments[map_segment_cluster[ps]].find(ps));
-    map_segment_cluster.erase(ps);
+    if (map_segment_cluster.find(ps)!=map_segment_cluster.end()){
+      if (map_cluster_segments.find(map_segment_cluster[ps]) != map_cluster_segments.end())
+	map_cluster_segments[map_segment_cluster[ps]].erase(map_cluster_segments[map_segment_cluster[ps]].find(ps));
+      map_segment_cluster.erase(ps);
+    }
     return true;
   }else{
     return false;
@@ -1599,33 +1603,37 @@ bool WCPPID::NeutrinoID::examine_vertices_2(WCPPID::PR3DCluster* temp_cluster){
   
   // merge and clean up map ...
   if (v1!=0 && v2!=0){
-    std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Merge Vertices Type II" << std::endl;
-    // delete the segment in between
-    del_proto_segment(sg);
-    WCPPID::ProtoSegmentSelection tmp_segments;
-    for (auto it1 = map_vertex_segments[v2].begin(); it1 != map_vertex_segments[v2].end(); it1++){
-      tmp_segments.push_back(*it1);
+    if (v2 != main_vertex){
+      std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Merge Vertices Type II" << std::endl;
+      // delete the segment in between
+      del_proto_segment(sg);
+      WCPPID::ProtoSegmentSelection tmp_segments;
+      for (auto it1 = map_vertex_segments[v2].begin(); it1 != map_vertex_segments[v2].end(); it1++){
+	tmp_segments.push_back(*it1);
+      }
+      for (auto it1 = tmp_segments.begin(); it1!=tmp_segments.end(); it1++){
+	WCPPID::ProtoVertex *v3 = find_other_vertex(*it1, v2);
+	temp_cluster->dijkstra_shortest_paths(v3->get_wcpt(),2);  
+	temp_cluster->cal_shortest_path(v1->get_wcpt(),2);
+	ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++; 
+	del_proto_segment(*it1);
+	add_proto_connection(v3, sg2, temp_cluster);
+	add_proto_connection(v1, sg2, temp_cluster);
+      }
+      del_proto_vertex(v2); 
+      
+      WCPPID::ProtoVertexSelection tmp_vertices;
+      for (auto it1 = map_vertex_segments.begin(); it1!=map_vertex_segments.end(); it1++){
+	if (it1->second.size()==0) tmp_vertices.push_back(it1->first);
+      }
+      for (auto it1 = tmp_vertices.begin(); it1!=tmp_vertices.end(); it1++){
+	del_proto_vertex(*it1);
+      }
+      
+      temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+    }else{
+      flag_continue = false;
     }
-    for (auto it1 = tmp_segments.begin(); it1!=tmp_segments.end(); it1++){
-      WCPPID::ProtoVertex *v3 = find_other_vertex(*it1, v2);
-      temp_cluster->dijkstra_shortest_paths(v3->get_wcpt(),2);  
-      temp_cluster->cal_shortest_path(v1->get_wcpt(),2);
-      ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++; 
-      del_proto_segment(*it1);
-      add_proto_connection(v3, sg2, temp_cluster);
-      add_proto_connection(v1, sg2, temp_cluster);
-    }
-    del_proto_vertex(v2); 
-    
-    WCPPID::ProtoVertexSelection tmp_vertices;
-    for (auto it1 = map_vertex_segments.begin(); it1!=map_vertex_segments.end(); it1++){
-      if (it1->second.size()==0) tmp_vertices.push_back(it1->first);
-    }
-    for (auto it1 = tmp_vertices.begin(); it1!=tmp_vertices.end(); it1++){
-      del_proto_vertex(*it1);
-    }
-    
-    temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
   }
   
   return flag_continue;
@@ -1643,7 +1651,8 @@ bool WCPPID::NeutrinoID::examine_vertices_4(WCPPID::PR3DCluster *temp_cluster){
       auto pair_vertices = find_vertices(sg);
       WCPPID::ProtoVertex *v1 = pair_vertices.first;
       WCPPID::ProtoVertex *v2 = pair_vertices.second;
-      //if (map_vertex_segments[v1].size() <= 2 || map_vertex_segments[v2].size() <=2) continue;
+      //      if (map_vertex_segments[v1].size() <= 1 || map_vertex_segments[v2].size() <=1) continue;
+      if (v1 == main_vertex || v2 == main_vertex) continue;
       
       if (map_vertex_segments[v1].size()>=2 && examine_vertices_4(v1, v2) ){
 
@@ -1967,28 +1976,31 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
   //    std::cout << map_vertex_replace.size() << std::endl;
   // replace ...
   if (v1!=0 && v2!=0){
-    
-    //      std::cout << v1 << " " << v2 << " " << v3 << std::endl;
-    ProtoSegment *sg = find_segment(v1,v2);
-    ProtoSegment *sg1 = find_segment(v1,v3);
-    
-    //      std::cout << v2->get_cluster_id() << " " << v3->get_cluster_id() << std::endl;
-    
-    //  std::cout << sg<< " " << sg1 << std::endl;
-    temp_cluster->dijkstra_shortest_paths(v3->get_wcpt(),2); 
-    temp_cluster->cal_shortest_path(v2->get_wcpt(),2);
-    ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
-    
-    std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Merge Vertices Type I " << sg->get_id() << " + " << sg1->get_id() << " -> " << sg2->get_id() << std::endl;
-    add_proto_connection(v2, sg2, temp_cluster);
-    add_proto_connection(v3, sg2, temp_cluster);
-    
-    del_proto_vertex(v1);
-    del_proto_segment(sg);
-    del_proto_segment(sg1);
-    
-    temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
-    
+
+    if (v1 != main_vertex ) {
+      //      std::cout << v1 << " " << v2 << " " << v3 << std::endl;
+      ProtoSegment *sg = find_segment(v1,v2);
+      ProtoSegment *sg1 = find_segment(v1,v3);
+      
+      //      std::cout << v2->get_cluster_id() << " " << v3->get_cluster_id() << std::endl;
+      
+      //  std::cout << sg<< " " << sg1 << std::endl;
+      temp_cluster->dijkstra_shortest_paths(v3->get_wcpt(),2); 
+      temp_cluster->cal_shortest_path(v2->get_wcpt(),2);
+      ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
+      
+      std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Merge Vertices Type I " << sg->get_id() << " + " << sg1->get_id() << " -> " << sg2->get_id() << std::endl;
+      add_proto_connection(v2, sg2, temp_cluster);
+      add_proto_connection(v3, sg2, temp_cluster);
+      
+      del_proto_vertex(v1);
+      del_proto_segment(sg);
+      del_proto_segment(sg1);
+      
+      temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+    }else{
+      flag_continue = false;
+    }
   }
   
   // hack for now

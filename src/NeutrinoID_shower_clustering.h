@@ -28,6 +28,8 @@ void WCPPID::NeutrinoID::shower_determing_in_main_cluster(){
   /* } */
 
   examine_good_tracks(main_cluster->get_cluster_id());
+
+  // print_segs_info(main_cluster->get_cluster_id());
   
   // if multiple tracks in, make them undetermined ...
   fix_maps_multiple_tracks_in(main_cluster->get_cluster_id());
@@ -39,7 +41,7 @@ void WCPPID::NeutrinoID::shower_determing_in_main_cluster(){
   // if one shower in and a track out, change the track to shower
   improve_maps_shower_in_track_out(main_cluster->get_cluster_id()); // use shower information to determine the rest ...
 
-
+  //  print_segs_info(main_cluster->get_cluster_id());
   
   // help to change tracks around shower to showers
   improve_maps_no_dir_tracks(main_cluster->get_cluster_id());    
@@ -656,6 +658,8 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_in_main_cluster(){
       WCPPID::ProtoSegment *curr_sg = it->first;
       WCPPID::ProtoVertex *daughter_vtx = it->second;
       used_segments.insert(curr_sg);
+
+      //std::cout << curr_sg->get_id() << " " << curr_sg->get_particle_type() << " " << segments_in_long_muon.size() << std::endl;
       
       if (curr_sg->get_flag_shower() || segments_in_long_muon.find(curr_sg) != segments_in_long_muon.end()){
 	WCPPID::ProtoVertex *parent_vtx = find_other_vertex(curr_sg, daughter_vtx);

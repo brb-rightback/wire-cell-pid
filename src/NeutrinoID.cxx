@@ -115,7 +115,10 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
       
     }
     //  deghost ...
+
+    //std::cout << "CC " << std::endl;
     deghosting();
+    //std::cout << "DD " << std::endl;
   }
 
   
@@ -130,13 +133,18 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   if (flag_main_cluster){
     // overall
     separate_track_shower();
+
+    //    std::cout << "AA " << std::endl;
+    
     // for charge based on calculation ...
     collect_2D_charges();
+
+    //    std::cout << "BB " << std::endl;
     // cluster E&M ...
     shower_clustering_with_nv();
   }
   
-  //  std::cout << "Final Information: " << std::endl;
+  // std::cout << "Final Information: " << std::endl;
   // print_segs_info(main_vertex);
 
   

@@ -293,41 +293,44 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	  if (fabs((*it1)->get_particle_type())==2212)	  nprotons[1] ++;
 	}
 	
+	bool flag_print = false;
+	
 	//	std::cout << sg->get_id() << " " << nshowers[0] << " " << nshowers[1] << " " << map_vertex_segments[two_vertices.first].size() << " " << map_vertex_segments[two_vertices.second].size() << " " << sg->get_particle_type()  << " " << nmuons[0] << " " << nmuons[1] << " " << nprotons[0] << " " << nprotons[1] << std::endl;
 	
 	if (nshowers[0] + nshowers[1] >2 && sg->get_length()<5*units::cm ||
 	    nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() && (nshowers[1]+1 == map_vertex_segments[two_vertices.second].size()) && nshowers[0]>0 && nshowers[1]>0 && sg->get_length()<5*units::cm){ // 2 shower, muon, very short track ...
-	  //	  std::cout << "A: " << sg->get_id() << std::endl;
-		sg->set_particle_type(11);
-		TPCParams& mp = Singleton<TPCParams>::Instance();
-		sg->set_particle_mass(mp.get_mass_electron());
-		if (sg->get_particle_4mom(3)>0) sg->cal_4mom();
-		flag_update = true;
+	  if (flag_print)	  std::cout << "A: " << sg->get_id() << std::endl;
+	  sg->set_particle_type(11);
+	  TPCParams& mp = Singleton<TPCParams>::Instance();
+	  sg->set_particle_mass(mp.get_mass_electron());
+	  if (sg->get_particle_4mom(3)>0) sg->cal_4mom();
+	  flag_update = true;
 	}else if (  (nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() || nshowers[0]>0) && // one shower or nothing
 	      (nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() || nshowers[1] >0) && // one shower or nothing
 	      (nshowers[0] + nshowers[1] >2) && // 3 showers in total ...
 	      (nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() ||
 	       nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() ) // one side all showers
 	      ){
-	  bool flag_start;
-	  if (sg->get_wcpt_vec().front().index == two_vertices.first->get_wcpt().index)
-	    flag_start = true;
+	  bool flag_start; 
+	  if (sg->get_wcpt_vec().front().index == two_vertices.first->get_wcpt().index) 
+	      flag_start = true; 
 	  else if (sg->get_wcpt_vec().back().index == two_vertices.first->get_wcpt().index)
 	    flag_start = false;
 	  if (flag_start){
-	    if (n_in[0]>0 && n_in[1]==0){
-	      sg->set_flag_dir(1);
-	    }else if (n_in[0]==0 && n_in[1]>0){
+	    if (nshowers[1]==0){
 	      sg->set_flag_dir(-1);
-	    }
-	  }else{
-	    if (n_in[0]>0 && n_in[1]==0){
-	      sg->set_flag_dir(-1);
-	    }else if (n_in[0]==0 && n_in[1]>0){
+	    }else if (nshowers[0]==0){
 	      sg->set_flag_dir(1);
 	    }
-	  }
-	  //	  std::cout << "B: " << sg->get_id() << std::endl;
+	  }else{ 
+	    if (nshowers[1]==0){
+	      sg->set_flag_dir(1);
+	    }else if (nshowers[0]==0){
+	      sg->set_flag_dir(-1);
+	    }
+	  } 
+	  sg->set_dir_weak(true);
+	  if (flag_print) std::cout << "B: " << sg->get_id() << std::endl;
 	  sg->set_particle_type(11);
 	  TPCParams& mp = Singleton<TPCParams>::Instance();
 	  sg->set_particle_mass(mp.get_mass_electron());
@@ -354,7 +357,7 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	      sg->set_flag_dir(-1);
 	    else
 	      sg->set_flag_dir(1);
-	    //	    std::cout << "C: " << sg->get_id() << std::endl;
+	    if (flag_print) std::cout << "C: " << sg->get_id() << std::endl;
 	    sg->set_particle_type(11);
 	    TPCParams& mp = Singleton<TPCParams>::Instance();
 	    sg->set_particle_mass(mp.get_mass_electron());
@@ -383,7 +386,7 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	      sg->set_flag_dir(-1);
 	    else
 	      sg->set_flag_dir(1);
-	    //	    std::cout << "D: " << sg->get_id() << std::endl;
+	    if (flag_print) std::cout << "D: " << sg->get_id() << std::endl;
 	    sg->set_particle_type(11);
 	    TPCParams& mp = Singleton<TPCParams>::Instance();
 	    sg->set_particle_mass(mp.get_mass_electron());
@@ -406,7 +409,7 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	      || length < 5*units::cm && (nprotons[0] + nshowers[0] ==0 && nshowers[1] >=2
 					  || nprotons[1] + nshowers[1]==0 && nshowers[0]>=2)
 	      ){
-	    //	    std::cout << "E: " << sg->get_id() << std::endl;
+	    if (flag_print) std::cout << "E: " << sg->get_id() << std::endl;
 	    sg->set_particle_type(11);
 	    TPCParams& mp = Singleton<TPCParams>::Instance();
 	    sg->set_particle_mass(mp.get_mass_electron());
@@ -443,7 +446,7 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	    }
 	    //	    std::cout << max_angle1 << " " << max_angle2 << std::endl;
 	    if (num_s1 > 4 && max_angle1 > 150 || num_s2 > 4 && max_angle2 > 150){
-	      //	      std::cout << "F: " << sg->get_id() << std::endl;
+	      if (flag_print) std::cout << "F: " << sg->get_id() << std::endl;
 	      sg->set_particle_type(11);
 	      TPCParams& mp = Singleton<TPCParams>::Instance();
 	      sg->set_particle_mass(mp.get_mass_electron());
@@ -476,7 +479,7 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	    //std::cout << tmp_sg->get_length()/units::cm << " " << tmp_sg->get_id() << std::endl;
 	  }
 	  if (flag_change){
-	    //	    std::cout << "G: " << sg->get_id() << std::endl;
+	    if (flag_print) std::cout << "G: " << sg->get_id() << std::endl;
 	    sg->set_particle_type(11);
 	    TPCParams& mp = Singleton<TPCParams>::Instance();
 	    sg->set_particle_mass(mp.get_mass_electron());
