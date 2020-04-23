@@ -191,10 +191,10 @@ bool WCPPID::ProtoSegment::is_shower_topology(){
 
 
   
-  if (max_spread > 0.7*units::cm && large_spread_length > 0.2 * total_effective_length && total_effective_length > 3*units::cm && total_effective_length < 15*units::cm ||
-      max_spread > 0.8*units::cm && large_spread_length > 0.3 * total_effective_length && total_effective_length >= 15*units::cm
+  if (max_spread > 0.7*units::cm && large_spread_length > 0.2 * total_effective_length && total_effective_length > 3*units::cm && total_effective_length < 15*units::cm && ( large_spread_length > 2.7*units::cm || large_spread_length > 0.35 * total_effective_length)
+      || max_spread > 0.8*units::cm && large_spread_length > 0.3 * total_effective_length && total_effective_length >= 15*units::cm
       || max_spread > 1.0*units::cm && large_spread_length > 0.4 * total_effective_length) {
-    //std::cout << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << std::endl;
+    //    std::cout << id << " " << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << std::endl;
     flag_shower_topology = true;
   }
 
@@ -298,7 +298,8 @@ bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
     TVector3 dir_1(fit_pt_vec.at(sections.at(j).first).x - fit_pt_vec.at(sections.at(j).second).x, fit_pt_vec.at(sections.at(j).first).y - fit_pt_vec.at(sections.at(j).second).y, fit_pt_vec.at(sections.at(j).first).z - fit_pt_vec.at(sections.at(j).second).z);
     dir_1 = dir_1.Unit();
     double tmp_dQ_dx = get_medium_dQ_dx(sections.at(j).first, sections.at(j).second)/(50000/units::cm);
-    
+
+    //    std::cout << fabs(drift_dir.Angle(dir_1)/3.1415926*180.-90.) << std::endl;
     if (fabs(drift_dir.Angle(dir_1)/3.1415926*180.-90.)>10 ){ // not parallel case ...
       double direct_length = get_direct_length(sections.at(j).first, sections.at(j).second);
       double integrated_length = get_length(sections.at(j).first, sections.at(j).second);
@@ -306,8 +307,8 @@ bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
       if (direct_length == 0 ) length_ratio = 1;
       else length_ratio = direct_length / integrated_length;
     
-      if (tmp_dQ_dx*0.11 + 2*length_ratio < 2 && tmp_dQ_dx < 2 && length_ratio < 0.95) n_shower_like ++;
-      //std::cout << "Xin: " << j << " " << sections.at(j).first << " " << sections.at(j).second <<  " " << length_ratio << " " << tmp_dQ_dx << " " << direct_length << " " << drift_dir.Angle(dir)/3.1415926*180. << std::endl;
+      if (tmp_dQ_dx*0.11 + 2*length_ratio < 2.03 && tmp_dQ_dx < 2 && length_ratio < 0.95) n_shower_like ++;
+      //      std::cout << "Xin: " << j << " " << sections.at(j).first << " " << sections.at(j).second <<  " " << length_ratio << " " << tmp_dQ_dx << " " << direct_length << " " << drift_dir.Angle(dir_1)/3.1415926*180. << std::endl;
     }else{
       TVector3 dir_2 = drift_dir.Cross(dir_1);
       dir_2 = dir_2.Unit();
@@ -319,10 +320,10 @@ bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
       else length_ratio = direct_length / integrated_length;
       if (tmp_dQ_dx*0.11 + 2*length_ratio < 2.06 && tmp_dQ_dx < 2 && length_ratio < 0.97) n_shower_like ++;
       // std::cout << "Xin: " << j << " " << sections.at(j).first << " " << sections.at(j).second <<  " " << length_ratio << " " << tmp_dQ_dx << " " << direct_length << " " << drift_dir.Angle(dir_1)/3.1415926*180. << " " << tmp_dQ_dx*0.11 + 2*length_ratio - 2 << std::endl;  
-  }
+    }
     
   }
-  //std::cout << "BB " << id << " " << sections.size() << " " << get_length()/units::cm << " " << n_shower_like << std::endl;
+  //  std::cout << "BB " << id << " " << sections.size() << " " << get_length()/units::cm << " " << n_shower_like << std::endl;
   
   if (n_shower_like >=0.5*sections.size()) flag_shower_trajectory = true;
   

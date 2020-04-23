@@ -60,7 +60,7 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
     }
 
     bool flag_print = false;
-    //    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
+    //if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
     
     
     if (sg->get_flag_shower_trajectory()){
@@ -238,7 +238,7 @@ void WCPPID::NeutrinoID::examine_good_tracks(int temp_cluster_id){
 	sg->set_dir_weak(1); 
       }
       
-      //   std::cout << sg->get_id() << " " << sg->get_particle_type() << " " << num_daughter_showers << " " << sg->get_length()/units::cm << " " << max_angle << " " << min_para_angle << " " << fabs(drift_dir.Angle(dir1)/3.1415926*180.-90.) << std::endl;
+      //      std::cout << sg->get_id() << " " << sg->get_particle_type() << " " << num_daughter_showers << " " << sg->get_length()/units::cm << " " << max_angle << " " << min_para_angle << " " << fabs(drift_dir.Angle(dir1)/3.1415926*180.-90.) << std::endl;
 
        /* TVector3 dir1 = sg->cal_dir_3vector(pair_vertices.first->get_fit_pt(), 15*units::cm); */
        /* 	    for (auto it1 = map_vertex_segments[pair_vertices.first].begin(); it1!= map_vertex_segments[pair_vertices.first].end(); it1++){ */
@@ -294,6 +294,7 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	}
 	
 	//	std::cout << sg->get_id() << " " << nshowers[0] << " " << nshowers[1] << " " << map_vertex_segments[two_vertices.first].size() << " " << map_vertex_segments[two_vertices.second].size() << " " << sg->get_particle_type()  << " " << nmuons[0] << " " << nmuons[1] << " " << nprotons[0] << " " << nprotons[1] << std::endl;
+	
 	if (nshowers[0] + nshowers[1] >2 && sg->get_length()<5*units::cm ||
 	    nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() && (nshowers[1]+1 == map_vertex_segments[two_vertices.second].size()) && nshowers[0]>0 && nshowers[1]>0 && sg->get_length()<5*units::cm){ // 2 shower, muon, very short track ...
 		sg->set_particle_type(11);
@@ -649,7 +650,8 @@ void WCPPID::NeutrinoID::improve_maps_shower_in_track_out(int temp_cluster_id, b
       int n_in_shower = 0;
       std::vector<WCPPID::ProtoSegment*> out_tracks;
       std::map<WCPPID::ProtoSegment*, bool> map_no_dir_segments;
-      
+
+      //      bool flag_print = false;
       for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
 	WCPPID::ProtoSegment *sg = (*it1);
 	bool flag_start;
@@ -669,9 +671,11 @@ void WCPPID::NeutrinoID::improve_maps_shower_in_track_out(int temp_cluster_id, b
 	}else if (sg->get_flag_dir()==0){
 	  map_no_dir_segments[sg] = flag_start;
 	}
+	//if (sg->get_id()==55) flag_print = true;
       }
-      
 
+      //      if (flag_print)
+      // std::cout  << n_in_shower << " " << out_tracks.size() << " " << map_no_dir_segments.size() << std::endl;
       
       if (n_in_shower >0 && (out_tracks.size() >0 || map_no_dir_segments.size() >0 )) {
 	for (auto it1 = out_tracks.begin(); it1!=out_tracks.end(); it1++){
