@@ -1929,7 +1929,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
 	for (auto it2 = map_segment_vertices[sg].begin(); it2 != map_segment_vertices[sg].end(); it2++){
 	  WCPPID::ProtoVertex *vtx1 = (*it2);
 	  if (vtx1 == vtx) continue;
-	  if (map_vertex_segments[vtx1].size() > 2){ // the other track needs to be larger than 2
+	  if (map_vertex_segments[vtx1].size() >= 2){ // the other track needs to be larger than 2
 	    //	    std::cout << sg->get_id() << " " << vtx->get_id() << " " << vtx1->get_id() << " " <<  sg->get_length()/units::cm <<std::endl;
 	    
 	    if (examine_vertices_1(vtx, vtx1, offset_t, slope_xt, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw)){
@@ -2051,7 +2051,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::ProtoVertex* v1, WCPPID::Pro
 	}
       }
 
-      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()< 5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
+      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()< 8 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
       else{
 	double step_size = 0.6*units::cm;
 	int ncount = std::round(sqrt(pow(start_p.x - end_p.x,2) + pow(start_p.y - end_p.y,2) + pow(start_p.z - end_p.z,2))/step_size);
@@ -2112,7 +2112,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::ProtoVertex* v1, WCPPID::Pro
 	}
       }
 
-      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()< 5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
+      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()< 8 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
       else{
 	double step_size = 0.6*units::cm;
 	int ncount = std::round(sqrt(pow(start_p.x - end_p.x,2) + pow(start_p.y - end_p.y,2) + pow(start_p.z - end_p.z,2))/step_size);
@@ -2174,7 +2174,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::ProtoVertex* v1, WCPPID::Pro
 	}
       }
 
-      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()< 5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
+      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()< 8 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
       else{
 	double step_size = 0.6*units::cm;
 	int ncount = std::round(sqrt(pow(start_p.x - end_p.x,2) + pow(start_p.y - end_p.y,2) + pow(start_p.z - end_p.z,2))/step_size);
