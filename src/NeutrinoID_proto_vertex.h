@@ -1,10 +1,10 @@
 
-bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bool flag_break_track, int nrounds_find_other_tracks){
+bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bool flag_break_track, int nrounds_find_other_tracks, bool flag_back_search){
 
   if (temp_cluster->get_point_cloud_steiner()==0) return false;
   if (temp_cluster->get_point_cloud_steiner()->get_num_points()<2) return false;
   
-  WCPPID::ProtoSegment* sg1 = init_first_segment(temp_cluster);
+  WCPPID::ProtoSegment* sg1 = init_first_segment(temp_cluster, flag_back_search);
 
  
   
@@ -142,17 +142,26 @@ void WCPPID::NeutrinoID::init_point_segment(WCPPID::PR3DCluster *temp_cluster){
   }
 }
 
-WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster *temp_cluster){
+WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster *temp_cluster, bool flag_back_search){
   // do the first search of the trajectory ...
   std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = temp_cluster->get_two_boundary_wcps(2);
 
   if (temp_cluster == main_cluster){
     // main cluster, start from the downstream point ...
-    if (wcps.first.z < wcps.second.z){
-      auto wcp1 = wcps.first;
-      auto wcp2 = wcps.second;
-      wcps.first = wcp2;
-      wcps.second = wcp1;
+    if (flag_back_search){
+      if (wcps.first.z < wcps.second.z){
+	auto wcp1 = wcps.first;
+	auto wcp2 = wcps.second;
+	wcps.first = wcp2;
+	wcps.second = wcp1;
+      }
+    }else{
+      if (wcps.first.z > wcps.second.z){
+	auto wcp1 = wcps.first;
+	auto wcp2 = wcps.second;
+	wcps.first = wcp2;
+	wcps.second = wcp1;
+      }
     }
   }else{
     Point tp1(wcps.first.x, wcps.first.y, wcps.first.z);

@@ -89,7 +89,9 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     shower_determing_in_main_cluster();
     determine_main_vertex(main_cluster);	
     
-    if (max_length > map_cluster_length[main_cluster] * 0.8 ) check_switch_main_cluster(max_length_cluster, other_clusters, skip_clusters);        
+    if (max_length > map_cluster_length[main_cluster] * 0.8 )
+      check_switch_main_cluster(max_length_cluster, other_clusters, skip_clusters);
+    
     // fit the vertex in 3D 
     improve_vertex(main_cluster);
     clustering_points(main_cluster);
