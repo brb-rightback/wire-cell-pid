@@ -244,7 +244,7 @@ void WCPPID::NeutrinoID::deghost_clusters(){
 		if (std::get<0>(results)<=dis_cut/3.*2.){
 		}else{
 		  results = global_skeleton_cloud.get_closest_2d_point_info(test_point, 0);
-		  if (std::get<0>(results)<=dis_cut*5/4.){
+		  if (std::get<0>(results)<=dis_cut*6/4.){
 		  }else{
 		    num_unique[0]++;
 		  }
@@ -259,24 +259,29 @@ void WCPPID::NeutrinoID::deghost_clusters(){
 	    flag_dead = ct_point_cloud->get_closest_dead_chs(test_point,1);
 	    if (!flag_dead){
 	      std::tuple<double, WCP::PR3DCluster*, size_t> results = global_point_cloud.get_closest_2d_point_info(test_point, 1);
+	      //std::cout << "A: " << std::get<0>(results)/units::cm << " ";
 	      if (std::get<0>(results)<=dis_cut/2.){
 	      }else{
 		results = global_steiner_point_cloud.get_closest_2d_point_info(test_point, 1);
+		//std::cout << std::get<0>(results)/units::cm << " ";
 		if (std::get<0>(results)<=dis_cut/3.*2.){
 		}else{
 		  results = global_skeleton_cloud.get_closest_2d_point_info(test_point, 1);
-		  if (std::get<0>(results)<=dis_cut*5/4.){
+		  //  std::cout  << std::get<0>(results)/units::cm << " ";
+		  if (std::get<0>(results)<=dis_cut*6/4.){
 		  }else{
 		    num_unique[1]++;
 		  }
 		}
 	      }
+	      //	      std::cout << std::endl;
 	    }else{
 	      num_dead[1]++;
 	    }
 
 	    // W plane ...
 	    flag_dead = ct_point_cloud->get_closest_dead_chs(test_point,2);
+	    //std::cout << test_point.z << " " << flag_dead << std::endl;
 	    if (!flag_dead){
 	      std::tuple<double, WCP::PR3DCluster*, size_t> results = global_point_cloud.get_closest_2d_point_info(test_point, 2);
 	      if (std::get<0>(results)<=dis_cut/2.){
@@ -285,7 +290,7 @@ void WCPPID::NeutrinoID::deghost_clusters(){
 		if (std::get<0>(results)<=dis_cut/3.*2.){
 		}else{
 		  results = global_skeleton_cloud.get_closest_2d_point_info(test_point, 2);
-		  if (std::get<0>(results)<=dis_cut*5/4.){
+		  if (std::get<0>(results)<=dis_cut*6/4.){
 		  }else{
 		    num_unique[2]++;
 		  }
@@ -329,7 +334,7 @@ void WCPPID::NeutrinoID::deghost_clusters(){
 	flag_add = false;
 
       //      if(!flag_add)
-      //	std::cout << flag_add << " " << cluster->get_cluster_id() << " " << num_total_points << " " << num_dead[0] << " " << num_dead[1] << " " << num_dead[2] << " " << num_unique[0] << " " << num_unique[1] << " " << num_unique[2] << " " << max_unique_percent << " " << min_unique_percent << " " << ave_unique_percent << " " << max_dead_percent << std::endl;
+      //      std::cout << flag_add << " " << cluster->get_cluster_id() << " " << num_total_points << " " << num_dead[0] << " " << num_dead[1] << " " << num_dead[2] << " " << num_unique[0] << " " << num_unique[1] << " " << num_unique[2] << " " << max_unique_percent << " " << min_unique_percent << " " << ave_unique_percent << " " << max_dead_percent << std::endl;
       
       if (flag_add){
 	global_point_cloud.AddPoints(ordered_clusters.at(i)->get_point_cloud());

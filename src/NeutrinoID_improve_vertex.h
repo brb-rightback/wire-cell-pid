@@ -49,9 +49,13 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
   /*  std::cout << sg->get_associate_points().size() << std::endl; */
   /* } */
 
+  bool flag_found_vertex_activities = false;
+  
   // search for vertex activities ...
-  if ( examine_structure_4(main_vertex, temp_cluster) )
+  if ( examine_structure_4(main_vertex, temp_cluster) ){
+    flag_found_vertex_activities = true;
     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+  }
   
 
   bool flag_update_fit = false;
@@ -109,8 +113,8 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
     }
     //    std::cout << ntracks << " " << nshowers << " " << vtx << " " << main_vertex << std::endl;
     if (ntracks == 0 && vtx != main_vertex ) continue;
-    if (vertices_in_long_muon.find(vtx)!=vertices_in_long_muon.end()) continue;
-    
+    if (vertices_in_long_muon.find(vtx)!=vertices_in_long_muon.end()) continue;  
+    if (vtx == main_vertex && flag_found_vertex_activities) continue;
     
     bool flag_update = search_for_vertex_activities(vtx, it->second, temp_cluster);
     if (flag_update) {
@@ -118,6 +122,7 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
       if (map_vertex_segments[vtx].size()==3) refit_vertices.push_back(vtx);
       flag_update_fit = true;
     }
+    
   }
   //  std::cout << flag_update_fit << std::endl;
   if (flag_update_fit){
@@ -760,6 +765,7 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
       //    for (auto it = sg_set.begin(); it != sg_set.end(); it++){
       for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
 	WCPPID::ProtoSegment *sg = it->first;
+	//	std::cout << sg->get_id() << std::endl;
 	std::pair<double, WCP::Point> results = sg->get_closest_point(test_p);
 	if (results.first < min_dis) min_dis = results.first;
 	
@@ -769,8 +775,7 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
 	if (std::get<2>(results_2d) < min_dis_w) min_dis_w = std::get<2>(results_2d);
       }
       
-      //if (flag_terminals.at(candidate_wcps.at(i).index))
-      // std::cout << min_dis/units::cm << " " << flag_terminals.at(candidate_wcps.at(i).index) << " " <<  (min_dis_u + min_dis_v + min_dis_w)/units::cm << std::endl;
+      //      std::cout << min_dis/units::cm << " " << flag_terminals.at(candidate_wcps.at(i).index) << " " <<  (min_dis_u + min_dis_v + min_dis_w)/units::cm << std::endl;
       
       if (min_dis > 0.6*units::cm   && min_dis_u + min_dis_v + min_dis_w > 1.2*units::cm){
 	TVector3 dir(test_p.x - vtx->get_fit_pt().x, test_p.y - vtx->get_fit_pt().y, test_p.z - vtx->get_fit_pt().z);
@@ -808,6 +813,8 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
     }
   }
 
+
+  
   // 2nd round vertex finding ...
   if (max_dis == 0){
     for (size_t i=0; i!=candidate_wcps.size(); i++){
@@ -862,7 +869,7 @@ bool WCPPID::NeutrinoID::search_for_vertex_activities(WCPPID::ProtoVertex *vtx, 
 	}
       }
     }
-  }
+    }
 
   //  std::cout << max_dis/units::cm << std::endl;
   

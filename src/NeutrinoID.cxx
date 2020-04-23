@@ -165,12 +165,30 @@ void WCPPID::NeutrinoID::determine_overall_main_vertex(std::map<WCPPID::PR3DClus
     check_switch_main_cluster(map_cluster_main_vertices[main_cluster], max_length_cluster, skip_clusters);
 
   main_vertex = map_cluster_main_vertices[main_cluster];
-  
+
   std::cout << "Overall main Vertex " << main_vertex->get_fit_pt() << " connecting to: ";
   for (auto it = map_vertex_segments[main_vertex].begin(); it!=map_vertex_segments[main_vertex].end(); it++){
     std::cout << (*it)->get_id() << ", ";
   }
   std::cout << " in cluster " << main_vertex->get_cluster_id() << std::endl;
+
+  // clean up long muons ...
+  {
+    std::set<WCPPID::ProtoSegment* > tmp_segments;
+    std::set<WCPPID::ProtoVertex* > tmp_vertices;
+    for (auto it = segments_in_long_muon.begin(); it!= segments_in_long_muon.end(); it++){
+      if ((*it)->get_cluster_id() != main_vertex->get_cluster_id()) tmp_segments.insert(*it);
+    }
+    for (auto it = vertices_in_long_muon.begin(); it!= vertices_in_long_muon.end(); it++){
+      if ((*it)->get_cluster_id() != main_vertex->get_cluster_id()) tmp_vertices.insert(*it);
+    }
+    for (auto it = tmp_segments.begin(); it!=tmp_segments.end();it++){
+      segments_in_long_muon.erase(*it);
+    }
+    for (auto it = tmp_vertices.begin(); it!=tmp_vertices.end(); it++){
+      vertices_in_long_muon.erase(*it);
+    }
+  }
   
 }
 
