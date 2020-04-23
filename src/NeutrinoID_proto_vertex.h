@@ -1630,13 +1630,13 @@ bool WCPPID::NeutrinoID::examine_vertices_4(WCPPID::PR3DCluster *temp_cluster){
   for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
-    if (sg->get_direct_length() < 1.5*units::cm){
+    if (sg->get_direct_length() < 2.0*units::cm){
       auto pair_vertices = find_vertices(sg);
       WCPPID::ProtoVertex *v1 = pair_vertices.first;
       WCPPID::ProtoVertex *v2 = pair_vertices.second;
-      if (map_vertex_segments[v1].size() <= 2 || map_vertex_segments[v2].size() <=2) continue;
+      //if (map_vertex_segments[v1].size() <= 2 || map_vertex_segments[v2].size() <=2) continue;
       
-      if (examine_vertices_4(v1, v2)){
+      if (map_vertex_segments[v1].size()>=2 && examine_vertices_4(v1, v2) ){
 
 	for (auto it1 = map_vertex_segments[v1].begin(); it1 != map_vertex_segments[v1].end(); it1++){
 	  ProtoSegment *sg1 = *it1;
@@ -1724,7 +1724,7 @@ bool WCPPID::NeutrinoID::examine_vertices_4(WCPPID::PR3DCluster *temp_cluster){
 	flag_continue = true;
 	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
 
-      }else if (examine_vertices_4(v2, v1)){
+      }else if (map_vertex_segments[v2].size()>=2 && examine_vertices_4(v2, v1)){
 	// merge v2's segments to v1 ...
 
 	for (auto it1 = map_vertex_segments[v2].begin(); it1 != map_vertex_segments[v2].end(); it1++){
@@ -1857,7 +1857,7 @@ bool WCPPID::NeutrinoID::examine_vertices_4(WCPPID::ProtoVertex *v1, WCPPID::Pro
 		   start_p.z + (end_p.z - start_p.z)/ncount*i);
       if (!ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0)) n_bad ++;
     }
-    //std::cout << n_bad << std::endl;
+    //    std::cout << n_bad << " " << ncount << " " << sg->get_id() << " " << sg1->get_id() << " " << sg1->get_length()/units::cm << " " << sqrt(pow(start_p.x - end_p.x,2) + pow(start_p.y - end_p.y,2) + pow(start_p.z - end_p.z,2))/units::cm << std::endl;
     if (n_bad !=0) {
       flag = false;
       break;
@@ -1929,9 +1929,9 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
 	for (auto it2 = map_segment_vertices[sg].begin(); it2 != map_segment_vertices[sg].end(); it2++){
 	  WCPPID::ProtoVertex *vtx1 = (*it2);
 	  if (vtx1 == vtx) continue;
-	  if (map_vertex_segments[vtx1].size() > 2){ // the other track needs to be larger than 2
-	    //	      std::cout << sg->get_id() << " " << vtx->get_id() << " " << vtx1->get_id() << std::endl;
-	    //std::cout << sg->get_length() << std::endl;
+	  if (map_vertex_segments[vtx1].size() >= 2){ // the other track needs to be larger than 2
+	    //	    std::cout << sg->get_id() << " " << vtx->get_id() << " " << vtx1->get_id() << " " <<  sg->get_length()/units::cm <<std::endl;
+	    
 	    if (examine_vertices_1(vtx, vtx1, offset_t, slope_xt, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw)){
 	      v1 = vtx;
 	      v2 = vtx1;
@@ -2051,7 +2051,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::ProtoVertex* v1, WCPPID::Pro
 	}
       }
 
-      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()<5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
+      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()< 5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
       else{
 	double step_size = 0.6*units::cm;
 	int ncount = std::round(sqrt(pow(start_p.x - end_p.x,2) + pow(start_p.y - end_p.y,2) + pow(start_p.z - end_p.z,2))/step_size);
@@ -2112,7 +2112,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::ProtoVertex* v1, WCPPID::Pro
 	}
       }
 
-      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()<5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
+      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()< 5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
       else{
 	double step_size = 0.6*units::cm;
 	int ncount = std::round(sqrt(pow(start_p.x - end_p.x,2) + pow(start_p.y - end_p.y,2) + pow(start_p.z - end_p.z,2))/step_size);
@@ -2125,7 +2125,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::ProtoVertex* v1, WCPPID::Pro
 	}
 	if (n_bad<=1) ncount_line ++;
       }
-      //std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
+      //      std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
     }
   }
 
@@ -2174,7 +2174,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::ProtoVertex* v1, WCPPID::Pro
 	}
       }
 
-      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()<5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
+      if (180-v1.Angle(v2)/3.1415926*180. < 30 || v1.Mag()< 5 && 180-v1.Angle(v2)/3.1415926*180. < 35) ncount_line++;
       else{
 	double step_size = 0.6*units::cm;
 	int ncount = std::round(sqrt(pow(start_p.x - end_p.x,2) + pow(start_p.y - end_p.y,2) + pow(start_p.z - end_p.z,2))/step_size);

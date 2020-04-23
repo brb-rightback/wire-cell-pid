@@ -32,8 +32,7 @@ void WCPPID::NeutrinoID::separate_track_shower(){
     std::vector<bool>& point_flag_showers = temp_cluster->get_point_flag_showers();
     point_flag_showers.resize(point_sub_cluster_ids.size(), false);
 
-    
-    
+        
     for (size_t i=0;i!=point_sub_cluster_ids.size();i++){ 
       if (point_sub_cluster_ids.at(i) == -1) continue;
       if (map_id_seg.find(point_sub_cluster_ids.at(i)) == map_id_seg.end()) continue;
@@ -188,6 +187,71 @@ bool WCPPID::NeutrinoID::examine_maps(int temp_cluster_id){
 
 bool WCPPID::NeutrinoID::examine_maps(WCPPID::PR3DCluster* temp_cluster){
   return examine_maps(temp_cluster->get_cluster_id());
+}
+
+void WCPPID::NeutrinoID::examine_good_tracks(int temp_cluster_id){
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+      WCPPID::ProtoSegment *sg = it->first;
+      if (sg->get_cluster_id() != temp_cluster_id) continue;
+      if (sg->get_flag_shower()) continue;
+      if (sg->get_flag_dir()==0 || sg->is_dir_weak() ) continue;
+
+      auto pair_vertices = find_vertices(sg);
+      WCPPID::ProtoVertex *start_vertex = 0, *end_vertex = 0;
+      if (sg->get_flag_dir()==1){
+	if (pair_vertices.first->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	  start_vertex = pair_vertices.first;
+	  end_vertex = pair_vertices.second;
+	}else{
+	  start_vertex = pair_vertices.second;
+	  end_vertex = pair_vertices.first;
+	}
+      }else if (sg->get_flag_dir()==-1){
+	if (pair_vertices.first->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	   start_vertex = pair_vertices.second;
+	  end_vertex = pair_vertices.first;
+	}else{
+	  start_vertex = pair_vertices.first;
+	  end_vertex = pair_vertices.second;
+	}
+      }
+      int num_daughter_showers = calculate_num_daughter_showers(start_vertex, sg);
+      double max_angle = 0;
+      TVector3 dir1 = sg->cal_dir_3vector(end_vertex->get_fit_pt(), 15*units::cm);
+      TVector3 drift_dir(1,0,0);
+      double min_para_angle = 1e9;
+      for (auto it1 = map_vertex_segments[end_vertex].begin(); it1!=map_vertex_segments[end_vertex].end(); it1++){
+	WCPPID::ProtoSegment *sg1 = *it1;
+	if (sg1 == sg) continue;
+	TVector3 dir2 = sg1->cal_dir_3vector(end_vertex->get_fit_pt(), 15*units::cm);
+	double angle = dir1.Angle(dir2)/3.1415926*180.;
+	if (angle > max_angle) max_angle = angle;
+	angle = fabs(drift_dir.Angle(dir2)/3.1415926*180.-90);
+	if (angle < min_para_angle) min_para_angle = angle;
+      }
+
+      if (num_daughter_showers >4 && (max_angle > 155 || fabs(drift_dir.Angle(dir1)/3.1415926*180.-90.) < 15 &&  min_para_angle < 15 && min_para_angle +  fabs(drift_dir.Angle(dir1)/3.1415926*180.-90.) < 25) && sg->get_length() < 15*units::cm){
+	sg->set_particle_type(11); 
+	TPCParams& mp = Singleton<TPCParams>::Instance(); 
+	sg->set_particle_mass(mp.get_mass_electron()); 
+	sg->set_flag_dir(0); 
+	sg->set_dir_weak(1); 
+      }
+      
+      //   std::cout << sg->get_id() << " " << sg->get_particle_type() << " " << num_daughter_showers << " " << sg->get_length()/units::cm << " " << max_angle << " " << min_para_angle << " " << fabs(drift_dir.Angle(dir1)/3.1415926*180.-90.) << std::endl;
+
+       /* TVector3 dir1 = sg->cal_dir_3vector(pair_vertices.first->get_fit_pt(), 15*units::cm); */
+       /* 	    for (auto it1 = map_vertex_segments[pair_vertices.first].begin(); it1!= map_vertex_segments[pair_vertices.first].end(); it1++){ */
+       /* 	      if (*it1 == sg) continue; */
+       /* 	      TVector3 dir2 = (*it1)->cal_dir_3vector(pair_vertices.first->get_fit_pt(), 15*units::cm); */
+       /* 	      if ( (*it1)->get_flag_shower()){ */
+       /* 		double  angle = dir1.Angle(dir2)/3.1415926*180; */
+       /* 		if (max_angle1 < angle) max_angle1 = angle; */
+       /* 		num_s1 += calculate_num_daughter_showers(pair_vertices.first, *it1); */
+       /* 	      } */
+       /* 	    } */
+       /* 	    dir1 = sg->cal_dir_3vector(pair_vertices.second->get_fit_pt(), 10*units::cm); */
+  }
 }
 
 void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
@@ -771,7 +835,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   
 
   
-  // std::cout << "Information after main vertex determination: " << std::endl;
+  //  std::cout << "Information after main vertex determination: " << std::endl;
   // print_segs_info(main_vertex);
   
 }

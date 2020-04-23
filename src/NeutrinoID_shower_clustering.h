@@ -14,7 +14,20 @@ bool sortbydis(const cluster_point_info &a, const cluster_point_info &b){
 
 void WCPPID::NeutrinoID::shower_determing_in_main_cluster(){
 
-  //find the longest muon
+  //hack for now 
+  /* for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){ */
+  /*   WCPPID::ProtoSegment *sg = it->first; */
+  /*   if (sg->get_cluster_id() != main_cluster->get_cluster_id()) continue; */
+  /*   if (sg->get_id()==21 || sg->get_id()==29 || sg->get_id()==31){ */
+  /*     sg->set_particle_type(11); */
+  /*     TPCParams& mp = Singleton<TPCParams>::Instance(); */
+  /*     sg->set_particle_mass(mp.get_mass_electron()); */
+  /*     sg->set_flag_dir(0); */
+  /*     sg->set_dir_weak(1); */
+  /*   } */
+  /* } */
+
+  examine_good_tracks(main_cluster->get_cluster_id());
   
   // if multiple tracks in, make them undetermined ...
   fix_maps_multiple_tracks_in(main_cluster->get_cluster_id());
@@ -25,13 +38,13 @@ void WCPPID::NeutrinoID::shower_determing_in_main_cluster(){
   improve_maps_one_in(main_cluster); // one in and many out ...
   // if one shower in and a track out, change the track to shower
   improve_maps_shower_in_track_out(main_cluster->get_cluster_id()); // use shower information to determine the rest ...
+
+  //print_segs_info(main_cluster);
   
   // help to change tracks around shower to showers
   improve_maps_no_dir_tracks(main_cluster->get_cluster_id());
   // if one shower in and a track out, change the track to shower
   improve_maps_shower_in_track_out(main_cluster->get_cluster_id(), false); // use shower information to determine the rest ...
-
-  //  print_segs_info(main_cluster);
   
   // if multiple tracks in, change track to shower
   improve_maps_multiple_tracks_in(main_cluster->get_cluster_id());
