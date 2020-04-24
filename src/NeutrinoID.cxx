@@ -51,7 +51,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   // }
   
   
-  std::map<WCPPID::PR3DCluster*, double> map_cluster_length;
+  
   
   // form id vs. cluster ...
   map_id_cluster[main_cluster->get_cluster_id()] = main_cluster;
@@ -82,8 +82,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   //   other_clusters.push_back(main_cluster);
   //   main_cluster = max_length_cluster;
   // }
-
-  std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* > map_cluster_main_vertices;
+ 
   
   if (flag_main_cluster){
     // find the proto vertex ...
@@ -136,10 +135,10 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     }
 
     //  deghost ...
-    deghosting(map_cluster_main_vertices);
+    deghosting();
   }
 
-  determine_overall_main_vertex(map_cluster_main_vertices, map_cluster_length);  
+  determine_overall_main_vertex();  
   
   if (flag_main_cluster && main_vertex !=0){
     // fit the vertex in 3D 
@@ -163,7 +162,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   fill_fit_parameters();
 }
 
-void WCPPID::NeutrinoID::determine_overall_main_vertex(std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* > map_cluster_main_vertices, std::map<WCPPID::PR3DCluster*, double>& map_cluster_length){
+void WCPPID::NeutrinoID::determine_overall_main_vertex(){
   PR3DCluster* max_length_cluster = 0;
   double max_length = 0;
   for (auto it = map_cluster_length.begin(); it!= map_cluster_length.end(); it++){

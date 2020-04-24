@@ -203,13 +203,14 @@ namespace WCPPID{
     bool search_for_vertex_activities(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster, double search_range = 1.5*units::cm);
     bool eliminate_short_vertex_activities(WCPPID::PR3DCluster *temp_cluster);
 
-
+    std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* >& get_map_cluster_vertex(){return map_cluster_main_vertices;};
+      
     // get direction 
     TVector3 get_dir(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, double dis = 2*units::cm);
     void determine_direction(WCPPID::PR3DCluster* temp_cluster);
     void determine_main_vertex(WCPPID::PR3DCluster* temp_cluster, bool flag_print = true);
 
-    void determine_overall_main_vertex(std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* > map_cluster_main_vertices, std::map<WCPPID::PR3DCluster*, double>& map_cluster_length);
+    void determine_overall_main_vertex();
 
     void check_switch_main_cluster(WCPPID::ProtoVertex *temp_main_vertex, WCPPID::PR3DCluster *max_length_cluster,  std::set<WCPPID::PR3DCluster*>& skip_clusters );
     
@@ -254,7 +255,7 @@ namespace WCPPID{
     Map_Proto_Segment_Vertices& get_map_segment_verteices(){return map_segment_vertices;};
 
     // deghost
-    void deghosting(std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* >& map_cluster_main_vertices);
+    void deghosting();
     void deghost_clusters();
     void deghost_segments();
     
@@ -292,6 +293,10 @@ namespace WCPPID{
     int acc_segment_id;
 
     int flag_neutrino_id_process;
+
+    // global variable ...
+    std::map<WCPPID::PR3DCluster*, double> map_cluster_length;
+    std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* > map_cluster_main_vertices;
     
     // input ...
     WCPPID::PR3DCluster *main_cluster;

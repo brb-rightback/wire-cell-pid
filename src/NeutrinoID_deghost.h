@@ -10,7 +10,7 @@ bool sortbysec1(const std::pair<WCPPID::ProtoSegment*,double> &a,
   return (a.second > b.second);
 }
 
-void WCPPID::NeutrinoID::deghosting(std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* >& map_cluster_main_vertices){
+void WCPPID::NeutrinoID::deghosting(){
   //std::cout << "B " << std::endl;
   deghost_clusters();
 

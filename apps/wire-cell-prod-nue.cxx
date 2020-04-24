@@ -1338,52 +1338,46 @@ int main(int argc, char* argv[])
     T_match1->Fill();
   }
 
-  // TTree *T_vtx = new TTree("T_vtx","T_vtx");
-  // T_vtx->SetDirectory(file1);
-  // Double_t x_vtx, y_vtx, z_vtx;
-  // Int_t type_vtx=0;
-  // // 1: Steiner-inspired graph
-  // // 2: Steiner terminals
-  // // 3: end point (extreme point, connecting to one object)
-  // // 4: kink (connecting to two objects
-  // // 5: vertex (connecting to three or more objects)
-  // Int_t flag_main_vtx=0; // main vertex or not
-  // Int_t cluster_id_vtx=-1; // -1 if not belonging to any cluster ...
-  // std::vector<int> *sub_cluster_ids_vtx = new std::vector<int>;
+  TTree *T_vtx = new TTree("T_vtx","T_vtx");
+  T_vtx->SetDirectory(file1);
+  Double_t x_vtx, y_vtx, z_vtx;
+  Int_t type_vtx=0;
+  // 1: Steiner-inspired graph
+  // 2: Steiner terminals
+  // 3: end point (extreme point, connecting to one object)
+  // 4: kink (connecting to two objects
+  // 5: vertex (connecting to three or more objects)
+  Int_t flag_main_vtx=0; // main vertex or not
+  Int_t cluster_id_vtx=-1; // -1 if not belonging to any cluster ...
+  std::vector<int> *sub_cluster_ids_vtx = new std::vector<int>;
   
-  // T_vtx->Branch("x",&x_vtx,"x/D");
-  // T_vtx->Branch("y",&y_vtx,"y/D");
-  // T_vtx->Branch("z",&z_vtx,"z/D");
-  // T_vtx->Branch("type",&type_vtx,"type/I");
-  // T_vtx->Branch("flag_main",&flag_main_vtx,"flag_main/I");
-  // T_vtx->Branch("cluster_id",&cluster_id_vtx,"cluster_id/I");
-  // T_vtx->Branch("sub_cluster_ids",&sub_cluster_ids_vtx);
+  T_vtx->Branch("x",&x_vtx,"x/D");
+  T_vtx->Branch("y",&y_vtx,"y/D");
+  T_vtx->Branch("z",&z_vtx,"z/D");
+  T_vtx->Branch("type",&type_vtx,"type/I");
+  T_vtx->Branch("flag_main",&flag_main_vtx,"flag_main/I");
+  T_vtx->Branch("cluster_id",&cluster_id_vtx,"cluster_id/I");
+  T_vtx->Branch("sub_cluster_ids",&sub_cluster_ids_vtx);
   
-  // for (size_t i=0;i!=neutrino_vec.size();i++){
-  //   WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();
-  //   //    WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices = neutrino.get_map_segment_vertices();
-  //   for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end();it++){
-  //     WCPPID::ProtoVertex *vtx = it->first;
-  //     x_vtx = vtx->get_fit_pt().x/units::cm;
-  //     y_vtx = vtx->get_fit_pt().y/units::cm;
-  //     z_vtx = vtx->get_fit_pt().z/units::cm;
-  //     if (it->second.size()==1){
-  //     	type_vtx = 3;
-  //     }else if (it->second.size()==2){
-  //     	type_vtx = 4;
-  //     }else{
-  //     	type_vtx = 5;
-  //     }
-  //     flag_main_vtx = vtx->get_flag_neutrino_vertex();
-  //     cluster_id_vtx = vtx->get_cluster_id();
-  //     sub_cluster_ids_vtx->clear();
-  //     for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-  //     	WCPPID::ProtoSegment *sg = *it1;
-  //     	sub_cluster_ids_vtx->push_back(cluster_id_vtx*1000 + sg->get_id());
-  //     }
-  //     T_vtx->Fill();
-  //   }
-  // }
+  for (size_t i=0;i!=neutrino_vec.size();i++){
+    std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* >& map_cluster_vertex = neutrino_vec.at(i)->get_map_cluster_vertex();
+    for (auto it = map_cluster_vertex.begin(); it!= map_cluster_vertex.end(); it++){
+      WCPPID::ProtoVertex *vtx = it->second;
+      x_vtx = vtx->get_fit_pt().x/units::cm;
+      y_vtx = vtx->get_fit_pt().y/units::cm;
+      z_vtx = vtx->get_fit_pt().z/units::cm;
+
+      type_vtx = 3;
+      flag_main_vtx = vtx->get_flag_neutrino_vertex();
+      cluster_id_vtx = vtx->get_cluster_id();
+      sub_cluster_ids_vtx->clear();
+      //     for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+      //     	WCPPID::ProtoSegment *sg = *it1;
+      //     	sub_cluster_ids_vtx->push_back(cluster_id_vtx*1000 + sg->get_id());
+      //     }
+      T_vtx->Fill();
+    }
+  }
 
 
   TTree *TMC = new TTree("TMC","TMC");
