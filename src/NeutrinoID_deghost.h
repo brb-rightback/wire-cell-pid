@@ -334,7 +334,11 @@ void WCPPID::NeutrinoID::deghost_clusters(){
 	flag_add = false;
 
       //      if(!flag_add)
-      //      std::cout << flag_add << " " << cluster->get_cluster_id() << " " << num_total_points << " " << num_dead[0] << " " << num_dead[1] << " " << num_dead[2] << " " << num_unique[0] << " " << num_unique[1] << " " << num_unique[2] << " " << max_unique_percent << " " << min_unique_percent << " " << ave_unique_percent << " " << max_dead_percent << std::endl;
+      if ((num_dead[0]==num_total_points || num_dead[1]==num_total_points || num_dead[2]==num_total_points) // one plane must be dead ...
+	  &&(num_unique[0]==0 && num_unique[1]==0 || num_unique[0]==0 && num_unique[2]==0 || num_unique[2]==0 && num_unique[1]==0) // two plane's unique are zero
+	  && flag_add && max_unique_percent < 0.75) // the rest is smaller than 75% 
+	flag_add = false;
+      //	std::cout << flag_add << " " << cluster->get_cluster_id() << " " << num_total_points << " " << num_dead[0] << " " << num_dead[1] << " " << num_dead[2] << " " << num_unique[0] << " " << num_unique[1] << " " << num_unique[2] << " " << max_unique_percent << " " << min_unique_percent << " " << ave_unique_percent << " " << max_dead_percent << std::endl;
       
       if (flag_add){
 	global_point_cloud.AddPoints(ordered_clusters.at(i)->get_point_cloud());

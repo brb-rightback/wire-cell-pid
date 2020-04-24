@@ -161,9 +161,18 @@ void WCPPID::NeutrinoID::determine_overall_main_vertex(std::map<WCPPID::PR3DClus
       max_length_cluster = it->first;
     }
   }
-
+  
   if (flag_neutrino_id_process==1){
     // development chain ...
+
+    // for (auto it = map_cluster_main_vertices.begin(); it!= map_cluster_main_vertices.end(); it++){
+    //   WCPPID::PR3DCluster* cluster = it->first;
+    //   WCPPID::ProtoVertex* vertex = it->second;
+    //   double length = map_cluster_length[cluster];
+    //   std::cout << cluster->get_cluster_id() << " " << length/units::cm << " " << vertex->get_fit_pt() << std::endl;
+    // }
+    
+
     std::set<WCPPID::PR3DCluster* > skip_clusters;  
     if (max_length > map_cluster_length[main_cluster] * 0.8 )
       check_switch_main_cluster(map_cluster_main_vertices[main_cluster], max_length_cluster, skip_clusters);
