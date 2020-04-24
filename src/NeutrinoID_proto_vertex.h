@@ -1,3 +1,69 @@
+#include "TMatrixDEigen.h"
+
+std::pair<WCP::Point, TVector3> calc_PCA_main_axis(WCP::PointVector& points){
+
+  Point center(0,0,0);
+  int nsum = 0;
+  for (size_t i=0;i!=points.size();i++){
+    center.x += points.at(i).x;
+    center.y += points.at(i).y;
+    center.z += points.at(i).z;
+    nsum ++;
+  }
+
+  TVector3 PCA_main_axis(0,0,0);
+  
+  if (nsum>=3){
+    center.x /=nsum;
+    center.y /=nsum;
+    center.z /=nsum;
+  }else{
+    center.x = 0;
+    center.y = 0;
+    center.z = 0;
+    return std::make_pair(center, PCA_main_axis);
+  }
+  
+  TMatrixD cov_matrix(3,3);
+  for (int i=0;i!=3;i++){
+    for (int j=i;j!=3;j++){
+      cov_matrix(i,j)=0;
+      PointVector& ps = points;
+      for (int k=0;k!=ps.size();k++){
+	if (i==0 && j==0){
+	  cov_matrix(i,j) += (ps.at(k).x - center.x) * (ps.at(k).x - center.x);
+	}else if (i==0 && j==1){
+	  cov_matrix(i,j) += (ps.at(k).x - center.x) * (ps.at(k).y - center.y);
+	}else if (i==0 && j==2){
+	  cov_matrix(i,j) += (ps.at(k).x - center.x) * (ps.at(k).z - center.z);
+	}else if (i==1 && j==1){
+	  cov_matrix(i,j) += (ps.at(k).y - center.y) * (ps.at(k).y - center.y);
+	}else if (i==1 && j==2){
+	  cov_matrix(i,j) += (ps.at(k).y - center.y) * (ps.at(k).z - center.z);
+	}else if (i==2 && j==2){
+	  cov_matrix(i,j) += (ps.at(k).z - center.z) * (ps.at(k).z - center.z);
+	}
+      }
+    }
+  }
+  cov_matrix(1,0) = cov_matrix(0,1);
+  cov_matrix(2,0) = cov_matrix(0,2);
+  cov_matrix(2,1) = cov_matrix(1,2);
+  
+  TMatrixDEigen eigen(cov_matrix);
+  //TMatrixD eigen_values = eigen.GetEigenValues();
+  TMatrixD eigen_vectors = eigen.GetEigenVectors();
+
+  // PCA_values[0] = eigen_values(0,0) ;
+  // PCA_values[1] = eigen_values(1,1) ;
+  // PCA_values[2] = eigen_values(2,2) ;
+  int i=0;
+  PCA_main_axis.SetXYZ(eigen_vectors(0,i)/sqrt(eigen_vectors(0,i)*eigen_vectors(0,i) + eigen_vectors(1,i)*eigen_vectors(1,i) + eigen_vectors(2,i)*eigen_vectors(2,i)), eigen_vectors(1,i)/sqrt(eigen_vectors(0,i)*eigen_vectors(0,i) + eigen_vectors(1,i)*eigen_vectors(1,i) + eigen_vectors(2,i)*eigen_vectors(2,i)), eigen_vectors(2,i)/sqrt(eigen_vectors(0,i)*eigen_vectors(0,i) + eigen_vectors(1,i)*eigen_vectors(1,i) + eigen_vectors(2,i)*eigen_vectors(2,i)));
+  PCA_main_axis = PCA_main_axis.Unit();
+  
+  return std::make_pair(center, PCA_main_axis);
+}
+
 
 bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bool flag_break_track, int nrounds_find_other_tracks, bool flag_back_search){
 
@@ -558,10 +624,36 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     temp_segments.at(i).number_points = ncounts[i];
     
     int special_A = -1;
+    std::vector<int> candidates_special_A;
     for (size_t j=0;j!=ncounts[i];j++){
       if (map_connection.find(sep_clusters[i].at(j))!=map_connection.end()){
-	special_A = sep_clusters[i].at(j);
-	break;
+	//	special_A = sep_clusters[i].at(j);
+	candidates_special_A.push_back(sep_clusters[i].at(j));
+	//	if (ncounts[i]>=40)	  std::cout << special_A << " " << ncounts[i] << " " << cloud.pts[special_A].index_u << " " << cloud.pts[special_A].index_v << " " << cloud.pts[special_A].index_w << std::endl;
+	//	break;
+      }
+    }
+
+    if (candidates_special_A.size() >0){
+      if (candidates_special_A.size()>1 && ncounts[i] > 6){
+	//	special_A = candidates_special_A.back();
+	PointVector tmp_points;
+	for (size_t j=0;j!=ncounts[i];j++){
+	  Point tmp_p(cloud.pts[sep_clusters[i].at(j)].x, cloud.pts[sep_clusters[i].at(j)].y, cloud.pts[sep_clusters[i].at(j)].z);
+	  tmp_points.push_back(tmp_p);
+	}
+	std::pair<Point, TVector3> results_pca = calc_PCA_main_axis(tmp_points);
+	double max_val = 0;
+	for (size_t j=0;j!=candidates_special_A.size();j++){
+	  double val = fabs( (cloud.pts[candidates_special_A.at(j)].x - results_pca.first.x) * results_pca.second.X() + (cloud.pts[candidates_special_A.at(j)].y - results_pca.first.y) * results_pca.second.Y() + (cloud.pts[candidates_special_A.at(j)].z - results_pca.first.z) * results_pca.second.Z() );
+	  //  std::cout << candidates_special_A.at(j) << " " << val  << " " << ncounts[i] << " " << cloud.pts[candidates_special_A.at(j)].index_u << " " << cloud.pts[candidates_special_A.at(j)].index_v << " " << cloud.pts[candidates_special_A.at(j)].index_w << std::endl;
+	  if (val > max_val){
+	    max_val = val;
+	    special_A = candidates_special_A.at(j);
+	  }
+	}
+      }else{
+	special_A = candidates_special_A.front();
       }
     }
 

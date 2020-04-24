@@ -1,6 +1,7 @@
 #include "WCPPID/ProtoSegment.h"
 #include "WCPData/TPCParams.h"
 #include "WCPData/Singleton.h"
+#include "WCPData/Line.h"
 
 #include "TH1F.h"
 
@@ -300,14 +301,20 @@ bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
     double tmp_dQ_dx = get_medium_dQ_dx(sections.at(j).first, sections.at(j).second)/(50000/units::cm);
 
     //    std::cout << fabs(drift_dir.Angle(dir_1)/3.1415926*180.-90.) << std::endl;
-    if (fabs(drift_dir.Angle(dir_1)/3.1415926*180.-90.)>10 ){ // not parallel case ...
+    double angle_diff = fabs(drift_dir.Angle(dir_1)/3.1415926*180.-90.);
+    if (angle_diff>10 ){ // not parallel case ...
       double direct_length = get_direct_length(sections.at(j).first, sections.at(j).second);
       double integrated_length = get_length(sections.at(j).first, sections.at(j).second);
+      double max_dev = get_max_deviation(sections.at(j).first, sections.at(j).second);
+
+      //      std::cout << max_dev/units::cm << " " << fabs(drift_dir.Angle(dir_1)/3.1415926*180.-90.) << std::endl;
+      
       double length_ratio;
       if (direct_length == 0 ) length_ratio = 1;
       else length_ratio = direct_length / integrated_length;
     
-      if (tmp_dQ_dx*0.11 + 2*length_ratio < 2.03 && tmp_dQ_dx < 2 && length_ratio < 0.95) n_shower_like ++;
+      if (tmp_dQ_dx*0.11 + 2*length_ratio < 2.03 && tmp_dQ_dx < 2 && length_ratio < 0.95 && (angle_diff < 60 || integrated_length < 10*units::cm || integrated_length >= 10*units::cm && max_dev > 0.75*units::cm)
+	  ) n_shower_like ++;
       //      std::cout << "Xin: " << j << " " << sections.at(j).first << " " << sections.at(j).second <<  " " << length_ratio << " " << tmp_dQ_dx << " " << direct_length << " " << drift_dir.Angle(dir_1)/3.1415926*180. << std::endl;
     }else{
       TVector3 dir_2 = drift_dir.Cross(dir_1);
@@ -315,21 +322,40 @@ bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
       TVector3 dir_3 = dir_1.Cross(dir_2);
       double direct_length = get_direct_length(sections.at(j).first, sections.at(j).second, dir_2);
       double integrated_length = get_length(sections.at(j).first, sections.at(j).second, dir_2);
+      double max_dev = get_max_deviation(sections.at(j).first, sections.at(j).second);
       double length_ratio;
       if (direct_length == 0 ) length_ratio = 1;
       else length_ratio = direct_length / integrated_length;
-      if (tmp_dQ_dx*0.11 + 2*length_ratio < 2.06 && tmp_dQ_dx < 2 && length_ratio < 0.97) n_shower_like ++;
+      if (tmp_dQ_dx*0.11 + 2*length_ratio < 2.06 && tmp_dQ_dx < 2 && length_ratio < 0.97 && (integrated_length < 10*units::cm || integrated_length >= 10*units::cm && max_dev > 0.75*units::cm) ) n_shower_like ++;
       // std::cout << "Xin: " << j << " " << sections.at(j).first << " " << sections.at(j).second <<  " " << length_ratio << " " << tmp_dQ_dx << " " << direct_length << " " << drift_dir.Angle(dir_1)/3.1415926*180. << " " << tmp_dQ_dx*0.11 + 2*length_ratio - 2 << std::endl;  
     }
-    
   }
-  //  std::cout << "BB " << id << " " << sections.size() << " " << get_length()/units::cm << " " << n_shower_like << std::endl;
+
+  
+  
+  // std::cout << "BB " << id << " " << sections.size() << " " << get_length()/units::cm << " " << n_shower_like << std::endl;
   
   if (n_shower_like >=0.5*sections.size()) flag_shower_trajectory = true;
   
   // calculate direct length, accumulated length, medium dQ/dx in each section ...
   //  std::cout << length/units::cm << " " << ncount << std::endl;
   return flag_shower_trajectory;
+}
+
+double WCPPID::ProtoSegment::get_max_deviation(int n1, int n2){
+  if (n1 < 0) n1 = 0;  if (n1+1 > fit_pt_vec.size()) n1 = int(fit_pt_vec.size())-1;
+  if (n2 < 0) n2 = 0;  if (n2+1 > fit_pt_vec.size()) n2 = int(fit_pt_vec.size())-1;
+  
+  double max_dev = 0;
+  if (n1 != n2){
+    WCP::Line l(fit_pt_vec.at(n1), fit_pt_vec.at(n2));
+    for (size_t i=n1; i<=n2;i++){
+      double dis = l.closest_dis(fit_pt_vec.at(i));
+      if (dis > max_dev) max_dev = dis;
+    }
+  }
+  
+  return max_dev;
 }
 
 double WCPPID::ProtoSegment::get_direct_length(int n1, int n2){

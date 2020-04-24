@@ -159,7 +159,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
 	  if (shower_1->get_start_vertex().second==1 && shower_2->get_start_vertex().second==1) continue;
 	  map_shower_pair_mass_vertex[std::make_pair(shower_1, shower_2)] = std::make_pair(mass_pio, vtx);
 	  
-	  //	  std::cout << vtx->get_id() << " " << i << " " << j << " " << shower_1->get_kine_charge()/units::MeV << " " << shower_2->get_kine_charge()/units::MeV << " " << dir1.Mag() << " " << dir2.Mag() << " " << angle/3.1415926*180. << " " << sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2))/units::MeV<< std::endl;
+	  //std::cout << vtx->get_id() << " " << i << " " << j << " " << shower_1->get_kine_charge()/units::MeV << " " << shower_2->get_kine_charge()/units::MeV << " " << dir1.Mag() << " " << dir2.Mag() << " " << angle/3.1415926*180. << " " << sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2))/units::MeV<< std::endl;
 	} // loop shower
       } // loop shower
     } // more than 1 shower
@@ -170,7 +170,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
     double mass_save = 0;
     WCPPID::WCShower *shower_1 = 0;
     WCPPID::WCShower *shower_2 = 0;
-    double mass_offset = 0*units::MeV;
+    double mass_offset = 10*units::MeV;
     WCPPID::ProtoVertex* vtx;
     for (auto it = map_shower_pair_mass_vertex.begin(); it!= map_shower_pair_mass_vertex.end(); it++){
       if (fabs(it->second.first - 135*units::MeV + mass_offset) < mass_diff){ // hack pi0 mass to a slightly lower value ...
@@ -263,7 +263,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
       WCPPID::ProtoSegment *seg = *it2;
       if (map_segment_in_shower.find(seg) != map_segment_in_shower.end()) continue;
       // if (seg->get_cluster_id()==112) std::cout << seg->get_id() << " " << seg->get_flag_shower() << " " << seg->get_particle_type() << std::endl;
-      if (seg->get_flag_shower()==1 || seg->get_particle_type()==0 || abs(seg->get_particle_type())==13 && seg->is_dir_weak()){
+      if (seg->get_flag_shower()==1 || seg->get_particle_type()==0 || (abs(seg->get_particle_type())==13 || abs(seg->get_particle_type())==211) && seg->is_dir_weak()){
 	acc_length += seg->get_length();
 	PointVector& pts = seg->get_point_vec();
 	for (size_t i=0; i!= pts.size(); i++){
@@ -275,9 +275,10 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
       }
       if (seg->get_particle_type()!=11 && (!seg->get_flag_shower()))
 	acc_length1 += seg->get_length();
+      //      std::cout << seg->get_particle_type() << " " << seg->get_length()/units::cm << " " << seg->is_dir_weak() << std::endl;
     }
-    //    std::cout << cluster->get_cluster_id() << " " << acc_length/units::cm << " " << acc_length1/units::cm << std::endl;
-    if (acc_length > 1.0*units::cm && acc_length >= acc_length1){
+    // std::cout << cluster->get_cluster_id() << " " << acc_length/units::cm << " " << acc_length1/units::cm << std::endl;
+    if (acc_length > 1.0*units::cm && acc_length >= acc_length1 || acc_length > 10*units::cm){
       p.x /= np;
       p.y /= np;
       p.z /= np;

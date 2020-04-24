@@ -41,6 +41,15 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   bool flag_other_clusters = true;
   bool flag_main_cluster = true;
 
+  // // hack the main cluster
+  // for (auto it = other_clusters.begin(); it != other_clusters.end(); it++){
+  //   WCPPID::PR3DCluster *cluster = *it;    
+  //   if (cluster->get_cluster_id()==51) {
+  //     swap_main_cluster(cluster);
+  //     break;
+  //   }
+  // }
+  
   
   std::map<WCPPID::PR3DCluster*, double> map_cluster_length;
   
@@ -51,12 +60,15 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     std::pair<WCP::WCPointCloud<double>::WCPoint,WCP::WCPointCloud<double>::WCPoint> two_wcps = main_cluster->get_two_boundary_wcps();
     map_cluster_length[main_cluster] = sqrt(pow(two_wcps.first.x - two_wcps.second.x, 2) + pow(two_wcps.first.y - two_wcps.second.y, 2) + pow(two_wcps.first.z - two_wcps.second.z, 2));
   }
-  for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
-    map_id_cluster[(*it)->get_cluster_id()] = *it;
-    (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-    std::pair<WCP::WCPointCloud<double>::WCPoint,WCP::WCPointCloud<double>::WCPoint> two_wcps = (*it)->get_two_boundary_wcps();
-    double length = sqrt(pow(two_wcps.first.x - two_wcps.second.x, 2) + pow(two_wcps.first.y - two_wcps.second.y, 2) + pow(two_wcps.first.z - two_wcps.second.z, 2));
-    map_cluster_length[*it] = length;    
+  
+  if (flag_other_clusters){
+    for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
+      map_id_cluster[(*it)->get_cluster_id()] = *it;
+      (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
+      std::pair<WCP::WCPointCloud<double>::WCPoint,WCP::WCPointCloud<double>::WCPoint> two_wcps = (*it)->get_two_boundary_wcps();
+      double length = sqrt(pow(two_wcps.first.x - two_wcps.second.x, 2) + pow(two_wcps.first.y - two_wcps.second.y, 2) + pow(two_wcps.first.z - two_wcps.second.z, 2));
+      map_cluster_length[*it] = length;    
+    }
   }
   
   // std::cout << main_cluster->get_num_mcells() << " " << map_cluster_length[main_cluster]/units::cm << std::endl;
@@ -143,7 +155,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     shower_clustering_with_nv();
   }
   
-  //  std::cout << "Final Information: " << std::endl;
+  // std::cout << "Final Information: " << std::endl;
   // print_segs_info(main_vertex);
 
   
@@ -190,7 +202,8 @@ void WCPPID::NeutrinoID::determine_overall_main_vertex(std::map<WCPPID::PR3DClus
     std::cout << (*it)->get_id() << ", ";
   }
   std::cout << " in cluster " << main_vertex->get_cluster_id() << std::endl;
-
+  print_segs_info(main_vertex->get_cluster_id(), main_vertex);
+  
   // clean up long muons ...
   {
     std::set<WCPPID::ProtoSegment* > tmp_segments;
@@ -212,6 +225,12 @@ void WCPPID::NeutrinoID::determine_overall_main_vertex(std::map<WCPPID::PR3DClus
 }
 
 
+void WCPPID::NeutrinoID::swap_main_cluster(WCPPID::PR3DCluster *new_main_cluster){
+  other_clusters.push_back(main_cluster);
+  main_cluster = new_main_cluster;
+  auto it1 = find(other_clusters.begin(), other_clusters.end(), main_cluster);
+  other_clusters.erase(it1);
+}
 
 void WCPPID::NeutrinoID::check_switch_main_cluster(WCPPID::ProtoVertex *temp_main_vertex, WCPPID::PR3DCluster *max_length_cluster, std::set<WCPPID::PR3DCluster*>& skip_clusters ){
 
@@ -226,11 +245,12 @@ void WCPPID::NeutrinoID::check_switch_main_cluster(WCPPID::ProtoVertex *temp_mai
   
   if (flag_switch){
     std::cout << "Switch Main Cluster! " << std::endl;
-    auto it = find(other_clusters.begin(), other_clusters.end(), max_length_cluster);
-    other_clusters.erase(it);
     skip_clusters.insert(main_cluster);
-    other_clusters.push_back(main_cluster);
-    main_cluster = max_length_cluster;
+    swap_main_cluster(max_length_cluster);
+    //    auto it = find(other_clusters.begin(), other_clusters.end(), max_length_cluster);
+    //other_clusters.erase(it);  
+    //other_clusters.push_back(main_cluster);
+    //main_cluster = max_length_cluster;
     
     // find the proto vertex ...
     // find_proto_vertex(main_cluster, true, 2);    

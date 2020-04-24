@@ -35,6 +35,7 @@ namespace WCPPID{
     double get_direct_length();
     double get_direct_length(int n1, int n2);
     double get_length(int n1, int n2);
+    double get_max_deviation(int n1, int n2);
 
     double get_direct_length(int n1, int n2, TVector3 dir_perp);
     double get_length(int n1, int n2, TVector3 dir_perp);

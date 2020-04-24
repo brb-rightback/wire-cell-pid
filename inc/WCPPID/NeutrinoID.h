@@ -131,6 +131,9 @@ namespace WCPPID{
     int get_num_segments(ProtoVertex *pv);
 
     WCPPID::PR3DCluster* get_main_cluster(){return main_cluster;};
+
+    // swap main cluster
+    void swap_main_cluster(WCPPID::PR3DCluster *new_main_cluster);
     
     // actual functions ...
     void process_main_cluster();
@@ -220,7 +223,8 @@ namespace WCPPID{
     void examine_good_tracks(int temp_cluster_id);
 
 
-    int calculate_num_daughter_showers(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg);
+    std::pair<int, double> calculate_num_daughter_showers(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg);
+    
     bool examine_maps(WCPPID::PR3DCluster* temp_cluster);
     bool examine_maps(WCPPID::ProtoVertex *temp_vertex);
     bool examine_maps(int temp_cluster_id);
