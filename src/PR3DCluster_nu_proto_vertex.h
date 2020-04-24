@@ -35,6 +35,8 @@ bool WCPPID::PR3DCluster::proto_break_tracks(WCP::WCPointCloud<double>::WCPoint&
       }
     }
     curr_wcp = wcps_list1.back();
+
+    if (wcps_list1.size()<=1 || wcps_list2.size()<=1) return false;
     
     return true;
   }else {

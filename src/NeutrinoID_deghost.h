@@ -90,7 +90,7 @@ void WCPPID::NeutrinoID::deghost_segments(){
 	  if (!flag_dead){
 	    bool flag_in = false;
 	    std::tuple<double, WCP::PR3DCluster*, size_t> results = global_point_cloud.get_closest_2d_point_info(test_point, 0);
-	    if (std::get<0>(results)<=dis_cut/2.) flag_in = true;
+	    if (std::get<0>(results)<=dis_cut*2./3.) flag_in = true;
 	    if (global_steiner_point_cloud.get_num_points()!=0){
 	      results = global_steiner_point_cloud.get_closest_2d_point_info(test_point, 0);
 	      if (std::get<0>(results)<=dis_cut*2./3.) flag_in = true;
@@ -110,7 +110,7 @@ void WCPPID::NeutrinoID::deghost_segments(){
 	  if (!flag_dead){
 	    bool flag_in = false;
 	    std::tuple<double, WCP::PR3DCluster*, size_t> results = global_point_cloud.get_closest_2d_point_info(test_point, 1);
-	    if (std::get<0>(results)<=dis_cut/2.) flag_in = true;
+	    if (std::get<0>(results)<=dis_cut*2./3.) flag_in = true;
 	    if (global_steiner_point_cloud.get_num_points()!=0){
 	      results = global_steiner_point_cloud.get_closest_2d_point_info(test_point, 1);
 	      if (std::get<0>(results)<=dis_cut*2/3.) flag_in = true;
@@ -129,16 +129,16 @@ void WCPPID::NeutrinoID::deghost_segments(){
 	  if (!flag_dead){
 	    bool flag_in = false;
 	    std::tuple<double, WCP::PR3DCluster*, size_t> results = global_point_cloud.get_closest_2d_point_info(test_point, 2);
-	    //	    std::cout << "A: " << std::get<0>(results)/units::cm << std::endl;
-	    if (std::get<0>(results)<=dis_cut/2.) flag_in = true;
+	    // std::cout << "A: " << std::get<0>(results)/units::cm << std::endl;
+	    if (std::get<0>(results)<=dis_cut*2./3.) flag_in = true;
 	    if (global_steiner_point_cloud.get_num_points()!=0){
 	      results = global_steiner_point_cloud.get_closest_2d_point_info(test_point, 2);
-	      //	      std::cout << "B: " << std::get<0>(results)/units::cm << std::endl;
+	      //std::cout << "B: " << std::get<0>(results)/units::cm << std::endl;
 	      if (std::get<0>(results)<=dis_cut*2./3.) flag_in = true;
 	    }
 	    if ( global_skeleton_cloud.get_num_points()!=0){
 	      results = global_skeleton_cloud.get_closest_2d_point_info(test_point, 2);
-	      //	      std::cout << "C: " << std::get<0>(results)/units::cm << std::endl;
+	      //std::cout << "C: " << std::get<0>(results)/units::cm << std::endl;
 	      if (std::get<0>(results)<=dis_cut*3./4.) flag_in = true;
 	    }
 	    if (!flag_in) num_unique[2]++;

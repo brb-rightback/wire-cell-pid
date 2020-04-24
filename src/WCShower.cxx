@@ -176,6 +176,7 @@ void WCPPID::WCShower::calculate_kinematics(){
     }
     init_dir = init_dir.Unit();
   }else{
+    // more than one segment ...
     int nsegments = map_seg_vtxs.size();
     int nconnected_segs = 0;
     {
@@ -187,6 +188,11 @@ void WCPPID::WCShower::calculate_kinematics(){
       // single track
       particle_type = start_segment->get_particle_type();
       flag_shower = start_segment->get_flag_shower();
+      if (start_segment->get_flag_dir()==1){
+	start_point = start_segment->get_point_vec().front();
+      }else if (start_segment->get_flag_dir()==-1){
+	start_point = start_segment->get_point_vec().back();
+      }
       // initial direction ...
       if (start_connection_type == 1){
 	if (start_segment->get_length() > 8*units::cm)
@@ -194,18 +200,13 @@ void WCPPID::WCShower::calculate_kinematics(){
 	else
 	  init_dir = cal_dir_3vector(start_vertex->get_fit_pt(),12*units::cm);
       }else if (start_connection_type == 2){
+	//std::cout << start_segment->get_id() << " " << start_point << std::endl;
 	init_dir.SetXYZ(start_point.x - start_vertex->get_fit_pt().x, start_point.y - start_vertex->get_fit_pt().y, start_point.z - start_vertex->get_fit_pt().z);
       }else if (start_connection_type == 3){
 	init_dir.SetXYZ(start_point.x - start_vertex->get_fit_pt().x, start_point.y - start_vertex->get_fit_pt().y, start_point.z - start_vertex->get_fit_pt().z);
       }
       init_dir = init_dir.Unit();
       
-      
-      if (start_segment->get_flag_dir()==1){
-	start_point = start_segment->get_point_vec().front();
-      }else if (start_segment->get_flag_dir()==-1){
-	start_point = start_segment->get_point_vec().back();
-      }
       double max_dis = 0; Point max_point;
       for (auto it = map_vtx_segs.begin(); it != map_vtx_segs.end(); it++){
 	WCPPID::ProtoVertex *vtx = it->first;

@@ -104,9 +104,10 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
 	shower_determing_in_main_cluster(*it);
 	determine_main_vertex(*it, false);
 	
-    
-	map_cluster_main_vertices[*it] = main_vertex;
-	main_vertex = 0;
+	if (main_vertex !=0){
+	  map_cluster_main_vertices[*it] = main_vertex;
+	  main_vertex = 0;
+	}
       }else{
 	if (!find_proto_vertex(*it, false, 1)) init_point_segment(*it);
 	
@@ -114,9 +115,10 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
 	separate_track_shower(*it);
 	determine_direction(*it);
 	determine_main_vertex(*it, false);	
-
-	map_cluster_main_vertices[*it] = main_vertex;
-	main_vertex = 0;
+	if (main_vertex !=0){
+	  map_cluster_main_vertices[*it] = main_vertex;
+	  main_vertex = 0;
+	}
       }
     }
 

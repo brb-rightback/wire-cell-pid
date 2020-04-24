@@ -837,11 +837,14 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
     }
   }
 
+
   
   if (main_vertex_candidates.size()==1){
     main_vertex = main_vertex_candidates.front();
-  }else{
+  }else if (main_vertex_candidates.size()>1){
     main_vertex = compare_main_vertices(main_vertex_candidates);
+  }else{
+    return;
   }
   bool flag_check = examine_direction(main_vertex);
   if (!flag_check) std::cout << "Wrong: inconsistency for track directions in cluster " << main_vertex->get_cluster_id() << std::endl;
