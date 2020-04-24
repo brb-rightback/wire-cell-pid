@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
   bool flag_debug_output = true; // output
   int datatier = 0; // data=0, overlay=1, full mc=2
   int flag_calib_corr = 1;
+  int flag_neutrino_id_process = 1; // 1 for development chain, 2 for current frozen chain 
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
     case 'd':
@@ -38,6 +39,9 @@ int main(int argc, char* argv[])
       break;
     case 'q':
       flag_calib_corr = atoi(&argv[i][2]);
+      break;
+    case 'n':
+      flag_neutrino_id_process = atoi(&argv[i][2]);
       break;
     }
   }
@@ -1252,7 +1256,7 @@ int main(int argc, char* argv[])
     }
 
     double offset_x =     (flash_time - time_offset)*2./nrebin*time_slice_width;
-    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x);
+    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process);
     neutrino_vec.push_back(neutrino);
     
   }

@@ -22,7 +22,7 @@ using namespace WCP;
 #include "NeutrinoID_energy_reco.h"
 #include "NeutrinoID_shower_clustering.h"
 
-WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<WCPPID::PR3DCluster*>& other_clusters1, std::vector<WCPPID::PR3DCluster*>& all_clusters1, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x)
+WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<WCPPID::PR3DCluster*>& other_clusters1, std::vector<WCPPID::PR3DCluster*>& all_clusters1, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x, int flag_neutrino_id_process)
   : acc_vertex_id(0)
   , acc_segment_id(0)
   , main_cluster(main_cluster1)
@@ -33,6 +33,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   , global_wc_map(global_wc_map)
   , flash_time(flash_time)
   , offset_x(offset_x)
+  , flag_neutrino_id_process(flag_neutrino_id_process)
   , type(0)
   , main_vertex(0)
   , main_cluster_initial_pair_vertices(std::make_pair((WCPPID::ProtoVertex*)0, (WCPPID::ProtoVertex*)0))
@@ -161,13 +162,20 @@ void WCPPID::NeutrinoID::determine_overall_main_vertex(std::map<WCPPID::PR3DClus
     }
   }
 
-  std::set<WCPPID::PR3DCluster* > skip_clusters;
+  if (flag_neutrino_id_process==1){
+    // development chain ...
+    std::set<WCPPID::PR3DCluster* > skip_clusters;  
+    if (max_length > map_cluster_length[main_cluster] * 0.8 )
+      check_switch_main_cluster(map_cluster_main_vertices[main_cluster], max_length_cluster, skip_clusters);
+  }else{
+    // frozen chain
+    std::set<WCPPID::PR3DCluster* > skip_clusters;  
+    if (max_length > map_cluster_length[main_cluster] * 0.8 )
+      check_switch_main_cluster(map_cluster_main_vertices[main_cluster], max_length_cluster, skip_clusters);
+  }
   
-  if (max_length > map_cluster_length[main_cluster] * 0.8 )
-    check_switch_main_cluster(map_cluster_main_vertices[main_cluster], max_length_cluster, skip_clusters);
-
+  
   main_vertex = map_cluster_main_vertices[main_cluster];
-
   std::cout << "Overall main Vertex " << main_vertex->get_fit_pt() << " connecting to: ";
   for (auto it = map_vertex_segments[main_vertex].begin(); it!=map_vertex_segments[main_vertex].end(); it++){
     std::cout << (*it)->get_id() << ", ";
@@ -677,6 +685,8 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment* sg= it->first;
     if (map_segment_in_shower.find(sg)!=map_segment_in_shower.end()) continue;
+    if (sg->get_cluster_id() != main_vertex->get_cluster_id() ) continue;
+    //    std::cout << sg->get_cluster_id() << " " << main_vertex->get_cluster_id() << " " << sg->get_length()/units::cm << std::endl;
     fill_reco_tree(sg, rtree);
     std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> pair_vertices = find_vertices(sg);
     if (map_vertex_segments[pair_vertices.first].size()==1 || map_vertex_segments[pair_vertices.second].size()==1 ){
