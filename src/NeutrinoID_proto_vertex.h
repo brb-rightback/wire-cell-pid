@@ -1,6 +1,6 @@
 #include "TMatrixDEigen.h"
 
-std::pair<WCP::Point, TVector3> calc_PCA_main_axis(WCP::PointVector& points){
+std::pair<WCP::Point, TVector3> WCPPID::NeutrinoID::calc_PCA_main_axis(WCP::PointVector& points){
 
   Point center(0,0,0);
   int nsum = 0;

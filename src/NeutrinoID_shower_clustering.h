@@ -277,7 +277,8 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
 	acc_length1 += seg->get_length();
       //      std::cout << seg->get_particle_type() << " " << seg->get_length()/units::cm << " " << seg->is_dir_weak() << std::endl;
     }
-    // std::cout << cluster->get_cluster_id() << " " << acc_length/units::cm << " " << acc_length1/units::cm << std::endl;
+
+    //   std::cout << cluster->get_cluster_id() << " " << acc_length/units::cm << " " << acc_length1/units::cm << std::endl;
     if (acc_length > 1.0*units::cm && acc_length >= acc_length1 || acc_length > 10*units::cm){
       p.x /= np;
       p.y /= np;
@@ -382,6 +383,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
       map_cluster_pi[cluster] = min_pi;
     }
     // hack for now ...
+    //    std::cout << cluster->get_cluster_id() << " " << map_cluster_pi[cluster].min_angle << std::endl;
     // map_cluster_pi[cluster] = main_pi;
   }
   
@@ -419,7 +421,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
     WCP::Point point = vec_pi.at(i).min_point;
     WCPPID::ProtoSegment* sg1 = 0;
     double angle = vec_pi.at(i).min_angle;
-    if (angle > 25) continue;
+    if (angle > 45) continue;
     
     for (auto it = map_cluster_segments[cluster].begin(); it!=map_cluster_segments[cluster].end();it++){
       WCPPID::ProtoSegment *sg = *it;
@@ -531,8 +533,9 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
 	if (it1 != map_cluster_associated_vertex.end()){
 	  if (it1->second != vertex){ //continue;
 	    double dis1 = shower->get_dis(seg1);
+	    //	    std::cout << seg1->get_cluster_id() << " " << dis1/units::cm <<" " << pair_dis_point.first/units::cm << std::endl;
 	    if (dis1 > 25*units::cm && dis1 > pair_dis_point.first * 0.4){
-	    //	    std::cout << shower->get_dis(seg1)/units::cm <<" " << pair_dis_point.first/units::cm << std::endl;
+
 	      continue;
 	    }
 	  }

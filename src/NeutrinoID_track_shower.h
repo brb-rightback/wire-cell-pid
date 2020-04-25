@@ -761,7 +761,7 @@ void WCPPID::NeutrinoID::print_segs_info(int temp_cluster_id, WCPPID::ProtoVerte
       else std::cout << "Something messed up!" << std::endl;
       if (flag_start && sg->get_flag_dir()==-1  || (!flag_start)&& sg->get_flag_dir()==1){
 	in_vertex = -1;
-      }else if (flag_start && sg->get_flag_dir()==1  || (!flag_start)&& sg->get_flag_dir()==-11){
+      }else if (flag_start && sg->get_flag_dir()==1  || (!flag_start)&& sg->get_flag_dir()==-1){
 	in_vertex = 1;
       }
     }
@@ -793,7 +793,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   // print ...
 
   //  std::cout << "Information after initial logic examination: " << std::endl;
-  // print_segs_info(temp_cluster);
+  //print_segs_info(temp_cluster);
 
   
   // find the main vertex ...
@@ -803,66 +803,68 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
     WCPPID::ProtoVertex *vtx = it->first;
     if (vtx->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
-    bool flag_in = false;
-    int ntracks = 0, nshowers = 0;
-    for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
-      WCPPID::ProtoSegment *sg = *it1;
-      if (sg->get_flag_shower()) nshowers ++;
-      else ntracks ++;
-      
-      bool flag_start;
-      if (sg->get_wcpt_vec().front().index == vtx->get_wcpt().index)
-	flag_start = true;
-      else if (sg->get_wcpt_vec().back().index == vtx->get_wcpt().index)
-	flag_start = false;
-      else std::cout << "Something messed up!" << std::endl;
-      if (flag_start && sg->get_flag_dir()==-1  && (!sg->is_dir_weak()) ){
-	flag_in = true;
-	break;
-      }else if ((!flag_start)&& sg->get_flag_dir()==1 &&(!sg->is_dir_weak()) ){
-	flag_in = true;
-	break;
-      }
-    }
+
+    auto results = examine_main_vertex_candidate(vtx);
+    bool flag_in = std::get<0>(results);
+    int ntracks = std::get<1>(results), nshowers = std::get<2>(results);
+    
     if (!flag_in){
-      if (ntracks > 0) 
-	flag_save_only_showers = false;
+      if (ntracks > 0) flag_save_only_showers = false;
       map_vertex_track_shower[vtx] = std::make_pair(ntracks, nshowers);
     }
   }
 
-  for (auto it = map_vertex_track_shower.begin(); it!= map_vertex_track_shower.end(); it++){
-    if (flag_save_only_showers){
-      main_vertex_candidates.push_back(it->first);
-    }else{
-      if (it->second.first >0)
+  if (flag_save_only_showers){
+    for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
+      if (it->first->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+      if (it->second.size()==1){
 	main_vertex_candidates.push_back(it->first);
+      }
+    }
+    for (auto it = map_vertex_track_shower.begin(); it!= map_vertex_track_shower.end(); it++){ 
+      if (find(main_vertex_candidates.begin(), main_vertex_candidates.end(), it->first) == main_vertex_candidates.end())
+	main_vertex_candidates.push_back(it->first); 
+    }
+  }else{
+    for (auto it = map_vertex_track_shower.begin(); it!= map_vertex_track_shower.end(); it++){
+      if (it->second.first >0) main_vertex_candidates.push_back(it->first);
+    }
+  }
+  
+
+  if (flag_save_only_showers){
+    std::cout << "Determining the main vertex with all showers: " << main_vertex_candidates.size() << std::endl;
+    if (main_vertex_candidates.size()>0){
+      main_vertex = compare_main_vertices_all_showers(main_vertex_candidates, temp_cluster);
+    }else{
+      return;
+    }
+  }else{
+    if (flag_print){
+      //  std::cout << main_vertex_candidates.size() << std::endl;
+      for (auto it = main_vertex_candidates.begin(); it!= main_vertex_candidates.end(); it++){
+	std::cout << "Candidate main vertex " << (*it)->get_fit_pt() << " connecting to: ";
+	for (auto it1 = map_vertex_segments[*it].begin(); it1!=map_vertex_segments[*it].end(); it1++){
+	  std::cout << (*it1)->get_id() << ", ";
+	}
+	std::cout << std::endl;
+      }
+    }
+    
+    if (main_vertex_candidates.size()==1){
+      main_vertex = main_vertex_candidates.front();
+    }else if (main_vertex_candidates.size()>1){
+      main_vertex = compare_main_vertices(main_vertex_candidates);
+    }else{
+      return;
     }
   }
 
-  if (flag_print){
-    //  std::cout << main_vertex_candidates.size() << std::endl;
-    for (auto it = main_vertex_candidates.begin(); it!= main_vertex_candidates.end(); it++){
-      std::cout << "Candidate main vertex " << (*it)->get_fit_pt() << " connecting to: ";
-      for (auto it1 = map_vertex_segments[*it].begin(); it1!=map_vertex_segments[*it].end(); it1++){
-	std::cout << (*it1)->get_id() << ", ";
-      }
-      std::cout << std::endl;
-    }
-  }
 
 
   
-  if (main_vertex_candidates.size()==1){
-    main_vertex = main_vertex_candidates.front();
-  }else if (main_vertex_candidates.size()>1){
-    main_vertex = compare_main_vertices(main_vertex_candidates);
-  }else{
-    return;
-  }
   bool flag_check = examine_direction(main_vertex);
   if (!flag_check) std::cout << "Wrong: inconsistency for track directions in cluster " << main_vertex->get_cluster_id() << std::endl;
-
   if (flag_print){
     std::cout << "Main Vertex " << main_vertex->get_fit_pt() << " connecting to: ";
     for (auto it = map_vertex_segments[main_vertex].begin(); it!=map_vertex_segments[main_vertex].end(); it++){
@@ -878,7 +880,167 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   
 }
 
+std::tuple<bool, int, int> WCPPID::NeutrinoID::examine_main_vertex_candidate(WCPPID::ProtoVertex *vertex){
+  bool flag_in = false;
+  int ntracks =0;
+  int nshowers =0;
+  WCPPID::ProtoSegment *shower_cand = 0;
+  WCPPID::ProtoSegment *track_cand = 0;
+  
+  for (auto it1 = map_vertex_segments[vertex].begin(); it1!=map_vertex_segments[vertex].end(); it1++){
+    WCPPID::ProtoSegment *sg = *it1;
+    if (sg->get_flag_shower()) {
+      nshowers ++;
+      shower_cand = sg;
+    } else{
+      ntracks ++;
+      track_cand = sg;
+    }
+    
+    bool flag_start;
+    if (sg->get_wcpt_vec().front().index == vertex->get_wcpt().index)
+      flag_start = true;
+    else if (sg->get_wcpt_vec().back().index == vertex->get_wcpt().index)
+      flag_start = false;
+    else std::cout << "Something messed up!" << std::endl;
+    if (flag_start && sg->get_flag_dir()==-1  && (!sg->is_dir_weak()) ){
+      flag_in = true;
+      break;
+    }else if ((!flag_start)&& sg->get_flag_dir()==1 &&(!sg->is_dir_weak()) ){
+      flag_in = true;
+      break;
+    }
+  }
 
+  // check Michel electron case ...
+  if (map_vertex_segments[vertex].size()==2 && ntracks ==1 && nshowers == 1){
+    // calculate the number of daughter showers
+    auto pair_result = calculate_num_daughter_showers(vertex, shower_cand);
+    if (pair_result.first <=3 && pair_result.second < 30*units::cm){
+      bool flag_start;
+      if (track_cand->get_wcpt_vec().front().index == vertex->get_wcpt().index)
+	flag_start = true;
+      else if (track_cand->get_wcpt_vec().back().index == vertex->get_wcpt().index)
+	flag_start = false;
+      if (flag_start && track_cand->get_flag_dir()==-1 || (!flag_start)&& track_cand->get_flag_dir()==1)
+	flag_in = true;
+    }
+  }
+  
+  return std::make_tuple(flag_in, ntracks, nshowers);
+}
+
+
+WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_all_showers(WCPPID::ProtoVertexSelection& vertex_candidates, WCPPID::PR3DCluster *temp_cluster){
+
+  WCPPID::ProtoVertex *temp_main_vertex = vertex_candidates.front();
+  PointVector pts;
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != temp_main_vertex->get_cluster_id()) continue;
+    if (sg->get_point_vec().size()<=2){
+    }else{
+      for(size_t i = 1; i+1 < sg->get_point_vec().size(); i++){
+	pts.push_back(sg->get_point_vec().at(i));
+      }
+    }
+  }
+  for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
+    WCPPID::ProtoVertex *vtx = it->first;
+    if (vtx->get_cluster_id() != temp_main_vertex->get_cluster_id()) continue;
+    pts.push_back(vtx->get_fit_pt());
+  }
+  
+  if (pts.size() >3){
+    auto pair_result = calc_PCA_main_axis(pts);
+    TVector3 dir = pair_result.second;
+    Point center = pair_result.first;
+
+    double min_val = 0, max_val = 0;
+    WCPPID::ProtoVertex *min_vtx = 0, *max_vtx = 0;
+    for (auto it = vertex_candidates.begin(); it!=vertex_candidates.end(); it++){
+      double val = ((*it)->get_fit_pt().x - center.x) * dir.X() + ((*it)->get_fit_pt().y - center.y) * dir.Y() + ((*it)->get_fit_pt().z - center.z) * dir.Z();
+      if (val > max_val){
+	max_val = val;
+	max_vtx = *it;
+      }else if (val < min_val){
+	min_val = val;
+	min_vtx = *it;
+      }
+    }
+
+    //    std::cout << temp_cluster->get_point_cloud_steiner()->get_cloud().pts.size() << " " << max_vtx->get_wcpt().index << " " << min_vtx->get_wcpt().index << std::endl; 
+    ToyPointCloud* pcloud_steiner = temp_cluster->get_point_cloud_steiner();
+    if (pcloud_steiner->get_cloud().pts.size()>2){
+      // Now create a fake segment and two fake vertices for track fitting ...
+      auto max_wcp = pcloud_steiner->get_closest_wcpoint(max_vtx->get_fit_pt());
+      auto min_wcp = pcloud_steiner->get_closest_wcpoint(min_vtx->get_fit_pt());
+      temp_cluster->dijkstra_shortest_paths(max_wcp,2); 
+      temp_cluster->cal_shortest_path(min_wcp,2);
+      if ( temp_cluster->get_path_wcps().size() > 2){
+	WCPPID::ProtoVertex *tmp_v1 = new WCPPID::ProtoVertex(-1, max_wcp, temp_cluster->get_cluster_id());
+	WCPPID::ProtoVertex *tmp_v2 = new WCPPID::ProtoVertex(-2, min_wcp, temp_cluster->get_cluster_id());
+	WCPPID::ProtoSegment *tmp_sg = new WCPPID::ProtoSegment(-1, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id());
+	Map_Proto_Vertex_Segments tmp_map_vertex_segments;
+	Map_Proto_Segment_Vertices tmp_map_segment_vertices;
+	tmp_map_vertex_segments[tmp_v1].insert(tmp_sg);
+	tmp_map_vertex_segments[tmp_v2].insert(tmp_sg);
+	tmp_map_segment_vertices[tmp_sg].insert(tmp_v1);
+	tmp_map_segment_vertices[tmp_sg].insert(tmp_v2);
+	temp_cluster->do_multi_tracking(tmp_map_vertex_segments, tmp_map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+	tmp_sg->build_pcloud_fit();
+	// associate points
+	WCP::WCPointCloud<double>& cloud = temp_cluster->get_point_cloud()->get_cloud();
+	WCP::WC2DPointCloud<double>& cloud_u = temp_cluster->get_point_cloud()->get_cloud_u();
+	WCP::WC2DPointCloud<double>& cloud_v = temp_cluster->get_point_cloud()->get_cloud_v();
+	WCP::WC2DPointCloud<double>& cloud_w = temp_cluster->get_point_cloud()->get_cloud_w();
+	for (size_t i=0;i!=cloud.pts.size();i++){
+	  tmp_sg->add_associate_point(cloud.pts[i], cloud_u.pts[i], cloud_v.pts[i], cloud_w.pts[i]);
+	}
+	ToyPointCloud *pcloud_associate = tmp_sg->get_associated_pcloud();
+	if (pcloud_associate !=0) pcloud_associate->build_kdtree_index();
+	
+	// determine direction as topology ...
+	tmp_sg->is_shower_topology(true);
+	
+	if (tmp_sg->get_flag_dir()==1){
+	  temp_main_vertex = max_vtx;
+	}else if (tmp_sg->get_flag_dir()==-1){
+	  temp_main_vertex = min_vtx;
+	}else{
+	  if (max_vtx->get_fit_pt().z < min_vtx->get_fit_pt().z){ // pick the forward one ...
+	    temp_main_vertex = max_vtx;
+	  }else{
+	    temp_main_vertex = min_vtx;
+	  }
+	}
+	
+	//    std::cout << tmp_sg->get_id() << " " << tmp_sg->get_length()/units::cm << " " << tmp_sg->get_flag_shower_topology() << " " << tmp_sg->get_flag_dir() << " " << tmp_sg->is_dir_weak() << std::endl;
+	
+	delete tmp_v1;
+	delete tmp_v2;
+	delete tmp_sg;
+      }else{
+	if (max_vtx->get_fit_pt().z < min_vtx->get_fit_pt().z){ // pick the forward one ...
+	  temp_main_vertex = max_vtx;
+	}else{
+	  temp_main_vertex = min_vtx;
+	}
+      }
+    }else{
+      if (max_vtx->get_fit_pt().z < min_vtx->get_fit_pt().z){ // pick the forward one ...
+	temp_main_vertex = max_vtx;
+      }else{
+	temp_main_vertex = min_vtx;
+      }
+    }
+  }
+  
+
+
+  
+  return temp_main_vertex;
+}
 
 
 WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVertexSelection& vertex_candidates){
@@ -921,7 +1083,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
     
     // positive is good ...
     map_vertex_num[vtx] -= (n_proton_in - n_proton_out);   // proton information ...
-    //    std::cout << "A: " << map_vertex_num[vtx] << " " << n_proton_in << " " << n_proton_out << std::endl;
+    //std::cout << "A: " << map_vertex_num[vtx] << " " << n_proton_in << " " << n_proton_out << std::endl;
   }
 
   // whether the vertex is at beginning or not ...
@@ -952,7 +1114,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
     }
 
     
-    //    std::cout << "B: " << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(200*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
+    //std::cout << "B: " << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(200*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
   }
   
   // whether the vetex is at boundary or not ...
@@ -960,7 +1122,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
     WCPPID::ProtoVertex *vtx = *it;
     if (fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x))
       map_vertex_num[vtx] +=0.5; // good      // fiducial volume ..
-    //    std::cout << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
+    //std::cout << "C: " << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
   }
 
   for (auto it = vertex_candidates.begin(); it != vertex_candidates.end(); it++){
@@ -968,7 +1130,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
 
     double num_conflicts = calc_conflict_maps(vtx);
     map_vertex_num[vtx] -= num_conflicts/4.;
-    //    std::cout << "C: " << map_vertex_num[vtx] << " " << num_conflicts << " " << map_vertex_num[vtx] << std::endl;
+    //    std::cout << "D: " << map_vertex_num[vtx] << " " << num_conflicts << " " << map_vertex_num[vtx] << std::endl;
   }
   
   double max_val = -1e9; WCPPID::ProtoVertex* max_vertex = 0;

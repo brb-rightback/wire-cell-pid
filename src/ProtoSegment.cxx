@@ -66,8 +66,8 @@ WCPPID::ProtoSegment::~ProtoSegment(){
     delete pcloud_associated_steiner;
 }
 
-bool WCPPID::ProtoSegment::is_shower_topology(){
-  flag_shower_topology = false;
+bool WCPPID::ProtoSegment::is_shower_topology(bool tmp_val){
+  flag_shower_topology = tmp_val;
   flag_dir = 0;
   
   // look at the points ...
@@ -198,7 +198,8 @@ bool WCPPID::ProtoSegment::is_shower_topology(){
     //    std::cout << id << " " << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << std::endl;
     flag_shower_topology = true;
   }
-
+  //  std::cout << id << " " << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << std::endl;
+  
   
   if (flag_shower_topology){
     std::vector<std::tuple<int, int, double> > threshold_segs;

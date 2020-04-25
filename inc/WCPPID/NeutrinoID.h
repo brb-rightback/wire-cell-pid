@@ -207,12 +207,17 @@ namespace WCPPID{
       
     // get direction 
     TVector3 get_dir(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, double dis = 2*units::cm);
+    TVector3 get_dir(WCPPID::ProtoVertex *vtx, double dis_cut = 5*units::cm);
+    
     void determine_direction(WCPPID::PR3DCluster* temp_cluster);
     void determine_main_vertex(WCPPID::PR3DCluster* temp_cluster, bool flag_print = true);
+    std::tuple<bool, int, int> examine_main_vertex_candidate(WCPPID::ProtoVertex *vertex);
 
     void determine_overall_main_vertex();
 
-    void check_switch_main_cluster(WCPPID::ProtoVertex *temp_main_vertex, WCPPID::PR3DCluster *max_length_cluster,  std::set<WCPPID::PR3DCluster*>& skip_clusters );
+    void examine_main_vertices();
+    void check_switch_main_cluster(WCPPID::ProtoVertex *temp_main_vertex, WCPPID::PR3DCluster *max_length_cluster);
+    void check_switch_main_cluster();
     
     // if there is one in, fix the others ...
     void improve_maps_one_in(WCPPID::PR3DCluster* temp_cluster, bool flag_strong_check = true);
@@ -236,8 +241,10 @@ namespace WCPPID{
     void print_segs_info(WCPPID::ProtoVertex *temp_vertex);
     void print_segs_info(int temp_cluster_id, WCPPID::ProtoVertex *spec_vertex=0);
     
-    
+    WCPPID::ProtoVertex* compare_main_vertices_all_showers(WCPPID::ProtoVertexSelection& vertex_candidates, WCPPID::PR3DCluster *temp_cluster);
     WCPPID::ProtoVertex* compare_main_vertices(WCPPID::ProtoVertexSelection& vertex_candidates);
+    WCPPID::ProtoVertex* compare_main_vertices_global(WCPPID::ProtoVertexSelection& vertex_candidates);
+    std::pair<WCP::Point, TVector3> calc_PCA_main_axis(WCP::PointVector& points);
     
     bool examine_direction(WCPPID::ProtoVertex* vertex);
     
