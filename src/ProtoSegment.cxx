@@ -270,7 +270,7 @@ bool WCPPID::ProtoSegment::is_shower_topology(bool tmp_val){
       flag_dir = -1;
     }
     
-    //std::cout << id << " " << total_length1/units::cm << " " << total_length2/units::cm << " " << max_length1/units::cm << " " << max_length2/units::cm << std::endl;
+    //    std::cout << cluster_id << " " << id << " " << total_length1/units::cm << " " << total_length2/units::cm << " " << max_length1/units::cm << " " << max_length2/units::cm << " " << flag_dir << std::endl;
     
   }
   
