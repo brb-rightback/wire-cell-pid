@@ -162,40 +162,86 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
 }
 
 bool WCPPID::NeutrinoID::eliminate_short_vertex_activities(WCPPID::PR3DCluster *temp_cluster){
-  std::vector<WCPPID::ProtoSegment*> to_be_removed_segments;
-  std::vector<WCPPID::ProtoVertex*> to_be_removed_vertices;
-  
-  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
-    WCPPID::ProtoSegment *sg = it->first;
-    if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
-    WCPPID::ProtoVertex *v1 = *it->second.begin();
-    WCPPID::ProtoVertex *v2 = *it->second.rbegin();
-    if (map_vertex_segments[v1].size()==1 && map_vertex_segments[v2].size()>=3){
-      double length = sg->get_direct_length();
-      // std::cout << length/units::cm << std::endl;
-      if (length < 0.36*units::cm){
-	to_be_removed_segments.push_back(sg);
-	to_be_removed_vertices.push_back(v1);
-      }else if (length < 0.5*units::cm && map_vertex_segments[v2].size()>3){
-	to_be_removed_segments.push_back(sg);
-	to_be_removed_vertices.push_back(v1);
+
+  bool flag_continue = true;
+
+  while(flag_continue){
+    flag_continue = false;
+    std::set<WCPPID::ProtoSegment*> to_be_removed_segments;
+    std::set<WCPPID::ProtoVertex*> to_be_removed_vertices;
+    
+    for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+      WCPPID::ProtoSegment *sg = it->first;
+      if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+      WCPPID::ProtoVertex *v1 = *it->second.begin();
+      WCPPID::ProtoVertex *v2 = *it->second.rbegin();
+      
+      if (map_vertex_segments[v1].size()==1 && map_vertex_segments[v2].size()>=3){
+	double length = sg->get_direct_length();
+	// std::cout << length/units::cm << std::endl;
+	if (length < 0.36*units::cm){
+	  to_be_removed_segments.insert(sg);
+	  to_be_removed_vertices.insert(v1);
+	  flag_continue = true;
+	  break;
+	}else if (length < 0.5*units::cm && map_vertex_segments[v2].size()>3){
+	  to_be_removed_segments.insert(sg);
+	  to_be_removed_vertices.insert(v1);
+	  flag_continue = true;
+	  break;
+	}
+      }else if (map_vertex_segments[v1].size()>=3 && map_vertex_segments[v2].size()==1){
+	double length = sg->get_direct_length();
+	if (length < 0.36*units::cm){
+	  to_be_removed_segments.insert(sg);
+	  to_be_removed_vertices.insert(v2);
+	  flag_continue = true;
+	  break;
+	}else if (length < 0.5*units::cm && map_vertex_segments[v1].size()>3){
+	  to_be_removed_segments.insert(sg);
+	  to_be_removed_vertices.insert(v2);
+	  flag_continue = true;
+	  break;
+	}
       }
-    }else if (map_vertex_segments[v1].size()>=3 && map_vertex_segments[v2].size()==1){
-      double length = sg->get_direct_length();
-      if (length < 0.36*units::cm){
-	to_be_removed_segments.push_back(sg);
-	to_be_removed_vertices.push_back(v2);
-      }else if (length < 0.5*units::cm && map_vertex_segments[v1].size()>3){
-	to_be_removed_segments.push_back(sg);
-	to_be_removed_vertices.push_back(v2);
-      }
+
+      //  std::cout << sg->get_length()/units::cm << std::endl;
+      if (!flag_continue)
+	if (map_vertex_segments[v1].size()==1 && map_vertex_segments[v2].size()>1){
+	  for (auto it1 = map_vertex_segments[v2].begin(); it1 != map_vertex_segments[v2].end(); it1++){
+	    WCPPID::ProtoSegment *sg1 = *it1;
+	    if (sg1 == sg) continue;
+	    double dis = sg1->get_closest_point(v1->get_fit_pt()).first;
+	    //std::cout << dis/units::cm << std::endl;
+	    if (dis < 0.36*units::cm){
+	      to_be_removed_segments.insert(sg);
+	      to_be_removed_vertices.insert(v1);
+	      flag_continue = true;
+	      break;
+	    }
+	  }
+	}else if (map_vertex_segments[v2].size()==1 && map_vertex_segments[v1].size()>1){
+	  for (auto it1 = map_vertex_segments[v1].begin(); it1 != map_vertex_segments[v1].end(); it1++){
+	    WCPPID::ProtoSegment *sg1 = *it1;
+	    if (sg1 == sg) continue;
+	    double dis = sg1->get_closest_point(v2->get_fit_pt()).first;
+	    if (dis < 0.36*units::cm){
+	      to_be_removed_segments.insert(sg);
+	      to_be_removed_vertices.insert(v2);
+	      flag_continue = true;
+	      break;
+	    }
+	  }
+	}
+      if (flag_continue) break;
+    } // for loop of segment
+    
+    for (auto it = to_be_removed_segments.begin(); it!=to_be_removed_segments.end(); it++){
+      del_proto_segment(*it);
     }
-  }
-  for (auto it = to_be_removed_segments.begin(); it!=to_be_removed_segments.end(); it++){
-    del_proto_segment(*it);
-  }
-  for (auto it = to_be_removed_vertices.begin(); it!=to_be_removed_vertices.end(); it++){
-    del_proto_vertex(*it);
+    for (auto it = to_be_removed_vertices.begin(); it!=to_be_removed_vertices.end(); it++){
+      del_proto_vertex(*it);
+    }
   }
   
 }
