@@ -101,11 +101,61 @@ double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::WCShower *shower){
     }
   }
 
-
+  
   //  std::cout << sum_u_charge << " " << sum_v_charge << " " << sum_w_charge << std::endl;
+  double charge[3];
+  charge[0] = sum_u_charge;
+  charge[1] = sum_v_charge;
+  charge[2] = sum_w_charge;
+  double weight[3]={0.25,0.25,1};
 
-  kine_energy = (0.25 * sum_u_charge + 0.25*sum_v_charge + sum_w_charge)/1.5/recom_factor/fudge_factor*23.6/1e6 * units::MeV;
+  int min_index = 0, max_index = 0, med_index = 0;
+  double min_charge = 1e9, max_charge = -1e9;
+  for (int i=0;i!=3;i++){
+    if (min_charge > charge[i]){
+      min_charge = charge[i];
+      min_index = i;
+    }
+    if (max_charge < charge[i]){
+      max_charge = charge[i];
+      max_index = i;
+    }
+  }
+  if (min_index != max_index){
+    for (int i=0;i!=3;i++){
+      if (i==min_index) continue;
+      if (i==max_index) continue;
+      med_index = i;
+    }
+  }else{
+    min_index = 0;
+    med_index = 1;
+    max_index = 2;
+  }
+  //  std::cout << min_index << " " << med_index << " " << max_index << std::endl;
 
+  double min_asy = fabs(charge[med_index] - charge[min_index])/(charge[med_index] + charge[min_index]);
+  double max_asy = fabs(charge[med_index] - charge[max_index])/(charge[med_index] + charge[max_index]);
+  
+  //  std::cout << med_index << " " << min_index << " " << max_index << " " << charge[0] << " " << charge[1] << " " << charge[2] << " " << min_asy << " " << max_asy << " " << (0.25 * sum_u_charge + 0.25*sum_v_charge + sum_w_charge)/1.5 << std::endl;
+
+  // default case ...
+  double overall_charge = (weight[0]*charge[0] + weight[1]*charge[1]+weight[2]*charge[2])/(weight[0] + weight[1] + weight[2]);
+  
+  if (max_asy > 0.04){ // exclude the maximal charge ... 
+    // if (min_asy < 0.04){
+    overall_charge =(weight[med_index] * charge[med_index] + weight[min_index]*charge[min_index])/(weight[med_index] + weight[min_index]);
+    // }else{
+    // overall_charge = charge[med_index];
+    // }
+  }
+    
+
+  
+  
+  // default ...
+  kine_energy = overall_charge/recom_factor/fudge_factor*23.6/1e6 * units::MeV;
+  
   
   return kine_energy;
 }
@@ -165,7 +215,56 @@ double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::ProtoSegment *sg){
 
   //std::cout << sum_u_charge << " " << sum_v_charge << " " << sum_w_charge << std::endl;
 
-  kine_energy = (0.25 * sum_u_charge + 0.25*sum_v_charge + sum_w_charge)/1.5/recom_factor/fudge_factor*23.6/1e6 * units::MeV;
+   double charge[3];
+  charge[0] = sum_u_charge;
+  charge[1] = sum_v_charge;
+  charge[2] = sum_w_charge;
+  double weight[3]={0.25,0.25,1};
+
+  int min_index = 0, max_index = 0, med_index = 0;
+  double min_charge = 1e9, max_charge = -1e9;
+  for (int i=0;i!=3;i++){
+    if (min_charge > charge[i]){
+      min_charge = charge[i];
+      min_index = i;
+    }
+    if (max_charge < charge[i]){
+      max_charge = charge[i];
+      max_index = i;
+    }
+  }
+  if (min_index != max_index){
+    for (int i=0;i!=3;i++){
+      if (i==min_index) continue;
+      if (i==max_index) continue;
+      med_index = i;
+    }
+  }else{
+    min_index = 0;
+    med_index = 1;
+    max_index = 2;
+  }
+  //  std::cout << min_index << " " << med_index << " " << max_index << std::endl;
+
+  double min_asy = fabs(charge[med_index] - charge[min_index])/(charge[med_index] + charge[min_index]);
+  double max_asy = fabs(charge[med_index] - charge[max_index])/(charge[med_index] + charge[max_index]);
+  
+  //  std::cout << med_index << " " << min_index << " " << max_index << " " << charge[0] << " " << charge[1] << " " << charge[2] << " " << min_asy << " " << max_asy << " " << (0.25 * sum_u_charge + 0.25*sum_v_charge + sum_w_charge)/1.5 << std::endl;
+
+  // default case ...
+  double overall_charge = (weight[0]*charge[0] + weight[1]*charge[1]+weight[2]*charge[2])/(weight[0] + weight[1] + weight[2]);
+  
+  if (max_asy > 0.04){ // exclude the maximal charge ... 
+    // if (min_asy < 0.04){
+    overall_charge =(weight[med_index] * charge[med_index] + weight[min_index]*charge[min_index])/(weight[med_index] + weight[min_index]);
+    // }else{
+    // overall_charge = charge[med_index];
+    // }
+  }
+
+
+  
+  kine_energy = overall_charge/recom_factor/fudge_factor*23.6/1e6 * units::MeV;
   
 
   

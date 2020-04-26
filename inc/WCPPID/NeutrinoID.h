@@ -283,6 +283,7 @@ namespace WCPPID{
     // holder for now ...
     void shower_clustering_in_other_clusters(bool flag_save = true);
     void id_pi0_with_vertex();
+    void id_pi0_without_vertex();
     
     // establish map
     //    void establish_cluster_segment_maps();

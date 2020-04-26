@@ -34,6 +34,16 @@ WCPPID::WCShower::~WCShower(){
   if (pcloud_associated != (ToyPointCloud*)0) delete pcloud_associated;
 }
 
+std::pair<double, WCP::Point> WCPPID::WCShower::get_closest_point(WCP::Point& p){
+  if (pcloud_fit != (ToyPointCloud*)0) 
+    return pcloud_fit->get_closest_point(p);
+  else{
+    WCP::Point p1(0,0,0);
+    return std::make_pair(-1,p1);
+  }
+}
+
+
 void WCPPID::WCShower::rebuild_point_clouds(){
   if (pcloud_fit != (ToyPointCloud*)0) delete pcloud_fit;
   if (pcloud_associated != (ToyPointCloud*)0) delete pcloud_associated;
@@ -158,13 +168,26 @@ void WCPPID::WCShower::calculate_kinematics(){
 	}
       }
     }
-    
-    if (start_segment->get_flag_dir()==1){
-      start_point = start_segment->get_point_vec().front();
-      end_point = start_segment->get_point_vec().back();
-    }else if (start_segment->get_flag_dir()==-1){
-      start_point = start_segment->get_point_vec().back();
-      end_point = start_segment->get_point_vec().front();
+    if (start_connection_type ==1|| pcloud_fit == 0 ){
+      if (start_segment->get_flag_dir()==1 ){
+	start_point = start_segment->get_point_vec().front();
+	end_point = start_segment->get_point_vec().back();
+      }else if (start_segment->get_flag_dir()==-1){
+	start_point = start_segment->get_point_vec().back();
+	end_point = start_segment->get_point_vec().front();
+      }
+    }else{
+      start_point = get_closest_point(start_vertex->get_fit_pt()).second;
+      double max_dis = 0; Point max_point;
+      for (auto it = map_vtx_segs.begin(); it != map_vtx_segs.end(); it++){
+	WCPPID::ProtoVertex *vtx = it->first;
+	double dis = sqrt(pow(start_point.x - vtx->get_fit_pt().x,2) + pow(start_point.y - vtx->get_fit_pt().y,2) + pow(start_point.z - vtx->get_fit_pt().z,2));
+	if (dis > max_dis){
+	  max_dis = dis;
+	  max_point = vtx->get_fit_pt();
+	}
+      } // far of the vertex ...
+      end_point = max_point;
     }
     // initial direction ...
     if (start_connection_type == 1){
@@ -188,10 +211,15 @@ void WCPPID::WCShower::calculate_kinematics(){
       // single track
       particle_type = start_segment->get_particle_type();
       flag_shower = start_segment->get_flag_shower();
-      if (start_segment->get_flag_dir()==1){
-	start_point = start_segment->get_point_vec().front();
-      }else if (start_segment->get_flag_dir()==-1){
-	start_point = start_segment->get_point_vec().back();
+
+      if (start_connection_type==1 || pcloud_fit == 0){
+	if (start_segment->get_flag_dir()==1){
+	  start_point = start_segment->get_point_vec().front();
+	}else if (start_segment->get_flag_dir()==-1){
+	  start_point = start_segment->get_point_vec().back();
+	}
+      }else{
+	start_point = get_closest_point(start_vertex->get_fit_pt()).second;
       }
       // initial direction ...
       if (start_connection_type == 1){
@@ -251,10 +279,14 @@ void WCPPID::WCShower::calculate_kinematics(){
       // multiple tracks ...
       particle_type = start_segment->get_particle_type();
       flag_shower = start_segment->get_flag_shower();
-      if (start_segment->get_flag_dir()==1){
-	start_point = start_segment->get_point_vec().front();
-      }else if (start_segment->get_flag_dir()==-1){
-	start_point = start_segment->get_point_vec().back();
+      if (start_connection_type==1|| pcloud_fit == 0){
+	if (start_segment->get_flag_dir()==1){
+	  start_point = start_segment->get_point_vec().front();
+	}else if (start_segment->get_flag_dir()==-1){
+	  start_point = start_segment->get_point_vec().back();
+	}
+      }else{
+	start_point = get_closest_point(start_vertex->get_fit_pt()).second;
       }
        
       // initial direction ...

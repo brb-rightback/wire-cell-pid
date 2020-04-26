@@ -18,6 +18,8 @@ namespace WCPPID{
     std::pair<ProtoVertex*, int> get_start_vertex(){return std::make_pair(start_vertex, start_connection_type);};
     ProtoSegment* get_start_segment(){return start_segment;}
     
+    std::pair<double, WCP::Point> get_closest_point(WCP::Point& p);
+      
     // provide internal information to outside structure ...
     void fill_maps(std::map<WCPPID::ProtoVertex*, WCPPID::WCShower* >& map_vertex_in_shower, std::map<WCPPID::ProtoSegment*, WCPPID::WCShower*>& map_segment_in_shower);
     void fill_sets( std::set<WCPPID::ProtoVertex* >& used_vertices,  std::set<WCPPID::ProtoSegment* >& used_segments, bool flag_exclude_start_segment = true);
