@@ -1210,7 +1210,7 @@ void WCPPID::NeutrinoID::fill_skeleton_info_magnify(int mother_cluster_id, WCPPI
 	ptree.reco_pt = vtx->get_pt();    
 	ptree.reco_reduced_chi2 = vtx->get_reduced_chi2();
 	ptree.reco_rr = -1; // no residual range
-	
+
 	T->Fill();
       }
     }
@@ -1325,8 +1325,9 @@ void WCPPID::NeutrinoID::fill_skeleton_info(int mother_cluster_id, WCPPID::WCPoi
       ptree.reco_pw = vtx->get_pw();
       ptree.reco_pt = vtx->get_pt();    
       ptree.reco_reduced_chi2 = vtx->get_reduced_chi2();
-            
-      T->Fill();
+
+      if ( vtx->get_dQ()!=0)
+	T->Fill();
     }
   }
   
@@ -1355,8 +1356,9 @@ void WCPPID::NeutrinoID::fill_skeleton_info(int mother_cluster_id, WCPPID::WCPoi
 	ptree.reco_pw = vtx->get_pw();
 	ptree.reco_pt = vtx->get_pt();    
 	ptree.reco_reduced_chi2 = vtx->get_reduced_chi2();
-      
-	T->Fill();
+
+	if ( vtx->get_dQ()!=0)
+	  T->Fill();
       }
     }
   }

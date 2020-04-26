@@ -223,6 +223,8 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
       
       // hack main vertex 
       main_vertex->set_fit_pt(vtx_point);
+      main_vertex->set_dQ(0);
+      
       //if (shower_1->get_start_vertex().first != vtx){
       shower_1->set_start_vertex(main_vertex, 2);
       shower_1->calculate_kinematics();
