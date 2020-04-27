@@ -333,10 +333,9 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_global(WCPPID::Pr
 	map_vertex_num[vtx] += 1/4.; // has a clear proton ...
       else if (sg->get_flag_dir()!=0 && (!sg->get_flag_shower()))
 	map_vertex_num[vtx] += 1/4./2.; // has a direction with track ..
-      
     }
-    
-    //std::cout << "A: " << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(200*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
+    if (vtx->get_cluster_id() == main_cluster->get_cluster_id()) map_vertex_num[vtx] += 0.25;
+    //    std::cout << "A: " << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(200*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
   }
   
   // whether the vetex is at boundary or not ...
@@ -344,7 +343,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_global(WCPPID::Pr
     WCPPID::ProtoVertex *vtx = *it;
     if (fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x))
       map_vertex_num[vtx] +=0.5; // good      // fiducial volume ..
-    //std::cout << "B: " << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
+    //    std::cout << "B: " << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
   }
 
   for (auto it = vertex_candidates.begin(); it != vertex_candidates.end(); it++){
@@ -352,7 +351,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_global(WCPPID::Pr
 
     double num_conflicts = calc_conflict_maps(vtx);
     map_vertex_num[vtx] -= num_conflicts/4.;
-    //  std::cout << "C: " << map_vertex_num[vtx] << " " << num_conflicts << " " << map_vertex_num[vtx] << std::endl;
+    //    std::cout << "C: " << map_vertex_num[vtx] << " " << num_conflicts << " " << map_vertex_num[vtx] << std::endl;
   }
 
 
@@ -375,7 +374,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_global(WCPPID::Pr
       }else if (dir.Angle(dir1)/3.1415926*180.<30){
 	map_vertex_num[vtx] += 0.25/2.;
       }
-      //      std::cout << vtx->get_cluster_id() << " " << dir.Angle(dir1)/3.1415926*180. << std::endl;
+      //      std::cout << vtx->get_cluster_id() << " " << map_vertex_num[vtx] << " " << dir.Angle(dir1)/3.1415926*180. << std::endl;
     }
   }
   

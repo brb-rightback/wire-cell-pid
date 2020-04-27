@@ -833,8 +833,9 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   
 
   if (flag_save_only_showers){
-    std::cout << "Determining the main vertex with all showers: " << main_vertex_candidates.size() << " in cluster " << main_vertex_candidates.front()->get_cluster_id() << std::endl;
     if (main_vertex_candidates.size()>0){
+      if (flag_print)
+	std::cout << "Determining the main vertex with all showers: " << main_vertex_candidates.size() << " in cluster " << main_vertex_candidates.front()->get_cluster_id() << std::endl;
       main_vertex = compare_main_vertices_all_showers(main_vertex_candidates, temp_cluster);
     }else{
       return;
@@ -847,7 +848,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
 	for (auto it1 = map_vertex_segments[*it].begin(); it1!=map_vertex_segments[*it].end(); it1++){
 	  std::cout << (*it1)->get_id() << ", ";
 	}
-	std::cout << std::endl;
+	std::cout << " in cluster " << (*it)->get_cluster_id() << std::endl;
       }
     }
     
