@@ -178,7 +178,7 @@ bool WCPPID::NeutrinoID::eliminate_short_vertex_activities(WCPPID::PR3DCluster *
       
       if (map_vertex_segments[v1].size()==1 && map_vertex_segments[v2].size()>=3){
 	double length = sg->get_direct_length();
-	// std::cout << length/units::cm << std::endl;
+	//	std::cout << sg->get_id() << " " << length/units::cm << std::endl;
 	if (length < 0.36*units::cm){
 	  to_be_removed_segments.insert(sg);
 	  to_be_removed_vertices.insert(v1);
@@ -192,6 +192,7 @@ bool WCPPID::NeutrinoID::eliminate_short_vertex_activities(WCPPID::PR3DCluster *
 	}
       }else if (map_vertex_segments[v1].size()>=3 && map_vertex_segments[v2].size()==1){
 	double length = sg->get_direct_length();
+	//	std::cout << sg->get_id() << " " << length/units::cm << std::endl;
 	if (length < 0.36*units::cm){
 	  to_be_removed_segments.insert(sg);
 	  to_be_removed_vertices.insert(v2);
@@ -212,8 +213,13 @@ bool WCPPID::NeutrinoID::eliminate_short_vertex_activities(WCPPID::PR3DCluster *
 	    WCPPID::ProtoSegment *sg1 = *it1;
 	    if (sg1 == sg) continue;
 	    double dis = sg1->get_closest_point(v1->get_fit_pt()).first;
-	    //std::cout << dis/units::cm << std::endl;
+	    // std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " " << dis/units::cm << std::endl;
 	    if (dis < 0.36*units::cm){
+	      to_be_removed_segments.insert(sg);
+	      to_be_removed_vertices.insert(v1);
+	      flag_continue = true;
+	      break;
+	    }else if (v2 == main_vertex && dis < 0.45*units::cm && sg->get_length() < 0.45*units::cm){
 	      to_be_removed_segments.insert(sg);
 	      to_be_removed_vertices.insert(v1);
 	      flag_continue = true;
@@ -225,7 +231,13 @@ bool WCPPID::NeutrinoID::eliminate_short_vertex_activities(WCPPID::PR3DCluster *
 	    WCPPID::ProtoSegment *sg1 = *it1;
 	    if (sg1 == sg) continue;
 	    double dis = sg1->get_closest_point(v2->get_fit_pt()).first;
+	    // std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " " << dis/units::cm << std::endl;
 	    if (dis < 0.36*units::cm){
+	      to_be_removed_segments.insert(sg);
+	      to_be_removed_vertices.insert(v2);
+	      flag_continue = true;
+	      break;
+	    }else if (v1 == main_vertex && dis < 0.45*units::cm && sg->get_length() < 0.45*units::cm){
 	      to_be_removed_segments.insert(sg);
 	      to_be_removed_vertices.insert(v2);
 	      flag_continue = true;

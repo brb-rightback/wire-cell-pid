@@ -84,6 +84,7 @@ namespace WCPPID{
     //
     bool is_shower_trajectory(double step_size =10.*units::cm);
     bool is_shower_topology(bool val = false);
+    bool determine_shower_direction();
     
     bool get_flag_shower();
     void set_flag_shower_trajectory(bool val){flag_shower_trajectory = val;};

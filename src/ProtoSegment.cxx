@@ -66,6 +66,234 @@ WCPPID::ProtoSegment::~ProtoSegment(){
     delete pcloud_associated_steiner;
 }
 
+
+bool WCPPID::ProtoSegment::determine_shower_direction(){
+  flag_dir = 0;
+  // look at the points ...
+  std::vector<PointVector > local_points_vec(fit_pt_vec.size());
+  std::vector<std::tuple<double, double, double> > vec_rms_vals(fit_pt_vec.size(), std::make_tuple(0,0,0));
+  std::vector<double> vec_dQ_dx(fit_pt_vec.size(), 0);
+  std::vector<TVector3> vec_dir(fit_pt_vec.size());
+  
+  if (pcloud_associated == 0 ) return false;
+ 
+  WCP::WCPointCloud<double>& cloud = pcloud_associated->get_cloud();
+
+  for (size_t i = 0; i!= cloud.pts.size(); i++){
+    Point test_p(cloud.pts.at(i).x, cloud.pts.at(i).y, cloud.pts.at(i).z);
+    std::vector<std::pair<size_t,double>> results = pcloud_fit->get_closest_index(test_p,1);
+    local_points_vec.at(results.front().first).push_back(test_p);
+  }
+
+  TVector3 drift_dir(1,0,0); // drift direction
+  
+  for (size_t i=0;i!=local_points_vec.size();i++){
+    TVector3 dir_1, dir_2, dir_3;
+    Point v1(0,0,0);
+    for (size_t j=1;j!=3;j++){
+      if (i+j<local_points_vec.size()){
+	v1.x += fit_pt_vec.at(i+j).x - fit_pt_vec.at(i).x;
+	v1.y += fit_pt_vec.at(i+j).y - fit_pt_vec.at(i).y;
+	v1.z += fit_pt_vec.at(i+j).z - fit_pt_vec.at(i).z;
+      }
+      if (i>=j){
+	v1.x += fit_pt_vec.at(i).x - fit_pt_vec.at(i-j).x;
+	v1.y += fit_pt_vec.at(i).y - fit_pt_vec.at(i-j).y;
+	v1.z += fit_pt_vec.at(i).z - fit_pt_vec.at(i-j).z;
+      }
+    }
+    dir_1.SetXYZ(v1.x, v1.y, v1.z);
+    dir_1 = dir_1.Unit();
+    vec_dir.at(i) = dir_1;
+    
+    
+    if (dir_1.Angle(drift_dir)/3.1415926*180. < 7.5){
+      dir_1.SetXYZ(1,0,0);
+      dir_2.SetXYZ(0,1,0);
+      dir_3.SetXYZ(0,0,1);
+    }else{
+      dir_2 = drift_dir.Cross(dir_1);
+      dir_2 = dir_2.Unit();
+      dir_3 = dir_1.Cross(dir_2);
+    }
+    
+    std::vector<std::tuple<double, double, double> > vec_projs;
+    for (size_t j=0;j!=local_points_vec.at(i).size();j++){
+      double proj_1 = dir_1.X() * local_points_vec.at(i).at(j).x + dir_1.Y() * local_points_vec.at(i).at(j).y + dir_1.Z() * local_points_vec.at(i).at(j).z;
+      double proj_2 = dir_2.X() * local_points_vec.at(i).at(j).x + dir_2.Y() * local_points_vec.at(i).at(j).y + dir_2.Z() * local_points_vec.at(i).at(j).z;
+      double proj_3 = dir_3.X() * local_points_vec.at(i).at(j).x + dir_3.Y() * local_points_vec.at(i).at(j).y + dir_3.Z() * local_points_vec.at(i).at(j).z;
+      vec_projs.push_back(std::make_tuple(proj_1, proj_2, proj_3));
+    }
+    std::tuple<double, double, double> means = std::make_tuple(0,0,0);
+    int ncount = local_points_vec.at(i).size();
+    if (ncount >1){
+      std::get<0>(means) = dir_1.X() * fit_pt_vec.at(i).x + dir_1.Y() * fit_pt_vec.at(i).y + dir_1.Z() * fit_pt_vec.at(i).z;
+      std::get<1>(means) = dir_2.X() * fit_pt_vec.at(i).x + dir_2.Y() * fit_pt_vec.at(i).y + dir_2.Z() * fit_pt_vec.at(i).z;
+      std::get<2>(means) = dir_3.X() * fit_pt_vec.at(i).x + dir_3.Y() * fit_pt_vec.at(i).y + dir_3.Z() * fit_pt_vec.at(i).z;
+      
+      for (size_t j=0;j!=local_points_vec.at(i).size();j++){
+	std::get<0>(vec_rms_vals.at(i)) += pow(std::get<0>(vec_projs.at(j)) - std::get<0>(means),2);
+	std::get<1>(vec_rms_vals.at(i)) += pow(std::get<1>(vec_projs.at(j)) - std::get<1>(means),2);
+	std::get<2>(vec_rms_vals.at(i)) += pow(std::get<2>(vec_projs.at(j)) - std::get<2>(means),2);
+      }
+
+      std::get<0>(vec_rms_vals.at(i)) = sqrt(std::get<0>(vec_rms_vals.at(i))*1./(ncount));
+      std::get<1>(vec_rms_vals.at(i)) = sqrt(std::get<1>(vec_rms_vals.at(i))*1./(ncount));
+      std::get<2>(vec_rms_vals.at(i)) = sqrt(std::get<2>(vec_rms_vals.at(i))*1./(ncount));
+    }
+    vec_dQ_dx.at(i) = dQ_vec.at(i)/(dx_vec.at(i)+1e-9)/43e3*units::cm;
+  }
+
+  double max_spread = 0;
+  double large_spread_length = 0;
+  double total_effective_length = 0;
+
+  double max_cont_length = 0;
+  double max_cont_weighted_length = 0;
+  
+  double cont_length = 0;
+  double cont_weighted_length = 0;
+
+  bool flag_prev = false;
+  double total_length;
+  for (size_t i=0;i+1<local_points_vec.size();i++){
+    double length = sqrt(pow(fit_pt_vec.at(i+1).x - fit_pt_vec.at(i).x,2) + pow(fit_pt_vec.at(i+1).y - fit_pt_vec.at(i).y,2) + pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
+    total_length += length;
+    if (std::get<2>(vec_rms_vals.at(i))!=0){
+      total_effective_length += length;
+      if (std::get<2>(vec_rms_vals.at(i)) > 0.4*units::cm) {
+	large_spread_length += length;
+
+	cont_length += length;
+	cont_weighted_length += length * std::get<2>(vec_rms_vals.at(i));
+	flag_prev = true;
+      }else{
+	if (flag_prev && cont_length > max_cont_length){
+	  max_cont_length = cont_length;
+	  max_cont_weighted_length = cont_weighted_length;
+	}
+	cont_length = 0;
+	cont_weighted_length = 0;
+	flag_prev = false;
+      }
+      if (std::get<2>(vec_rms_vals.at(i)) > max_spread) max_spread = std::get<2>(vec_rms_vals.at(i));
+    }    
+  }
+  
+
+  if (max_spread > 0.7*units::cm && large_spread_length > 0.2 * total_effective_length && total_effective_length > 3*units::cm && total_effective_length < 15*units::cm && ( large_spread_length > 2.7*units::cm || large_spread_length > 0.35 * total_effective_length)
+      || max_spread > 0.8*units::cm && large_spread_length > 0.3 * total_effective_length && total_effective_length >= 15*units::cm
+      || max_spread > 1.0*units::cm && large_spread_length > 0.4 * total_effective_length) {
+    TVector3 main_dir = cal_dir_3vector(fit_pt_vec.front(),6*units::cm);
+    
+    std::vector<std::tuple<int, int, double> > threshold_segs;
+    for(size_t i=0;i!=vec_dQ_dx.size(); i++){
+      //    std::cout << i << " A: " << main_dir.Angle(vec_dir.at(i))/3.1415926*180. << std::endl;
+      if (threshold_segs.size()==0 && std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 && main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30){
+	threshold_segs.push_back(std::make_tuple(i,i,std::get<2>(vec_rms_vals.at(i))));
+      }else if (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4&& main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30){
+	if (i == std::get<1>(threshold_segs.back())+1 && std::get<2>(threshold_segs.back()) < std::get<2>(vec_rms_vals.at(i)) ){
+	  std::get<1>(threshold_segs.back()) = i;
+	  std::get<2>(threshold_segs.back()) = std::get<2>(vec_rms_vals.at(i));
+	}else{
+	  if (i!=std::get<1>(threshold_segs.back())+1)
+	    threshold_segs.push_back(std::make_tuple(i,i,std::get<2>(vec_rms_vals.at(i))));
+	}
+      }
+      // loop ...
+    }
+    
+    double total_length1 = 0, max_length1 = 0;
+    for (auto it = threshold_segs.begin(); it!= threshold_segs.end(); it++){
+      int start_n = std::get<0>(*it);
+      if (start_n >0) start_n --;
+      int end_n = std::get<1>(*it);
+      double tmp_length = 0;
+      for (int i=start_n; i!=end_n;i++){
+	tmp_length += sqrt(pow(fit_pt_vec.at(i+1).x - fit_pt_vec.at(i).x,2)+pow(fit_pt_vec.at(i+1).y - fit_pt_vec.at(i).y,2)+pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
+      }
+      total_length1 += tmp_length;
+      if (tmp_length > max_length1) max_length1 = tmp_length;
+      //      std::cout << id << " A: " << start_n << " " << end_n << " " << tmp_length/units::cm << std::endl;
+    }
+    
+    main_dir = cal_dir_3vector(fit_pt_vec.back(),6*units::cm);
+    
+    threshold_segs.clear();
+    for(int i=vec_dQ_dx.size()-1;i>=0; i--){
+      // std::cout << "B: " << 180-main_dir.Angle(vec_dir.at(i))/3.1415926*180. << std::endl;
+      if (threshold_segs.size()==0 && std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 && 180-main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30){
+	threshold_segs.push_back(std::make_tuple(i,i,std::get<2>(vec_rms_vals.at(i))));
+      }else if (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 && 180-main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30){
+	if (i == std::get<1>(threshold_segs.back())-1 && std::get<2>(threshold_segs.back()) < std::get<2>(vec_rms_vals.at(i)) ){
+	  std::get<1>(threshold_segs.back()) = i;
+	  std::get<2>(threshold_segs.back()) = std::get<2>(vec_rms_vals.at(i));
+	}else{
+	  if (i!=std::get<1>(threshold_segs.back())-1)
+	    threshold_segs.push_back(std::make_tuple(i,i,std::get<2>(vec_rms_vals.at(i))));
+	}
+      }
+      // loop ...
+    }
+    
+    
+    double total_length2 = 0, max_length2 = 0;
+    for (auto it = threshold_segs.begin(); it!= threshold_segs.end(); it++){
+      int start_n = std::get<0>(*it);
+      if (start_n <fit_pt_vec.size()-1) start_n ++;
+      int end_n = std::get<1>(*it);
+      double tmp_length = 0;
+      for (int i=start_n; i!=end_n;i--){
+	tmp_length+= sqrt(pow(fit_pt_vec.at(i-1).x - fit_pt_vec.at(i).x,2)+pow(fit_pt_vec.at(i-1).y - fit_pt_vec.at(i).y,2)+pow(fit_pt_vec.at(i-1).z - fit_pt_vec.at(i).z,2));
+      }
+      total_length2 += tmp_length;
+      if (tmp_length > max_length2) max_length2 = tmp_length;
+      //       std::cout << id << " B: " << start_n << " " << end_n << " " << tmp_length/units::cm << std::endl;
+    }
+    
+    if (total_length1 + max_length1 > 1.1*(total_length2 + max_length2)){
+      flag_dir = 1;
+    }else if (1.1*(total_length1 + max_length1) < total_length2 + max_length2){
+      flag_dir = -1;
+    }
+    
+    // std::cout << cluster_id << " " << id << " " << total_length1/units::cm << " " << total_length2/units::cm << " " << max_length1/units::cm << " " << max_length2/units::cm << " " << flag_dir << std::endl;
+  }else{
+    if (total_length < 5*units::cm){
+      if (!is_shower_trajectory())
+	determine_dir_track(0, fit_pt_vec.size());
+    }else{
+      
+      TVector3 main_dir = cal_dir_3vector(fit_pt_vec.front(),6*units::cm);
+      Int_t ncount_front = 0, ncount_back = 0;
+      for(size_t i=0;i!=vec_dQ_dx.size(); i++){
+	if (main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30) ncount_front ++;
+	  //	std::cout << i << " A: " << main_dir.Angle(vec_dir.at(i))/3.1415926*180. << std::endl;
+      }
+      main_dir = cal_dir_3vector(fit_pt_vec.back(),6*units::cm);
+      for(int i=vec_dQ_dx.size()-1;i>=0; i--){
+	if (180-main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30) ncount_back++;
+	//	std::cout << "B: " << 180-main_dir.Angle(vec_dir.at(i))/3.1415926*180. << std::endl;
+      }
+      if (1.2 * ncount_front  < ncount_back){
+	flag_dir = -1;
+      }else if (ncount_front > 1.2 * ncount_back){
+	flag_dir = 1;
+      }
+      //      std::cout << ncount_front << " " << ncount_back << std::endl;
+       
+    }
+  }
+  
+  if (flag_dir !=0) return true;
+  else return false;
+  
+  
+    
+   
+}
+
+
 bool WCPPID::ProtoSegment::is_shower_topology(bool tmp_val){
   flag_shower_topology = tmp_val;
   flag_dir = 0;
@@ -229,7 +457,7 @@ bool WCPPID::ProtoSegment::is_shower_topology(bool tmp_val){
       }
       total_length1 += tmp_length;
       if (tmp_length > max_length1) max_length1 = tmp_length;
-      //       std::cout << id << " " << start_n << " " << end_n << " " << tmp_length/units::cm << std::endl;
+      //      std::cout << id << " A: " << start_n << " " << end_n << " " << tmp_length/units::cm << std::endl;
     }
 
 
@@ -261,7 +489,7 @@ bool WCPPID::ProtoSegment::is_shower_topology(bool tmp_val){
        }
        total_length2 += tmp_length;
        if (tmp_length > max_length2) max_length2 = tmp_length;
-       //std::cout << id << " " << start_n << " " << end_n << " " << tmp_length/units::cm << std::endl;
+       //       std::cout << id << " B: " << start_n << " " << end_n << " " << tmp_length/units::cm << std::endl;
     }
 
     if (total_length1 + max_length1 > 1.1*(total_length2 + max_length2)){

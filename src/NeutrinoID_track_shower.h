@@ -833,7 +833,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   
 
   if (flag_save_only_showers){
-    std::cout << "Determining the main vertex with all showers: " << main_vertex_candidates.size() << std::endl;
+    std::cout << "Determining the main vertex with all showers: " << main_vertex_candidates.size() << " in cluster " << main_vertex_candidates.front()->get_cluster_id() << std::endl;
     if (main_vertex_candidates.size()>0){
       main_vertex = compare_main_vertices_all_showers(main_vertex_candidates, temp_cluster);
     }else{
@@ -1001,7 +1001,9 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_all_showers(WCPPI
 	if (pcloud_associate !=0) pcloud_associate->build_kdtree_index();
 	
 	// determine direction as topology ...
-	tmp_sg->is_shower_topology(true);
+	tmp_sg->determine_shower_direction();
+
+	
 	
 	if (tmp_sg->get_flag_dir()==1){
 	  temp_main_vertex = max_vtx;
