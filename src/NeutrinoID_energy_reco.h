@@ -42,6 +42,40 @@
 
 
 double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::WCShower *shower){
+
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  double time_slice_width = mp.get_ts_width();
+  int time_offset = mp.get_time_offset();
+  int nrebin = mp.get_nrebin();
+  double pitch_u = mp.get_pitch_u();
+  double pitch_v = mp.get_pitch_v();
+  double pitch_w = mp.get_pitch_w();
+  double first_u_dis = mp.get_first_u_dis();
+  double first_v_dis = mp.get_first_v_dis();
+  double first_w_dis = mp.get_first_w_dis();
+  double angle_u = mp.get_angle_u();
+  double angle_v = mp.get_angle_v();
+  double angle_w = mp.get_angle_w();
+  //  convert Z to W ... 
+  double slope_zw = 1./pitch_w * cos(angle_w);
+  double slope_yw = 1./pitch_w * sin(angle_w);
+  
+  double slope_yu = -1./pitch_u * sin(angle_u);
+  double slope_zu = 1./pitch_u * cos(angle_u);
+  double slope_yv = -1./pitch_v * sin(angle_v);
+  double slope_zv = 1./pitch_v * cos(angle_v);
+  //convert Y,Z to U,V
+  double offset_w = -first_w_dis/pitch_w + 0.5;
+  double offset_u = -first_u_dis/pitch_u + 0.5;
+  double offset_v = -first_v_dis/pitch_v + 0.5;
+  
+  double first_t_dis = main_cluster->get_point_cloud()->get_cloud().pts[0].mcell->GetTimeSlice()*time_slice_width - main_cluster->get_point_cloud()->get_cloud().pts[0].x;
+  double slope_xt = 1./time_slice_width;
+  double offset_t =  first_t_dis/time_slice_width + 0.5;
+
+
+
+  
   double kine_energy = 0;
   
   // to be improved ...
@@ -67,24 +101,58 @@ double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::WCShower *shower){
   for (auto it = charge_2d_u.begin(); it!= charge_2d_u.end(); it++){
     std::pair<double, double> p2d = ct_point_cloud->convert_time_ch_2Dpoint(it->first.first, it->first.second, 0);
     double dis = 1e9;
-    if (pcloud1!=0) dis = pcloud1->get_closest_2d_dis(p2d.first, p2d.second, 0);
-    if (dis < 0.6*units::cm) sum_u_charge += it->second.first;
-    else{
+    int point_index = -1;
+    if (pcloud1!=0) {
+      auto results = pcloud1->get_closest_2d_dis_index(p2d.first, p2d.second, 0);
+      dis = results.first;
+      point_index = results.second;
+    }
+    if (dis < 0.6*units::cm) {
+      Point test_p(pcloud1->get_cloud().pts[point_index].x, pcloud1->get_cloud().pts[point_index].y, pcloud1->get_cloud().pts[point_index].z);
+      double factor = cal_corr_factor(test_p, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw);
+      sum_u_charge += it->second.first*factor;
+    }else{
       dis = 1e9;
-      if (pcloud2!=0) dis = pcloud2->get_closest_2d_dis(p2d.first, p2d.second, 0);
-      if (dis < 0.6*units::cm) sum_u_charge += it->second.first;
+      point_index = -1;
+      if (pcloud2!=0) {
+	auto results = pcloud2->get_closest_2d_dis_index(p2d.first, p2d.second, 0);
+	dis = results.first;
+	point_index = results.second;
+      }
+      if (dis < 0.6*units::cm) {
+	Point test_p(pcloud2->get_cloud().pts[point_index].x, pcloud2->get_cloud().pts[point_index].y, pcloud2->get_cloud().pts[point_index].z);
+	double factor = cal_corr_factor(test_p, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw);
+	sum_u_charge += it->second.first*factor;
+      }
     }
   }
 
   for (auto it = charge_2d_v.begin(); it!= charge_2d_v.end(); it++){
     std::pair<double, double> p2d = ct_point_cloud->convert_time_ch_2Dpoint(it->first.first, it->first.second, 1);
     double dis = 1e9;
-    if (pcloud1!=0) dis = pcloud1->get_closest_2d_dis(p2d.first, p2d.second, 1);
-    if (dis < 0.6*units::cm) sum_v_charge += it->second.first;
-    else{
+    int point_index = -1;
+    if (pcloud1!=0) {
+      auto results = pcloud1->get_closest_2d_dis_index(p2d.first, p2d.second, 1);
+      dis = results.first;
+      point_index = results.second;
+    }
+    if (dis < 0.6*units::cm) {
+      Point test_p(pcloud1->get_cloud().pts[point_index].x, pcloud1->get_cloud().pts[point_index].y, pcloud1->get_cloud().pts[point_index].z);
+      double factor = cal_corr_factor(test_p, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw);
+      sum_v_charge += it->second.first*factor;
+    }else{
       dis = 1e9;
-      if (pcloud2!=0) dis = pcloud2->get_closest_2d_dis(p2d.first, p2d.second, 1);
-      if (dis < 0.6*units::cm) sum_v_charge += it->second.first;
+      point_index = -1;
+      if (pcloud2!=0) {
+	auto results = pcloud2->get_closest_2d_dis_index(p2d.first, p2d.second, 1);
+	dis = results.first;
+	point_index = results.second;
+      }
+      if (dis < 0.6*units::cm) {
+	Point test_p(pcloud2->get_cloud().pts[point_index].x, pcloud2->get_cloud().pts[point_index].y, pcloud2->get_cloud().pts[point_index].z);
+	double factor = cal_corr_factor(test_p, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw);
+	sum_v_charge += it->second.first * factor;
+      }
     }
   }
 
@@ -92,12 +160,29 @@ double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::WCShower *shower){
   for (auto it = charge_2d_w.begin(); it!= charge_2d_w.end(); it++){
     std::pair<double, double> p2d = ct_point_cloud->convert_time_ch_2Dpoint(it->first.first, it->first.second, 2);
     double dis = 1e9;
-    if (pcloud1!=0) dis = pcloud1->get_closest_2d_dis(p2d.first, p2d.second, 2);
-    if (dis < 0.6*units::cm) sum_w_charge += it->second.first;
-    else{
+    int point_index = -1;
+    if (pcloud1!=0) {
+      auto results = pcloud1->get_closest_2d_dis_index(p2d.first, p2d.second, 2);
+      dis = results.first;
+      point_index = results.second;
+    }
+    if (dis < 0.6*units::cm) {
+      Point test_p(pcloud1->get_cloud().pts[point_index].x, pcloud1->get_cloud().pts[point_index].y, pcloud1->get_cloud().pts[point_index].z);
+      double factor = cal_corr_factor(test_p, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw);
+      sum_w_charge += it->second.first*factor;
+    }else{
       dis = 1e9;
-      if (pcloud2!=0) dis = pcloud2->get_closest_2d_dis(p2d.first, p2d.second, 2);
-      if (dis < 0.6*units::cm) sum_w_charge += it->second.first;
+      point_index = -1;
+      if (pcloud2!=0) {
+       auto results = pcloud2->get_closest_2d_dis_index(p2d.first, p2d.second, 2);
+       dis = results.first;
+       point_index = results.second;
+      }
+      if (dis < 0.6*units::cm) {
+	Point test_p(pcloud2->get_cloud().pts[point_index].x, pcloud2->get_cloud().pts[point_index].y, pcloud2->get_cloud().pts[point_index].z);
+	double factor = cal_corr_factor(test_p, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw);
+	sum_w_charge += it->second.first*factor;
+      }
     }
   }
 
@@ -160,7 +245,59 @@ double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::WCShower *shower){
   return kine_energy;
 }
 
+
+double WCPPID::NeutrinoID::cal_corr_factor(WCP::Point& p, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw){
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  double factor = 1;
+  double central_U = offset_u + (slope_yu * p.y + slope_zu * p.z);
+  if (central_U >=296 && central_U <=327 ||
+      central_U >=336 && central_U <=337 ||
+      central_U >=343 && central_U <=351 ||
+      central_U >=376 && central_U <=400 ||
+      central_U >=410 && central_U <=484 ||
+      central_U >=501 && central_U <=524 ||
+      central_U >=536 && central_U <=671)
+    factor = factor/0.7;
+  
+  if (mp.get_flag_corr()){
+    factor *= mp.get_corr_factor(p, offset_u,  slope_yu,  slope_zu,  offset_v,  slope_yv,  slope_zv,  offset_w,  slope_yw,  slope_zw);
+  }
+  return factor;
+}
+
+
 double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::ProtoSegment *sg){
+   TPCParams& mp = Singleton<TPCParams>::Instance();
+  double time_slice_width = mp.get_ts_width();
+  int time_offset = mp.get_time_offset();
+  int nrebin = mp.get_nrebin();
+  double pitch_u = mp.get_pitch_u();
+  double pitch_v = mp.get_pitch_v();
+  double pitch_w = mp.get_pitch_w();
+  double first_u_dis = mp.get_first_u_dis();
+  double first_v_dis = mp.get_first_v_dis();
+  double first_w_dis = mp.get_first_w_dis();
+  double angle_u = mp.get_angle_u();
+  double angle_v = mp.get_angle_v();
+  double angle_w = mp.get_angle_w();
+  //  convert Z to W ... 
+  double slope_zw = 1./pitch_w * cos(angle_w);
+  double slope_yw = 1./pitch_w * sin(angle_w);
+  
+  double slope_yu = -1./pitch_u * sin(angle_u);
+  double slope_zu = 1./pitch_u * cos(angle_u);
+  double slope_yv = -1./pitch_v * sin(angle_v);
+  double slope_zv = 1./pitch_v * cos(angle_v);
+  //convert Y,Z to U,V
+  double offset_w = -first_w_dis/pitch_w + 0.5;
+  double offset_u = -first_u_dis/pitch_u + 0.5;
+  double offset_v = -first_v_dis/pitch_v + 0.5;
+  
+  double first_t_dis = main_cluster->get_point_cloud()->get_cloud().pts[0].mcell->GetTimeSlice()*time_slice_width - main_cluster->get_point_cloud()->get_cloud().pts[0].x;
+  double slope_xt = 1./time_slice_width;
+  double offset_t =  first_t_dis/time_slice_width + 0.5;
+
+  
   double kine_energy = 0;
   
   // to be improved ...
@@ -183,32 +320,66 @@ double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::ProtoSegment *sg){
   
   for (auto it = charge_2d_u.begin(); it!= charge_2d_u.end(); it++){
     std::pair<double, double> p2d = ct_point_cloud->convert_time_ch_2Dpoint(it->first.first, it->first.second, 0);
-    double dis = pcloud1->get_closest_2d_dis(p2d.first, p2d.second, 0);
-    if (dis < 0.6*units::cm) sum_u_charge += it->second.first;
-    else{
-      dis = pcloud2->get_closest_2d_dis(p2d.first, p2d.second, 0);
-      if (dis < 0.6*units::cm) sum_u_charge += it->second.first;
+
+    auto results = pcloud1->get_closest_2d_dis_index(p2d.first, p2d.second, 0);
+    double dis = results.first;
+    int point_index = results.second;
+    if (dis < 0.6*units::cm) {
+      Point test_p(pcloud1->get_cloud().pts[point_index].x, pcloud1->get_cloud().pts[point_index].y, pcloud1->get_cloud().pts[point_index].z);
+      double factor = cal_corr_factor(test_p, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw);
+      sum_u_charge += it->second.first*factor;
+    }else{
+      results = pcloud2->get_closest_2d_dis_index(p2d.first, p2d.second, 0);
+      dis = results.first;
+      point_index = results.second;
+      if (dis < 0.6*units::cm) {
+	Point test_p(pcloud2->get_cloud().pts[point_index].x, pcloud2->get_cloud().pts[point_index].y, pcloud2->get_cloud().pts[point_index].z);
+	double factor = cal_corr_factor(test_p, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw);
+	sum_u_charge += it->second.first*factor;
+      }
     }
   }
 
   for (auto it = charge_2d_v.begin(); it!= charge_2d_v.end(); it++){
     std::pair<double, double> p2d = ct_point_cloud->convert_time_ch_2Dpoint(it->first.first, it->first.second, 1);
-    double dis = pcloud1->get_closest_2d_dis(p2d.first, p2d.second, 1);
-    if (dis < 0.6*units::cm) sum_v_charge += it->second.first;
-    else{
-      dis = pcloud2->get_closest_2d_dis(p2d.first, p2d.second, 1);
-      if (dis < 0.6*units::cm) sum_v_charge += it->second.first;
+    auto results = pcloud1->get_closest_2d_dis_index(p2d.first, p2d.second, 1);
+    double dis = results.first;
+    int point_index = results.second;
+    if (dis < 0.6*units::cm) {
+      Point test_p(pcloud1->get_cloud().pts[point_index].x, pcloud1->get_cloud().pts[point_index].y, pcloud1->get_cloud().pts[point_index].z);
+      double factor = cal_corr_factor(test_p, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw);
+      sum_v_charge += it->second.first * factor;
+    }else{
+      results = pcloud2->get_closest_2d_dis_index(p2d.first, p2d.second, 1);
+      dis = results.first;
+      point_index = results.second;
+      if (dis < 0.6*units::cm) {
+	Point test_p(pcloud2->get_cloud().pts[point_index].x, pcloud2->get_cloud().pts[point_index].y, pcloud2->get_cloud().pts[point_index].z);
+	double factor = cal_corr_factor(test_p, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw);
+	sum_v_charge += it->second.first*factor;
+      }
     }
   }
 
   
   for (auto it = charge_2d_w.begin(); it!= charge_2d_w.end(); it++){
     std::pair<double, double> p2d = ct_point_cloud->convert_time_ch_2Dpoint(it->first.first, it->first.second, 2);
-    double dis = pcloud1->get_closest_2d_dis(p2d.first, p2d.second, 2);
-    if (dis < 0.6*units::cm) sum_w_charge += it->second.first;
-    else{
-      dis = pcloud2->get_closest_2d_dis(p2d.first, p2d.second, 2);
-      if (dis < 0.6*units::cm) sum_w_charge += it->second.first;
+    auto results = pcloud1->get_closest_2d_dis_index(p2d.first, p2d.second, 2);
+    double dis = results.first;
+    int point_index = results.second;
+    if (dis < 0.6*units::cm) {
+      Point test_p(pcloud1->get_cloud().pts[point_index].x, pcloud1->get_cloud().pts[point_index].y, pcloud1->get_cloud().pts[point_index].z);
+      double factor = cal_corr_factor(test_p, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw);
+      sum_w_charge += it->second.first * factor;
+    }else{
+      results = pcloud2->get_closest_2d_dis_index(p2d.first, p2d.second, 2);
+      dis = results.first;
+      point_index = results.second;
+      if (dis < 0.6*units::cm) {
+	Point test_p(pcloud2->get_cloud().pts[point_index].x, pcloud2->get_cloud().pts[point_index].y, pcloud2->get_cloud().pts[point_index].z);
+	double factor = cal_corr_factor(test_p, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw);
+	sum_w_charge += it->second.first*factor;
+      }
     }
   }
 

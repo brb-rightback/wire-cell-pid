@@ -196,6 +196,8 @@ namespace WCPPID{
     void collect_2D_charges();
     double cal_kine_charge(WCPPID::ProtoSegment *sg);
     double cal_kine_charge(WCPPID::WCShower *shower);
+    double cal_corr_factor(WCP::Point& p, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw);
+
     
     // improve vertex ...
     void improve_vertex(WCPPID::PR3DCluster* temp_cluster);
