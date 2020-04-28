@@ -103,10 +103,10 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
       WCPPID::ProtoSegment *sg =*it;
       if (map_segment_in_shower.find(sg) == map_segment_in_shower.end()){
 	if (sg->get_length() < 1.2*units::cm && (sg->get_flag_dir()==0 || sg->is_dir_weak())){
-	    //	    std::cout << sg->get_particle_type() << " " << sg->get_length()/units::cm << " " << sg->get_flag_dir() << " " << sg->is_dir_weak() << std::endl;
+	  
 	  flag_return = false;
 	}
-	  // std::cout << (*map_vertex_segments[main_vertex].begin())->get_length()/units::cm << " " << (*map_vertex_segments[main_vertex].rbegin())->get_length()/units::cm << std::endl;
+	// std::cout << (*map_vertex_segments[main_vertex].begin())->get_length()/units::cm << " " << (*map_vertex_segments[main_vertex].rbegin())->get_length()/units::cm << std::endl;
       }
     }
     if (flag_return) return;
@@ -262,15 +262,29 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
       // hack main vertex 
       main_vertex->set_fit_pt(vtx_point);
       main_vertex->set_dQ(0);
-      
 
+      if (shower_1->get_start_vertex().first == main_vertex){
+	for (auto it = map_vertex_segments[main_vertex].begin(); it!= map_vertex_segments[main_vertex].end(); it++){
+	  WCPPID::ProtoSegment *sg =*it;
+	  if (sg == shower_1->get_start_segment()) continue;
+	  shower_1->add_segment(sg, map_segment_vertices);
+	}
+      }
+      if (shower_2->get_start_vertex().first == main_vertex){
+	for (auto it = map_vertex_segments[main_vertex].begin(); it!= map_vertex_segments[main_vertex].end(); it++){
+	  WCPPID::ProtoSegment *sg =*it;
+	  if (sg == shower_2->get_start_segment()) continue;
+	  shower_2->add_segment(sg, map_segment_vertices);
+	}
+      }
+      
       shower_1->set_start_vertex(main_vertex, 2);
       shower_1->calculate_kinematics();
 
       shower_2->set_start_vertex(main_vertex, 2);
       shower_2->calculate_kinematics();
       
-      
+      update_shower_maps();
       std::cout << "Pi0 (displaced vertex) found with mass: " << " " << mass_save/units::MeV << " MeV with " << shower_1->get_kine_charge()/units::MeV << " MeV + " << shower_2->get_kine_charge()/units::MeV << " MeV" << std::endl;
     }
     
@@ -725,17 +739,18 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
 		  pair_dis_point.second.z - point.z);
       double angle = dir_shower.Angle(v1);
       double angle1 = dir_shower.Angle(v2);
+
+      //  std::cout << seg1->get_cluster_id() << " " << seg1->get_id() << " " << angle1/3.1415926*180. << " " << angle/3.1415926*180. << " " << dis1/units::cm <<" " << pair_dis_point.first/units::cm << std::endl;
       
       if (angle1/3.1415926*180. > 30) continue;
       
-      if (angle/3.1415926*180.< 25 && pair_dis_point.first < 80*units::cm ||
-	  angle/3.1415926*180 < 12.5 && pair_dis_point.first < 120*units::cm ){
-	if (it1 != map_cluster_associated_vertex.end()){
+      if ((angle/3.1415926*180.< 25 || angle1/3.1415926*180. < 25) && pair_dis_point.first < 80*units::cm ||
+	  (angle/3.1415926*180 < 12.5 || angle1/3.1415926*180. < 12.5) && pair_dis_point.first < 120*units::cm ){
+	if (it1 != map_cluster_associated_vertex.end() && seg1->get_cluster_id() != shower->get_start_segment()->get_cluster_id()){
 	  if (it1->second != vertex){ //continue;
 	    double dis1 = shower->get_dis(seg1);
-	    //	    std::cout << seg1->get_cluster_id() << " " << dis1/units::cm <<" " << pair_dis_point.first/units::cm << std::endl;
 	    if (dis1 > 25*units::cm && dis1 > pair_dis_point.first * 0.4){
-
+	      //	      std::cout << seg1->get_cluster_id() << " " << seg1->get_id() << " " << angle1/3.1415926*180. << " " << angle1/3.1415926*180. << " " << dis1/units::cm <<" " << pair_dis_point.first/units::cm << std::endl;
 	      continue;
 	    }
 	  }
