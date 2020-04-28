@@ -13,6 +13,7 @@ namespace WCPPID{
     // define the initial condition
     void set_start_vertex(ProtoVertex* vertex, int type);
     void set_start_segment(ProtoSegment* seg);
+    void set_start_point(WCP::Point p);
     void set_start_segment(ProtoSegment* seg, Map_Proto_Segment_Vertices& map_segment_vertices);
     
     std::pair<ProtoVertex*, int> get_start_vertex(){return std::make_pair(start_vertex, start_connection_type);};
@@ -27,6 +28,7 @@ namespace WCPPID{
     // complete structure ...
     void complete_structure_with_start_segment(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices,  std::set<WCPPID::ProtoSegment* >& used_segments);
     void add_segment(WCPPID::ProtoSegment* seg, Map_Proto_Segment_Vertices& map_segment_vertices);
+    void add_shower(WCPPID::WCShower* temp_shower);
     double get_dis(WCPPID::ProtoSegment* seg);
 
     void calculate_kinematics();
@@ -60,7 +62,7 @@ namespace WCPPID{
     //
     std::pair<std::set<WCPPID::ProtoSegment*>, std::set<WCPPID::ProtoVertex*> > get_connected_pieces(WCPPID::ProtoSegment* seg);
     
-    
+    Map_Proto_Segment_Vertices& get_map_seg_vtxs(){return map_seg_vtxs; };
   protected:
     int particle_type;
     bool flag_shower;

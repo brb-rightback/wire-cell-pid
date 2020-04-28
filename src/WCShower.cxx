@@ -338,6 +338,10 @@ void WCPPID::WCShower::set_start_segment(ProtoSegment* seg){
   start_segment = seg;
 }
 
+void WCPPID::WCShower::set_start_point(Point p){
+  start_point = p;
+}
+
 void WCPPID::WCShower::set_start_segment(ProtoSegment* seg, Map_Proto_Segment_Vertices& map_segment_vertices){
   start_segment = seg;
   for (auto it = map_segment_vertices[start_segment].begin(); it!= map_segment_vertices[start_segment].end(); it++){
@@ -475,6 +479,18 @@ double WCPPID::WCShower::get_dis(WCPPID::ProtoSegment* seg){
     }
   }
   return min_dis;
+}
+
+void WCPPID::WCShower::add_shower(WCPPID::WCShower* temp_shower){
+  Map_Proto_Segment_Vertices& tmp_map_seg_vtxs = temp_shower->get_map_seg_vtxs();
+  for (auto it = tmp_map_seg_vtxs.begin(); it!= tmp_map_seg_vtxs.end(); it++){
+    WCPPID::ProtoSegment *seg = it->first;
+    for (auto it1 = it->second.begin(); it1!= it->second.end(); it1++){
+      WCPPID::ProtoVertex *vtx = *it1;
+      map_seg_vtxs[seg].insert(vtx);
+      map_vtx_segs[vtx].insert(seg);
+    }
+  }
 }
 
 void WCPPID::WCShower::add_segment(WCPPID::ProtoSegment* seg, Map_Proto_Segment_Vertices& map_segment_vertices){
