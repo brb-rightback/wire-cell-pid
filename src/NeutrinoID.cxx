@@ -214,7 +214,7 @@ void WCPPID::NeutrinoID::determine_overall_main_vertex(){
 void WCPPID::NeutrinoID::examine_main_vertices(){
  
 
-  double cluster_length_cut = std::min(map_cluster_length[main_cluster]*0.6, 8*units::cm);
+  double cluster_length_cut = std::min(map_cluster_length[main_cluster]*0.6, 6*units::cm);
   
   WCPPID::PR3DClusterSelection clusters_to_be_removed;
   for (auto it = map_cluster_main_vertices.begin(); it!= map_cluster_main_vertices.end(); it++){
