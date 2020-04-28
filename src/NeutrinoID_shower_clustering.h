@@ -842,11 +842,12 @@ void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(bool flag_save){
   }
   //  std::cout << vertices.size() << std::endl;
 
+  
   for (auto it = map_cluster_main_vertices.begin(); it!= map_cluster_main_vertices.end(); it++){
     WCPPID::PR3DCluster* cluster = it->first;
     WCPPID::ProtoVertex* vertex = it->second;
     if (used_shower_clusters.find(cluster->get_cluster_id()) != used_shower_clusters.end()) continue;
-    // std::cout << cluster->get_cluster_id() << std::endl;
+    if (map_cluster_length[cluster] < 4*units::cm) continue;
 
     // check against the main cluster first ...
     ToyPointCloud *pcloud = cluster->get_point_cloud();
@@ -872,7 +873,11 @@ void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(bool flag_save){
     WCPPID::ProtoSegment *sg = 0;
     for (auto it1 = map_vertex_segments[vertex].begin(); it1!= map_vertex_segments[vertex].end(); it1++){
       sg = *it1;
-      break;
+      if(sg->get_flag_shower()){
+	break;
+      }else{
+	sg = 0 ;
+      }
     }
     int connection_type = 3;
     
@@ -932,7 +937,7 @@ void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(bool flag_save){
 	  shower->add_shower(showers.at(i));
 	  showers_to_be_removed.push_back(showers.at(i));
 	}
-	//	std::cout << i << " " << dir_shower.Angle(dir_shower1)/3.1415926*180. << " " << dir_shower.Angle(dir2)/3.1415926*180. << " " << dir2.Mag()/units::cm << std::endl;
+	std::cout << i << " " << dir_shower.Angle(dir_shower1)/3.1415926*180. << " " << dir_shower.Angle(dir2)/3.1415926*180. << " " << dir2.Mag()/units::cm << std::endl;
       }
       for (auto it1 = showers_to_be_removed.begin(); it1 != showers_to_be_removed.end(); it1++){
 	auto it2 = find(showers.begin(), showers.end(), *it1);
@@ -944,8 +949,8 @@ void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(bool flag_save){
     }
   }  
   update_shower_maps();  
-  //  std::cout << showers.size() << std::endl;
-
+  //std::cout << showers.size() << std::endl;
+  
 
   
   for (auto it = other_clusters.begin(); it != other_clusters.end(); it++){
