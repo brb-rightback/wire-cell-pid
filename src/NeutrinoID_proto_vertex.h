@@ -123,6 +123,8 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
     
     // examine the vertices ...
     examine_vertices(temp_cluster);
+
+    
     
     // examine the two initial points ...
     if (temp_cluster == main_cluster && main_cluster_initial_pair_vertices.first!=0)

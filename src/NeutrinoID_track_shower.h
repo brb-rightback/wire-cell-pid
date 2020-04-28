@@ -883,7 +883,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
       if (it->second.first >0) main_vertex_candidates.push_back(it->first);
     }
   }
-  
+ 
 
   if (flag_save_only_showers){
     if (main_vertex_candidates.size()>0){
@@ -904,7 +904,8 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
 	std::cout << " in cluster " << (*it)->get_cluster_id() << std::endl;
       }
     }
-    
+
+
     if (main_vertex_candidates.size()==1){
       main_vertex = main_vertex_candidates.front();
     }else if (main_vertex_candidates.size()>1){
@@ -1417,7 +1418,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex){
 	      current_sg->set_particle_type(11);
 	      current_sg->set_particle_mass(mp.get_mass_electron());
 	    }
-	    std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << " " << num_daughter_showers << std::endl;
+	    //	    std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << " " << num_daughter_showers << std::endl;
 	  }else if (current_sg->get_particle_type()==11 && num_daughter_showers<=2 && (!flag_shower_in) && (!current_sg->get_flag_shower_topology()) && (!current_sg->get_flag_shower_trajectory()) && current_sg->get_length() > 10*units::cm){
 	    //	    std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << " " << num_daughter_showers << " " << current_sg->get_length()/units::cm << " " << current_sg->get_flag_shower_topology() << " " << current_sg->get_flag_shower_trajectory() << " " << std::endl;
 	    double direct_length = current_sg->get_direct_length();
