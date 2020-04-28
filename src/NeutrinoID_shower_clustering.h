@@ -286,8 +286,7 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
       update_shower_maps();
       std::cout << "Pi0 (displaced vertex) found with mass: " << " " << mass_save/units::MeV << " MeV with " << shower_1->get_kine_charge()/units::MeV << " MeV + " << shower_2->get_kine_charge()/units::MeV << " MeV" << std::endl;
     }
-    
-    
+        
   } // more than one shower
 
   for (auto it = map_shower_line.begin(); it!=map_shower_line.end(); it++){

@@ -1194,7 +1194,7 @@ void WCPPID::NeutrinoID::fill_skeleton_info_magnify(int mother_cluster_id, WCPPI
       for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
 	WCPPID::ProtoVertex *vtx = it->first;
 	if (vtx->get_cluster_id() != cluster->get_cluster_id()) continue;
-	if (map_vertex_in_shower.find(vtx)!=map_vertex_in_shower.end()) continue;
+	if (map_vertex_in_shower.find(vtx)!=map_vertex_in_shower.end() && vtx != main_vertex) continue;
 	ptree.reco_cluster_id = vtx->get_cluster_id();
 	ptree.reco_proto_cluster_id = -1;
 	ptree.reco_particle_id = -1;
@@ -1394,7 +1394,8 @@ void WCPPID::NeutrinoID::fill_skeleton_info(int mother_cluster_id, WCPPID::WCPoi
      
      // std::cout <<  ptree.reco_proto_cluster_id << std::endl;
      // std::cout << shower->get_start_segment()->get_length()/units::cm << " " << vtx << " " << shower << std::endl;
-     T->Fill();
+     if ( vtx->get_dQ()!=0)
+       T->Fill();
   }
   
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
