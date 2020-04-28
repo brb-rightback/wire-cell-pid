@@ -784,6 +784,59 @@ void WCPPID::NeutrinoID::print_segs_info(WCPPID::PR3DCluster* temp_cluster){
   print_segs_info(temp_cluster->get_cluster_id());
 }
 
+void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  int n_good_tracks = 0, n_tracks = 0, n_showers = 0;
+  double length_good_tracks = 0, length_tracks = 0, length_showers = 0;
+  for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+    double length = sg->get_length();
+    if (sg->get_flag_shower() ){
+      n_showers ++;
+      length_showers += length;
+    }else{
+      if (sg->get_flag_dir()!=0 && (!sg->is_dir_weak())){
+	n_good_tracks ++;
+	length_good_tracks += length;
+      }else{
+	n_tracks ++;
+	length_tracks += length;
+      }
+    }
+  }
+
+  bool flag_change_showers = false;
+  
+  if (n_good_tracks == 0){
+    if ( length_tracks < 1./3.*length_showers || length_tracks < 2./3.*length_showers && n_tracks == 1){
+      if ( (length_showers + length_tracks) < 40*units::cm){
+	flag_change_showers = true;
+      }else if (length_tracks < 0.15 * length_showers && (length_showers + length_tracks) < 60*units::cm ){
+	flag_change_showers = true;
+      }
+    }else if ( length_tracks < 35*units::cm &&  length_tracks + length_showers  < 50*units::cm && length_showers < 15*units::cm){
+      flag_change_showers = true;
+    }
+  }
+  //  if (!flag_change_showers)
+  //  std::cout << temp_cluster->get_cluster_id() << " " << n_good_tracks << " " << n_tracks << " " << n_showers << " " << length_good_tracks/units::cm << " " << length_tracks/units::cm << " " << length_showers/units::cm << std::endl;
+
+  if (flag_change_showers){
+    for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){ 
+      WCPPID::ProtoSegment *sg = it->first; 
+      if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+      if (!sg->get_flag_shower()){
+	sg->set_particle_type(11);
+	sg->set_particle_mass(mp.get_mass_electron());
+      }
+    }
+  }
+  
+
+  
+}
+
 
 void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster, bool flag_print){
   // update directions ... 
@@ -876,7 +929,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   }
 
   
-  //  std::cout << "Information after main vertex determination: " << std::endl;
+  // std::cout << "Information after main vertex determination: " << std::endl;
   // print_segs_info(main_vertex);
   
 }
@@ -1200,7 +1253,7 @@ float WCPPID::NeutrinoID::calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex){
 	  (!flag_start) && sg->get_flag_dir() == 1){
 	if ( !sg->is_dir_weak() ) 	num_conflicts ++;
 	else num_conflicts += 0.5;
-	//	std::cout << " A: " << it->first->get_id() << " " << it->second.first->get_id() << " " << it->second.second->get_id() << std::endl;
+	//std::cout << " A: " << it->first->get_id() << " " << it->second.first->get_id() << " " << it->second.second->get_id() << std::endl;
       }
     }
     //    

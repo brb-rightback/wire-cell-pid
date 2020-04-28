@@ -47,8 +47,6 @@ void WCPPID::NeutrinoID::shower_determing_in_main_cluster(WCPPID::PR3DCluster *t
   improve_maps_no_dir_tracks(temp_cluster->get_cluster_id());    
   // if one shower in and a track out, change the track to shower
   improve_maps_shower_in_track_out(temp_cluster->get_cluster_id(), false); // use shower information to determine the rest ...
-
-
   
   // if multiple tracks in, change track to shower
   improve_maps_multiple_tracks_in(temp_cluster->get_cluster_id());
@@ -57,6 +55,9 @@ void WCPPID::NeutrinoID::shower_determing_in_main_cluster(WCPPID::PR3DCluster *t
     
   // examine map ...
   examine_maps(temp_cluster);
+
+  examine_all_showers(temp_cluster);
+  
   
   //  print_segs_info(main_cluster->get_cluster_id());
   /* std::cout << std::endl << std::endl; */
@@ -92,8 +93,24 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv(){
 
 void WCPPID::NeutrinoID::id_pi0_without_vertex(){
   // test main vertex ...
-  if (map_vertex_segments[main_vertex].size()>1) return; // more than one shower
-  if (map_segment_in_shower.find(*map_vertex_segments[main_vertex].begin()) == map_segment_in_shower.end()) return; // not a shower connecting to main vertex ...
+  if (map_vertex_segments[main_vertex].size()>2) return; // more than one shower
+  if (map_segment_in_shower.find(*map_vertex_segments[main_vertex].begin()) == map_segment_in_shower.end() &&
+      map_segment_in_shower.find(*map_vertex_segments[main_vertex].rbegin()) == map_segment_in_shower.end() ) return; // not a shower connecting to main vertex ...
+
+  if (map_vertex_segments[main_vertex].size()==2){
+    bool flag_return = true;
+    for (auto it = map_vertex_segments[main_vertex].begin(); it!= map_vertex_segments[main_vertex].end(); it++){
+      WCPPID::ProtoSegment *sg =*it;
+      if (map_segment_in_shower.find(sg) == map_segment_in_shower.end()){
+	if (sg->get_length() < 1.2*units::cm && (sg->get_flag_dir()==0 || sg->is_dir_weak())){
+	    //	    std::cout << sg->get_particle_type() << " " << sg->get_length()/units::cm << " " << sg->get_flag_dir() << " " << sg->is_dir_weak() << std::endl;
+	  flag_return = false;
+	}
+	  // std::cout << (*map_vertex_segments[main_vertex].begin())->get_length()/units::cm << " " << (*map_vertex_segments[main_vertex].rbegin())->get_length()/units::cm << std::endl;
+      }
+    }
+    if (flag_return) return;
+  }
 
   
   std::map<WCPPID::WCShower*, WCP::Line *> map_shower_line;
@@ -107,7 +124,25 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
     TVector3 dir = (*it)->cal_dir_3vector(test_p, 15*units::cm);
     WCP::Line *line = new Line(test_p, dir);
     map_shower_line[*it] = line;
+    //    std::cout << (*it)->get_start_segment()->get_cluster_id() << " " << std::endl;
   }
+  for (auto it = map_vertex_to_shower.begin(); it!= map_vertex_to_shower.end(); it++){
+    if (it->first == main_vertex) continue;
+    for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+      if ((*it1)->get_start_segment()->get_particle_type()==13) continue; // a muon 
+      if ((*it1)->get_total_length() < 3*units::cm) continue; // too short ... 
+      if (pi0_showers.find(*it1) != pi0_showers.end()) continue; // cannot be already in a pi0
+      if ((*it1)->get_start_vertex().second != 3) continue;
+      if (!(*it1)->get_start_segment()->get_flag_shower()) continue;
+      
+      Point test_p = (*it1)->get_closest_point(main_vertex->get_fit_pt()).second; 
+      TVector3 dir = (*it1)->cal_dir_3vector(test_p, 15*units::cm); 
+      WCP::Line *line = new Line(test_p, dir); 
+      map_shower_line[*it1] = line; 
+      //std::cout << (*it1)->get_start_segment()->get_cluster_id() << " " << (*it1)->get_start_segment()->get_particle_type() << " " << (*it1)->get_start_segment()->get_length()/units::cm << " " << (*it1)->get_start_vertex().second << std::endl;
+    }
+  }
+  //  std::cout << map_shower_line.size() << std::endl;
   
   if (map_shower_line.size() > 1){
     // save information ... 
@@ -125,24 +160,27 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
 
 	auto pair_points = l1->closest_dis_points(*l2);
 	Point center(0,0,0);
-	  
+
+	//	std::cout << length_1/units::cm << " " << length_2/units::cm << std::endl;
+	
 	if (length_1 > 15*units::cm && length_2 > 15*units::cm){
 	  
 	  center.x = (pair_points.first.x + pair_points.second.x)/2.;
 	  center.y = (pair_points.first.y + pair_points.second.y)/2.;
 	  center.z = (pair_points.first.z + pair_points.second.z)/2.;
 	  //calculate mass ...
-	  TVector3 dir1(shower_1->get_start_point().x - center.x, shower_1->get_start_point().y - center.y, shower_1->get_start_point().z - center.z);
-	  TVector3 dir2(shower_2->get_start_point().x - center.x, shower_2->get_start_point().y - center.y, shower_2->get_start_point().z - center.z);
+	  TVector3 dir1(l1->get_p1().x - center.x, l1->get_p1().y - center.y, l1->get_p1().z - center.z);
+	  TVector3 dir2(l2->get_p1().x - center.x, l2->get_p1().y - center.y, l2->get_p1().z - center.z);
 	  
 	  if (dir1.Mag() < 3*units::cm) dir1 = l1->get_dir();
 	  if (dir2.Mag() < 3*units::cm) dir2 = l2->get_dir();
 
+	  
 	  if (dir1.Angle(l1->get_dir())/3.1415926*180.>25 || dir2.Angle(l2->get_dir())/3.1415926*180. >25) continue;
 	  double angle = dir1.Angle(dir2);
 	  double mass_pio = sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2));
 	  map_shower_pair_mass_point[std::make_pair(shower_1,shower_2)] = std::make_pair(mass_pio, center);
-	  //	  std::cout << dir1.Mag()/units::cm << " " << dir2.Mag()/units::cm << " " << dir1.Angle(l1->get_dir())/3.1415926*180. << " " << dir2.Angle(l2->get_dir())/3.1415926*180. << " " << l1->closest_dis(*l2)/units::cm << " " << mass_pio/units::MeV << std::endl;
+	  std::cout << dir1.Mag()/units::cm << " " << dir2.Mag()/units::cm << " " << dir1.Angle(l1->get_dir())/3.1415926*180. << " " << dir2.Angle(l2->get_dir())/3.1415926*180. << " " << l1->closest_dis(*l2)/units::cm << " " << mass_pio/units::MeV << std::endl;
 	  
 	}else if (length_1 > 15*units::cm || length_2 > 15*units::cm){
 
@@ -158,7 +196,7 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
 	    WCP::Line l3(test_p, dir3);
 	    pair_points = l1->closest_dis_points(l3);
 	    center = pair_points.first;
-	    dir1.SetXYZ(shower_1->get_start_point().x - center.x, shower_1->get_start_point().y - center.y, shower_1->get_start_point().z - center.z);
+	    dir1.SetXYZ(l1->get_p1().x - center.x, l1->get_p1().y - center.y, l1->get_p1().z - center.z);
 	    dir2.SetXYZ(test_p.x - center.x, test_p.y - center.y, test_p.z - center.z);
 	    if (dir1.Angle(l1->get_dir())/3.1415926*180.>25 || dir2.Angle(l3.get_dir())/3.1415926*180. >25) continue;
 	    double angle = dir1.Angle(dir2);
@@ -175,7 +213,7 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
 	     WCP::Line l3(test_p, dir3);
 	     pair_points = l3.closest_dis_points(*l2);
 	     center = pair_points.second;
-	     dir2.SetXYZ(shower_2->get_start_point().x - center.x, shower_2->get_start_point().y - center.y, shower_2->get_start_point().z - center.z);
+	     dir2.SetXYZ(l2->get_p1().x - center.x, l2->get_p1().y - center.y, l2->get_p1().z - center.z);
 	     dir1.SetXYZ(test_p.x - center.x, test_p.y - center.y, test_p.z - center.z);
 	     if (dir1.Angle(l3.get_dir())/3.1415926*180.>25 || dir2.Angle(l2->get_dir())/3.1415926*180. >25) continue;
 	     double angle = dir1.Angle(dir2);
@@ -225,14 +263,13 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
       main_vertex->set_fit_pt(vtx_point);
       main_vertex->set_dQ(0);
       
-      //if (shower_1->get_start_vertex().first != vtx){
+
       shower_1->set_start_vertex(main_vertex, 2);
       shower_1->calculate_kinematics();
-      //}
-      //if (shower_2->get_start_vertex().first != vtx){
+
       shower_2->set_start_vertex(main_vertex, 2);
       shower_2->calculate_kinematics();
-      //}
+      
       
       std::cout << "Pi0 (displaced vertex) found with mass: " << " " << mass_save/units::MeV << " MeV with " << shower_1->get_kine_charge()/units::MeV << " MeV + " << shower_2->get_kine_charge()/units::MeV << " MeV" << std::endl;
     }

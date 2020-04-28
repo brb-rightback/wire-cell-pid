@@ -227,7 +227,8 @@ namespace WCPPID{
     void improve_maps_multiple_tracks_in(int temp_cluster_id);
     void improve_maps_no_dir_tracks(int temp_cluster_id);
     void examine_good_tracks(int temp_cluster_id);
-
+    
+    void examine_all_showers(WCPPID::PR3DCluster* temp_cluster);
 
     std::pair<int, double> calculate_num_daughter_showers(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg);
     

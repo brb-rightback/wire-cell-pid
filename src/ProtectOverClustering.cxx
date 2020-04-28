@@ -68,6 +68,8 @@ void WCPPID::Protect_Over_Clustering(std::vector<std::pair<int, Opflash*> >& to_
 	    max_number_cells = vec_mcells.at(j).size();
 	  }
 	}
+
+	//	std::cout << second_max << " " << max_number_cells << " " << main_id << std::endl;
 	
 	if (second_max > 0.7 * max_number_cells){
 	  if (pl == 0 ) pl = new Photon_Library(run_no,flag_match_data);
@@ -79,8 +81,13 @@ void WCPPID::Protect_Over_Clustering(std::vector<std::pair<int, Opflash*> >& to_
 	  for (size_t j=0;j<vec_mcells.size();j++){
 	    if (vec_mcells.at(j).size() < 0.7 * max_number_cells || j==main_id) continue;
 	    results = WCPPID::compare_pe_pattern(run_no, offset_x, pl, vec_mcells.at(j), flash ,flag_match_data);
-	    double score = sqrt(pow(results.first,2) + pow(results.second - min_ratio,2));
-	    //	    std::cout << score << " " <<  min_score << " " << std::endl;
+	    double score;
+	    if (fabs(1-results.second) > fabs(1-min_ratio)){
+	      score = sqrt(pow(results.first,2) + pow(results.second - min_ratio,2));
+	    }else{
+	      score = sqrt(pow(results.first,2));
+	    }
+	    //	    std::cout << score << " " <<  min_score << " " << results.first << " "<< results.second << " " << min_ratio << std::endl;
 	    
 	    if (score < min_score){
 	      min_score = score;
@@ -88,6 +95,8 @@ void WCPPID::Protect_Over_Clustering(std::vector<std::pair<int, Opflash*> >& to_
 	      max_number_cells = vec_mcells.at(j).size();
 	    }
 	  }
+
+	  //	  std::cout << main_id << " " << max_number_cells << std::endl;
 	}
 	
 	

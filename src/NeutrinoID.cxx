@@ -214,13 +214,14 @@ void WCPPID::NeutrinoID::determine_overall_main_vertex(){
 void WCPPID::NeutrinoID::examine_main_vertices(){
  
 
-  double cluster_length_cut = std::min(map_cluster_length[main_cluster]*0.6, 10*units::cm);
+  double cluster_length_cut = std::min(map_cluster_length[main_cluster]*0.6, 8*units::cm);
   
   WCPPID::PR3DClusterSelection clusters_to_be_removed;
   for (auto it = map_cluster_main_vertices.begin(); it!= map_cluster_main_vertices.end(); it++){
     WCPPID::PR3DCluster* cluster = it->first;
     WCPPID::ProtoVertex* vertex = it->second;
     double length = map_cluster_length[cluster];
+    //    std::cout << cluster->get_cluster_id() << " " << length/units::cm << std::endl;
     if (length < cluster_length_cut){
       bool flag_removed = true;
       for (auto it1 = map_vertex_segments[vertex].begin(); it1 != map_vertex_segments[vertex].end(); it1++){
@@ -335,7 +336,8 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_global(WCPPID::Pr
 	map_vertex_num[vtx] += 1/4./2.; // has a direction with track ..
     }
     if (vtx->get_cluster_id() == main_cluster->get_cluster_id()) map_vertex_num[vtx] += 0.25;
-    //    std::cout << "A: " << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(200*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
+
+    //std::cout << "A: " << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(200*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
   }
   
   // whether the vetex is at boundary or not ...
@@ -343,16 +345,16 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_global(WCPPID::Pr
     WCPPID::ProtoVertex *vtx = *it;
     if (fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x))
       map_vertex_num[vtx] +=0.5; // good      // fiducial volume ..
-    //    std::cout << "B: " << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
+    // std::cout << "B: " << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
   }
 
-  for (auto it = vertex_candidates.begin(); it != vertex_candidates.end(); it++){
-    WCPPID::ProtoVertex *vtx = *it;
+  //  for (auto it = vertex_candidates.begin(); it != vertex_candidates.end(); it++){
+  // WCPPID::ProtoVertex *vtx = *it;
 
-    double num_conflicts = calc_conflict_maps(vtx);
-    map_vertex_num[vtx] -= num_conflicts/4.;
-    //    std::cout << "C: " << map_vertex_num[vtx] << " " << num_conflicts << " " << map_vertex_num[vtx] << std::endl;
-  }
+  //double num_conflicts = calc_conflict_maps(vtx);
+  //  map_vertex_num[vtx] -= num_conflicts/4.;
+    //std::cout << "C: " << map_vertex_num[vtx] << " " << num_conflicts << " " << map_vertex_num[vtx] << std::endl;
+  //}
 
 
   // Now compare with all other vertices ...
@@ -362,6 +364,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_global(WCPPID::Pr
     WCPPID::ProtoVertex *vtx = *it;
     map_vertex_dir[vtx] = get_dir(vtx);
   }
+  
   for (auto it = vertex_candidates.begin(); it!= vertex_candidates.end(); it++){
     WCPPID::ProtoVertex *vtx = *it;
     for (auto it1 = vertex_candidates.begin(); it1!=vertex_candidates.end(); it1++){
@@ -374,7 +377,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_global(WCPPID::Pr
       }else if (dir.Angle(dir1)/3.1415926*180.<30){
 	map_vertex_num[vtx] += 0.25/2.;
       }
-      //      std::cout << vtx->get_cluster_id() << " " << map_vertex_num[vtx] << " " << dir.Angle(dir1)/3.1415926*180. << std::endl;
+      //      std::cout << "D: " << vtx->get_cluster_id() << " " << map_vertex_num[vtx] << " " << dir.Angle(dir1)/3.1415926*180. << " " << main_cluster->get_cluster_id() << std::endl;
     }
   }
   
