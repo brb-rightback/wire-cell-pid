@@ -108,6 +108,8 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
     /* 	std::cout << vtx->get_id() << " " << vtx->get_fit_pt() << " " << vtx->get_wcpt().x << " " << vtx->get_wcpt().y << " " << vtx->get_wcpt().z << std::endl; */
     /*   } */
     /* } */
+
+    
     
     // find other segments ...
     for (size_t i=0;i!=nrounds_find_other_tracks;i++){
@@ -122,7 +124,7 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
     }
     
     
-    
+  
     
     // examine the vertices ...
     examine_vertices(temp_cluster);
@@ -1535,6 +1537,13 @@ void WCPPID::NeutrinoID::examine_segment(WCPPID::PR3DCluster* temp_cluster){
   for (auto it = segments_to_be_removed.begin(); it != segments_to_be_removed.end(); it++){
     del_proto_segment(*it);
   }
+  std::set<WCPPID::ProtoVertex*> vertices_to_be_removed;
+  for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
+    if (it->second.size()==0) vertices_to_be_removed.insert(it->first);
+  }
+  for (auto it = vertices_to_be_removed.begin(); it != vertices_to_be_removed.end(); it++){
+    del_proto_vertex(*it);
+  }
   
  
 }
@@ -1544,19 +1553,25 @@ void WCPPID::NeutrinoID::examine_vertices(WCPPID::PR3DCluster* temp_cluster){
   bool flag_continue = true;
   while(flag_continue){
     flag_continue = false;
-    
+
+    //    std::cout << "haha0 " << " " << flag_continue << std::endl;
     examine_segment(temp_cluster);
-  
-  
+
+    //    std::cout << "haha1 " << " " << flag_continue << std::endl;
     // merge vertex if the kink is not at right location
     flag_continue = flag_continue || examine_vertices_1(temp_cluster);
-  
-    //  std::cout << "haha2 " << std::endl;
+    
+    
+    //    std::cout << "haha2 " << " " << flag_continue << std::endl;
     if (find_vertices(temp_cluster).size() > 2)
       // merge vertices if they are too close ...
       flag_continue = flag_continue || examine_vertices_2(temp_cluster);
 
+    //    std::cout << "haha3 " << " " << flag_continue << std::endl;
+    
     flag_continue = flag_continue || examine_vertices_4(temp_cluster);
+
+    //    std::cout << "haha4 " << " " << flag_continue << std::endl;
   }
 
 }
@@ -2057,6 +2072,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
 	    if (examine_vertices_1(vtx, vtx1, offset_t, slope_xt, offset_u, slope_yu, slope_zu, offset_v, slope_yv, slope_zv, offset_w, slope_yw, slope_zw)){
 	      v1 = vtx;
 	      v2 = vtx1;
+	      //std::cout << "haha " << std::endl;
 	      
 	      for (auto it3 = it->second.begin(); it3 != it->second.end(); it3++){
 		if (*it3 == sg) continue;
@@ -2069,6 +2085,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
 	      flag_continue = true;
 	      break;
 	    }
+	    //	    std::cout << "hehe " << std::endl;
 	  }
 	} // loop over vertices ..
 	if (flag_continue) break;
@@ -2077,7 +2094,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
     } // require two segment
   } // loop over vertices ...
   
-  //    std::cout << map_vertex_replace.size() << std::endl;
+
   // replace ...
   if (v1!=0 && v2!=0){
 
@@ -2096,10 +2113,17 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::PR3DCluster* temp_cluster){
       std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Merge Vertices Type I " << sg->get_id() << " + " << sg1->get_id() << " -> " << sg2->get_id() << std::endl;
       add_proto_connection(v2, sg2, temp_cluster);
       add_proto_connection(v3, sg2, temp_cluster);
+
+      /* std::cout << v2->get_wcpt().index << " " << v3->get_wcpt().index << std::endl; */
+      /* for (auto it5 = temp_cluster->get_path_wcps().begin(); it5 != temp_cluster->get_path_wcps().end(); it5++){ */
+      /* 	std::cout << (*it5).index << std::endl; */
+      /* } */
       
       del_proto_vertex(v1);
       del_proto_segment(sg);
       del_proto_segment(sg1);
+
+      
       
       temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
     }else{
@@ -2181,7 +2205,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::ProtoVertex* v1, WCPPID::Pro
 	double step_size = 0.6*units::cm;
 	int ncount = std::round(sqrt(pow(start_p.x - end_p.x,2) + pow(start_p.y - end_p.y,2) + pow(start_p.z - end_p.z,2))/step_size);
 	int n_bad = 0;
-	for (int i=1;i!=ncount;i++){
+	for (int i=1;i<ncount;i++){
 	  Point test_p(start_p.x + (end_p.x - start_p.x)/ncount*i,
 		       start_p.y + (end_p.y - start_p.y)/ncount*i,
 		       start_p.z + (end_p.z - start_p.z)/ncount*i);
@@ -2189,7 +2213,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::ProtoVertex* v1, WCPPID::Pro
 	}
 	if (n_bad<=1) ncount_line ++;
       }
-      //      std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
+      //std::cout << v1.Mag() << " " << v2.Mag() << " " << v1.Angle(v2)/3.1415926*180. << std::endl;
     }
   }
 
@@ -2242,7 +2266,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::ProtoVertex* v1, WCPPID::Pro
 	double step_size = 0.6*units::cm;
 	int ncount = std::round(sqrt(pow(start_p.x - end_p.x,2) + pow(start_p.y - end_p.y,2) + pow(start_p.z - end_p.z,2))/step_size);
 	int n_bad = 0;
-	for (int i=1;i!=ncount;i++){
+	for (int i=1;i<ncount;i++){
 	  Point test_p(start_p.x + (end_p.x - start_p.x)/ncount*i,
 		       start_p.y + (end_p.y - start_p.y)/ncount*i,
 		       start_p.z + (end_p.z - start_p.z)/ncount*i);
@@ -2304,7 +2328,7 @@ bool WCPPID::NeutrinoID::examine_vertices_1(WCPPID::ProtoVertex* v1, WCPPID::Pro
 	double step_size = 0.6*units::cm;
 	int ncount = std::round(sqrt(pow(start_p.x - end_p.x,2) + pow(start_p.y - end_p.y,2) + pow(start_p.z - end_p.z,2))/step_size);
 	int n_bad = 0;
-	for (int i=1;i!=ncount;i++){
+	for (int i=1;i<ncount;i++){
 	  Point test_p(start_p.x + (end_p.x - start_p.x)/ncount*i,
 		       start_p.y + (end_p.y - start_p.y)/ncount*i,
 		       start_p.z + (end_p.z - start_p.z)/ncount*i);
