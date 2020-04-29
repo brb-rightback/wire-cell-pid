@@ -315,19 +315,23 @@ WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster
 
 void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& remaining_segments, WCPPID::PR3DCluster* temp_cluster){
   bool flag_print = false;
+
+ 
   
   int count = 0;
   
   while(remaining_segments.size()!=0 && count < 2){
     WCPPID::ProtoSegment* curr_sg = remaining_segments.back();
     remaining_segments.pop_back();
+    if (map_segment_vertices.find(curr_sg) == map_segment_vertices.end()) continue;
+    
     WCPPID::ProtoVertex *start_v=0, *end_v=0;
     for (auto it = map_segment_vertices[curr_sg].begin(); it!=map_segment_vertices[curr_sg].end(); it++){
       if ((*it)->get_wcpt().index == curr_sg->get_wcpt_vec().front().index) start_v = *it;
       if ((*it)->get_wcpt().index == curr_sg->get_wcpt_vec().back().index) end_v = *it;
     }
     if (start_v==0 || end_v==0){
-      std::cout << "Error in finding vertices for a segment" << std::endl; 
+      std::cout << "Error in finding vertices for a segment" << " " << start_v << " " << end_v << " " << curr_sg->get_id() << " " << map_segment_vertices[curr_sg].size() << std::endl; 
       //std::cout << "Vertex: " << start_v->get_wcpt().index << " " << end_v->get_wcpt().index << std::endl;
     }
     
@@ -960,10 +964,11 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	add_proto_connection(v1,sg1,temp_cluster);
 	add_proto_connection(v2,sg1,temp_cluster);
 
-	//	std::cout << sg1->get_id() << std::endl;
+	//	std::cout << sg1->get_id() << " " << map_segment_vertices[sg1].size() << std::endl;
 
 	if (sg1->get_length() > 30*units::cm)	new_segments.push_back(sg1);
 
+	
 	// do dQ/dx fitting and exclude others ...
 	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
 	flag_final_fit = false;
