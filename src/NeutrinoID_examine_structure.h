@@ -269,7 +269,7 @@ bool WCPPID::NeutrinoID::examine_structure_4(WCPPID::ProtoVertex* vertex, WCPPID
 
 	for (auto it1 = map_segment_vertices.begin(); it1!=map_segment_vertices.end(); it1++){
 	  WCPPID::ProtoSegment *sg = it1->first;
-	  
+	  //if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
 	  WCP::WCPointCloud<double>::WCPoint closest_wcp = sg->get_closest_wcpt(test_p);
 	  std::pair<double, WCP::Point> results = sg->get_closest_point(test_p);
 	  if (results.first < min_dis) min_dis = results.first;
@@ -282,8 +282,7 @@ bool WCPPID::NeutrinoID::examine_structure_4(WCPPID::ProtoVertex* vertex, WCPPID
 	  if (std::get<2>(results_2d) < min_dis_w) min_dis_w = std::get<2>(results_2d);
 	}
 
-
-
+	//	std::cout << " " << candidate_wcps.at(i).index_u << " " << candidate_wcps.at(i).index_v << " " << candidate_wcps.at(i).index_w << " " << dis/units::cm << " " << min_dis/units::cm << " " << min_dis_u/units::cm << " " <<  min_dis_v/units::cm << " " <<  min_dis_w/units::cm << std::endl;
 	
 	if (min_dis > 0.9*units::cm   && min_dis_u + min_dis_v + min_dis_w > 1.8*units::cm &&
 	    (min_dis_u > 0.8*units::cm && min_dis_v > 0.8*units::cm
@@ -308,8 +307,10 @@ bool WCPPID::NeutrinoID::examine_structure_4(WCPPID::ProtoVertex* vertex, WCPPID
 	    }
 	  }
 
+	  //	  std::cout << dis/units::cm << " " << min_dis/units::cm << " " << min_dis_u/units::cm << " " <<  min_dis_v/units::cm << " " <<  min_dis_w/units::cm << std::endl;
+	  
 	  if (flag_pass){
-	    //	    std::cout << dis/units::cm << " " << min_dis/units::cm << " " << min_dis_u/units::cm << " " <<  min_dis_v/units::cm << " " <<  min_dis_w/units::cm << std::endl;
+	    
 	    if (max_dis < dis){
 	      max_dis = dis;
 	      max_wcp = candidate_wcps.at(i);

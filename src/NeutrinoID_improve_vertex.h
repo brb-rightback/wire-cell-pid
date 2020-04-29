@@ -43,11 +43,19 @@ bool WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
 }
 
 void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
-  /* for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){ */
-  /*  WCPPID::ProtoSegment *sg = it->first; */
-  /*  if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue; */
-  /*  std::cout << sg->get_associate_points().size() << std::endl; */
-  /* } */
+
+  // if all showers, no need to fit vertex with only two legs ...
+  bool flag_skip_two_legs = false;
+  {
+    int ntracks = 0;
+    for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+      WCPPID::ProtoSegment *sg = it->first;
+      if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+      if (!sg->get_flag_shower()) ntracks++;
+    }
+    if (ntracks ==0 )
+      flag_skip_two_legs = true;
+  }
 
   bool flag_found_vertex_activities = false;
   
@@ -70,7 +78,8 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
       else ntracks ++;
     }
     if (ntracks == 0 && (vtx != main_vertex) ) continue;
-
+    if (flag_skip_two_legs && it->second.size()<=2) continue;
+    
     auto wcp_save = vtx->get_wcpt();
     
     bool flag_update = fit_vertex(vtx, it->second, temp_cluster);
@@ -115,6 +124,7 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
     if (ntracks == 0 && vtx != main_vertex ) continue;
     if (vertices_in_long_muon.find(vtx)!=vertices_in_long_muon.end()) continue;  
     if (vtx == main_vertex && flag_found_vertex_activities) continue;
+    if (flag_skip_two_legs && it->second.size()<=2) continue;
     
     bool flag_update = search_for_vertex_activities(vtx, it->second, temp_cluster);
     if (flag_update) {

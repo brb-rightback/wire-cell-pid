@@ -1015,6 +1015,9 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_all_showers(WCPPI
     WCPPID::ProtoVertex *min_vtx = 0, *max_vtx = 0;
     for (auto it = vertex_candidates.begin(); it!=vertex_candidates.end(); it++){
       double val = ((*it)->get_fit_pt().x - center.x) * dir.X() + ((*it)->get_fit_pt().y - center.y) * dir.Y() + ((*it)->get_fit_pt().z - center.z) * dir.Z();
+      
+      //  std::cout << (*it)->get_fit_pt() << " " << map_vertex_segments[*it].size() << std::endl;
+	
       if (val > max_val){
 	max_val = val;
 	max_vtx = *it;
