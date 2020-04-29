@@ -48,12 +48,20 @@ bool WCPPID::NeutrinoID::examine_structure_1(WCPPID::PR3DCluster *temp_cluster){
 	 WCP::WCPointCloud<double>::WCPoint start_wcp = wcps.front();
 	 WCP::WCPointCloud<double>::WCPoint end_wcp = wcps.back();
 	 wcps.clear();
+	 //	 std::cout << start_wcp.index << std::endl;
 	 wcps.push_back(start_wcp);
 	 for (size_t i=0; i!=new_pts.size(); i++){
 	   WCP::WCPointCloud<double>::WCPoint& wcp =  pcloud_steiner->get_closest_wcpoint(new_pts.at(i));
-	   if (wcp.index != wcps.back().index) wcps.push_back(wcp);
+	   if (wcp.index != wcps.back().index ) {
+	     //std::cout << new_pts.at(i) << " " << wcp.index << std::endl;
+	     wcps.push_back(wcp);
+	   }
+	   if (wcps.back().index == end_wcp.index) break;
 	 }
-	 if (end_wcp.index != wcps.back().index) wcps.push_back(end_wcp);
+	 if (end_wcp.index != wcps.back().index) {
+	   //std::cout << end_wcp.index << std::endl;
+	   wcps.push_back(end_wcp);
+	 }
 	 flag_update = true;
 	 std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " id " << sg->get_id() << " replace Track Content with Straight Line" << std::endl;
        } // replace

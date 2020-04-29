@@ -51,6 +51,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   // }
   
   // form id vs. cluster ...
+
   map_id_cluster[main_cluster->get_cluster_id()] = main_cluster;
   main_cluster->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
   {
@@ -58,6 +59,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     map_cluster_length[main_cluster] = sqrt(pow(two_wcps.first.x - two_wcps.second.x, 2) + pow(two_wcps.first.y - two_wcps.second.y, 2) + pow(two_wcps.first.z - two_wcps.second.z, 2));
   }
   
+
   if (flag_other_clusters){
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
       map_id_cluster[(*it)->get_cluster_id()] = *it;
@@ -102,7 +104,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   if (flag_other_clusters){
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
       //if (skip_clusters.find(*it) != skip_clusters.end()) continue;
-      //std::cout << (*it)->get_cluster_id() << std::endl;
+      //      if ((*it)->get_cluster_id()!=64) continue;
+
       if (map_cluster_length[*it] > 6*units::cm){
 	// find the proto vertex ...
 	find_proto_vertex(*it, true, 2);
@@ -135,7 +138,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     deghosting();
   }
 
-  determine_overall_main_vertex();  
+  if (flag_main_cluster)
+    determine_overall_main_vertex();  
   
   if (flag_main_cluster && main_vertex !=0){
     // fit the vertex in 3D 
