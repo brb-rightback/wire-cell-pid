@@ -1011,7 +1011,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_all_showers(WCPPI
     TVector3 dir = pair_result.second;
     Point center = pair_result.first;
 
-    double min_val = 0, max_val = 0;
+    double min_val = 1e9, max_val = -1e9;
     WCPPID::ProtoVertex *min_vtx = 0, *max_vtx = 0;
     for (auto it = vertex_candidates.begin(); it!=vertex_candidates.end(); it++){
       double val = ((*it)->get_fit_pt().x - center.x) * dir.X() + ((*it)->get_fit_pt().y - center.y) * dir.Y() + ((*it)->get_fit_pt().z - center.z) * dir.Z();
@@ -1028,7 +1028,8 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_all_showers(WCPPI
     ToyPointCloud* pcloud_steiner = temp_cluster->get_point_cloud_steiner();
     if (pcloud_steiner->get_cloud().pts.size()>2){
       // Now create a fake segment and two fake vertices for track fitting ...
-      //  std::cout << max_vtx->get_fit_pt() << " " << min_vtx->get_fit_pt() << std::endl;
+      //std::cout << max_vtx << " " << min_vtx << " " << max_vtx->get_fit_pt() << " " << min_vtx->get_fit_pt() << std::endl;
+      
       auto max_wcp = pcloud_steiner->get_closest_wcpoint(max_vtx->get_fit_pt());
       auto min_wcp = pcloud_steiner->get_closest_wcpoint(min_vtx->get_fit_pt());
       temp_cluster->dijkstra_shortest_paths(max_wcp,2); 
