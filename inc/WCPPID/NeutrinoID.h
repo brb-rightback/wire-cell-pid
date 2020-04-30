@@ -166,7 +166,9 @@ namespace WCPPID{
     
     bool examine_vertices_2(WCPPID::PR3DCluster* temp_cluster); // two close vertices  ...
     void examine_segment(WCPPID::PR3DCluster* temp_cluster);
+    bool crawl_segment(WCPPID::ProtoSegment *sg, WCPPID::ProtoVertex *vtx, WCPPID::PR3DCluster* temp_cluster);
 
+    
     bool examine_vertices_4(WCPPID::PR3DCluster* temp_cluster); // two close vertices with multiple segments
     bool examine_vertices_4(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2); // check v1's segment against v2 ...
     
@@ -200,7 +202,7 @@ namespace WCPPID{
 
     
     // improve vertex ...
-    void improve_vertex(WCPPID::PR3DCluster* temp_cluster);
+    void improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool flag_search_vertex_activity = true);
     bool fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster);
     bool search_for_vertex_activities(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster, double search_range = 1.5*units::cm);
     bool eliminate_short_vertex_activities(WCPPID::PR3DCluster *temp_cluster);

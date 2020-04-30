@@ -93,7 +93,9 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     determine_direction(main_cluster);
     
     shower_determing_in_main_cluster(main_cluster);
-    determine_main_vertex(main_cluster);	
+    determine_main_vertex(main_cluster);
+    //improve_vertex(main_cluster, false); // do not search for vertex activities ...
+    
     
     map_cluster_main_vertices[main_cluster] = main_vertex;
     main_vertex = 0;
@@ -116,6 +118,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
 	determine_direction(*it);    
 	shower_determing_in_main_cluster(*it);
 	determine_main_vertex(*it, false);
+	//improve_vertex(main_cluster, false); // do not search for vertex activity
 	
 	if (main_vertex !=0){
 	  map_cluster_main_vertices[*it] = main_vertex;
