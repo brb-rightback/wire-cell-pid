@@ -187,9 +187,24 @@ void WCPPID::NeutrinoID::determine_overall_main_vertex(){
     if (max_length > map_cluster_length[main_cluster] * 0.8 )
       check_switch_main_cluster(map_cluster_main_vertices[main_cluster], max_length_cluster);
   }
-  
-  
+    
   main_vertex = map_cluster_main_vertices[main_cluster];
+
+  // examine the track connected to it ...
+  for (auto it = map_vertex_segments[main_vertex].begin(); it!= map_vertex_segments[main_vertex].end();it++){
+    WCPPID::ProtoSegment *sg = *it;
+    auto pair_results = calculate_num_daughter_showers(main_vertex, sg, false);
+    if (pair_results.first==1 && sg->get_length() < 1.5*units::cm && sg->get_medium_dQ_dx()/(43e3/units::cm) > 1.6){
+      TPCParams& mp = Singleton<TPCParams>::Instance();
+      sg->set_particle_type(2212);
+      sg->set_particle_mass(mp.get_mass_proton());
+      sg->cal_4mom();
+      //    std::cout << pair_results.first << " " << sg->get_length()/units::cm << " " << sg->get_medium_dQ_dx()/(43e3/units::cm) << std::endl;
+      //    if (sg->get_length()<1*units::cm && pair_results.
+    }
+  }
+
+  
   std::cout << "Overall main Vertex " << main_vertex->get_fit_pt() << " connecting to: ";
   for (auto it = map_vertex_segments[main_vertex].begin(); it!=map_vertex_segments[main_vertex].end(); it++){
     std::cout << (*it)->get_id() << ", ";

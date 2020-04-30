@@ -507,7 +507,10 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
  
 }
 
-std::pair<int, double> WCPPID::NeutrinoID::calculate_num_daughter_showers(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg){
+
+
+
+std::pair<int, double> WCPPID::NeutrinoID::calculate_num_daughter_showers(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, bool flag_count_shower){
   int number_showers = 0;
   double acc_length = 0;
   
@@ -524,7 +527,7 @@ std::pair<int, double> WCPPID::NeutrinoID::calculate_num_daughter_showers(WCPPID
       WCPPID::ProtoVertex *prev_vtx = it->first;
       WCPPID::ProtoSegment *current_sg = it->second;
       if (used_segments.find(current_sg)!=used_segments.end()) continue; // looked at it before ...
-      if (current_sg->get_flag_shower()){
+      if (current_sg->get_flag_shower() || (!flag_count_shower)){
 	  number_showers ++;
 	  acc_length += current_sg->get_length();
       }
@@ -1345,7 +1348,7 @@ float WCPPID::NeutrinoID::calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex){
 }
 
 
-bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex){
+bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, bool flag_final){
   
   TPCParams& mp = Singleton<TPCParams>::Instance();
   std::set<WCPPID::ProtoVertex* > used_vertices;

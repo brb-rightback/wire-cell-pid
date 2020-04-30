@@ -232,7 +232,8 @@ namespace WCPPID{
     
     void examine_all_showers(WCPPID::PR3DCluster* temp_cluster);
 
-    std::pair<int, double> calculate_num_daughter_showers(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg);
+    std::pair<int, double> calculate_num_daughter_showers(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, bool flag_count_shower = true);
+    
     
     bool examine_maps(WCPPID::PR3DCluster* temp_cluster);
     bool examine_maps(WCPPID::ProtoVertex *temp_vertex);
@@ -249,7 +250,7 @@ namespace WCPPID{
     WCPPID::ProtoVertex* compare_main_vertices_global(WCPPID::ProtoVertexSelection& vertex_candidates);
     std::pair<WCP::Point, TVector3> calc_PCA_main_axis(WCP::PointVector& points);
     
-    bool examine_direction(WCPPID::ProtoVertex* vertex);
+    bool examine_direction(WCPPID::ProtoVertex* vertex, bool flag_final = false);
     
     // clustering points
     void clustering_points(WCPPID::PR3DCluster* temp_cluster);
