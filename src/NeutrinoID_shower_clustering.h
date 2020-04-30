@@ -133,6 +133,8 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
       if (pi0_showers.find(*it1) != pi0_showers.end()) continue; // cannot be already in a pi0
       if ((*it1)->get_start_vertex().second != 3) continue;
       if (!(*it1)->get_start_segment()->get_flag_shower()) continue;
+
+      
       
       Point test_p = (*it1)->get_closest_point(main_vertex->get_fit_pt()).second; 
       TVector3 dir = (*it1)->cal_dir_3vector(test_p, 15*units::cm); 
@@ -155,11 +157,13 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
 	WCPPID::WCShower *shower_2 = it1->first;
 	if (shower_1 == shower_2) continue;
 	WCP::Line *l2 = it1->second;
+	if (l1->get_p1() == l2->get_p1()) continue;
 	double length_2 = shower_2->get_total_length();
 
 	auto pair_points = l1->closest_dis_points(*l2);
 	Point center(0,0,0);
 
+	//	std::cout << l1->get_p1() << " " << l2->get_p1() << " " << l1->get_dir().Angle(l2->get_dir()) << std::endl;
 	//	std::cout << length_1/units::cm << " " << length_2/units::cm << std::endl;
 	
 	if (length_1 > 15*units::cm && length_2 > 15*units::cm){
@@ -188,7 +192,8 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
 	    center.x = (pair_points.first.x + pair_points.second.x)/2.;
 	    center.y = (pair_points.first.y + pair_points.second.y)/2.;
 	    center.z = (pair_points.first.z + pair_points.second.z)/2.;
-
+	    
+	    
 	    // update directional information for the small one ...
 	    Point test_p = shower_2->get_closest_point(center).second;
 	    TVector3 dir3 = shower_2->cal_dir_3vector(test_p, 15*units::cm);
