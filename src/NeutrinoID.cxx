@@ -41,10 +41,10 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   bool flag_other_clusters = true;
   bool flag_main_cluster = true;
 
-  // hack the main cluster
+  // // hack the main cluster
   // for (auto it = other_clusters.begin(); it != other_clusters.end(); it++){
   //   WCPPID::PR3DCluster *cluster = *it;    
-  //   if (cluster->get_cluster_id()==59) {
+  //   if (cluster->get_cluster_id()==43) {
   //     swap_main_cluster(cluster);
   //     break;
   //   }
@@ -352,7 +352,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_global(WCPPID::Pr
     WCPPID::ProtoVertex *vtx = *it;
     if (fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x))
       map_vertex_num[vtx] +=0.5; // good      // fiducial volume ..
-    //    std::cout << "B: " << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
+    // std::cout << "B: " << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
   }
 
   //  for (auto it = vertex_candidates.begin(); it != vertex_candidates.end(); it++){
@@ -387,7 +387,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_global(WCPPID::Pr
 	map_vertex_num[vtx] += 0.25/2.;
 	delta ++;
       }
-      //      std::cout << "D: " << vtx->get_cluster_id() << " " << map_vertex_num[vtx] << " " << dir.Angle(dir1)/3.1415926*180. << " " << main_cluster->get_cluster_id() << std::endl;
+      //      std::cout << "D: " << vtx->get_cluster_id() << " " << map_vertex_num[vtx] << " " << dir.Angle(dir1)/3.1415926*180. << " " << main_cluster->get_cluster_id() << " " << dir.Mag()/units::cm << std::endl;
     }
     
     // nothing point to this one ...

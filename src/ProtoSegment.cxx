@@ -158,6 +158,7 @@ bool WCPPID::ProtoSegment::determine_shower_direction(){
   double total_length;
   for (size_t i=0;i+1<local_points_vec.size();i++){
     double length = sqrt(pow(fit_pt_vec.at(i+1).x - fit_pt_vec.at(i).x,2) + pow(fit_pt_vec.at(i+1).y - fit_pt_vec.at(i).y,2) + pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
+    //std::cout << i << " " << std::get<2>(vec_rms_vals.at(i))/units::cm << std::endl;
     total_length += length;
     if (std::get<2>(vec_rms_vals.at(i))!=0){
       total_effective_length += length;
@@ -188,10 +189,10 @@ bool WCPPID::ProtoSegment::determine_shower_direction(){
     
     std::vector<std::tuple<int, int, double> > threshold_segs;
     for(size_t i=0;i!=vec_dQ_dx.size(); i++){
-      //    std::cout << i << " A: " << main_dir.Angle(vec_dir.at(i))/3.1415926*180. << std::endl;
-      if (threshold_segs.size()==0 && std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 && main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30){
+      //      std::cout << i << " A: " << main_dir.Angle(vec_dir.at(i))/3.1415926*180. << " " << vec_dQ_dx.at(i) << " " << std::get<2>(vec_rms_vals.at(i))/units::cm << std::endl;
+      if (threshold_segs.size()==0 && main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30 && (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 || vec_dQ_dx.at(i) > 1.6)){
 	threshold_segs.push_back(std::make_tuple(i,i,std::get<2>(vec_rms_vals.at(i))));
-      }else if (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4&& main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30){
+      }else if (main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30 && (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 || vec_dQ_dx.at(i) > 1.6)){
 	if (i == std::get<1>(threshold_segs.back())+1 && std::get<2>(threshold_segs.back()) < std::get<2>(vec_rms_vals.at(i)) ){
 	  std::get<1>(threshold_segs.back()) = i;
 	  std::get<2>(threshold_segs.back()) = std::get<2>(vec_rms_vals.at(i));
@@ -222,9 +223,9 @@ bool WCPPID::ProtoSegment::determine_shower_direction(){
     threshold_segs.clear();
     for(int i=vec_dQ_dx.size()-1;i>=0; i--){
       // std::cout << "B: " << 180-main_dir.Angle(vec_dir.at(i))/3.1415926*180. << std::endl;
-      if (threshold_segs.size()==0 && std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 && 180-main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30){
+      if (threshold_segs.size()==0 && 180-main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30 && (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 || vec_dQ_dx.at(i) > 1.6)){
 	threshold_segs.push_back(std::make_tuple(i,i,std::get<2>(vec_rms_vals.at(i))));
-      }else if (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 && 180-main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30){
+      }else if (180-main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30 && (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 || vec_dQ_dx.at(i) > 1.6)){
 	if (i == std::get<1>(threshold_segs.back())-1 && std::get<2>(threshold_segs.back()) < std::get<2>(vec_rms_vals.at(i)) ){
 	  std::get<1>(threshold_segs.back()) = i;
 	  std::get<2>(threshold_segs.back()) = std::get<2>(vec_rms_vals.at(i));
@@ -257,7 +258,7 @@ bool WCPPID::ProtoSegment::determine_shower_direction(){
       flag_dir = -1;
     }
     
-    // std::cout << cluster_id << " " << id << " " << total_length1/units::cm << " " << total_length2/units::cm << " " << max_length1/units::cm << " " << max_length2/units::cm << " " << flag_dir << std::endl;
+    //   std::cout << cluster_id << " " << id << " " << total_length1/units::cm << " " << total_length2/units::cm << " " << max_length1/units::cm << " " << max_length2/units::cm << " " << flag_dir << std::endl;
   }else{
     if (total_length < 5*units::cm){
       if (!is_shower_trajectory())
@@ -280,7 +281,7 @@ bool WCPPID::ProtoSegment::determine_shower_direction(){
       }else if (ncount_front > 1.2 * ncount_back){
 	flag_dir = 1;
       }
-      //      std::cout << ncount_front << " " << ncount_back << std::endl;
+      // std::cout << id << " " << ncount_front << " " << ncount_back << std::endl;
        
     }
   }
@@ -1236,7 +1237,13 @@ bool WCPPID::ProtoSegment::is_dir_weak(){
   
   if (fabs(particle_type)==13 && particle_score > 0.07 && length >= 5*units::cm
       || fabs(particle_type)==13 &&  particle_score > 0.15 && length < 5*units::cm
+      || fabs(particle_type)==2212 && particle_score > 0.13 && length >=5*units::cm
+      || fabs(particle_type)==2212 && particle_score > 0.27 && length < 5*units::cm
       || dir_weak ) return true;
+
+
+  // std::cout << particle_type << " " << particle_score << std::endl;
+  
   return false;
 }
 

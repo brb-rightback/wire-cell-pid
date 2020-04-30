@@ -810,17 +810,18 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
   
   if (n_good_tracks == 0){
     if ( length_tracks < 1./3.*length_showers || length_tracks < 2./3.*length_showers && n_tracks == 1){
-      if ( (length_showers + length_tracks) < 40*units::cm){
+      if ( (length_showers + length_tracks) < 40*units::cm || length_tracks < 15*units::cm){
 	flag_change_showers = true;
-      }else if (length_tracks < 0.15 * length_showers && (length_showers + length_tracks) < 60*units::cm ){
+      }else if (length_tracks < 0.18 * length_showers && ((length_showers + length_tracks) < 60*units::cm || length_tracks < 15*units::cm)){
 	flag_change_showers = true;
       }
     }else if ( length_tracks < 35*units::cm &&  length_tracks + length_showers  < 50*units::cm && length_showers < 15*units::cm){
       flag_change_showers = true;
     }
   }
-  //  if (!flag_change_showers)
-  //  std::cout << temp_cluster->get_cluster_id() << " " << n_good_tracks << " " << n_tracks << " " << n_showers << " " << length_good_tracks/units::cm << " " << length_tracks/units::cm << " " << length_showers/units::cm << std::endl;
+  
+  //if (!flag_change_showers)
+  //std::cout << temp_cluster->get_cluster_id() << " " << n_good_tracks << " " << n_tracks << " " << n_showers << " " << length_good_tracks/units::cm << " " << length_tracks/units::cm << " " << length_showers/units::cm << " " << flag_change_showers << std::endl;
 
   if (flag_change_showers){
     for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){ 
@@ -1010,12 +1011,17 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_all_showers(WCPPI
     auto pair_result = calc_PCA_main_axis(pts);
     TVector3 dir = pair_result.second;
     Point center = pair_result.first;
+    dir = dir.Unit();
 
     double min_val = 1e9, max_val = -1e9;
     WCPPID::ProtoVertex *min_vtx = 0, *max_vtx = 0;
     for (auto it = vertex_candidates.begin(); it!=vertex_candidates.end(); it++){
       double val = ((*it)->get_fit_pt().x - center.x) * dir.X() + ((*it)->get_fit_pt().y - center.y) * dir.Y() + ((*it)->get_fit_pt().z - center.z) * dir.Z();
-      
+      if (map_vertex_segments[*it].size()==1 && (*map_vertex_segments[*it].begin())->get_length()<1*units::cm){
+	if (val >0) val -= 0.5*units::cm;
+	else if (val <0) val += 0.5*units::cm;
+	//	std::cout << "gaga " << std::endl;
+      }
       //  std::cout << (*it)->get_fit_pt() << " " << map_vertex_segments[*it].size() << std::endl;
 	
       if (val > max_val){

@@ -56,7 +56,7 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster){
     if (ntracks ==0 )
       flag_skip_two_legs = true;
   }
-
+  
   bool flag_found_vertex_activities = false;
   
   // search for vertex activities ...

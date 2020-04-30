@@ -354,7 +354,7 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
       if (std::get<1>(kink_tuple).Mag()!=0 ){
 	// find the extreme point ... PR3DCluster function
 	break_wcp = temp_cluster->proto_extend_point(std::get<0>(kink_tuple), std::get<1>(kink_tuple), std::get<2>(kink_tuple), std::get<3>(kink_tuple));
-	//std::cout << "Break point: " << remaining_segments.size() << " " << std::get<0>(kink_tuple) << " " << std::get<1>(kink_tuple).Mag() << " " << std::get<3>(kink_tuple) << " " << break_wcp.x/units::cm << " " << break_wcp.y/units::cm << " " << break_wcp.z/units::cm << " " << break_wcp.index << std::endl;
+	//std::cout << "Break point: " << remaining_segments.size() << " " << std::get<0>(kink_tuple) << " " << std::get<1>(kink_tuple).Mag() << " " << std::get<3>(kink_tuple) << " " << break_wcp.x/units::cm << " " << break_wcp.y/units::cm << " " << break_wcp.z/units::cm << " " << break_wcp.index << " " << sqrt(pow(start_v->get_wcpt().x - break_wcp.x,2) + pow(start_v->get_wcpt().y - break_wcp.y,2) + pow(start_v->get_wcpt().z - break_wcp.z,2))/units::cm << " " << sqrt(pow(end_v->get_wcpt().x - break_wcp.x,2) +  pow(end_v->get_wcpt().y - break_wcp.y,2) +   pow(end_v->get_wcpt().z - break_wcp.z,2))/units::cm << std::endl;
         if (sqrt(pow(start_v->get_wcpt().x - break_wcp.x,2) +
 	       pow(start_v->get_wcpt().y - break_wcp.y,2) +
 	       pow(start_v->get_wcpt().z - break_wcp.z,2)) <= 1*units::cm &&
@@ -362,6 +362,7 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
 		 pow(end_v->get_wcpt().y - break_wcp.y,2) +
 		 pow(end_v->get_wcpt().z - break_wcp.z,2)) > 1*units::cm)
 	  test_start_p = std::get<0>(kink_tuple);
+
       }else{
 	break;
       }
@@ -374,9 +375,15 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
       // break into two tracks and adding a ProtoVertex in this function ...
       std::list<WCP::WCPointCloud<double>::WCPoint> wcps_list1;
       std::list<WCP::WCPointCloud<double>::WCPoint> wcps_list2;
-      bool flag_break = temp_cluster->proto_break_tracks(start_v->get_wcpt(), break_wcp, end_v->get_wcpt(), wcps_list1, wcps_list2);
-
-      //      std::cout << break_wcp.index_u << " " << break_wcp.index_v << " " << break_wcp.index_w << " " << break_wcp.mcell->GetTimeSlice() << std::endl;
+      
+      bool flag_break;
+      if ( sqrt(pow(end_v->get_wcpt().x - break_wcp.x,2) + pow(end_v->get_wcpt().y - break_wcp.y,2) + pow(end_v->get_wcpt().z - break_wcp.z,2)) < 1*units::cm && map_vertex_segments[end_v].size()==1){
+	flag_break = temp_cluster->proto_break_tracks(start_v->get_wcpt(), break_wcp, end_v->get_wcpt(), wcps_list1, wcps_list2, true);
+      }else{
+	flag_break = temp_cluster->proto_break_tracks(start_v->get_wcpt(), break_wcp, end_v->get_wcpt(), wcps_list1, wcps_list2);
+      }
+	  
+      //  std::cout << break_wcp.index_u << " " << break_wcp.index_v << " " << break_wcp.index_w << " " << break_wcp.mcell->GetTimeSlice() << std::endl;
       
       if (flag_break){
 	std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " breaking point: " << flag_break << " " << wcps_list1.front().index << " " << wcps_list1.back().index << " " << wcps_list2.front().index << " " << wcps_list2.back().index << std::endl;
@@ -422,8 +429,29 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
 	  temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, false);	
 	  remaining_segments.push_back(sg3);
 	}
-      }
-    }
+      }/* else if ((!flag_break) && sqrt(pow(end_v->get_wcpt().x - break_wcp.x,2) + pow(end_v->get_wcpt().y - break_wcp.y,2) + pow(end_v->get_wcpt().z - break_wcp.z,2)) < 1*units::cm && map_vertex_segments[end_v].size()==1){ */
+    /* 	//std::cout << "haah " << std::endl; */
+    /* 	std::vector<WCP::WCPointCloud<double>::WCPoint >& wcps = curr_sg->get_wcpt_vec(); */
+    /* 	end_v->set_wcpt(break_wcp); */
+	
+    /* 	WCP::WCPointCloud<double>::WCPoint  min_wcp = wcps.back(); */
+    /* 	double min_dis = 1e9; */
+    /* 	for (size_t i=0;i!=wcps.size(); i++){ */
+    /* 	  double dis = sqrt(pow(break_wcp.x-wcps.at(i).x,2) + pow(break_wcp.y - wcps.at(i).y,2) + pow(break_wcp.z - wcps.at(i).z,2)); */
+    /* 	  if (dis < min_dis){ */
+    /* 	    min_dis = dis; */
+    /* 	    min_wcp = wcps.at(i); */
+    /* 	  } */
+    /* 	} */
+    /* 	while(wcps.back().index != min_wcp.index){ */
+    /* 	  wcps.pop_back(); */
+    /* 	} */
+    /* 	if (wcps.size()>1)  wcps.pop_back(); */
+    /* 	wcps.push_back(break_wcp); */
+
+    /* 	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, false);	 */
+    /*   } */
+     } 
     
     //    std::cout << proto_vertices.size() << " " << map_vertex_segments.size() << " " << map_segment_vertices[sg2].size() << " " << map_cluster_vertices[main_cluster].size() << " " << map_vertex_cluster.size()  << std::endl;
     // std::cout << proto_segments.size() << " " << map_segment_vertices.size() << " " << map_vertex_segments[v3].size() << " " << map_cluster_segments[main_cluster].size() << " " << map_segment_cluster.size() << std::endl;
