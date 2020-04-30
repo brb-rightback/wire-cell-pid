@@ -1235,14 +1235,13 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
 bool WCPPID::ProtoSegment::is_dir_weak(){
   double length = get_length();
   
+  
   if (fabs(particle_type)==13 && particle_score > 0.07 && length >= 5*units::cm
       || fabs(particle_type)==13 &&  particle_score > 0.15 && length < 5*units::cm
       || fabs(particle_type)==2212 && particle_score > 0.13 && length >=5*units::cm
       || fabs(particle_type)==2212 && particle_score > 0.27 && length < 5*units::cm
       || dir_weak ) return true;
 
-
-  // std::cout << particle_type << " " << particle_score << std::endl;
   
   return false;
 }
