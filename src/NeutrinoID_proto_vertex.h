@@ -992,21 +992,35 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
       }
 
       if (map_vertex_segments.find(v1)!=map_vertex_segments.end() || map_vertex_segments.find(v2) != map_vertex_segments.end()){
-	WCPPID::ProtoSegment *sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
-	//std::cout << v1 << " " << v2 << " " << sg1 << std::endl;
-	add_proto_connection(v1,sg1,temp_cluster);
-	add_proto_connection(v2,sg1,temp_cluster);
-
-	//	std::cout << sg1->get_id() << " " << map_segment_vertices[sg1].size() << std::endl;
-
-	if (sg1->get_length() > 30*units::cm)	new_segments.push_back(sg1);
-
-	
-	// do dQ/dx fitting and exclude others ...
-	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
-	flag_final_fit = false;
-	// update output ...
-	std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Other tracks -- # of Vertices: " << map_vertex_segments.size() << "; # of Segments: " << map_segment_vertices.size() << std::endl;
+	if (v1->get_wcpt().index != v2->get_wcpt().index){
+	  WCPPID::ProtoSegment *sg1 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
+	  //std::cout << v1 << " " << v2 << " " << sg1 << std::endl;
+	  add_proto_connection(v1,sg1,temp_cluster);
+	  add_proto_connection(v2,sg1,temp_cluster);
+	  
+	  //	std::cout << sg1->get_id() << " " << map_segment_vertices[sg1].size() << std::endl;
+	  
+	  if (sg1->get_length() > 30*units::cm)	new_segments.push_back(sg1);
+	  
+	  /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
+	  /*   WCPPID::ProtoSegment *sg = it->first; */
+	  /*   std::cout << sg->get_wcpt_vec().size() << " " << it->second.size() << std::endl; */
+	  /*   for (auto it1 = it->second.begin(); it1!= it->second.end(); it1++){ */
+	  /*     std::cout << sg->get_wcpt_vec().front().index << " " << sg->get_wcpt_vec().back().index << " " << (*it1)->get_wcpt().index << std::endl; */
+	      
+	  /*   } */
+	  /* } */
+	  
+	  
+	  // do dQ/dx fitting and exclude others ...
+	  temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+	  flag_final_fit = false;
+	  // update output ...
+	  std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Other tracks -- # of Vertices: " << map_vertex_segments.size() << "; # of Segments: " << map_segment_vertices.size() << std::endl;
+	}else{
+	  if (map_vertex_segments.find(v1) == map_vertex_segments.end()) delete v1;
+	  if (map_vertex_segments.find(v2) == map_vertex_segments.end()) delete v2;
+	}
       }else{
 	// hack
 
