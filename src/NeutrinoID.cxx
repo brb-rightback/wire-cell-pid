@@ -151,6 +151,14 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     improve_vertex(main_cluster);
     clustering_points(main_cluster);
     examine_direction(main_vertex);
+
+    std::cout << "Overall main Vertex " << main_vertex->get_fit_pt() << " connecting to: ";
+    for (auto it = map_vertex_segments[main_vertex].begin(); it!=map_vertex_segments[main_vertex].end(); it++){
+      std::cout << (*it)->get_id() << ", ";
+    }
+    std::cout << " in cluster " << main_vertex->get_cluster_id() << std::endl;
+    print_segs_info(main_vertex->get_cluster_id(), main_vertex);
+    
     
     // overall
     separate_track_shower();
@@ -208,12 +216,7 @@ void WCPPID::NeutrinoID::determine_overall_main_vertex(){
   }
 
   
-  std::cout << "Overall main Vertex " << main_vertex->get_fit_pt() << " connecting to: ";
-  for (auto it = map_vertex_segments[main_vertex].begin(); it!=map_vertex_segments[main_vertex].end(); it++){
-    std::cout << (*it)->get_id() << ", ";
-  }
-  std::cout << " in cluster " << main_vertex->get_cluster_id() << std::endl;
-  print_segs_info(main_vertex->get_cluster_id(), main_vertex);
+  
   
   // clean up long muons ...
   {

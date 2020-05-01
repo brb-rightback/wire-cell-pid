@@ -170,6 +170,25 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
 	}
       }
     }
+  } // flag activities ...
+
+
+  if (main_vertex != 0 && main_vertex->get_cluster_id() == temp_cluster->get_cluster_id()){
+    for (auto it = map_vertex_segments[main_vertex].begin(); it!= map_vertex_segments[main_vertex].end(); it++){
+      WCPPID::ProtoSegment *sg = (*it);
+      std::pair<int, double> pair_result = calculate_num_daughter_showers(main_vertex, sg, false);
+      if (pair_result.first <=2 && sg->get_flag_shower_trajectory()){
+	if (!sg->is_shower_trajectory()){
+	  WCPPID::ProtoVertex *start_v=0, *end_v=0;
+	  for (auto it = map_segment_vertices[sg].begin(); it!=map_segment_vertices[sg].end(); it++){
+	    if ((*it)->get_wcpt().index == sg->get_wcpt_vec().front().index) start_v = *it;
+	    if ((*it)->get_wcpt().index == sg->get_wcpt_vec().back().index) end_v = *it;
+	  }
+	  sg->determine_dir_track(map_vertex_segments[start_v].size(), map_vertex_segments[end_v].size(), false);
+	}
+	//	std::cout << sg->get_id() << " " << sg->is_shower_trajectory() << std::endl;
+      }
+    }
   }
   
 }
