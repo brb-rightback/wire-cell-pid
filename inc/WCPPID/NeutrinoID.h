@@ -121,6 +121,8 @@ namespace WCPPID{
     bool del_proto_vertex(ProtoVertex *pv);
     bool del_proto_segment(ProtoSegment *ps);
     bool add_proto_connection(ProtoVertex *pv, ProtoSegment *ps, WCPPID::PR3DCluster* cluster);
+    bool del_proto_connection(ProtoVertex *pv, ProtoSegment *ps);
+    
     void organize_vertices_segments();
     
     std::tuple<ProtoVertex*, ProtoSegment*, WCP::Point> check_end_point(WCPPID::PR3DCluster* temp_cluster, WCP::PointVector& tracking_path, bool flag_front = true, double vtx_cut1 = 0.9*units::cm, double vtx_cut2 = 2.0*units::cm, double sg_cut1 = 2.0 * units::cm, double sg_cut2 = 1.2*units::cm);
@@ -168,6 +170,8 @@ namespace WCPPID{
     void examine_segment(WCPPID::PR3DCluster* temp_cluster);
     bool crawl_segment(WCPPID::ProtoSegment *sg, WCPPID::ProtoVertex *vtx, WCPPID::PR3DCluster* temp_cluster);
 
+    void examine_partial_identical_segments(WCPPID::PR3DCluster* temp_cluster);
+    
     
     bool examine_vertices_4(WCPPID::PR3DCluster* temp_cluster); // two close vertices with multiple segments
     bool examine_vertices_4(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2); // check v1's segment against v2 ...

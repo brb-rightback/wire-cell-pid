@@ -1166,7 +1166,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
     
     // positive is good ...
     map_vertex_num[vtx] -= (n_proton_in - n_proton_out);   // proton information ...
-    //std::cout << "A: " << map_vertex_num[vtx] << " " << n_proton_in << " " << n_proton_out << std::endl;
+    //    std::cout << "A: " << map_vertex_num[vtx] << " " << n_proton_in << " " << n_proton_out << std::endl;
   }
 
   // whether the vertex is at beginning or not ...
@@ -1197,7 +1197,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
     }
 
     
-    //std::cout << "B: " << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(200*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
+    //    std::cout << "B: " << map_vertex_num[vtx] << " " << (vtx->get_fit_pt().z - min_z)/(200*units::cm) << " " << map_vertex_segments[vtx].size()/4. << std::endl;
   }
   
   // whether the vetex is at boundary or not ...
@@ -1205,7 +1205,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
     WCPPID::ProtoVertex *vtx = *it;
     if (fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x))
       map_vertex_num[vtx] +=0.5; // good      // fiducial volume ..
-    //std::cout << "C: " << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
+    //    std::cout << "C: " << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
   }
 
   for (auto it = vertex_candidates.begin(); it != vertex_candidates.end(); it++){
@@ -1336,7 +1336,8 @@ float WCPPID::NeutrinoID::calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex){
       if (max_angle >=0 && flag_check){
 	if (max_angle < 35) num_conflicts += 5;
 	else if (max_angle < 70) num_conflicts += 3; // angle does not look right ...
-	else if (max_angle < 100) num_conflicts += 1;
+	else if (max_angle < 85) num_conflicts += 1;
+	else if (max_angle < 110) num_conflicts += 0.25;
       }
     }
     
@@ -1350,7 +1351,7 @@ float WCPPID::NeutrinoID::calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex){
     }
     if (n_in_shower >0 && n_out_tracks > 0) {
       num_conflicts += std::min(n_in_shower, n_out_tracks);
-      // std::cout << "Wrong: " << n_in_shower << " showers in and " << n_out_tracks << " tracks out! " << std::endl;
+      //      std::cout << "Wrong: " << n_in_shower << " showers in and " << n_out_tracks << " tracks out! " << std::endl;
     }
   }
   //  std::cout << num_conflicts << std::endl;
