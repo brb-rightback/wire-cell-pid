@@ -2071,6 +2071,9 @@ void WCPPID::NeutrinoID::examine_vertices(WCPPID::PR3DCluster* temp_cluster){
 
 // examine if the initial vertices are not at the extreme location ...
 void WCPPID::NeutrinoID::examine_vertices_3(){
+  
+
+  
   // examine main_cluster_initial_pair_vertices ...
   std::vector<WCPPID::ProtoVertex* > temp_vertices;
   if (main_cluster_initial_pair_vertices.first!=0) temp_vertices.push_back(main_cluster_initial_pair_vertices.first);
@@ -2097,7 +2100,7 @@ void WCPPID::NeutrinoID::examine_vertices_3(){
     
     auto wcp1 = main_cluster->get_local_extension(vtx->get_wcpt(),2);
 
-    if (wcp1.index == vtx->get_wcpt().index) continue;
+    if (wcp1.index == vtx->get_wcpt().index || wcp1.index == wcp2.index) continue;
     
     if (flag_start){
       main_cluster->dijkstra_shortest_paths(wcp1,2);  
@@ -2117,9 +2120,15 @@ void WCPPID::NeutrinoID::examine_vertices_3(){
     
     //    std::cout << wcps.size() << " " << main_cluster->get_path_wcps().size() << std::endl;
   }
-  if (flag_refit)
+  if (flag_refit){
+    /* for (auto it5 = map_segment_vertices.begin(); it5 != map_segment_vertices.end(); it5++){ */
+    /*   std::cout << it5->second.size() << " " << it5->first->get_wcpt_vec().front().index << " " << it5->first->get_wcpt_vec().back().index << std::endl; */
+    /* } */
+    /* for (auto it5 = map_vertex_segments.begin(); it5 != map_vertex_segments.end(); it5++){ */
+    /*   std::cout << it5->first->get_wcpt().index << " " << it5->second.size() << std::endl; */
+    /* } */
     main_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
-
+  }
   //  std::cout << "haha " << std::endl;
   
   
