@@ -1,6 +1,9 @@
 void WCPPID::NeutrinoID::examine_structure(WCPPID::PR3DCluster *temp_cluster){
   // change 2 to 1
+  
+  
 
+  
   if (examine_structure_2(temp_cluster) )
      temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
   // straighten 1
@@ -95,7 +98,7 @@ bool WCPPID::NeutrinoID::examine_structure_2(WCPPID::PR3DCluster *temp_cluster){
       WCPPID::ProtoVertex *vtx1 = find_other_vertex(sg1, vtx);
       WCPPID::ProtoVertex *vtx2 = find_other_vertex(sg2, vtx);
 
-      //      std::cout << vtx1 << " " << vtx2 << std::endl;
+
       
       double step_size = 0.6*units::cm;
       Point start_p = vtx1->get_fit_pt();
@@ -132,11 +135,17 @@ bool WCPPID::NeutrinoID::examine_structure_2(WCPPID::PR3DCluster *temp_cluster){
 	  if (wcp.index != wcps.back().index) wcps.push_back(wcp);
 	}
 	if (end_wcp.index != wcps.back().index) wcps.push_back(end_wcp);
-	WCPPID::ProtoSegment *sg3 = new WCPPID::ProtoSegment(acc_segment_id, wcps, temp_cluster->get_cluster_id()); acc_segment_id++;
-	//	std::cout << wcps.size() << std::endl;
-	//delete the old segments and old vertices
-	add_proto_connection(vtx1,sg3,temp_cluster);
-	add_proto_connection(vtx2,sg3,temp_cluster);
+
+	if (vtx1->get_wcpt().index != vtx2->get_wcpt().index){
+	  WCPPID::ProtoSegment *sg3 = new WCPPID::ProtoSegment(acc_segment_id, wcps, temp_cluster->get_cluster_id()); acc_segment_id++;
+	  add_proto_connection(vtx1,sg3,temp_cluster);
+	  add_proto_connection(vtx2,sg3,temp_cluster);
+	}else{
+	  for (auto it5 = map_vertex_segments[vtx2].begin(); it5 != map_vertex_segments[vtx2].end(); it5++){
+	    add_proto_connection(vtx1, *it5, temp_cluster);
+	  }
+	  del_proto_vertex(vtx2);
+	}
 
 	del_proto_segment(sg1);
 	del_proto_segment(sg2);
@@ -150,6 +159,8 @@ bool WCPPID::NeutrinoID::examine_structure_2(WCPPID::PR3DCluster *temp_cluster){
     }
   } // continue
 
+  
+  
   return flag_update;
 }
 
