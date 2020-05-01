@@ -1208,6 +1208,7 @@ int main(int argc, char* argv[])
 				 );
   ct_point_cloud.AddPoints(timesliceId,timesliceChannel,raw_charge,raw_charge_err);
   ct_point_cloud.AddDeadChs(dead_u_index, dead_v_index, dead_w_index);
+  //  ct_point_cloud.UpdateDeadChs();
   ct_point_cloud.build_kdtree_index();
 
   // examine the clustering ... 
@@ -1293,8 +1294,38 @@ int main(int argc, char* argv[])
   
   Trun1->Fill();
 
-  if (T_bad_ch!=0)
-    T_bad_ch->CloneTree(-1,"fast");
+  if (T_bad_ch!=0){
+    //  T_bad_ch->CloneTree(-1,"fast");
+    Int_t chid, plane;
+    Int_t start_time,end_time;
+    T_bad_ch->SetBranchAddress("chid",&chid);
+    T_bad_ch->SetBranchAddress("plane",&plane);
+    T_bad_ch->SetBranchAddress("start_time",&start_time);
+    T_bad_ch->SetBranchAddress("end_time",&end_time);
+    Int_t temp_run_no, temp_subrun_no, temp_event_no;
+    T_bad_ch->SetBranchAddress("runNo",&temp_run_no);
+    T_bad_ch->SetBranchAddress("subRunNo",&temp_subrun_no);
+    T_bad_ch->SetBranchAddress("eventNo",&temp_event_no);
+    
+    TTree *T_bad_ch1 = new TTree("T_bad_ch","T_bad_ch");
+    T_bad_ch1->SetDirectory(file1);
+    T_bad_ch1->Branch("chid",&chid,"chid/I");
+    T_bad_ch1->Branch("plane",&plane,"plane/I");
+    T_bad_ch1->Branch("start_time",&start_time,"start_time/I");
+    T_bad_ch1->Branch("end_time",&end_time,"end_time/I");
+    T_bad_ch1->Branch("runNo",&temp_run_no,"runNo/I");
+    T_bad_ch1->Branch("subRunNo",&temp_subrun_no,"subRunNo/I");
+    T_bad_ch1->Branch("eventNo",&temp_event_no,"eventNo/I");
+    
+    for (int i=0;i!=T_bad_ch->GetEntries();i++){
+      T_bad_ch->GetEntry(i);
+      if (temp_run_no != run_no || temp_subrun_no!=subrun_no || temp_event_no!=event_no) continue;
+      T_bad_ch1->Fill();
+    }
+    
+  }
+
+
   
   TTree *T_flash1 = new TTree("T_flash","T_flash");
   T_flash1->SetDirectory(file1);

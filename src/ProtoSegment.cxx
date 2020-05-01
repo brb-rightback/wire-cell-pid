@@ -258,7 +258,7 @@ bool WCPPID::ProtoSegment::determine_shower_direction(){
       flag_dir = -1;
     }
     
-    //   std::cout << cluster_id << " " << id << " " << total_length1/units::cm << " " << total_length2/units::cm << " " << max_length1/units::cm << " " << max_length2/units::cm << " " << flag_dir << std::endl;
+    // std::cout << cluster_id << " " << id << " " << total_length1/units::cm << " " << total_length2/units::cm << " " << max_length1/units::cm << " " << max_length2/units::cm << " " << flag_dir << std::endl;
   }else{
     if (total_length < 5*units::cm){
       if (!is_shower_trajectory())
