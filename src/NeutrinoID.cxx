@@ -86,11 +86,15 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   if (flag_main_cluster){
     // find the proto vertex ...
     find_proto_vertex(main_cluster, true, 2);
-      
+
+    
+    
     // deal with shower ...
     clustering_points(main_cluster);
     separate_track_shower(main_cluster);
     determine_direction(main_cluster);
+
+
     
     shower_determing_in_main_cluster(main_cluster);
     determine_main_vertex(main_cluster);
@@ -107,7 +111,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
       //if (skip_clusters.find(*it) != skip_clusters.end()) continue;
       //      if ((*it)->get_cluster_id()!=34) continue;
-      // std::cout << (*it)->get_cluster_id() << " " << map_cluster_length[*it]/units::cm << std::endl;
+      std::cout << (*it)->get_cluster_id() << " " << map_cluster_length[*it]/units::cm << std::endl;
       
       if (map_cluster_length[*it] > 6*units::cm){
 	// find the proto vertex ...

@@ -6,7 +6,6 @@ void WCPPID::NeutrinoID::examine_structure(WCPPID::PR3DCluster *temp_cluster){
   // straighten 1
   if ( examine_structure_1(temp_cluster) )
      temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
-  
 }
 
 bool WCPPID::NeutrinoID::examine_structure_1(WCPPID::PR3DCluster *temp_cluster){

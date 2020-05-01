@@ -42,7 +42,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
   /*   } */
   /* } */
 
-  //  std::cout << "haha1 " << std::endl;
+
 
   // collect charge
   collect_charge_multi_trajectory(map_segment_vertices, ct_point_cloud);
@@ -77,7 +77,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
   double end_point_limit = 0.6*units::cm;
   organize_segments_path(ct_point_cloud, map_vertex_segments, map_segment_vertices, low_dis_limit, end_point_limit);
 
-  
+
   
   /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
   /*   WCPPID::ProtoSegment *sg = it->first; */
@@ -96,7 +96,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
   std::map<std::pair<int,int>,std::set<int>> map_2DW_3D_set;
 
  
-  //  std::cout << "haha2 " << std::endl;
+  
   
   if (flag_1st_tracking){
     form_map_multi_segments(map_vertex_segments, map_segment_vertices, ct_point_cloud,
@@ -129,6 +129,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
     /* } */
     /*  } */
     
+
     
     multi_trajectory_fit(map_vertex_segments, map_segment_vertices,
 			 map_3D_2DU_set, map_3D_2DV_set, map_3D_2DW_set, map_3D_tuple,
@@ -172,7 +173,7 @@ void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& m
    /*    } */
    /*  } */
    /* } */
-  //  std::cout << "haha3 " << std::endl;
+
   
   if (flag_2nd_tracking){
     // second round trajectory fit ...
@@ -853,7 +854,8 @@ void WCPPID::PR3DCluster::form_map_multi_segments(WCPPID::Map_Proto_Vertex_Segme
     //if (pcloud_associated_steiner != 0) associated_pclouds_steiner.push_back(pcloud_associated_steiner);
     segments.push_back(seg);
   }
-  
+
+
   
   int count = 0;
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
@@ -872,7 +874,8 @@ void WCPPID::PR3DCluster::form_map_multi_segments(WCPPID::Map_Proto_Vertex_Segme
     PointVector saved_pts;
     std::vector<int> saved_index;
     std::vector<bool> saved_skip;
-
+    
+    
     std::vector<double> distances;
     for (size_t i=0;i+1!=pts.size();i++){
       distances.push_back(sqrt(pow(pts.at(i+1).x-pts.at(i).x,2) +
@@ -1045,6 +1048,8 @@ void WCPPID::PR3DCluster::form_map_multi_segments(WCPPID::Map_Proto_Vertex_Segme
     }
    
   }
+
+
 }
 
 void WCPPID::PR3DCluster::update_association(std::set<std::pair<int,int> >& temp_2dut, std::set<std::pair<int,int> >& temp_2dvt, std::set<std::pair<int,int> >& temp_2dwt, WCPPID::ProtoSegment* sg, WCPPID::ProtoSegmentSelection& segments){
@@ -1343,7 +1348,7 @@ void WCPPID::PR3DCluster::organize_segments_path_3rd(WCP::ToyCTPointCloud& ct_po
       pts.push_back(end_p);
     }
 
-    //   std::cout << pts.size() << std::endl;
+
     // ensure there is no single point ...
     if (pts.size()==1){
       //if (sqrt(pow(end_p.x - pts.back().x,2) + pow(end_p.y - pts.back().y,2) + pow(end_p.z - pts.back().z,2) ) >0)
@@ -1559,8 +1564,9 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCP::ToyCTPointCloud& ct_po
 
     {
       double dis1 = sqrt(pow(pts.back().x-end_p.x,2) + pow(pts.back().y-end_p.y,2) + pow(pts.back().z-end_p.z,2));
-      if (dis1 < low_dis_limit * 0.2) pts.pop_back();
-      else if (dis1 > low_dis_limit * 1.6){
+      if (dis1 < low_dis_limit * 0.2) {
+	if (pts.size()>1) pts.pop_back();
+      }else if (dis1 > low_dis_limit * 1.6){
 
 	int npoints = std::round(dis1/low_dis_limit);
 	Point p_save = pts.back();
@@ -1727,8 +1733,9 @@ void WCPPID::PR3DCluster::organize_segments_path(WCP::ToyCTPointCloud& ct_point_
 
     {
       double dis1 = sqrt(pow(pts.back().x-end_p.x,2) + pow(pts.back().y-end_p.y,2) + pow(pts.back().z-end_p.z,2));
-      if (dis1 < low_dis_limit * 0.2) pts.pop_back();
-      else if (dis1 > low_dis_limit * 1.6){
+      if (dis1 < low_dis_limit * 0.2) {
+	if (pts.size()>1) pts.pop_back();
+      }else if (dis1 > low_dis_limit * 1.6){
 	
 	int npoints = std::round(dis1/low_dis_limit);
 	Point p_save = pts.back();
@@ -1750,7 +1757,7 @@ void WCPPID::PR3DCluster::organize_segments_path(WCP::ToyCTPointCloud& ct_point_
 
     sg->set_point_vec(pts);
 
-    //std::cout << sg << " " << pts.front() << " " << pts.back() << std::endl;
+    //    std::cout << sg->get_id() << " " << sg->get_point_vec().size() << " " << pts.front() << " " << pts.back() << std::endl;
     //    std::cout << sg << flag_startv_end << " " << flag_endv_end << std::endl;
     //    std::cout << sg << " " << start_v << " " << end_v << std::endl;
   }
