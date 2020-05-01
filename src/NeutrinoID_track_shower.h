@@ -63,7 +63,7 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
     }
 
     bool flag_print = false;
-    // if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
+    //    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
     
     
     if (sg->get_flag_shower_trajectory()){
@@ -831,7 +831,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
  
   
   //if (!flag_change_showers)
-  // std::cout << temp_cluster->get_cluster_id() << " " << n_good_tracks << " " << n_tracks << " " << n_showers << " " << length_good_tracks/units::cm << " " << length_tracks/units::cm << " " << length_showers/units::cm << " " << flag_change_showers << std::endl;
+  //   std::cout << temp_cluster->get_cluster_id() << " " << n_good_tracks << " " << n_tracks << " " << n_showers << " " << length_good_tracks/units::cm << " " << length_tracks/units::cm << " " << length_showers/units::cm << " " << flag_change_showers << std::endl;
 
   if (flag_change_showers){
     for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){

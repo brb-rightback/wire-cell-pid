@@ -1000,8 +1000,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	  
 	  //	std::cout << sg1->get_id() << " " << map_segment_vertices[sg1].size() << std::endl;
 	  
-	  if (sg1->get_length() > 30*units::cm)	new_segments.push_back(sg1);
-	  
+	  if (sg1->get_length() > 30*units::cm || sg1->get_direct_length() < 0.8 * sg1->get_length() && sg1->get_length() > 8*units::cm)	new_segments.push_back(sg1);
 	  /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
 	  /*   WCPPID::ProtoSegment *sg = it->first; */
 	  /*   std::cout << sg->get_wcpt_vec().size() << " " << it->second.size() << std::endl; */
@@ -1022,8 +1021,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	  if (map_vertex_segments.find(v2) == map_vertex_segments.end()) delete v2;
 	}
       }else{
-	// hack
-
+	
 	TVector3 drift_dir(1,0,0);
 	WCPPID::ProtoSegment* new_sg = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
 	TVector3 dir(v1->get_wcpt().x - v2->get_wcpt().x, v1->get_wcpt().y - v2->get_wcpt().y, v1->get_wcpt().z - v2->get_wcpt().z);
@@ -1062,8 +1060,13 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	  delete v2;
 	  delete new_sg;
 	}else{
+	
+	  
 	  temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+	  if (new_sg->get_direct_length() < 0.8 * new_sg->get_length() && new_sg->get_length()>8*units::cm) new_segments.push_back(new_sg);
+	  
 	}
+	
       }
 
       //hack ...

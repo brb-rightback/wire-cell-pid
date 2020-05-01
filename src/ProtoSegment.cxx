@@ -1452,6 +1452,7 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
   if (abs(particle_type)==11 && (start_n>1 && end_n >1)){
     dir_weak = true;
     flag_dir = 0;
+    particle_type = 13;
   }else if (length < 1.5*units::cm){
     dir_weak = true;
   }
