@@ -157,9 +157,23 @@ void WCPPID::NeutrinoID::deghost_segments(){
       if (flag_add_seg){
 	global_skeleton_cloud.AddPoints(sg->get_point_vec());
       }else{
-	std::cout << "Remove Cluster ID " << sg->get_cluster_id() << " segment id " << sg->get_id() << std::endl;
-	// remove segment
-	del_proto_segment(sg);
+	// protect main vertex ...
+	
+	WCPPID::PR3DCluster *tmp_cluster = map_segment_cluster[sg];
+	if (map_cluster_main_vertices.find(tmp_cluster) != map_cluster_main_vertices.end()){
+	  WCPPID::ProtoVertex *tmp_vtx = map_cluster_main_vertices[tmp_cluster];
+	  if (map_vertex_segments[tmp_vtx].find(sg) != map_vertex_segments[tmp_vtx].end() && map_vertex_segments[tmp_vtx].size()==1){
+	    flag_add_seg = true;
+	  }
+	}
+	
+	if (flag_add_seg){
+	  global_skeleton_cloud.AddPoints(sg->get_point_vec());
+	}else{
+	  std::cout << "Remove Cluster ID " << sg->get_cluster_id() << " segment id " << sg->get_id() << std::endl;
+	  // remove segment
+	  del_proto_segment(sg);
+	}
       }
     }
     

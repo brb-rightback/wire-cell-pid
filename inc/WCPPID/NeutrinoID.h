@@ -300,7 +300,7 @@ namespace WCPPID{
     
     void calculate_shower_kinematics();
     void update_shower_maps();
-
+    void clean_up_maps_vertices_segments(WCPPID::PR3DCluster *temp_cluster);
     
     // fill_fit_parameters();
     void fill_fit_parameters();

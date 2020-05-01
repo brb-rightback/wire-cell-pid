@@ -111,7 +111,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
       //if (skip_clusters.find(*it) != skip_clusters.end()) continue;
       //      if ((*it)->get_cluster_id()!=34) continue;
-      std::cout << (*it)->get_cluster_id() << " " << map_cluster_length[*it]/units::cm << std::endl;
+      //      std::cout << (*it)->get_cluster_id() << " " << map_cluster_length[*it]/units::cm << std::endl;
       
       if (map_cluster_length[*it] > 6*units::cm){
 	// find the proto vertex ...
@@ -130,6 +130,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
 	}
       }else{
 	if (!find_proto_vertex(*it, false, 1)) init_point_segment(*it);
+
 	
 	clustering_points(*it);
 	separate_track_shower(*it);
@@ -299,6 +300,9 @@ void WCPPID::NeutrinoID::check_switch_main_cluster(){
   
   WCPPID::ProtoVertex *temp_main_vertex = map_cluster_main_vertices[main_cluster];
   int n_showers = 0;
+
+  //  std::cout << main_cluster->get_cluster_id() << " " << temp_main_vertex << std::endl;
+  
   for (auto it = map_vertex_segments[temp_main_vertex].begin(); it!= map_vertex_segments[temp_main_vertex].end(); it++){
     if ((*it)->get_flag_shower()) n_showers ++;
   }

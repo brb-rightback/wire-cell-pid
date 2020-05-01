@@ -72,7 +72,7 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
     }
   }
 
-  //std::cout << pts.size() << " " << pts.front() << " " << pts.back() << std::endl;
+
   // for (size_t i=0;i+1!=pts.size();i++){
   //   std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
   // }
@@ -117,6 +117,7 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
     }
   }
 
+  if (pts.size()==0) return;
   
   //  std::cout << pts.back() << std::endl;
   if (flag_2nd_tracking){
@@ -124,9 +125,9 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
     low_dis_limit = 0.6*units::cm;
     end_point_limit = 0.3*units::cm;
 
-    //std::cout << pts.size() << std::endl;
+    
     organize_ps_path(ct_point_cloud, pts, low_dis_limit, end_point_limit); 
-    //std::cout << pts.size() << std::endl;
+    
     
     
     map_3D_2DU_set.clear();

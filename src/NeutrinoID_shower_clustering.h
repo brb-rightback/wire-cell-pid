@@ -74,21 +74,22 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv(){
 
   // connect to the main cluster ...
   shower_clustering_with_nv_in_main_cluster();
-  // std::cout << showers.size() << std::endl;
-  shower_clustering_with_nv_from_main_cluster();
   //std::cout << showers.size() << std::endl;
+  shower_clustering_with_nv_from_main_cluster();
+  //  std::cout << showers.size() << std::endl;
   shower_clustering_with_nv_from_vertices();
   //  std::cout << showers.size() << std::endl;  
   calculate_shower_kinematics();
-
+  //std::cout << showers.size() << std::endl;
   // check remaining clusters ...
   shower_clustering_in_other_clusters(true);
- 
+  //std::cout << showers.size() << std::endl;
   calculate_shower_kinematics();
 
   id_pi0_with_vertex();
 
   id_pi0_without_vertex();
+  //std::cout << showers.size() << std::endl;
 }
 
 void WCPPID::NeutrinoID::id_pi0_without_vertex(){
@@ -504,6 +505,8 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
     }
   }
 
+
+  
   // list the main vertices ...
   std::vector<WCPPID::ProtoVertex*> main_cluster_vertices;
   for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
@@ -663,9 +666,11 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
       shower->set_start_segment(sg1, map_segment_vertices);
     }else{
       // break the segment ...
-      //      std::cout << sg1 << " " << sg1->get_wcpt_vec().size() << " " << sg1->get_point_vec().size() << std::endl;
+      // std::cout << sg1 << " " << sg1->get_wcpt_vec().size() << " " << sg1->get_point_vec().size() << std::endl;
       // create two segments with filled information , and find the correct segments ...
       std::tuple<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> result1 = sg1->break_segment_at_point(point, acc_segment_id, acc_vertex_id);
+      //      std::cout << "haha " << std::endl;
+      
       if (std::get<1>(result1) == 0){
 	shower->set_start_segment(sg1, map_segment_vertices);
       }else{
@@ -710,7 +715,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
     }
     //}
     
-    //      std::cout << shower->get_start_segment()->get_particle_type() << " " << std::endl;
+    //    std::cout << shower->get_start_segment()->get_particle_type() << " " << std::endl;
     if (shower->get_start_segment()->get_particle_type()==0 || fabs(shower->get_start_segment()->get_particle_type())==13){
       shower->get_start_segment()->set_particle_type(11);
       TPCParams& mp = Singleton<TPCParams>::Instance();
@@ -725,7 +730,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
     TVector3 dir_main(point.x - shower->get_start_vertex().first->get_fit_pt().x,
     		      point.y - shower->get_start_vertex().first->get_fit_pt().y,
     		      point.z - shower->get_start_vertex().first->get_fit_pt().z);
-    //    std::cout << shower->get_start_segment()->get_id() << " " << dir_shower.Angle(dir_main)/3.1415926*180. << std::endl;
+    //std::cout << shower->get_start_segment()->get_id() << " " << dir_shower.Angle(dir_main)/3.1415926*180. << std::endl;
       
     for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ 
       WCPPID::ProtoSegment *seg1 = it->first; 
@@ -1100,7 +1105,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_in_main_cluster(){
   }
 
   update_shower_maps();  
-  //  std::cout << showers.size() << " " << used_segments.size() << std::endl;
+  //std::cout << showers.size() << " " << used_segments.size() << std::endl;
 }
 
 

@@ -1595,7 +1595,7 @@ std::tuple<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> W
     if (nbreak+1==wcpt_vec.size()) nbreak --;
   }
 
-  //  std::cout << nbreak_fit << " " << fit_pt_vec.size() << " " << nbreak << " " << wcpt_vec.size() << std::endl;
+
  
   
   // Now start to construct new segment ...
@@ -1618,6 +1618,11 @@ std::tuple<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> W
   WCPPID::ProtoVertex *vtx = new WCPPID::ProtoVertex(acc_vertex_id, vertex_wcp, cluster_id); acc_vertex_id ++;
   WCPPID::ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, path_wcps2, cluster_id); acc_segment_id ++;
 
+  //std::cout << cluster_id << " " << nbreak_fit << " " << fit_pt_vec.size() << " " << dQ_vec.size() << " " << fit_index_vec.size() << " " << pu_vec.size() << " " << reduced_chi2_vec.size() << " " << nbreak << " " << wcpt_vec.size() << std::endl;
+  //  if (fit_index_vec.size()==0)
+  //  fit_index_vec.resize(dQ_vec.size(),0);
+
+  
   // fill in the vertex
   vtx->set_neutrino_vertex(false);
   vtx->set_fit_pt(fit_pt_vec.at(nbreak_fit) );
@@ -1632,6 +1637,8 @@ std::tuple<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> W
   vtx->set_pw(pw_vec.at(nbreak_fit));
   vtx->set_pt(pt_vec.at(nbreak_fit));
   vtx->set_reduced_chi2(reduced_chi2_vec.at(nbreak_fit));
+
+  // std::cout << cluster_id << " " << nbreak_fit << " " << fit_pt_vec.size() << " " << dQ_vec.size() << " " << fit_index_vec.size() << " " << pu_vec.size() << " " << reduced_chi2_vec.size() << " " << nbreak << " " << wcpt_vec.size() << std::endl;
   
   // fill in first and segments
   sg1->set_dir_weak(dir_weak); sg2->set_dir_weak(dir_weak);
@@ -1676,7 +1683,8 @@ std::tuple<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> W
   reduced_chi2_vec1.clear(); reduced_chi2_vec2.clear();
   fit_index_vec1.clear(); fit_index_vec2.clear();
   fit_flag_skip1.clear(); fit_flag_skip2.clear();
-  //std::cout << fit_pt_vec.size() << " " << dQ_vec.size() << " " << dx_vec.size() << " " << pu_vec.size() << " " << pv_vec.size() << " " << pw_vec.size() << " " << pt_vec.size() << " " << reduced_chi2_vec.size() << " " << fit_index_vec.size() << " " << fit_flag_skip.size() << std::endl;
+
+  //  std::cout << fit_pt_vec.size() << " " << dQ_vec.size() << " " << dx_vec.size() << " " << pu_vec.size() << " " << pv_vec.size() << " " << pw_vec.size() << " " << pt_vec.size() << " " << reduced_chi2_vec.size() << " " << fit_index_vec.size() << " " << fit_flag_skip.size() << std::endl;
   
   for (size_t i=0; i!=fit_pt_vec.size(); i++){
     if (i==nbreak_fit){
@@ -1753,7 +1761,7 @@ std::tuple<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> W
     sg2->get_associated_pcloud()->build_kdtree_index();
 
   
-  //std::cout << nbreak << " " << wcpt_vec.size() << " " << nbreak_fit << " " << fit_pt_vec.size() << std::endl;
+  //  std::cout << nbreak << " " << wcpt_vec.size() << " " << nbreak_fit << " " << fit_pt_vec.size() << std::endl;
 
   return std::make_tuple(sg1, vtx, sg2);
   
