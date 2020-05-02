@@ -184,7 +184,7 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
 	  double angle = dir1.Angle(dir2);
 	  double mass_pio = sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2));
 	  map_shower_pair_mass_point[std::make_pair(shower_1,shower_2)] = std::make_pair(mass_pio, center);
-	  //	  std::cout << dir1.Mag()/units::cm << " " << dir2.Mag()/units::cm << " " << dir1.Angle(l1->get_dir())/3.1415926*180. << " " << dir2.Angle(l2->get_dir())/3.1415926*180. << " " << l1->closest_dis(*l2)/units::cm << " " << mass_pio/units::MeV << std::endl;
+	  //std::cout << dir1.Mag()/units::cm << " " << dir2.Mag()/units::cm << " " << dir1.Angle(l1->get_dir())/3.1415926*180. << " " << dir2.Angle(l2->get_dir())/3.1415926*180. << " " << l1->closest_dis(*l2)/units::cm << " " << mass_pio/units::MeV << std::endl;
 	  
 	}else if (length_1 > 15*units::cm || length_2 > 15*units::cm){
 
@@ -207,7 +207,7 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
 	    double angle = dir1.Angle(dir2);
 	    double mass_pio = sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2));
 	    map_shower_pair_mass_point[std::make_pair(shower_1,shower_2)] = std::make_pair(mass_pio, center);
-	    // std::cout << dir1.Mag()/units::cm << " " << dir2.Mag()/units::cm << " " << dir1.Angle(l1->get_dir())/3.1415926*180. << " " << dir2.Angle(l3.get_dir())/3.1415926*180. << " " << l1->closest_dis(*l2)/units::cm << " " << mass_pio/units::MeV << std::endl;
+	    //	     std::cout << dir1.Mag()/units::cm << " " << dir2.Mag()/units::cm << " " << dir1.Angle(l1->get_dir())/3.1415926*180. << " " << dir2.Angle(l3.get_dir())/3.1415926*180. << " " << l1->closest_dis(*l2)/units::cm << " " << mass_pio/units::MeV << std::endl;
 	  }else{
 	     center.x = (pair_points.first.x + pair_points.second.x)/2.;
 	     center.y = (pair_points.first.y + pair_points.second.y)/2.;
@@ -224,7 +224,7 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
 	     double angle = dir1.Angle(dir2);
 	     double mass_pio = sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2));
 	     map_shower_pair_mass_point[std::make_pair(shower_1,shower_2)] = std::make_pair(mass_pio, center);
-	     //   std::cout << dir1.Mag()/units::cm << " " << dir2.Mag()/units::cm << " " << dir1.Angle(l3.get_dir())/3.1415926*180. << " " << dir2.Angle(l2->get_dir())/3.1415926*180. << " " << l1->closest_dis(*l2)/units::cm << " " << angle/3.1415926*180. << " " << mass_pio/units::MeV << std::endl;
+	     //  std::cout << dir1.Mag()/units::cm << " " << dir2.Mag()/units::cm << " " << dir1.Angle(l3.get_dir())/3.1415926*180. << " " << dir2.Angle(l2->get_dir())/3.1415926*180. << " " << l1->closest_dis(*l2)/units::cm << " " << angle/3.1415926*180. << " " << mass_pio/units::MeV << std::endl;
 	  }
 	  
 	}else{
