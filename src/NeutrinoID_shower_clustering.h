@@ -589,7 +589,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
       min_pi.min_point = main_pi.min_point;
       min_pi.min_dis = main_pi.min_dis;
     }
-    //    std::cout << main_vertex << " " << min_pi.min_vertex << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << std::endl;
+    //std::cout << main_vertex << " " << min_pi.min_vertex << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << std::endl;
     
     double vtx_dis = sqrt(pow(main_vertex->get_fit_pt().x - min_pi.min_vertex->get_fit_pt().x,2) + pow(main_vertex->get_fit_pt().y - min_pi.min_vertex->get_fit_pt().y,2) + pow(main_vertex->get_fit_pt().z - min_pi.min_vertex->get_fit_pt().z,2));
 
@@ -641,7 +641,10 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
     WCP::Point point = vec_pi.at(i).min_point;
     WCPPID::ProtoSegment* sg1 = 0;
     double angle = vec_pi.at(i).min_angle;
-    if (angle > 45) continue;
+
+    //    std::cout <<  angle << " " << vec_pi.at(i).min_dis/units::cm << std::endl;
+    
+    if (angle > 45 && vec_pi.at(i).min_dis > 6*units::cm || angle > 60) continue;
     
     for (auto it = map_cluster_segments[cluster].begin(); it!=map_cluster_segments[cluster].end();it++){
       WCPPID::ProtoSegment *sg = *it;

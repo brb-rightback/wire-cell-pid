@@ -424,8 +424,47 @@ bool WCPPID::ProtoSegment::is_shower_topology(bool tmp_val){
   if (max_spread > 0.7*units::cm && large_spread_length > 0.2 * total_effective_length && total_effective_length > 3*units::cm && total_effective_length < 15*units::cm && ( large_spread_length > 2.7*units::cm || large_spread_length > 0.35 * total_effective_length)
       || max_spread > 0.8*units::cm && large_spread_length > 0.3 * total_effective_length && total_effective_length >= 15*units::cm
       || max_spread > 1.0*units::cm && large_spread_length > 0.4 * total_effective_length) {
-    //    std::cout << id << " " << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << std::endl;
-    flag_shower_topology = true;
+
+    // do a quick PID ...
+    if (total_effective_length < 15*units::cm && large_spread_length < 7.5*units::cm){
+      int npoints = fit_pt_vec.size();
+      int start_n1 = 0, end_n1 = npoints - 1;
+      end_n1 = npoints - 2;
+      npoints -= 1;
+      npoints -=1;
+      start_n1 = 1;
+      if ( !(npoints ==0 || end_n1 < start_n1)){
+	std::vector<double> L(npoints,0);
+	std::vector<double> dQ_dx(npoints,0);
+	
+	double dis = 0;
+	for (size_t i = start_n1; i <= end_n1; i++){
+	  L.at(i-start_n1) = dis;
+	  dQ_dx.at(i-start_n1) = dQ_vec.at(i)/(dx_vec.at(i)/units::cm+1e-9);
+	  if (i+1 < fit_pt_vec.size())
+	    dis += sqrt(pow(fit_pt_vec.at(i+1).x-fit_pt_vec.at(i).x,2) + pow(fit_pt_vec.at(i+1).y-fit_pt_vec.at(i).y,2) + pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
+	}
+	
+	if (npoints >=3){ // reasonably long ...
+	  // can use the dQ/dx to do PID and direction ...
+	  bool tmp_flag_pid = do_track_pid(L, dQ_dx);
+	  if (!tmp_flag_pid) tmp_flag_pid =do_track_pid(L, dQ_dx, 15*units::cm);
+	  if (!tmp_flag_pid) tmp_flag_pid = do_track_pid(L, dQ_dx, 35*units::cm, 3*units::cm);
+	  if (!tmp_flag_pid) tmp_flag_pid =do_track_pid(L, dQ_dx, 15*units::cm, 3*units::cm);
+	}
+      }
+      if (particle_type == 2212 && particle_score < 0.09 ||
+	  particle_type == 13 && particle_score < 0.06 ){
+	flag_shower_topology = false;
+      }else{
+	flag_shower_topology = true;
+	particle_type = 11;
+	particle_score = 100;
+      }
+    }else{
+      //    std::cout << id << " " << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << " " << particle_type << " " << particle_score << std::endl;
+      flag_shower_topology = true;
+    }
   }
   //  std::cout << id << " " << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << std::endl;
   
@@ -545,7 +584,7 @@ bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
     
       if (tmp_dQ_dx*0.11 + 2*length_ratio < 2.03 && tmp_dQ_dx < 2 && length_ratio < 0.95 && (angle_diff < 60 || integrated_length < 10*units::cm || integrated_length >= 10*units::cm && max_dev > 0.75*units::cm)
 	  ) n_shower_like ++;
-      //      std::cout << "Xin: " << j << " " << sections.at(j).first << " " << sections.at(j).second <<  " " << length_ratio << " " << tmp_dQ_dx << " " << direct_length << " " << drift_dir.Angle(dir_1)/3.1415926*180. << std::endl;
+      //      std::cout << "Xin: " << id << " " << j << " " << sections.at(j).first << " " << sections.at(j).second <<  " " << length_ratio << " " << tmp_dQ_dx << " " << direct_length << " " << drift_dir.Angle(dir_1)/3.1415926*180. << std::endl;
     }else{
       TVector3 dir_2 = drift_dir.Cross(dir_1);
       dir_2 = dir_2.Unit();
@@ -563,7 +602,7 @@ bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
 
   
   
-  // std::cout << "BB " << id << " " << sections.size() << " " << get_length()/units::cm << " " << n_shower_like << std::endl;
+  //std::cout << "BB " << id << " " << sections.size() << " " << get_length()/units::cm << " " << n_shower_like << std::endl;
   
   if (n_shower_like >=0.5*sections.size()) flag_shower_trajectory = true;
   
@@ -772,24 +811,35 @@ std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_ki
       
       double sum_angles = 0;
       double nsum = 0;
+
+      double sum_angles1 = 0;
+      double nsum1 = 0;
+      
       for (int j = -2; j!=3;j++){
 	if (i+j>=0 && i+j<fit_pt_vec.size()){
 	  if (para_angles.at(i+j)>10){
 	    sum_angles += pow(refl_angles.at(i+j),2);
 	    nsum ++;
 	  }
+	  if (para_angles.at(i+j)>7.5){
+	    sum_angles1 += pow(refl_angles.at(i+j),2);
+	    nsum1 ++;
+	  }
 	}
       }
       if (nsum!=0) sum_angles=sqrt(sum_angles/nsum);
-
+      if (nsum1!=0) sum_angles1 = sqrt(sum_angles1/nsum1);
       //if (wcpt_vec.front().index >940 && wcpt_vec.front().index < 1200)
 
       // if (fabs(fit_pt_vec.at(i).x-2121.19)<30 && fabs(fit_pt_vec.at(i).y-218.775) < 30 && fabs(fit_pt_vec.at(i).z-715.347)<30)
-      //  std::cout << i << " " << min_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
+      //std::cout << i << " " << max_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sum_angles1<< " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
       
       if (para_angles.at(i) > 10 && refl_angles.at(i) > 30 && sum_angles > 15 ){
 	save_i = i;
 	break;
+      }else if (para_angles.at(i) > 7.5 && refl_angles.at(i) > 45 && sum_angles1 > 25){
+       	save_i = i;
+       	break;
       }else if (para_angles.at(i) > 15 && refl_angles.at(i) > 27 && sum_angles > 12.5){
 	//std::cout << i << " " << ave_dQ_dx << " " <<max_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
 	save_i = i;
@@ -872,6 +922,7 @@ std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_ki
       }
     }
 
+    //    std::cout << sqrt(pow(p.x-start_p.x,2) + pow(p.y-start_p.y,2) + pow(p.z-start_p.z,2))/units::cm << std::endl;
     //    std::cout << sum_dQ/(sum_dx) << " " << flag_search << std::endl;
     
     if (flag_search){
@@ -1452,7 +1503,10 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
   if (abs(particle_type)==11 && (start_n>1 && end_n >1)){
     dir_weak = true;
     flag_dir = 0;
-    //    std::cout << particle_score << std::endl;
+    if (particle_score < 0.15) particle_type = 13;
+  }else if (abs(particle_type)==11 && (start_n >1 && flag_dir == -1 || end_n >1 && flag_dir == 1) ){
+    dir_weak = true;
+    flag_dir = 0;
     if (particle_score < 0.15) particle_type = 13;
   }else if (length < 1.5*units::cm){
     dir_weak = true;

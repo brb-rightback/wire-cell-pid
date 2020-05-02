@@ -2,8 +2,9 @@ void WCPPID::NeutrinoID::separate_track_shower(WCPPID::PR3DCluster* temp_cluster
   for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
-    sg->is_shower_trajectory();
+   
     sg->is_shower_topology();
+    if (!sg->get_flag_shower_topology())      sg->is_shower_trajectory();
   }
 }
 
@@ -823,7 +824,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
       }else if (length_tracks < 0.18 * length_showers && ((length_showers + length_tracks) < 60*units::cm || length_tracks < 12*units::cm)){
 	flag_change_showers = true;
       }
-    }else if ( length_tracks < 35*units::cm &&  length_tracks + length_showers  < 50*units::cm && length_showers < 15*units::cm){
+    }else if ( length_tracks < 35*units::cm &&  length_tracks + length_showers  < 50*units::cm && length_showers < 15*units::cm && (length_showers > 0.5*length_tracks || length_showers > 0.33*length_tracks && n_showers >=2)){
       flag_change_showers = true;
     }
   }
@@ -831,7 +832,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
  
   
   //if (!flag_change_showers)
-  //   std::cout << temp_cluster->get_cluster_id() << " " << n_good_tracks << " " << n_tracks << " " << n_showers << " " << length_good_tracks/units::cm << " " << length_tracks/units::cm << " " << length_showers/units::cm << " " << flag_change_showers << std::endl;
+  //  std::cout << temp_cluster->get_cluster_id() << " " << n_good_tracks << " " << n_tracks << " " << n_showers << " " << length_good_tracks/units::cm << " " << length_tracks/units::cm << " " << length_showers/units::cm << " " << flag_change_showers << std::endl;
 
   if (flag_change_showers){
     for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
@@ -1428,7 +1429,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
 	if (flag_start) current_sg->set_flag_dir(1);
 	else current_sg->set_flag_dir(-1);
 	
-	//	if (current_sg->get_id()==19) std::cout << current_sg->get_id() << " " << flag_start << " " << map_vertex_segments[prev_vtx].size() << " " << prev_vtx->get_wcpt().index << " " << current_sg->get_wcpt_vec().front().index << " " << current_sg->get_wcpt_vec().back().index << std::endl;
+	//   if (current_sg->get_id()==19) std::cout << current_sg->get_id() << " " << flag_start << " " << map_vertex_segments[prev_vtx].size() << " " << prev_vtx->get_wcpt().index << " " << current_sg->get_wcpt_vec().front().index << " " << current_sg->get_wcpt_vec().back().index << std::endl;
 
 	if (flag_shower_in && current_sg->get_flag_dir()==0 && (!current_sg->get_flag_shower())){
 	  current_sg->set_particle_type(11);
@@ -1475,9 +1476,18 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
 	      current_sg->set_particle_type(13);
 	      current_sg->set_particle_mass(mp.get_mass_muon());
 	    }
+	  }else if (current_sg->get_particle_type()==11 && current_sg->get_flag_shower_trajectory() && num_daughter_showers == 1){
+	    auto pair_result1 = calculate_num_daughter_showers(prev_vtx, current_sg, false);
+	    if (pair_result1.second>3*current_sg->get_length() && pair_result1.second - current_sg->get_length() > 12*units::cm){
+	      current_sg->set_flag_shower_trajectory(false);
+	      current_sg->set_particle_type(13);
+	      current_sg->set_particle_mass(mp.get_mass_muon());
+	      //std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << " " << num_daughter_showers << " " << current_sg->get_length()/units::cm << " " << current_sg->get_flag_shower_topology() << " " << current_sg->get_flag_shower_trajectory() << " " << pair_result1.first << " " << pair_result1.second << std::endl;
+	    }
 	  }
 	}
 
+	// still particle type is not determined ...
 	if (temp_vertex == main_vertex){
 	  if (current_sg->get_particle_type()==0 && (!current_sg->get_flag_shower())){
 	    if (current_sg->get_medium_dQ_dx()/(43e3/units::cm) > 1.3){
@@ -1517,7 +1527,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
 	    }
 	  }
 	}
-      }
+      } // good track ...
 
       
       used_segments.insert(current_sg);

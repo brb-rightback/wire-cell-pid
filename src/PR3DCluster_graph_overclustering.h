@@ -111,8 +111,34 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	  
 	  bool flag = check_connectivity(index_index_dis[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k));
 
+	  //	  if (std::get<2>(temp_index_index_dis) < 0.9*units::cm) std::cout << std::get<2>(temp_index_index_dis)/units::cm << std::endl;
 	  
 	  if ( std::get<2>(temp_index_index_dis) < 0.9*units::cm && pt_clouds.at(j)->get_num_points() > 200 && pt_clouds.at(k)->get_num_points() > 200){
+	    if (!flag){
+	      std::vector<WCP::WCPointCloud<double>::WCPoint > temp_wcps1,  temp_wcps2; 
+	      {
+		Point test_p(cloud.pts[std::get<1>(temp_index_index_dis)].x, cloud.pts[std::get<1>(temp_index_index_dis)].y, cloud.pts[std::get<1>(temp_index_index_dis)].z);
+		temp_wcps1 = pt_clouds.at(j)->get_closest_wcpoints(test_p, std::get<2>(temp_index_index_dis) + 0.9*units::cm);
+	      }
+	      {
+		Point test_p(cloud.pts[std::get<0>(temp_index_index_dis)].x, cloud.pts[std::get<0>(temp_index_index_dis)].y, cloud.pts[std::get<0>(temp_index_index_dis)].z);
+		temp_wcps2 = pt_clouds.at(k)->get_closest_wcpoints(test_p, std::get<2>(temp_index_index_dis) + 0.9*units::cm);
+	      }
+	      for (size_t kk1 = 0; kk1 != temp_wcps1.size();kk1++){
+		for (size_t kk2 = 0; kk2 != temp_wcps2.size();kk2++){
+		  double dis = sqrt(pow(temp_wcps1.at(kk1).x - temp_wcps2.at(kk2).x,2) + pow(temp_wcps1.at(kk1).y - temp_wcps2.at(kk2).y,2) +pow(temp_wcps1.at(kk1).z - temp_wcps2.at(kk2).z,2));
+		  std::tuple<int,int,double> temp_tuple = std::make_tuple(temp_wcps2.at(kk2).index, temp_wcps1.at(kk1).index, dis);
+		  if (check_connectivity(temp_tuple, cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k), 0.3*units::cm, true)){
+		    flag = true;
+		    index_index_dis[j][k] = temp_tuple;
+		    break;
+		  }
+		}
+		if (flag)
+		  break;
+	      }
+	    }
+	    /*
 	    // check j against k
 	    if (!flag){ 
  	      Point test_p(cloud.pts[std::get<1>(temp_index_index_dis)].x, cloud.pts[std::get<1>(temp_index_index_dis)].y, cloud.pts[std::get<1>(temp_index_index_dis)].z);
@@ -120,7 +146,7 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	      for (size_t kk = 0; kk!=temp_wcps.size(); kk++){
 		double dis = sqrt(pow(test_p.x - temp_wcps.at(kk).x,2) + pow(test_p.y - temp_wcps.at(kk).y,2) +pow(test_p.z - temp_wcps.at(kk).z,2));
 		std::tuple<int,int,double> temp_tuple = std::make_tuple(temp_wcps.at(kk).index, std::get<1>(temp_index_index_dis), dis);
-		if (check_connectivity(temp_tuple, cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k))){
+		if (check_connectivity(temp_tuple, cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k), 0.3*units::cm)){
 		  flag = true;
 		  index_index_dis[j][k] = temp_tuple;
 		  break;
@@ -134,13 +160,14 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	      for (size_t kk = 0; kk!=temp_wcps.size(); kk++){
 		double dis = sqrt(pow(test_p.x - temp_wcps.at(kk).x,2) + pow(test_p.y - temp_wcps.at(kk).y,2) +pow(test_p.z - temp_wcps.at(kk).z,2));
 		std::tuple<int,int,double> temp_tuple = std::make_tuple(std::get<0>(temp_index_index_dis), temp_wcps.at(kk).index,  dis);
-		if (check_connectivity(temp_tuple, cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k))){
+		if (check_connectivity(temp_tuple, cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k), 0.3*units::cm)){
 		  flag = true;
 		  index_index_dis[j][k] = temp_tuple;
 		  break;
 		}
 	      }
 	    }
+	    */
 	  }
 	  
 	  /* if (std::get<2>(temp_index_index_dis)  < 1.5*units::cm) */
@@ -408,7 +435,7 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 }
 
 
-bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index_index_dis, WCP::WCPointCloud<double>& cloud, WCP::ToyCTPointCloud& ct_point_cloud, WCP::ToyPointCloud* pc1, WCP::ToyPointCloud* pc2){
+bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index_index_dis, WCP::WCPointCloud<double>& cloud, WCP::ToyCTPointCloud& ct_point_cloud, WCP::ToyPointCloud* pc1, WCP::ToyPointCloud* pc2, double step_size, bool flag_strong_check){
   if (std::get<0>(index_index_dis)==-1 || std::get<1>(index_index_dis)==-1) return false;
   
   WCPointCloud<double>::WCPoint wp1 = cloud.pts.at(std::get<0>(index_index_dis));
@@ -443,7 +470,7 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
   
   double dis = sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2)+pow(p1.z-p2.z,2));
   // check 2 pitch ...
-  double step_size = 0.6*units::cm;
+  // double step_size = 0.6*units::cm;
   int num_steps = std::round(dis/step_size);
 
   int num_bad[5]={0,0,0,0,0};
@@ -458,9 +485,13 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
     std::vector<int> scores;
     if (i==0 || i+1 == num_steps)
       scores = ct_point_cloud.test_good_point(test_p, dis/(num_steps+1.)*0.98);
-    else
-      scores = ct_point_cloud.test_good_point(test_p);
-
+    else{
+      if (flag_strong_check){
+	scores = ct_point_cloud.test_good_point(test_p, dis/(num_steps+1.));
+      }else{
+	scores = ct_point_cloud.test_good_point(test_p);
+      }
+    }
     int num_bad_details= 0;
     if (scores.at(0) + scores.at(3)==0){
       if (!flag_prolonged_u) num_bad[0] ++;
@@ -485,19 +516,25 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
     //    std::cout << i << " " << scores.at(0) << " " << scores.at(1) << " " << scores.at(2) << " " << scores.at(3) << " " << scores.at(4) << " " << scores.at(5) << std::endl;
   }
   //  if (flag_parallel && dis > 15*units::cm && dis < 25*units::cm && p1.y > 45*units::cm && p2.y > 45*units::cm && p1.y < 70*units::cm && p2.y < 70*units::cm)
-  //  std::cout << p1 << " " << p2 << " " << num_bad[0] << " " << num_bad[1] << " " << num_bad[2] << " " << num_bad[3] << " " << num_steps << std::endl;
+  //
 
-  
+  //  std::cout << p1 << " A " << p2 << " " << num_bad[0] << " " << num_bad[1] << " " << num_bad[2] << " " << num_bad[3] << " " << num_steps << " " << flag_prolonged_u << " " << flag_prolonged_v << " " << flag_prolonged_w << std::endl;
+
+  if (flag_strong_check && ((num_bad[0]+num_bad[1]+num_bad[2])>0 || num_bad[3] >=2)) return false;
   
   // prolonged case ...
   if (num_bad[0] <=2 && num_bad[1] <= 2 && num_bad[2] <=2 &&
       (num_bad[0] + num_bad[1] + num_bad[2] <=3) && 
       num_bad[0] < 0.1 * num_steps && num_bad[1] < 0.1 * num_steps && num_bad[2] < 0.1 * num_steps &&
       (num_bad[0] + num_bad[1] + num_bad[2]) < 0.15 * num_steps){
+
     if (flag_prolonged_u && flag_prolonged_v && flag_prolonged_w)
-      if (num_bad[3] >0.6 * num_steps) return false;
+      if (num_bad[3] >=0.6 * num_steps) return false;
+    //  std::cout << p1 << " A " << p2 << " " << num_bad[0] << " " << num_bad[1] << " " << num_bad[2] << " " << num_bad[3] << " " << num_steps << " " << flag_prolonged_u << " " << flag_prolonged_v << " " << flag_prolonged_w << std::endl;
+    
     return true;
   }else if (num_bad[3] <=2 && num_bad[3] < 0.1*num_steps){
+    //    std::cout << p1 << " B " << p2 << " " << num_bad[0] << " " << num_bad[1] << " " << num_bad[2] << " " << num_bad[3] << " " << num_steps << std::endl;
     return true;
   }
   

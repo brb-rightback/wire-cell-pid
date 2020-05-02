@@ -161,7 +161,7 @@ namespace WCPPID{
     bool find_proto_vertex(WCPPID::PR3DCluster *cluster, bool flag_break_trak = true, int nrounds_find_other_tracks = 2, bool flag_back_search = true);
     WCPPID::ProtoSegment* init_first_segment(WCPPID::PR3DCluster *cluster, bool flag_back_search = true);
     void init_point_segment(WCPPID::PR3DCluster *cluster);
-    void break_segments(std::vector<WCPPID::ProtoSegment*>& remaining_segments, WCPPID::PR3DCluster* temp_cluster);
+    void break_segments(std::vector<WCPPID::ProtoSegment*>& remaining_segments, WCPPID::PR3DCluster* temp_cluster, float dis_cut = 0);
     void examine_vertices(WCPPID::PR3DCluster* temp_cluster);
     bool examine_vertices_1(WCPPID::PR3DCluster* temp_cluster); // one segment can be skipped ...
     bool examine_vertices_1(WCPPID::ProtoVertex* v1, WCPPID::ProtoVertex *v2, double offset_t, double slope_xt, double offset_u, double slope_yu, double slope_zu, double offset_v, double slope_yv, double slope_zv, double offset_w, double slope_yw, double slope_zw);
