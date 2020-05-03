@@ -109,11 +109,17 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	if (std::get<0>(temp_index_index_dis) != -1){
 	  index_index_dis[j][k] = temp_index_index_dis; 
 	  
-	  bool flag = check_connectivity(index_index_dis[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k));
+	  bool flag;
 
-	  //	  if (std::get<2>(temp_index_index_dis) < 0.9*units::cm) std::cout << std::get<2>(temp_index_index_dis)/units::cm << std::endl;
+	  if (std::get<2>(temp_index_index_dis) <= 0.9*units::cm){
+	    flag = check_connectivity(index_index_dis[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k), 0.3*units::cm);
+	  }else{
+	    flag = check_connectivity(index_index_dis[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k));
+	  }
+
+	  //	  if (std::get<2>(temp_index_index_dis) < 0.9*units::cm) std::cout << std::get<2>(temp_index_index_dis)/units::cm << " " << flag << " " << check_connectivity(index_index_dis[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k), 0.2*units::cm) << std::endl;
 	  
-	  if ( std::get<2>(temp_index_index_dis) < 0.9*units::cm && pt_clouds.at(j)->get_num_points() > 200 && pt_clouds.at(k)->get_num_points() > 200){
+	  if ( std::get<2>(temp_index_index_dis) <= 0.9*units::cm && pt_clouds.at(j)->get_num_points() > 200 && pt_clouds.at(k)->get_num_points() > 200){
 	    if (!flag){
 	      std::vector<WCP::WCPointCloud<double>::WCPoint > temp_wcps1,  temp_wcps2; 
 	      {
@@ -474,7 +480,9 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
   int num_steps = std::round(dis/step_size);
 
   int num_bad[5]={0,0,0,0,0};
- 
+
+  double radius_cut = 0.6*units::cm;
+  if (step_size < radius_cut) radius_cut = step_size;
   
   for (int i=0;i!=num_steps;i++){
     Point test_p;
@@ -489,7 +497,7 @@ bool WCPPID::PR3DCluster::check_connectivity(std::tuple<int, int, double>& index
       if (flag_strong_check){
 	scores = ct_point_cloud.test_good_point(test_p, dis/(num_steps+1.));
       }else{
-	scores = ct_point_cloud.test_good_point(test_p);
+	scores = ct_point_cloud.test_good_point(test_p, radius_cut);
       }
     }
     int num_bad_details= 0;
