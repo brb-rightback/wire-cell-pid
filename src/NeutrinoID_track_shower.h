@@ -833,6 +833,8 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
 	flag_change_showers = true;
       }else if (length_tracks < 0.18 * length_showers && ((length_showers + length_tracks) < 60*units::cm || length_tracks < 12*units::cm)){
 	flag_change_showers = true;
+      }else if (length_tracks < 0.25 *length_showers && (tracks_score ==0 || length_tracks < 10*units::cm)){
+	flag_change_showers = true;
       }
     }else if ( length_tracks < 35*units::cm &&  length_tracks + length_showers  < 50*units::cm && length_showers < 15*units::cm
 	       && (temp_cluster != main_cluster ||
@@ -845,7 +847,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
  
   
   //if (!flag_change_showers)
-  //std::cout << temp_cluster->get_cluster_id() << " " << n_good_tracks << " " << n_tracks << " " << n_showers << " " << length_good_tracks/units::cm << " " << length_tracks/units::cm << " " << length_showers/units::cm << " " << flag_change_showers << " " << tracks_score << std::endl;
+  //  std::cout << temp_cluster->get_cluster_id() << " " << n_good_tracks << " " << n_tracks << " " << n_showers << " " << length_good_tracks/units::cm << " " << length_tracks/units::cm << " " << length_showers/units::cm << " " << flag_change_showers << " " << tracks_score << std::endl;
 
   if (flag_change_showers){
     for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
