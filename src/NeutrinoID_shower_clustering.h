@@ -37,7 +37,6 @@ void WCPPID::NeutrinoID::shower_determing_in_main_cluster(WCPPID::PR3DCluster *t
   fix_maps_shower_in_track_out(temp_cluster->get_cluster_id());
 
 
-    
   // if there is one good track in, turn everything else to out
   improve_maps_one_in(temp_cluster); // one in and many out ...
 

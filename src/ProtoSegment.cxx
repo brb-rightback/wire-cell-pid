@@ -1503,6 +1503,14 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
     }
   }
 
+
+  // if the particle score is really bad, make it a shower ...
+  if (length > 10*units::cm && particle_score > 1.0 && particle_score < 100){
+    particle_type = 11;
+    particle_score = 200;
+    flag_dir = 0;
+  }
+  
   //
   
   if (particle_type!=0){
