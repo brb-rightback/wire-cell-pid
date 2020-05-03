@@ -68,28 +68,32 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
   }
   
 
+
   bool flag_update_fit = false;
   // find the vertex
   for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end();it++){
     WCPPID::ProtoVertex *vtx = it->first;
     // hack for now ...
-    if ((vtx->get_cluster_id() != temp_cluster->get_cluster_id() || it->second.size()<=2) && (vtx != main_vertex) ) continue;
+    if (vtx->get_cluster_id() != temp_cluster->get_cluster_id() || it->second.size()<=2 && (vtx != main_vertex) ) continue;
     int ntracks = 0, nshowers = 0;
     for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
       if ((*it1)->get_flag_shower()) nshowers ++;
       else ntracks ++;
+      //      std::cout << vtx->get_cluster_id() << " " << vtx->get_id() << " " << (*it1)->get_cluster_id() << " " << (*it1)->get_id() << " " << ntracks << " " << flag_skip_two_legs << " " << it->second.size() << std::endl;
     }
     if (ntracks == 0 && (vtx != main_vertex) ) continue;
     if (flag_skip_two_legs && it->second.size()<=2) continue;
     
     auto wcp_save = vtx->get_wcpt();
+
+   
     
     bool flag_update = fit_vertex(vtx, it->second, temp_cluster);
     if (flag_update) {
       flag_update_fit = true;
 
       double tmp_dis = sqrt(pow(wcp_save.x - vtx->get_wcpt().x,2)+pow(wcp_save.y - vtx->get_wcpt().y,2)+pow(wcp_save.z - vtx->get_wcpt().z,2));
-      // std::cout << tmp_dis/units::cm << std::endl;
+     
       if (tmp_dis > 0.5*units::cm){// if the vertex is moving far, refit ...
 	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
 	fit_vertex(vtx, map_vertex_segments[vtx], temp_cluster);
@@ -101,20 +105,30 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
       //std::cout << std::endl;
     }
   }
+
+  
   
   if (flag_update_fit){
     // do the overall fit again
     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+    
+    
     examine_vertices(temp_cluster);
   }
+
+
 
   std::vector<WCPPID::ProtoVertex* > refit_vertices;
   flag_update_fit = false;
   if (flag_search_vertex_activity){
+
+   
+      
     for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end();it++){
       WCPPID::ProtoVertex *vtx = it->first;
       // hack for now ...
-      if ((vtx->get_cluster_id() != temp_cluster->get_cluster_id() || it->second.size()<=2) && (vtx != main_vertex)) continue;
+      if (vtx->get_cluster_id() != temp_cluster->get_cluster_id() || it->second.size()<=2 && (vtx != main_vertex)) continue;
+     
       int ntracks = 0, nshowers = 0;
       for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
 	if ((*it1)->get_flag_shower()) nshowers ++;
@@ -134,7 +148,9 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
       }
     
     }
-  
+
+    
+    
   
     //  std::cout << flag_update_fit << std::endl;
     if (flag_update_fit){
@@ -150,6 +166,8 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
       // eliminate the short tracks ...
       eliminate_short_vertex_activities(temp_cluster);
     }
+
+
     
     for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
       WCPPID::ProtoSegment *sg1 = it->first;
@@ -172,6 +190,9 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
     }
   } // flag activities ...
 
+
+
+  
   // if a track connecting to the vertex is trajectory shower, recheck, probably issue with vertex location ...
   if (main_vertex != 0 && main_vertex->get_cluster_id() == temp_cluster->get_cluster_id()){
     for (auto it = map_vertex_segments[main_vertex].begin(); it!= map_vertex_segments[main_vertex].end(); it++){

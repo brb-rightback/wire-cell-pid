@@ -126,18 +126,27 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
       
     }
     
-  
+     
+   
     
     // examine the vertices ...
     examine_vertices(temp_cluster);
 
+     
+    
     // examine partial identical segments
     examine_partial_identical_segments(temp_cluster);
-    
+
+     
     // examine the two initial points ...
     if (temp_cluster == main_cluster && main_cluster_initial_pair_vertices.first!=0)
       examine_vertices_3();
 
+ 
+     
+    
+
+    
     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
     
     return true;
@@ -1804,7 +1813,9 @@ void WCPPID::NeutrinoID::examine_segment(WCPPID::PR3DCluster* temp_cluster){
 
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
     if (sg->get_length()>4*units::cm) continue;
+    
     auto pair_vertices = find_vertices(sg);
     if (map_vertex_segments[pair_vertices.first].size()<2 || map_vertex_segments[pair_vertices.second].size()<2) continue; 
     
@@ -1872,6 +1883,8 @@ void WCPPID::NeutrinoID::examine_segment(WCPPID::PR3DCluster* temp_cluster){
 bool WCPPID::NeutrinoID::crawl_segment(WCPPID::ProtoSegment *curr_sg, WCPPID::ProtoVertex *v1, WCPPID::PR3DCluster* temp_cluster){
   bool flag = false;
 
+  if (curr_sg->get_cluster_id() != v1->get_cluster_id() || curr_sg->get_cluster_id() != temp_cluster->get_cluster_id()) return flag;
+  
   std::map<WCPPID::ProtoSegment*, Point> map_segment_point;
   for (auto it = map_vertex_segments[v1].begin(); it != map_vertex_segments[v1].end(); it++){
     WCPPID::ProtoSegment *sg = *it;
@@ -2093,21 +2106,29 @@ void WCPPID::NeutrinoID::examine_vertices(WCPPID::PR3DCluster* temp_cluster){
   while(flag_continue){
     flag_continue = false;
     
+      
+    
     //    std::cout << "haha0 " << " " << flag_continue << std::endl;
     examine_segment(temp_cluster);
 
+    
+    
     //    std::cout << "haha1 " << " " << flag_continue << std::endl;
     // merge vertex if the kink is not at right location
     flag_continue = flag_continue || examine_vertices_1(temp_cluster);
+
     
     //    std::cout << "haha2 " << " " << flag_continue << std::endl;
     if (find_vertices(temp_cluster).size() > 2)
       // merge vertices if they are too close ...
       flag_continue = flag_continue || examine_vertices_2(temp_cluster);
 
+     
+    
     // merge vertices if they are reasonable close ...
     flag_continue = flag_continue || examine_vertices_4(temp_cluster);
 
+      
     //    std::cout << "haha4 " << " " << flag_continue << std::endl;
   }
 

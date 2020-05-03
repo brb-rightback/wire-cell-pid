@@ -103,15 +103,22 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     
     map_cluster_main_vertices[main_cluster] = main_vertex;
     main_vertex = 0;
+
+    
+   
+    
   }
 
+  
+ 
+  
   
   // loop over other clusters ...
   if (flag_other_clusters){
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
       //if (skip_clusters.find(*it) != skip_clusters.end()) continue;
-      //      if ((*it)->get_cluster_id()!=34) continue;
-      //      std::cout << (*it)->get_cluster_id() << " " << map_cluster_length[*it]/units::cm << std::endl;
+      // if ((*it)->get_cluster_id()!=121) continue;
+      //std::cout << (*it)->get_cluster_id() << " " << map_cluster_length[*it]/units::cm << std::endl;
       
       if (map_cluster_length[*it] > 6*units::cm){
 	// find the proto vertex ...
@@ -142,6 +149,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
 	  main_vertex = 0;
 	}
       }
+     
     }
 
     //  deghost ...
@@ -152,11 +160,23 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     determine_overall_main_vertex();  
   
   if (flag_main_cluster && main_vertex !=0){
+
+
+    
+
+    
     // fit the vertex in 3D 
     improve_vertex(main_cluster);
+
+    
+
+    
     clustering_points(main_cluster);
     examine_direction(main_vertex);
 
+
+
+    
     std::cout << "Overall main Vertex " << main_vertex->get_fit_pt() << " connecting to: ";
     for (auto it = map_vertex_segments[main_vertex].begin(); it!=map_vertex_segments[main_vertex].end(); it++){
       std::cout << (*it)->get_id() << ", ";
@@ -169,13 +189,24 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     separate_track_shower();
     // for charge based on calculation ...
     collect_2D_charges();
+
+
+    
     // cluster E&M ...
     shower_clustering_with_nv();
+
+
+   
   }
   
   // std::cout << "Final Information: " << std::endl;
   // print_segs_info(main_vertex);
 
+  // for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+  //   auto pair_vertices = find_vertices(it->first);
+  //   if (pair_vertices.first->get_cluster_id() != pair_vertices.second->get_cluster_id())
+  //     std::cout << pair_vertices.first->get_cluster_id() << " " << pair_vertices.second->get_cluster_id() << std::endl;
+  // }
   
   // prepare output ...
   fill_fit_parameters();
