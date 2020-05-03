@@ -64,7 +64,7 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
     }
 
     bool flag_print = false;
-    //    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
+    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
     
     
     if (sg->get_flag_shower_trajectory()){
@@ -798,6 +798,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
   TPCParams& mp = Singleton<TPCParams>::Instance();
   int n_good_tracks = 0, n_tracks = 0, n_showers = 0;
   double length_good_tracks = 0, length_tracks = 0, length_showers = 0;
+  double tracks_score = 0;
   for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
@@ -812,6 +813,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
       }else{
 	n_tracks ++;
 	length_tracks += length;
+	if (sg->get_particle_score()!=100) tracks_score += sg->get_particle_score();
       }
     }
   }
@@ -825,7 +827,10 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
       }else if (length_tracks < 0.18 * length_showers && ((length_showers + length_tracks) < 60*units::cm || length_tracks < 12*units::cm)){
 	flag_change_showers = true;
       }
-    }else if ( length_tracks < 35*units::cm &&  length_tracks + length_showers  < 50*units::cm && length_showers < 15*units::cm && (length_showers > 0.5*length_tracks || length_showers > 0.33*length_tracks && n_showers >=2)){
+    }else if ( length_tracks < 35*units::cm &&  length_tracks + length_showers  < 50*units::cm && length_showers < 15*units::cm
+	       && (temp_cluster != main_cluster ||
+		   temp_cluster == main_cluster && (length_showers > 0.5*length_tracks || length_showers > 0.3*length_tracks && n_showers >=2 || n_showers ==1 && n_tracks==1 && length_showers > length_tracks * 0.3 || tracks_score == 0) )
+	       ){
       flag_change_showers = true;
     }
   }
@@ -833,7 +838,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
  
   
   //if (!flag_change_showers)
-  //  std::cout << temp_cluster->get_cluster_id() << " " << n_good_tracks << " " << n_tracks << " " << n_showers << " " << length_good_tracks/units::cm << " " << length_tracks/units::cm << " " << length_showers/units::cm << " " << flag_change_showers << std::endl;
+  //std::cout << temp_cluster->get_cluster_id() << " " << n_good_tracks << " " << n_tracks << " " << n_showers << " " << length_good_tracks/units::cm << " " << length_tracks/units::cm << " " << length_showers/units::cm << " " << flag_change_showers << " " << tracks_score << std::endl;
 
   if (flag_change_showers){
     for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){

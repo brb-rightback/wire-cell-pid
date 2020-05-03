@@ -190,6 +190,32 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
 	}
 	//	std::cout << sg->get_id() << " " << sg->is_shower_trajectory() << std::endl;
       }
+
+      //  std::cout << sg->get_id() << " " << sg->is_shower_topology() << " " << pair_result.first << std::endl;
+      // examine topology case ...
+      if (pair_result.first ==1 && sg->get_flag_shower_topology()){
+	int dir_save = sg->get_flag_dir();
+	WCPPID::ProtoVertex *start_v=0, *end_v=0;
+	for (auto it = map_segment_vertices[sg].begin(); it!=map_segment_vertices[sg].end(); it++){
+	  if ((*it)->get_wcpt().index == sg->get_wcpt_vec().front().index) start_v = *it;
+	  if ((*it)->get_wcpt().index == sg->get_wcpt_vec().back().index) end_v = *it;
+	}
+	sg->set_flag_shower_topology(false);
+	sg->determine_dir_track(map_vertex_segments[start_v].size(), map_vertex_segments[end_v].size(), false);
+	//	std::cout << sg->get_id() << " " << sg->get_particle_type() << " " << sg->get_particle_score() << std::endl;
+	if (sg->get_particle_type()==2212 && sg->get_particle_score()<0.09 ||
+	    sg->get_particle_type()==13 && sg->get_particle_score()<0.06){
+	  sg->set_flag_shower_topology(false);
+	}else{
+	  sg->set_flag_shower_topology(true);
+	  sg->set_particle_type(11);
+	  sg->set_particle_score(100);
+	  sg->set_flag_dir(dir_save);
+	  TPCParams& mp = Singleton<TPCParams>::Instance();
+	  sg->set_particle_mass( mp.get_mass_electron());
+	}
+      }
+
     }
   }
   

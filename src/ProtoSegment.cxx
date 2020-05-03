@@ -425,48 +425,9 @@ bool WCPPID::ProtoSegment::is_shower_topology(bool tmp_val){
       || max_spread > 0.8*units::cm && large_spread_length > 0.3 * total_effective_length && total_effective_length >= 15*units::cm
       || max_spread > 1.0*units::cm && large_spread_length > 0.4 * total_effective_length) {
 
-    /*
-    // do a quick PID ...
-    if (total_effective_length < 15*units::cm && large_spread_length < 7.5*units::cm){
-      int npoints = fit_pt_vec.size();
-      int start_n1 = 0, end_n1 = npoints - 1;
-      end_n1 = npoints - 2;
-      npoints -= 1;
-      npoints -=1;
-      start_n1 = 1;
-      if ( !(npoints ==0 || end_n1 < start_n1)){
-	std::vector<double> L(npoints,0);
-	std::vector<double> dQ_dx(npoints,0);
-	
-	double dis = 0;
-	for (size_t i = start_n1; i <= end_n1; i++){
-	  L.at(i-start_n1) = dis;
-	  dQ_dx.at(i-start_n1) = dQ_vec.at(i)/(dx_vec.at(i)/units::cm+1e-9);
-	  if (i+1 < fit_pt_vec.size())
-	    dis += sqrt(pow(fit_pt_vec.at(i+1).x-fit_pt_vec.at(i).x,2) + pow(fit_pt_vec.at(i+1).y-fit_pt_vec.at(i).y,2) + pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
-	}
-	
-	if (npoints >=3){ // reasonably long ...
-	  // can use the dQ/dx to do PID and direction ...
-	  bool tmp_flag_pid = do_track_pid(L, dQ_dx);
-	  if (!tmp_flag_pid) tmp_flag_pid =do_track_pid(L, dQ_dx, 15*units::cm);
-	  if (!tmp_flag_pid) tmp_flag_pid = do_track_pid(L, dQ_dx, 35*units::cm, 3*units::cm);
-	  if (!tmp_flag_pid) tmp_flag_pid =do_track_pid(L, dQ_dx, 15*units::cm, 3*units::cm);
-	}
-      }
-      if (particle_type == 2212 && particle_score < 0.09 ||
-	  particle_type == 13 && particle_score < 0.06 ){
-	flag_shower_topology = false;
-      }else{
-	flag_shower_topology = true;
-	particle_type = 11;
-	particle_score = 100;
-      }
-    }else{
-      //    std::cout << id << " " << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << " " << particle_type << " " << particle_score << std::endl;
-      */
-      flag_shower_topology = true;
-      //}
+  
+    flag_shower_topology = true;
+      
   }
   //  std::cout << id << " " << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << std::endl;
   

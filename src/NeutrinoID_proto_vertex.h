@@ -1269,10 +1269,17 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	  double direct_length = new_sg->get_direct_length();
 	  double length = new_sg->get_length();
 	  double medium_dQ_dx = new_sg->get_medium_dQ_dx()/(43e3/units::cm);
+
 	  // std::cout << direct_length/units::cm << " " << length/units::cm << " " << medium_dQ_dx << std::endl;
 	  if (direct_length < 0.78 * length && length >10*units::cm && medium_dQ_dx > 1.6 
 	      || direct_length < 0.6*length && length > 10*units::cm
-	      ) new_segments_1.push_back(new_sg );
+	      ){
+	    if (medium_dQ_dx > 1.1){
+	      new_segments.push_back(new_sg ); // high dQdx ...
+	    }else{
+	      new_segments_1.push_back(new_sg );
+	    }
+	  }
 	  
 	}
 	
@@ -1289,9 +1296,8 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 
   
   if (flag_break_track){
+    break_segments(new_segments_1, temp_cluster,2.0*units::cm);
     break_segments(new_segments, temp_cluster);
-    break_segments(new_segments_1, temp_cluster);
-    //    break_segments(new_segments_1, temp_cluster,2.0*units::cm);
   }
   //  if (flag_final_fit)
   // temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
