@@ -314,8 +314,8 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	}else if (  (nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() || nshowers[0]>0) && // one shower or nothing
 	      (nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() || nshowers[1] >0) && // one shower or nothing
 	      (nshowers[0] + nshowers[1] >2) && // 3 showers in total ...
-	      (nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() ||
-	       nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() ) // one side all showers
+	      (nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() && nshowers[0] >0 ||
+	       nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() && nshowers[1] > 0) // one side all showers
 	      ){
 	  if (sg->get_length() < 25*units::cm && sg->get_particle_type()!=11 || sg->get_flag_dir()==0){ // too long ...
 	    bool flag_start;
@@ -718,6 +718,7 @@ void WCPPID::NeutrinoID::improve_maps_shower_in_track_out(int temp_cluster_id, b
 	for (auto it1 = out_tracks.begin(); it1!=out_tracks.end(); it1++){
 	  WCPPID::ProtoSegment *sg1 = *it1;
 	  sg1->set_particle_type(11);
+	  sg1->set_flag_dir(0);
 	  TPCParams& mp = Singleton<TPCParams>::Instance();
 	  sg1->set_particle_mass(mp.get_mass_electron());
 	  if (sg1->get_particle_4mom(3)>0) sg1->cal_4mom();
@@ -726,12 +727,12 @@ void WCPPID::NeutrinoID::improve_maps_shower_in_track_out(int temp_cluster_id, b
 	for (auto it1 = map_no_dir_segments.begin(); it1 != map_no_dir_segments.end(); it1++){
 	  WCPPID::ProtoSegment *sg1 = it1->first;
 	  if (used_segments.find(sg1)!=used_segments.end()) continue;
-	  bool flag_start = it1->second;
-	  if (flag_start){
-	    sg1->set_flag_dir(1);
-	  }else{
-	    sg1->set_flag_dir(-1);
-	  }
+	  //bool flag_start = it1->second;
+	  //if (flag_start){
+	    //	    sg1->set_flag_dir(1);
+	  // }else{
+	    // sg1->set_flag_dir(-1);
+	  //}
 	  if (!sg1->get_flag_shower()){
 	    sg1->set_particle_type(11);
 	    TPCParams& mp = Singleton<TPCParams>::Instance();

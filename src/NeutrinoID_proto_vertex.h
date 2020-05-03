@@ -1070,6 +1070,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
   bool flag_final_fit = true;
   
   std::vector<WCPPID::ProtoSegment*> new_segments;
+  std::vector<WCPPID::ProtoSegment*> new_segments_1;
   // save segments ...
   for (auto it = saved_clusters.begin(); it!= saved_clusters.end(); it++){
     //    std::cout << (saved_cluster_points.at(*it)).first << " " << (saved_cluster_points.at(*it)).second << " " << cloud.pts.size() << std::endl;
@@ -1271,7 +1272,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	  // std::cout << direct_length/units::cm << " " << length/units::cm << " " << medium_dQ_dx << std::endl;
 	  if (direct_length < 0.78 * length && length >10*units::cm && medium_dQ_dx > 1.6 
 	      || direct_length < 0.6*length && length > 10*units::cm
-	      ) new_segments.push_back(new_sg );
+	      ) new_segments_1.push_back(new_sg );
 	  
 	}
 	
@@ -1287,9 +1288,11 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
  
 
   
-  if (flag_break_track)
-    break_segments(new_segments, temp_cluster,2.0*units::cm);
-
+  if (flag_break_track){
+    break_segments(new_segments, temp_cluster);
+    break_segments(new_segments_1, temp_cluster);
+    //    break_segments(new_segments_1, temp_cluster,2.0*units::cm);
+  }
   //  if (flag_final_fit)
   // temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
 }

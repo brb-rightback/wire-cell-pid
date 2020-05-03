@@ -425,6 +425,7 @@ bool WCPPID::ProtoSegment::is_shower_topology(bool tmp_val){
       || max_spread > 0.8*units::cm && large_spread_length > 0.3 * total_effective_length && total_effective_length >= 15*units::cm
       || max_spread > 1.0*units::cm && large_spread_length > 0.4 * total_effective_length) {
 
+    /*
     // do a quick PID ...
     if (total_effective_length < 15*units::cm && large_spread_length < 7.5*units::cm){
       int npoints = fit_pt_vec.size();
@@ -463,8 +464,9 @@ bool WCPPID::ProtoSegment::is_shower_topology(bool tmp_val){
       }
     }else{
       //    std::cout << id << " " << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << " " << particle_type << " " << particle_score << std::endl;
+      */
       flag_shower_topology = true;
-    }
+      //}
   }
   //  std::cout << id << " " << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << std::endl;
   
@@ -603,8 +605,13 @@ bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
   
   
   //std::cout << "BB " << id << " " << sections.size() << " " << get_length()/units::cm << " " << n_shower_like << std::endl;
-  
-  if (n_shower_like >=0.5*sections.size()) flag_shower_trajectory = true;
+  //std::cout << id << " " << get_medium_dQ_dx()/(43e3/units::cm) << std::endl;
+
+  //  double medium_dQ_dx = get_medium_dQ_dx()/(43e3/units::cm);
+  // not a good idea to require dQ/dx ...
+  if (n_shower_like >=0.5*sections.size()
+      //&& medium_dQ_dx < 1.1
+      ) flag_shower_trajectory = true;
   
   // calculate direct length, accumulated length, medium dQ/dx in each section ...
   //  std::cout << length/units::cm << " " << ncount << std::endl;
@@ -838,8 +845,8 @@ std::tuple<WCP::Point, TVector3, TVector3, bool> WCPPID::ProtoSegment::search_ki
 	save_i = i;
 	break;
       }else if (para_angles.at(i) > 7.5 && refl_angles.at(i) > 45 && sum_angles1 > 25){
-       	save_i = i;
-       	break;
+	save_i = i;
+	break;
       }else if (para_angles.at(i) > 15 && refl_angles.at(i) > 27 && sum_angles > 12.5){
 	//std::cout << i << " " << ave_dQ_dx << " " <<max_dQ_dx << " " << para_angles.at(i) << " " << refl_angles.at(i) << " " << sum_angles << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.front().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.front().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.front().z,2) ) /units::cm << " " << sqrt(pow(fit_pt_vec.at(i).x - fit_pt_vec.back().x,2) + pow(fit_pt_vec.at(i).y - fit_pt_vec.back().y,2) + pow(fit_pt_vec.at(i).z - fit_pt_vec.back().z,2) )/units::cm << " " << fit_pt_vec.at(i) << std::endl;
 	save_i = i;
@@ -1485,8 +1492,11 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
     if (!tmp_flag_pid) tmp_flag_pid =do_track_pid(L, dQ_dx, 15*units::cm, 3*units::cm);
   }
 
-  
+ 
   double length = get_length();
+
+  // not a good idea to constraing dQ/dx for electron
+  
   // short track what to do???
   if (particle_type == 0){
     // calculate medium dQ/dx
@@ -1511,7 +1521,6 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
   }else if (length < 1.5*units::cm){
     dir_weak = true;
   }
-  //	    start_n >1 && end_n >1 && particle_type == 2212) dir_weak = true;
 
   
   // vertex activities ...
