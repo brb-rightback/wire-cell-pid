@@ -1170,11 +1170,11 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
 	map_shower_angle_offset[shower] = 0;
 	if (fabs(map_shower_dir[shower].Angle(drift_dir)/3.1415926*180.-90)<5){
 	  map_shower_dir[shower] = shower->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 50*units::cm);
-	  map_shower_angle_offset[shower] = 15;
+	  map_shower_angle_offset[shower] = 5;
 	}
       }
 
-      //      std::cout << shower->get_start_vertex().first->get_fit_pt() << " " << map_shower_dir[shower].Mag() << " " << map_shower_dir[shower].Angle(drift_dir)/3.1415926*180. << " " << shower->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 15*units::cm).Mag() << " " << shower->get_start_segment()->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 15*units::cm).Mag() << std::endl;
+      //std::cout << shower->get_start_vertex().first->get_fit_pt() << " " << map_shower_dir[shower].Mag() << " " << map_shower_dir[shower].Angle(drift_dir)/3.1415926*180. << " " << shower->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 15*units::cm).Mag() << " " << shower->get_start_segment()->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 15*units::cm).Mag() << std::endl;
       
     }
   }
@@ -1201,9 +1201,9 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
       double angle_offset = 0;
       if (map_shower_angle_offset.find(shower) != map_shower_angle_offset.end())
 	angle_offset = map_shower_angle_offset[shower];
-      if (angle/3.1415926*180.<25. +angle_offset && pair_dis_point.first < 80*units::cm ||
-	  angle/3.1415926*180 < 12.5 +angle_offset&& pair_dis_point.first < 130*units::cm ||
-	  angle/3.1415926*180 < 5 +angle_offset && pair_dis_point.first < 200*units::cm ){
+      if (angle/3.1415926*180.<25. + angle_offset  && pair_dis_point.first < 80*units::cm ||
+	  angle/3.1415926*180 < 12.5 + angle_offset*8/5 && pair_dis_point.first < 130*units::cm ||
+	  angle/3.1415926*180 < 5 + angle_offset*2 && pair_dis_point.first < 200*units::cm ){
 	double dis = pow(pair_dis_point.first*cos(angle),2)/pow(40*units::cm,2) + pow(pair_dis_point.first*sin(angle),2)/pow(5*units::cm,2);
 	if (dis < min_dis){
 	  min_dis = dis;

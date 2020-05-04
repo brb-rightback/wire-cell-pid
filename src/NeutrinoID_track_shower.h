@@ -64,7 +64,7 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
     }
 
     bool flag_print = false;
-    //    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
+    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
     //    if (sg->get_cluster_id()==67) flag_print = true;
     
     if (sg->get_flag_shower_trajectory()){
@@ -872,8 +872,8 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   // examine_maps(temp_cluster);
   // print ...
 
-  //  std::cout << "Information after initial logic examination: " << std::endl;
-  // print_segs_info(temp_cluster);
+  std::cout << "Information after initial logic examination: " << std::endl;
+  print_segs_info(temp_cluster);
 
   
   // find the main vertex ...
@@ -1498,7 +1498,9 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
 	    if (current_sg->get_particle_score()<=100){
 	      
 	      double direct_length = current_sg->get_direct_length();
-	      if (direct_length >= 34*units::cm || direct_length < 34*units::cm && direct_length > 0.93 * length && current_sg->get_particle_score()!=100){
+	      if (direct_length >= 34*units::cm || direct_length < 34*units::cm && direct_length > 0.93 * length
+		  //&& current_sg->get_particle_score()!=100 // no good ...
+		  ){
 		//	       std::cout << direct_length << " " << length << std::endl;
 		current_sg->set_particle_type(13);
 		current_sg->set_particle_mass(mp.get_mass_muon());

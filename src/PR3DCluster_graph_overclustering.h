@@ -110,12 +110,12 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	  index_index_dis[j][k] = temp_index_index_dis; 
 	  
 	  bool flag;
-
-	  if (std::get<2>(temp_index_index_dis) <= 0.9*units::cm){
-	    flag = check_connectivity(index_index_dis[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k), 0.3*units::cm);
-	  }else{
-	    flag = check_connectivity(index_index_dis[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k));
-	  }
+	  // overclustering difficult to change ... 
+	  //	  if (std::get<2>(temp_index_index_dis) <= 0.9*units::cm){
+	  // flag = check_connectivity(index_index_dis[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k), 0.3*units::cm);
+	  //}else{
+	  flag = check_connectivity(index_index_dis[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k));
+	  //}
 
 	  //	  if (std::get<2>(temp_index_index_dis) < 0.9*units::cm) std::cout << std::get<2>(temp_index_index_dis)/units::cm << " " << flag << " " << check_connectivity(index_index_dis[j][k], cloud, ct_point_cloud, pt_clouds.at(j), pt_clouds.at(k), 0.2*units::cm) << std::endl;
 	  
