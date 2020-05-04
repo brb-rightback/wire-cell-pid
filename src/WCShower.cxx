@@ -369,7 +369,7 @@ void WCPPID::WCShower::update_particle_type(){
       start_segment->set_particle_mass(mp.get_mass_electron());
       start_segment->cal_4mom();
     }
-    //    std::cout << shower_length << " " << track_length << std::endl;
+    //    std::cout << start_segment->get_cluster_id() << " " << shower_length << " " << track_length << std::endl;
   }
 }
 

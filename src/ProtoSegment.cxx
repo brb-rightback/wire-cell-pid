@@ -185,14 +185,31 @@ bool WCPPID::ProtoSegment::determine_shower_direction(){
   if (max_spread > 0.7*units::cm && large_spread_length > 0.2 * total_effective_length && total_effective_length > 3*units::cm && total_effective_length < 15*units::cm && ( large_spread_length > 2.7*units::cm || large_spread_length > 0.35 * total_effective_length)
       || max_spread > 0.8*units::cm && large_spread_length > 0.3 * total_effective_length && total_effective_length >= 15*units::cm
       || max_spread > 1.0*units::cm && large_spread_length > 0.4 * total_effective_length) {
-    TVector3 main_dir = cal_dir_3vector(fit_pt_vec.front(),6*units::cm);
+    TVector3 drift_dir(1,0,0);
+    
+    TVector3 main_dir1, main_dir2;
+    bool flag_skip_angle1 = false;
+    bool flag_skip_angle2 = false;
+    if (fit_pt_vec.front().z < fit_pt_vec.back().z){
+      main_dir1 = cal_dir_3vector(fit_pt_vec.front(), 15*units::cm);
+      main_dir2 = cal_dir_3vector(fit_pt_vec.back(), 6*units::cm);
+      if (fabs(main_dir1.Angle(drift_dir)/3.1415926*180.-90)<10) flag_skip_angle1 = true;
+    }else{
+      main_dir1 = cal_dir_3vector(fit_pt_vec.front(), 6*units::cm);
+      main_dir2 = cal_dir_3vector(fit_pt_vec.back(), 15*units::cm);
+      if (fabs(main_dir2.Angle(drift_dir)/3.1415926*180.-90)<10) flag_skip_angle2 = true;
+    }
+
+   
+    //    std::cout << main_dir.Angle(drift_dir)/3.1415926*180. << std::endl;
     
     std::vector<std::tuple<int, int, double> > threshold_segs;
     for(size_t i=0;i!=vec_dQ_dx.size(); i++){
-      //      std::cout << i << " A: " << main_dir.Angle(vec_dir.at(i))/3.1415926*180. << " " << vec_dQ_dx.at(i) << " " << std::get<2>(vec_rms_vals.at(i))/units::cm << std::endl;
-      if (threshold_segs.size()==0 && main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30 && (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 || vec_dQ_dx.at(i) > 1.6)){
+      //      std::cout << i << " A: " << main_dir.Angle(vec_dir.at(i))/3.1415926*180. << " " <<vec_dir.at(i).Angle(drift_dir)/3.1415926*180. << " " << vec_dQ_dx.at(i) << " " << std::get<2>(vec_rms_vals.at(i))/units::cm << std::endl;
+      double angle = main_dir1.Angle(vec_dir.at(i))/3.1415926*180.;
+      if (threshold_segs.size()==0 && (angle < 30 || flag_skip_angle1 && angle < 60) && (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 || vec_dQ_dx.at(i) > 1.6)){
 	threshold_segs.push_back(std::make_tuple(i,i,std::get<2>(vec_rms_vals.at(i))));
-      }else if (main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30 && (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 || vec_dQ_dx.at(i) > 1.6)){
+      }else if ((angle < 30 || flag_skip_angle1 && angle < 60) && (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 || vec_dQ_dx.at(i) > 1.6)){
 	if (i == std::get<1>(threshold_segs.back())+1 && std::get<2>(threshold_segs.back()) < std::get<2>(vec_rms_vals.at(i)) ){
 	  std::get<1>(threshold_segs.back()) = i;
 	  std::get<2>(threshold_segs.back()) = std::get<2>(vec_rms_vals.at(i));
@@ -218,14 +235,14 @@ bool WCPPID::ProtoSegment::determine_shower_direction(){
       //      std::cout << id << " A: " << start_n << " " << end_n << " " << tmp_length/units::cm << std::endl;
     }
     
-    main_dir = cal_dir_3vector(fit_pt_vec.back(),6*units::cm);
     
     threshold_segs.clear();
     for(int i=vec_dQ_dx.size()-1;i>=0; i--){
       // std::cout << "B: " << 180-main_dir.Angle(vec_dir.at(i))/3.1415926*180. << std::endl;
-      if (threshold_segs.size()==0 && 180-main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30 && (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 || vec_dQ_dx.at(i) > 1.6)){
+      double angle = 180-main_dir2.Angle(vec_dir.at(i))/3.1415926*180.;
+      if (threshold_segs.size()==0 && (angle  < 30 || flag_skip_angle2 && angle < 60) && (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 || vec_dQ_dx.at(i) > 1.6)){
 	threshold_segs.push_back(std::make_tuple(i,i,std::get<2>(vec_rms_vals.at(i))));
-      }else if (180-main_dir.Angle(vec_dir.at(i))/3.1415926*180. < 30 && (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 || vec_dQ_dx.at(i) > 1.6)){
+      }else if ( (angle < 30 || flag_skip_angle2 && angle < 60) && (std::get<2>(vec_rms_vals.at(i))/units::cm> 0.4 || vec_dQ_dx.at(i) > 1.6)){
 	if (i == std::get<1>(threshold_segs.back())-1 && std::get<2>(threshold_segs.back()) < std::get<2>(vec_rms_vals.at(i)) ){
 	  std::get<1>(threshold_segs.back()) = i;
 	  std::get<2>(threshold_segs.back()) = std::get<2>(vec_rms_vals.at(i));
@@ -258,7 +275,7 @@ bool WCPPID::ProtoSegment::determine_shower_direction(){
       flag_dir = -1;
     }
     
-    // std::cout << cluster_id << " " << id << " " << total_length1/units::cm << " " << total_length2/units::cm << " " << max_length1/units::cm << " " << max_length2/units::cm << " " << flag_dir << std::endl;
+    //    std::cout << cluster_id << " " << id << " " << total_length1/units::cm << " " << total_length2/units::cm << " " << max_length1/units::cm << " " << max_length2/units::cm << " " << flag_dir << std::endl;
   }else{
     if (total_length < 5*units::cm){
       if (!is_shower_trajectory())
@@ -423,13 +440,16 @@ bool WCPPID::ProtoSegment::is_shower_topology(bool tmp_val){
   
   if (max_spread > 0.7*units::cm && large_spread_length > 0.2 * total_effective_length && total_effective_length > 3*units::cm && total_effective_length < 15*units::cm && ( large_spread_length > 2.7*units::cm || large_spread_length > 0.35 * total_effective_length)
       || max_spread > 0.8*units::cm && large_spread_length > 0.3 * total_effective_length && total_effective_length >= 15*units::cm
-      || max_spread > 1.0*units::cm && large_spread_length > 0.4 * total_effective_length) {
+      || max_spread > 0.8*units::cm && large_spread_length > 8*units::cm && large_spread_length > 0.18 * total_effective_length
+      || max_spread > 1.0*units::cm && large_spread_length > 0.4 * total_effective_length
+      || max_spread > 1.0*units::cm && large_spread_length > 5*units::cm && large_spread_length > 0.23 * total_effective_length
+      ){
 
   
     flag_shower_topology = true;
       
   }
-  //  std::cout << id << " " << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << std::endl;
+  // std::cout << id << " " << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << std::endl;
   
   
   if (flag_shower_topology){

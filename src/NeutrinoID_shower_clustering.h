@@ -126,6 +126,7 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
   std::map<WCPPID::WCShower*, WCP::Line *> map_shower_line;
   //std::cout << map_vertex_to_shower[main_vertex].size() << std::endl;
   for (auto it = map_vertex_to_shower[main_vertex].begin(); it!= map_vertex_to_shower[main_vertex].end(); it++){
+    //    std::cout << (*it)->get_start_segment()->get_cluster_id() << " " << (*it)->get_start_segment()->get_particle_type() << std::endl;
     if ((*it)->get_start_segment()->get_particle_type()==13) continue; // a muon
     if ((*it)->get_total_length() < 3*units::cm) continue; // too short ...
     if (pi0_showers.find(*it) != pi0_showers.end()) continue; // cannot be already in a pi0
@@ -138,13 +139,14 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
   }
   for (auto it = map_vertex_to_shower.begin(); it!= map_vertex_to_shower.end(); it++){
     if (it->first == main_vertex) continue;
+    
     for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
       if ((*it1)->get_start_segment()->get_particle_type()==13) continue; // a muon 
       if ((*it1)->get_total_length() < 3*units::cm) continue; // too short ... 
       if (pi0_showers.find(*it1) != pi0_showers.end()) continue; // cannot be already in a pi0
       if ((*it1)->get_start_vertex().second != 3) continue;
       if (!(*it1)->get_start_segment()->get_flag_shower()) continue;
-
+      
       
       
       Point test_p = (*it1)->get_closest_point(main_vertex->get_fit_pt()).second; 
@@ -924,7 +926,6 @@ void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(bool flag_save){
       shower->complete_structure_with_start_segment(map_vertex_segments, map_segment_vertices, used_segments); 
 
       
-      
        // cluster with the rest ... 
       TVector3 dir_shower = shower->cal_dir_3vector(vertex->get_fit_pt(), 15*units::cm);
       
@@ -1043,8 +1044,13 @@ void WCPPID::NeutrinoID::shower_clustering_in_other_clusters(bool flag_save){
 	  }
 	}
       }
+
+      //      std::cout << sg->get_cluster_id() << " " << sg->get_particle_type() << sg->get_length()/units::cm << std::endl;
+      
       //      std::cout << sg->get_particle_type() << " " << std::endl;
-      if (sg->get_particle_type()==0 || fabs(sg->get_particle_type())==13){
+      if (sg->get_particle_type()==0 || fabs(sg->get_particle_type())==13
+	  && sg->get_length() < 40*units::cm && sg->is_dir_weak()
+	  ){
 	sg->set_particle_type(11);
 	TPCParams& mp = Singleton<TPCParams>::Instance();
 	sg->set_particle_mass(mp.get_mass_electron());
@@ -1125,6 +1131,8 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_in_main_cluster(){
 
 void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
   std::map<WCPPID::WCShower*, TVector3> map_shower_dir;
+  std::map<WCPPID::WCShower*, double> map_shower_angle_offset;
+  TVector3 drift_dir(1,0,0);
   
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *seg = it->first;
@@ -1158,6 +1166,16 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
 	  }
 	}
       }
+      if (map_shower_dir.find(shower) != map_shower_dir.end()){
+	map_shower_angle_offset[shower] = 0;
+	if (fabs(map_shower_dir[shower].Angle(drift_dir)/3.1415926*180.-90)<5){
+	  map_shower_dir[shower] = shower->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 50*units::cm);
+	  map_shower_angle_offset[shower] = 15;
+	}
+      }
+
+      //      std::cout << shower->get_start_vertex().first->get_fit_pt() << " " << map_shower_dir[shower].Mag() << " " << map_shower_dir[shower].Angle(drift_dir)/3.1415926*180. << " " << shower->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 15*units::cm).Mag() << " " << shower->get_start_segment()->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 15*units::cm).Mag() << std::endl;
+      
     }
   }
 
@@ -1180,10 +1198,12 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
       std::pair<double, WCP::Point> pair_dis_point = seg1->get_closest_point(shower->get_start_vertex().first->get_fit_pt()); 
       TVector3 v1(pair_dis_point.second.x - shower->get_start_vertex().first->get_fit_pt().x, pair_dis_point.second.y - shower->get_start_vertex().first->get_fit_pt().y, pair_dis_point.second.z - shower->get_start_vertex().first->get_fit_pt().z);
       double angle = it1->second.Angle(v1);
-      
-      if (angle/3.1415926*180.<25. && pair_dis_point.first < 80*units::cm ||
-	  angle/3.1415926*180 < 12.5 && pair_dis_point.first < 130*units::cm ||
-	  angle/3.1415926*180 < 5 && pair_dis_point.first < 200*units::cm ){
+      double angle_offset = 0;
+      if (map_shower_angle_offset.find(shower) != map_shower_angle_offset.end())
+	angle_offset = map_shower_angle_offset[shower];
+      if (angle/3.1415926*180.<25. +angle_offset && pair_dis_point.first < 80*units::cm ||
+	  angle/3.1415926*180 < 12.5 +angle_offset&& pair_dis_point.first < 130*units::cm ||
+	  angle/3.1415926*180 < 5 +angle_offset && pair_dis_point.first < 200*units::cm ){
 	double dis = pow(pair_dis_point.first*cos(angle),2)/pow(40*units::cm,2) + pow(pair_dis_point.first*sin(angle),2)/pow(5*units::cm,2);
 	if (dis < min_dis){
 	  min_dis = dis;

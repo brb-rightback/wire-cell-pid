@@ -64,7 +64,7 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
     }
 
     bool flag_print = false;
-    // if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
+    //    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
     //    if (sg->get_cluster_id()==67) flag_print = true;
     
     if (sg->get_flag_shower_trajectory()){
@@ -833,7 +833,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
 	flag_change_showers = true;
       }else if (length_tracks < 0.18 * length_showers && ((length_showers + length_tracks) < 60*units::cm || length_tracks < 12*units::cm)){
 	flag_change_showers = true;
-      }else if (length_tracks < 0.25 *length_showers && (tracks_score ==0 || length_tracks < 10*units::cm)){
+      }else if (length_tracks < 0.25 *length_showers && (tracks_score ==0 && length_tracks < 30*units::cm || length_tracks < 10*units::cm)){
 	flag_change_showers = true;
       }
     }else if ( length_tracks < 35*units::cm &&  length_tracks + length_showers  < 50*units::cm && length_showers < 15*units::cm
@@ -847,7 +847,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
  
   
   //if (!flag_change_showers)
-  //  std::cout << temp_cluster->get_cluster_id() << " " << n_good_tracks << " " << n_tracks << " " << n_showers << " " << length_good_tracks/units::cm << " " << length_tracks/units::cm << " " << length_showers/units::cm << " " << flag_change_showers << " " << tracks_score << std::endl;
+  std::cout << temp_cluster->get_cluster_id() << " " << n_good_tracks << " " << n_tracks << " " << n_showers << " " << length_good_tracks/units::cm << " " << length_tracks/units::cm << " " << length_showers/units::cm << " " << flag_change_showers << " " << tracks_score << std::endl;
 
   if (flag_change_showers){
     for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
@@ -1097,7 +1097,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_all_showers(WCPPI
 	tmp_sg->determine_shower_direction();
 
 	
-	//	std::cout << max_vtx->get_fit_pt() << " " << min_vtx->get_fit_pt() << std::endl;
+	//	std::cout << max_vtx->get_cluster_id() << " " << max_vtx->get_fit_pt() << " " << min_vtx->get_fit_pt() << " " << tmp_sg->get_flag_dir() << std::endl;
 	
 	if (tmp_sg->get_flag_dir()==1){
 	  temp_main_vertex = max_vtx;
@@ -1493,10 +1493,12 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
 	    }
 	    //	    std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << " " << num_daughter_showers << std::endl;
 	  }else if (current_sg->get_particle_type()==11 && num_daughter_showers<=2 && (!flag_shower_in) && (!current_sg->get_flag_shower_topology()) && (!current_sg->get_flag_shower_trajectory()) && length > 10*units::cm){
-	    //	    std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << " " << num_daughter_showers << " " << current_sg->get_length()/units::cm << " " << current_sg->get_flag_shower_topology() << " " << current_sg->get_flag_shower_trajectory() << " " << std::endl;
+
+	    //std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << " " << num_daughter_showers << " " << current_sg->get_length()/units::cm << " " << current_sg->get_flag_shower_topology() << " " << current_sg->get_flag_shower_trajectory() << " " << " " << current_sg->get_particle_score() << std::endl;
 	    if (current_sg->get_particle_score()<=100){
+	      
 	      double direct_length = current_sg->get_direct_length();
-	      if (direct_length >= 34*units::cm || direct_length < 34*units::cm && direct_length > 0.93 * length){
+	      if (direct_length >= 34*units::cm || direct_length < 34*units::cm && direct_length > 0.93 * length && current_sg->get_particle_score()!=100){
 		//	       std::cout << direct_length << " " << length << std::endl;
 		current_sg->set_particle_type(13);
 		current_sg->set_particle_mass(mp.get_mass_muon());
@@ -1508,7 +1510,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
 	      current_sg->set_flag_shower_trajectory(false);
 	      current_sg->set_particle_type(13);
 	      current_sg->set_particle_mass(mp.get_mass_muon());
-	      //std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << " " << num_daughter_showers << " " << current_sg->get_length()/units::cm << " " << current_sg->get_flag_shower_topology() << " " << current_sg->get_flag_shower_trajectory() << " " << pair_result1.first << " " << pair_result1.second << std::endl;
+	      //	      std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << " " << num_daughter_showers << " " << current_sg->get_length()/units::cm << " " << current_sg->get_flag_shower_topology() << " " << current_sg->get_flag_shower_trajectory() << " " << pair_result1.first << " " << pair_result1.second << std::endl;
 	    }
 	  }
 	}
@@ -1523,6 +1525,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
 	      current_sg->set_particle_type(13);
 	      current_sg->set_particle_mass(mp.get_mass_muon());
 	    }
+	    //std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << std::endl;
 	  }
 	}
 	

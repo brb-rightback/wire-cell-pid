@@ -10,8 +10,8 @@ std::vector<SMGCSelection> WCPPID::PR3DCluster::Examine_graph(WCP::ToyCTPointClo
   const int N = point_cloud->get_num_points();
   graph = new MCUGraph(N);
   Establish_close_connected_graph();
-
   Connect_graph_overclustering_protection(ct_point_cloud);
+  
   std::vector<int> component(num_vertices(*graph));
   const int num = connected_components(*graph,&component[0]);
 
