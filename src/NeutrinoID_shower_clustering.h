@@ -387,7 +387,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
 	  map_shower_pair_mass_vertex[std::make_pair(shower_1, shower_2)].push_back(std::make_pair(mass_pio, vtx));
 
 	  //	  if (shower_1->get_kine_charge() > 80*units::MeV && shower_2->get_kine_charge() > 80*units::MeV)
-	  // std::cout << vtx->get_id() << " " << i << " " << j << " " << shower_1->get_kine_charge()/units::MeV << " " << shower_2->get_kine_charge()/units::MeV << " " << dir1.Mag() << " " << dir2.Mag() << " " << angle/3.1415926*180. << " " << sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2))/units::MeV<< std::endl;
+	  //  std::cout << vtx->get_id() << " " << i << " " << j << " " << shower_1->get_kine_charge()/units::MeV << " " << shower_2->get_kine_charge()/units::MeV << " " << dir1.Mag() << " " << dir2.Mag() << " " << angle/3.1415926*180. << " " << sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2))/units::MeV<< std::endl;
 	} // loop shower
       } // loop shower
     } // more than 1 shower

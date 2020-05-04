@@ -178,8 +178,13 @@ namespace WCPPID{
     
     void examine_vertices_3(); // main cluster only examine the two initial points
 
+    // after the main vertex determination ... examine structure ... fix mistakes ...
+    bool examine_structure_final(WCPPID::PR3DCluster* temp_cluster); 
+    bool examine_structure_final_1(WCPPID::PR3DCluster* temp_cluster); // merge two segments if a direct connection is better ...
     
+    //  bool examine_vertices_5(WCPPID::ProtoSegment *sg, WCPPID::ProtoVertex* vtx, WCPPID::ProtoVertex *vtx2, WCPPID::ProtoSegment *sg1, WCPPID::ProtoVertex *vtx1, WCPPID::ProtoSegment *sg2);
 
+    
     
 
     void examine_structure(WCPPID::PR3DCluster *temp_cluster);

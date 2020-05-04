@@ -116,10 +116,10 @@ bool WCPPID::NeutrinoID::examine_structure_2(WCPPID::PR3DCluster *temp_cluster){
 	new_pts.push_back(test_p);
 	if (!ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0)) n_bad ++;
 	if (n_bad>1) flag_replace = false;
-	//	 std::cout << i << " " << test_p << " " << ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0) << " " << sg->get_closest_point(test_p).first/units::cm << std::endl;
+	//	std::cout << i << " " << test_p << " " << ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0) << std::endl;
       }
 
-      //      std::cout << flag_replace << " " << sg1->get_id() << " " << sg2->get_id() << " " << length1/units::cm << " " << length2/units::cm << std::endl;
+      // std::cout << flag_replace << " " << sg1->get_id() << " " << sg2->get_id() << " " << length1/units::cm << " " << length2/units::cm << " " << n_bad << " " << ncount * step_size << std::endl;
       
       if (flag_replace){
 	// form a new segment

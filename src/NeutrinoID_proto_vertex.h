@@ -131,8 +131,6 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
     
     // examine the vertices ...
     examine_vertices(temp_cluster);
-
-     
     
     // examine partial identical segments
     examine_partial_identical_segments(temp_cluster);
@@ -1301,8 +1299,6 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 
   //  std::cout << "abc4 " << std::endl;
 
- 
-
   
   if (flag_break_track){
     break_segments(new_segments_1, temp_cluster,2.0*units::cm);
@@ -2275,10 +2271,13 @@ bool WCPPID::NeutrinoID::examine_vertices_2(WCPPID::PR3DCluster* temp_cluster){
     if (v1 !=0 &&  v2 !=0){
       double dis = sqrt(pow(v1->get_fit_pt().x-v2->get_fit_pt().x,2) + pow(v1->get_fit_pt().y-v2->get_fit_pt().y,2) + pow(v1->get_fit_pt().z-v2->get_fit_pt().z,2));
       
-      //std::cout << sg->get_cluster_id() << " " << sg->get_id() << " " << dis/units::cm << std::endl;
+      // std::cout << sg->get_cluster_id() << " " << sg->get_id() << " " << dis/units::cm << " " << map_vertex_segments[v1].size() << " " << map_vertex_segments[v2].size() << std::endl;
       if ( dis < 0.45*units::cm){
 	flag_continue = true;
 	break;
+      }else if (dis < 1.5*units::cm && map_vertex_segments[v1].size()==2 && map_vertex_segments[v2].size()==2){
+      	flag_continue = true;
+      	break;
       }else{
 	v1 = 0;
 	v2 = 0;
