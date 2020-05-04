@@ -312,39 +312,8 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	  sg->set_particle_mass(mp.get_mass_electron());
 	  if (sg->get_particle_4mom(3)>0) sg->cal_4mom();
 	  flag_update = true;
-	}else if (  (nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() || nshowers[0]>0) && // one shower or nothing
-	      (nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() || nshowers[1] >0) && // one shower or nothing
-	      (nshowers[0] + nshowers[1] >2) && // 3 showers in total ...
-	      (nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() && nshowers[0] >0 ||
-	       nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() && nshowers[1] > 0) // one side all showers
-	      ){
-	  if (length < 25*units::cm && sg->get_particle_type()!=11 || sg->get_flag_dir()==0){ // too long ...
-	    bool flag_start;
-	    if (sg->get_wcpt_vec().front().index == two_vertices.first->get_wcpt().index)
-	      flag_start = true;
-	    else if (sg->get_wcpt_vec().back().index == two_vertices.first->get_wcpt().index)
-	      flag_start = false;
-	    if (flag_start){
-	      if (nshowers[1]==0){
-		sg->set_flag_dir(-1);
-	      }else if (nshowers[0]==0){
-		sg->set_flag_dir(1);
-	      }
-	    }else{
-	      if (nshowers[1]==0){
-		sg->set_flag_dir(1);
-	      }else if (nshowers[0]==0){
-		sg->set_flag_dir(-1);
-	      }
-	    }
-	    sg->set_dir_weak(true);
-	    if (flag_print) std::cout << "B: " << sg->get_id() << std::endl;
-	    sg->set_particle_type(11);
-	    TPCParams& mp = Singleton<TPCParams>::Instance();
-	    sg->set_particle_mass(mp.get_mass_electron());
-	    if (sg->get_particle_4mom(3)>0) sg->cal_4mom();
-	    flag_update = true;
-	  }
+	
+	  
 	}else if ( nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() && nshowers[0]>=2 && sg->get_particle_type() == 2212){
 	  TVector3 v1 = sg->cal_dir_3vector(two_vertices.first->get_fit_pt(), 5*units::cm);
 	  double min_angle = 180;
@@ -419,12 +388,12 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	  
 	  double direct_length = sg->get_direct_length();
 
-
-
+	  
+	  
 	  if ( direct_length < 34*units::cm && direct_length < 0.93 * length
-	      || length < 5*units::cm && (nprotons[0] + nshowers[0] ==0 && nshowers[1] >=2
-					  || nprotons[1] + nshowers[1]==0 && nshowers[0]>=2)
-	      ){
+	       || length < 5*units::cm && (nprotons[0] + nshowers[0] ==0 && nshowers[1] >=2
+					   || nprotons[1] + nshowers[1]==0 && nshowers[0]>=2)
+	       ){
 	    if (flag_print) std::cout << "E: " << sg->get_id() << std::endl;
 	    sg->set_particle_type(11);
 	    TPCParams& mp = Singleton<TPCParams>::Instance();
@@ -433,7 +402,7 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	    //	    std::cout << sg->get_id() << " " << length << " " << direct_length << " " << sg->get_particle_type() << std::endl;
 	    flag_update = true;
 	  }else if (((nshowers[0]+nshowers[1]>=2 && (nprotons[0]+nmuons[0] + nshowers[0]==1 || nprotons[1]+nmuons[1]+nshowers[1]==1))
-		    ||(nshowers[0]+nshowers[1]>=1 && (nprotons[0]+nmuons[0] + nshowers[0]>1 || nprotons[1]+nmuons[1]+nshowers[1]>1))
+		     ||(nshowers[0]+nshowers[1]>=1 && (nprotons[0]+nmuons[0] + nshowers[0]>1 || nprotons[1]+nmuons[1]+nshowers[1]>1))
 		     )&& length < 40*units::cm){
 	    // calculate the number of daughters of daughters ...
 	    std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> pair_vertices = find_vertices(sg);
@@ -466,7 +435,7 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	      }
 	    }
 	    //	    std::cout << sg->get_id() << " " << sg->get_particle_type() << " " << length/units::cm << " " << max_angle1 << " " << max_angle2 << " " << num_s1 << " " << num_s2 << " " << length_s1/units::cm << " " << length_s2/units::cm << std::endl;
-	    //	    std::cout << max_angle1 << " " << max_angle2 << std::endl;
+	    //std::cout << max_angle1 << " " << max_angle2 << std::endl;
 	    if ((num_s1 >= 4 || length_s1 > 50*units::cm && num_s1 >=2) && max_angle1 > 150
 		|| (num_s2 >= 4 || length_s2 > 50*units::cm) && max_angle2 > 150
 		|| length<6*units::cm && (num_s1 >=4 && length_s1>20*units::cm || // short track ...
@@ -511,7 +480,40 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	    if (sg->get_particle_4mom(3)>0) sg->cal_4mom();
 	    flag_update = true;
 	  }
+	}else if (  (nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() || nshowers[0]>0) && // one shower or nothing
+		    (nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() || nshowers[1] >0) && // one shower or nothing
+		    (nshowers[0] + nshowers[1] >2) && // 3 showers in total ...
+		    (nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() && nshowers[0] >0 ||
+		     nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() && nshowers[1] > 0) // one side all showers
+		    ){
 	  
+	  if (length < 25*units::cm && sg->get_particle_type()!=11 || sg->get_flag_dir()==0){ // too long ...
+	    bool flag_start;
+	    if (sg->get_wcpt_vec().front().index == two_vertices.first->get_wcpt().index)
+	      flag_start = true;
+	    else if (sg->get_wcpt_vec().back().index == two_vertices.first->get_wcpt().index)
+	      flag_start = false;
+	    if (flag_start){
+	      if (nshowers[1]==0){
+		sg->set_flag_dir(-1);
+	      }else if (nshowers[0]==0){
+		sg->set_flag_dir(1);
+	      }
+	    }else{
+	      if (nshowers[1]==0){
+		sg->set_flag_dir(1);
+	      }else if (nshowers[0]==0){
+		sg->set_flag_dir(-1);
+	      }
+	    }
+	    sg->set_dir_weak(true);
+	    if (flag_print) std::cout << "B: " << sg->get_id() << std::endl;
+	    sg->set_particle_type(11);
+	    TPCParams& mp = Singleton<TPCParams>::Instance();
+	    sg->set_particle_mass(mp.get_mass_electron());
+	    if (sg->get_particle_4mom(3)>0) sg->cal_4mom();
+	    flag_update = true;
+	  }	  
 	}else if (sg->get_particle_type()==0 && length < 12*units::cm && nshowers[0]  + nshowers[1] > 0 && sg->get_medium_dQ_dx()/(43e3/units::cm) > 1.2){
 
 	  bool flag_change = false;
