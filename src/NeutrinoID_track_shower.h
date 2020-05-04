@@ -1462,7 +1462,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
       }
     }
   }
-
+  if (map_vertex_segments[temp_vertex].size()>2) flag_only_showers = false;
   
   /* if (flag_final){ */
   /*   for (auto it = map_vertex_segments[temp_vertex].begin(); it!= map_vertex_segments[temp_vertex].end(); it++){ */
