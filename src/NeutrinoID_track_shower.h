@@ -480,12 +480,15 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 	    if (sg->get_particle_4mom(3)>0) sg->cal_4mom();
 	    flag_update = true;
 	  }
-	}else if (  (nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() || nshowers[0]>0) && // one shower or nothing
-		    (nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() || nshowers[1] >0) && // one shower or nothing
-		    (nshowers[0] + nshowers[1] >2) && // 3 showers in total ...
-		    (nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() && nshowers[0] >0 ||
-		     nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() && nshowers[1] > 0) // one side all showers
-		    ){
+	}
+
+	
+	if (  (nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() || nshowers[0]>0) && // one shower or nothing
+	      (nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() || nshowers[1] >0) && // one shower or nothing
+	      (nshowers[0] + nshowers[1] >2) && // 3 showers in total ...
+	      (nshowers[0]+1 == map_vertex_segments[two_vertices.first].size() && nshowers[0] >0 ||
+	       nshowers[1]+1 == map_vertex_segments[two_vertices.second].size() && nshowers[1] > 0) // one side all showers
+	      ){
 	  
 	  if (length < 25*units::cm && sg->get_particle_type()!=11 || sg->get_flag_dir()==0){ // too long ...
 	    bool flag_start;

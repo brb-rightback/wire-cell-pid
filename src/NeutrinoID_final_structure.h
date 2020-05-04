@@ -51,7 +51,7 @@ bool WCPPID::NeutrinoID::examine_structure_final_1(WCPPID::PR3DCluster* temp_clu
       
       if (flag_replace){
 	// form a new segment
-	std::cout << "Cluster: " << temp_cluster->get_cluster_id() << "Final stage merge two short segments: " << sg1->get_id() << " " << sg2->get_id() << " with a straight one, vtx id "  << vtx->get_id() << std::endl;
+	std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Final stage merge two short segments: " << sg1->get_id() << " " << sg2->get_id() << " with a straight one, vtx id "  << vtx->get_id() << std::endl;
 	
 	WCP::ToyPointCloud* pcloud_steiner = temp_cluster->get_point_cloud_steiner();
 	std::list<WCP::WCPointCloud<double>::WCPoint > wcps;
