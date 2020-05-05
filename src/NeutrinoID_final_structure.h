@@ -1,12 +1,183 @@
 
 bool WCPPID::NeutrinoID::examine_structure_final(WCPPID::PR3DCluster* temp_cluster){
-  // this is after the main vertex determination, but before the other clustering
   
   // results need to repeat the fit and the PID related work ...
   examine_structure_final_1(temp_cluster);
 
+  examine_structure_final_2(temp_cluster);
   
 }
+
+
+bool WCPPID::NeutrinoID::examine_structure_final_2(WCPPID::PR3DCluster* temp_cluster){
+  bool flag_update;
+  WCP::ToyPointCloud *pcloud = temp_cluster->get_point_cloud_steiner();
+  bool flag_updated = false;
+  
+  if (main_vertex !=0 || main_vertex->get_cluster_id() != temp_cluster->get_cluster_id()){
+    bool flag_continue = true;
+    while(flag_continue){
+      flag_continue = false;
+      flag_update = false;
+      for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
+	WCPPID::ProtoSegment *sg = *it;
+	WCPPID::ProtoVertex *vtx1 = find_other_vertex(sg, main_vertex);
+
+	if (map_vertex_segments[vtx1].size()==1) continue;
+	double dis = sqrt(pow(main_vertex->get_fit_pt().x - vtx1->get_fit_pt().x,2) + pow(main_vertex->get_fit_pt().y - vtx1->get_fit_pt().y, 2) + pow(main_vertex->get_fit_pt().z - vtx1->get_fit_pt().z,2));
+	
+	if (dis <2.0*units::cm){
+	  // check to see if the vtx1 can be merged into main_vertex ...
+	  flag_update = true;
+	  for (auto it1 = map_vertex_segments[vtx1].begin(); it1 != map_vertex_segments[vtx1].end(); it1++){
+	    WCPPID::ProtoSegment *sg1 = *it1;
+	    if (sg == sg1) continue;
+	    PointVector& pts = sg1->get_point_vec();
+	    bool flag_start;
+	    if (sg->get_wcpt_vec().front().index == vtx1->get_wcpt().index){
+	      flag_start = true;
+	    }else if (sg->get_wcpt_vec().back().index == vtx1->get_wcpt().index){
+	      flag_start = false;
+	    }
+	    
+	    Point min_point = pts.front();
+	    double min_dis = 1e9;
+	    int min_index;
+	    for (size_t i=0;i!=pts.size();i++){
+	      double dis = fabs(sqrt(pow(pts.at(i).x - vtx1->get_fit_pt().x,2) + pow(pts.at(i).y - vtx1->get_fit_pt().y,2) + pow(pts.at(i).z - vtx1->get_fit_pt().z,2))-3*units::cm);
+	      if (dis < min_dis){
+		min_dis = dis;
+		min_point = pts.at(i);
+		min_index = i;
+	      }
+	    }
+	    
+	    bool flag_connect = true;
+	    if (flag_start){
+	      for (int i = min_index; i>=0;i--){
+		if (!ct_point_cloud->is_good_point(pts.at(i), 0.2*units::cm, 0, 0)) {
+		  flag_connect = false;
+		  break;
+		}
+	      }
+	    }else{
+	      for (int i = min_index; i<pts.size(); i++){
+		if (!ct_point_cloud->is_good_point(pts.at(i), 0.2*units::cm, 0, 0)) {
+		  flag_connect = false;
+		  break;
+		}
+	      }	    
+	    }
+	    
+	    if (flag_connect){
+	      double step_size = 0.3  *units::cm;
+	      Point start_p = min_point;
+	      Point end_p = main_vertex->get_fit_pt();
+	      int ncount = std::round(sqrt(pow(start_p.x - end_p.x,2) + pow(start_p.y - end_p.y,2) + pow(start_p.z - end_p.z,2))/step_size);
+	      int n_bad = 0;
+	      for (int i=1;i<ncount;i++){
+		Point test_p(start_p.x + (end_p.x - start_p.x)/ncount*i,
+			     start_p.y + (end_p.y - start_p.y)/ncount*i,
+			     start_p.z + (end_p.z - start_p.z)/ncount*i);
+		if (!ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0)) {
+		  n_bad ++;
+		}
+	      }
+	      if (n_bad >0) flag_update = false;
+	    }
+	  } // loop segments connecting to vtx1
+	  
+	  if (flag_update){
+	    for (auto it1 = map_vertex_segments[vtx1].begin(); it1 != map_vertex_segments[vtx1].end(); it1++){
+	      WCPPID::ProtoSegment *sg1 = *it1;
+	      if (sg1 == sg) continue;
+	      WCP::WCPointCloud<double>::WCPoint& vtx_new_wcp = main_vertex->get_wcpt();
+	      std::vector<WCP::WCPointCloud<double>::WCPoint >& vec_wcps = sg1->get_wcpt_vec();
+	      bool flag_front = false;
+	      if (vec_wcps.front().index == vtx1->get_wcpt().index) flag_front = true;
+	      
+	      WCP::WCPointCloud<double>::WCPoint min_wcp;
+	      double min_dis = 1e9;
+	      double max_dis = std::max(sqrt(pow(vec_wcps.front().x -vtx1->get_fit_pt().x,2)+pow(vec_wcps.front().y -vtx1->get_fit_pt().y,2)+pow(vec_wcps.front().z -vtx1->get_fit_pt().z,2)), sqrt(pow(vec_wcps.back().x -vtx1->get_fit_pt().x,2)+pow(vec_wcps.back().y -vtx1->get_fit_pt().y,2)+pow(vec_wcps.back().z -vtx1->get_fit_pt().z,2)));
+	      for (size_t j=0;j!=vec_wcps.size();j++){
+		double dis1 = sqrt(pow(vec_wcps.at(j).x -vtx1->get_fit_pt().x,2)+pow(vec_wcps.at(j).y -vtx1->get_fit_pt().y,2)+pow(vec_wcps.at(j).z -vtx1->get_fit_pt().z,2));
+		double dis = fabs(dis1 - 3.0*units::cm);
+		if (dis < min_dis){
+		  min_wcp = vec_wcps.at(j);
+		  min_dis = dis;
+		}
+	      }
+	      // establish the shortest path ...
+	      std::list<WCP::WCPointCloud<double>::WCPoint> new_list;
+	      new_list.push_back(vtx_new_wcp);
+	      {
+		double dis_step = 1.0*units::cm;
+		int ncount = std::round(sqrt(pow(vtx_new_wcp.x - min_wcp.x,2) + pow(vtx_new_wcp.y - min_wcp.y,2) + pow(vtx_new_wcp.z - min_wcp.z,2))/dis_step);
+		if (ncount <2) ncount = 2;
+		for (int qx=1;qx<ncount;qx++){
+		  Point tmp_p(vtx_new_wcp.x + (min_wcp.x-vtx_new_wcp.x)/ncount*qx, vtx_new_wcp.y + (min_wcp.y-vtx_new_wcp.y)/ncount*qx, vtx_new_wcp.z + (min_wcp.z-vtx_new_wcp.z)/ncount*qx);
+		  WCP::WCPointCloud<double>::WCPoint& tmp_wcp = pcloud->get_closest_wcpoint(tmp_p);
+		  //std::cout << qx << " " << sqrt(pow(tmp_wcp.x - tmp_p.x,2) + pow(tmp_wcp.y - tmp_p.y,2) + pow(tmp_wcp.z - tmp_p.z,2))/units::cm << std::endl;
+		  if (sqrt(pow(tmp_wcp.x - tmp_p.x,2) + pow(tmp_wcp.y - tmp_p.y,2) + pow(tmp_wcp.z - tmp_p.z,2)) > 0.3*units::cm) continue; // too large ...
+		  if (tmp_wcp.index != new_list.back().index && tmp_wcp.index != min_wcp.index)
+		    new_list.push_back(tmp_wcp);
+		}
+	      }
+	      new_list.push_back(min_wcp);
+	      
+	      
+	      std::list<WCP::WCPointCloud<double>::WCPoint> old_list;
+	      std::copy(vec_wcps.begin(), vec_wcps.end(), std::back_inserter(old_list));
+	      // append the list back ...
+	      //std::cout << min_wcp.index << " " << temp_cluster->get_path_wcps().size() << std::endl;
+	      if (flag_front){
+		while(old_list.front().index != min_wcp.index && old_list.size()>0 ){
+		  old_list.pop_front();
+		}
+		old_list.pop_front();
+		//      std::cout << "f2 " << old_list.size() << std::endl;
+		for (auto it = new_list.rbegin(); it!=new_list.rend(); it++){
+		  old_list.push_front(*it);
+		}
+		//      std::cout << "f3 " << old_list.size() << std::endl;
+	      }else{
+		//      std::cout << "b1 " << old_list.size() << std::endl;
+		while(old_list.back().index != min_wcp.index && old_list.size()>0 ){
+		  old_list.pop_back();
+		}
+		old_list.pop_back();
+		//      std::cout << "b2 " << old_list.size() << std::endl;
+		for (auto it = new_list.rbegin(); it!=new_list.rend(); it++){
+		  old_list.push_back(*it);
+		}
+		//      std::cout << "b3 " << old_list.size() << std::endl;
+	      }
+	      vec_wcps.clear();
+	      vec_wcps.reserve(old_list.size());
+	      std::copy(std::begin(old_list), std::end(old_list), std::back_inserter(vec_wcps));
+	      
+	      add_proto_connection(main_vertex, sg1, temp_cluster);	  
+	    }
+	    
+	    del_proto_vertex(vtx1);
+	    del_proto_segment(sg);
+	    break;
+	  }
+	} // distacen is close
+      } //loop over segment connecting to main vertex
+      if (flag_update){
+	flag_continue = true;
+	flag_updated = true;
+	temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+      }
+    } // flag continue loop ...
+  } // general check
+
+
+  return flag_updated;
+}
+
+
 
 bool WCPPID::NeutrinoID::examine_structure_final_1(WCPPID::PR3DCluster* temp_cluster){
   // merge two segments if a direct connection is better ...
