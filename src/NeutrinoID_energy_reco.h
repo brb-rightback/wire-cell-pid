@@ -93,7 +93,7 @@ double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::WCShower *shower){
   double sum_v_charge = 0;
   double sum_w_charge = 0;
 
-  shower->build_point_clouds();
+  shower->rebuild_point_clouds();
   WCP::ToyPointCloud* pcloud1 = shower->get_associated_pcloud();
   WCP::ToyPointCloud* pcloud2 = shower->get_fit_pcloud();
   

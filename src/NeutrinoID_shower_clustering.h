@@ -363,6 +363,9 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
       TVector3 dir2((*it1)->get_start_point().x - vtx->get_fit_pt().x,
 		    (*it1)->get_start_point().y - vtx->get_fit_pt().y,
 		    (*it1)->get_start_point().z - vtx->get_fit_pt().z);
+
+     
+      
       //      std::cout << dir1.Angle(dir2)/3.1415926*180. << std::endl;
       if ((*it1)->get_start_vertex().first == vtx){
 	tmp_showers.push_back(*it1);
@@ -387,6 +390,15 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
 	  map_shower_pair_mass_vertex[std::make_pair(shower_1, shower_2)].push_back(std::make_pair(mass_pio, vtx));
 
 	  //	  if (shower_1->get_kine_charge() > 80*units::MeV && shower_2->get_kine_charge() > 80*units::MeV)
+	  /* std::cout << vtx->get_fit_pt().x + dir1.X() * 10*units::cm << " " */
+	  /* 	    << vtx->get_fit_pt().y + dir1.Y() * 10*units::cm << " " */
+	  /* 	    << vtx->get_fit_pt().z + dir1.Z() * 10*units::cm << " " */
+	  /* 	    << vtx->get_fit_pt().x + dir2.X() * 10*units::cm << " " */
+	  /* 	    << vtx->get_fit_pt().y + dir2.Y() * 10*units::cm << " " */
+	  /* 	    << vtx->get_fit_pt().z + dir2.Z() * 10*units::cm << " " */
+	  /* 	    << std::endl; */
+	  
+	   
 	  //  std::cout << vtx->get_id() << " " << i << " " << j << " " << shower_1->get_kine_charge()/units::MeV << " " << shower_2->get_kine_charge()/units::MeV << " " << dir1.Mag() << " " << dir2.Mag() << " " << angle/3.1415926*180. << " " << sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2))/units::MeV<< std::endl;
 	} // loop shower
       } // loop shower
@@ -745,7 +757,11 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
     TVector3 dir_main(point.x - shower->get_start_vertex().first->get_fit_pt().x,
     		      point.y - shower->get_start_vertex().first->get_fit_pt().y,
     		      point.z - shower->get_start_vertex().first->get_fit_pt().z);
-    //std::cout << shower->get_start_segment()->get_id() << " " << dir_shower.Angle(dir_main)/3.1415926*180. << std::endl;
+    if (dir_shower.Angle(dir_main)/3.1415926*180. > 30){
+      Point test_p = shower->get_closest_point(shower->get_start_vertex().first->get_fit_pt()).second;
+      dir_shower = shower->cal_dir_3vector(test_p,30*units::cm);
+      //    std::cout << shower->get_start_segment()->get_id() << " " << dir_shower.Angle(dir_main)/3.1415926*180. << std::endl;
+    }
       
     for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ 
       WCPPID::ProtoSegment *seg1 = it->first; 
@@ -768,7 +784,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
       double tmp_shower_dis = seg1->get_closest_point(shower->get_start_segment()->get_point_vec().front()).first;
       
       
-      //      std::cout << seg1->get_cluster_id() << " " << seg1->get_id() << " " << angle1/3.1415926*180. << " " << angle/3.1415926*180. << " " << dis1/units::cm <<" " << pair_dis_point.first/units::cm << " " << tmp_shower_dis/units::cm << std::endl;
+      //     std::cout << seg1->get_cluster_id() << " " << seg1->get_id() << " " << angle1/3.1415926*180. << " " << angle/3.1415926*180. << " " << dis1/units::cm <<" " << pair_dis_point.first/units::cm << " " << tmp_shower_dis/units::cm << std::endl;
       
       if (angle1/3.1415926*180. > 30) continue;
       
@@ -790,6 +806,11 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
 	shower->add_segment(seg1, map_segment_vertices);
       }
     }
+
+
+
+
+
     
     shower->update_particle_type();
     bool tmp_flag = (shower->get_start_vertex().first == main_vertex);
@@ -798,6 +819,53 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
     
     // udate the map
     update_shower_maps();
+
+    {
+      std::map<WCPPID::WCShower*, double> map_shower_length;
+      std::map<WCPPID::WCShower*, TVector3> map_shower_dir;
+      for (auto it = showers.begin(); it!= showers.end(); it++){
+	map_shower_length[*it] = (*it)->get_total_length();
+	Point test_p = (*it)->get_closest_point((*it)->get_start_vertex().first->get_fit_pt()).second;
+	map_shower_dir[*it] = (*it)->cal_dir_3vector(test_p,30*units::cm);
+      }
+
+      bool flag_continue = true;
+      while(flag_continue){
+	flag_continue = false;
+	for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ 
+	  WCPPID::ProtoSegment *seg1 = it->first; 
+	  if (seg1->get_cluster_id() == main_cluster->get_cluster_id()) continue; 
+	  if (map_segment_in_shower.find(seg1) != map_segment_in_shower.end()) continue;
+	  double min_dis = 1e9;
+	  WCPPID::WCShower *min_shower = 0;
+	  for (size_t i=0; i!= showers.size();i++){ 
+	    if (seg1->get_length() > 0.75 * map_shower_length[showers.at(i)] ) continue;
+	    Point test_p = seg1->get_closest_point(showers.at(i)->get_start_point()).second;
+	    Point test_p1 = showers.at(i)->get_closest_point(showers.at(i)->get_start_vertex().first->get_fit_pt()).second;
+	    TVector3 tmp_dir(test_p.x - test_p1.x,
+			     test_p.y - test_p1.y,
+			     test_p.z - test_p1.z);
+	    double angle = tmp_dir.Angle(map_shower_dir[showers.at(i)])/3.1415926*180.;
+	    
+	    double dis = showers.at(i)->get_closest_dis(seg1);
+	    //	    std::cout << angle << " " << dis/units::cm << std::endl;
+	    if (dis < min_dis && angle < 45){
+	      min_dis = dis;
+	      min_shower = showers.at(i);
+	    }
+	    
+	  }
+	  if (min_shower !=0 && min_dis < 3.5*units::cm){
+	    min_shower->add_segment(seg1, map_segment_vertices);
+	    map_shower_length[min_shower] = min_shower->get_total_length();
+	    flag_continue = true;
+	  }
+	}
+	update_shower_maps();
+      }
+      
+    }
+    
   }
 
   
@@ -1181,8 +1249,45 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
 
   //std::cout << showers.size() << " " << map_shower_dir.size() << std::endl;
 
-  if (map_shower_dir.size() == 0) return;
+  if (map_shower_dir.size() == 0){
+    std::map<WCPPID::WCShower*, double> map_shower_length;
+    for (auto it = showers.begin(); it!= showers.end(); it++){
+      map_shower_length[*it] = (*it)->get_total_length();
+    }
+
+
+    bool flag_continue = true;
+    while(flag_continue){
+      flag_continue = false;
+      for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ 
+	WCPPID::ProtoSegment *seg1 = it->first; 
+	if (seg1->get_cluster_id() == main_cluster->get_cluster_id()) continue; 
+	if (map_segment_in_shower.find(seg1) != map_segment_in_shower.end()) continue;
+	double min_dis = 1e9;
+	WCPPID::WCShower *min_shower = 0;
+	for (size_t i=0; i!= showers.size();i++){ 
+	  if (seg1->get_length() > 0.75 * map_shower_length[showers.at(i)] ) continue;
+	  double dis = showers.at(i)->get_closest_dis(seg1);
+	  if (dis < min_dis){
+	    min_dis = dis;
+	    min_shower = showers.at(i);
+	  }
+	}
+	if (min_shower !=0 && min_dis < 3.5*units::cm){
+	  //	  std::cout << seg1->get_cluster_id() << " " << seg1->get_id() << " " << min_shower->get_start_segment()->get_cluster_id() << " " << min_shower->get_start_segment()->get_id() << " " << min_shower->get_closest_dis(seg1)/units::cm << std::endl;
+	  min_shower->add_segment(seg1, map_segment_vertices);
+	  map_shower_length[min_shower] = min_shower->get_total_length();
+	  flag_continue = true;
+	}
+      }
+      update_shower_maps();
+    }
+    
+    
+  }
   
+  if (map_shower_dir.size() == 0) return;
+
   // examine other segments first ... 
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ 
     WCPPID::ProtoSegment *seg1 = it->first; 
@@ -1215,11 +1320,12 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
     }
     
     //    if (seg1->get_cluster_id()==51 && seg1->get_id()==74) std::cout << min_shower << " " << std::endl;
-
+    
     if (min_shower!=0){
       min_shower->add_segment(seg1, map_segment_vertices);
     }
   }
   
   update_shower_maps();
+
 }

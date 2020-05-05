@@ -34,13 +34,19 @@ WCPPID::WCShower::~WCShower(){
   if (pcloud_associated != (ToyPointCloud*)0) delete pcloud_associated;
 }
 
+double WCPPID::WCShower::get_closest_dis(WCPPID::ProtoSegment *seg){
+  Point test_p = get_closest_point(seg->get_point_vec().front()).second;
+  test_p = seg->get_closest_point(test_p).second;
+  test_p = get_closest_point(test_p).second;
+  return seg->get_closest_point(test_p).first;
+}
+
 std::pair<double, WCP::Point> WCPPID::WCShower::get_closest_point(WCP::Point& p){
-  if (pcloud_fit != (ToyPointCloud*)0) 
-    return pcloud_fit->get_closest_point(p);
-  else{
-    WCP::Point p1(0,0,0);
-    return std::make_pair(-1,p1);
-  }
+  if (pcloud_fit == (ToyPointCloud*)0)
+    rebuild_point_clouds();
+  
+
+  return pcloud_fit->get_closest_point(p);
 }
 
 
@@ -491,6 +497,7 @@ void WCPPID::WCShower::add_shower(WCPPID::WCShower* temp_shower){
       map_vtx_segs[vtx].insert(seg);
     }
   }
+  rebuild_point_clouds();
 }
 
 void WCPPID::WCShower::add_segment(WCPPID::ProtoSegment* seg, Map_Proto_Segment_Vertices& map_segment_vertices){
@@ -499,6 +506,7 @@ void WCPPID::WCShower::add_segment(WCPPID::ProtoSegment* seg, Map_Proto_Segment_
     map_seg_vtxs[seg].insert(vtx);
     map_vtx_segs[vtx].insert(seg);
   }
+  rebuild_point_clouds();
 }
 
 void WCPPID::WCShower::complete_structure_with_start_segment(Map_Proto_Vertex_Segments& map_vertex_segments, Map_Proto_Segment_Vertices& map_segment_vertices,  std::set<WCPPID::ProtoSegment* >& used_segments){
@@ -541,6 +549,6 @@ void WCPPID::WCShower::complete_structure_with_start_segment(Map_Proto_Vertex_Se
       }
     }
   }
-  
+  rebuild_point_clouds();
   //std::cout << map_vtx_segs.size() << " " << map_seg_vtxs.size() << std::endl;
 }

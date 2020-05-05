@@ -274,13 +274,14 @@ void WCPPID::NeutrinoID::examine_main_vertices(){
  
 
   double cluster_length_cut = std::min(map_cluster_length[main_cluster]*0.6, 6*units::cm);
-  
+  WCP::ToyPointCloud* pcloud = main_cluster->get_point_cloud_steiner();
+    
   WCPPID::PR3DClusterSelection clusters_to_be_removed;
   for (auto it = map_cluster_main_vertices.begin(); it!= map_cluster_main_vertices.end(); it++){
     WCPPID::PR3DCluster* cluster = it->first;
     WCPPID::ProtoVertex* vertex = it->second;
     double length = map_cluster_length[cluster];
-    //    std::cout << cluster->get_cluster_id() << " " << length/units::cm << std::endl;
+    //
     if (length < cluster_length_cut){
       bool flag_removed = true;
       for (auto it1 = map_vertex_segments[vertex].begin(); it1 != map_vertex_segments[vertex].end(); it1++){
@@ -291,6 +292,11 @@ void WCPPID::NeutrinoID::examine_main_vertices(){
 	  flag_removed = false;
 	  break;
 	}
+      }
+      if (!flag_removed){
+	if (length < 5*units::cm && pcloud->get_closest_dis(vertex->get_fit_pt()) > 150*units::cm)
+	  flag_removed = true;
+	//std::cout << cluster->get_cluster_id() << " " << length/units::cm << " " << pcloud->get_closest_dis(vertex->get_fit_pt()) << std::endl;
       }
       if (flag_removed)
 	clusters_to_be_removed.push_back(cluster);
@@ -457,7 +463,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_global(WCPPID::Pr
 	map_vertex_num[vtx] += 0.25/2.;
 	delta ++;
       }
-      if (flag_print) std::cout << "D: " << vtx->get_cluster_id() << " " << map_vertex_num[vtx] << " " << dir.Angle(dir1)/3.1415926*180. << " " << main_cluster->get_cluster_id() << " " << dir.Mag()/units::cm << std::endl;
+      //      if (flag_print) std::cout << "D: " << vtx->get_cluster_id() << " " << map_vertex_num[vtx] << " " << dir.Angle(dir1)/3.1415926*180. << " " << main_cluster->get_cluster_id() << " " << dir.Mag()/units::cm << std::endl;
     }
     
     // nothing point to this one ...
@@ -473,8 +479,9 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_global(WCPPID::Pr
       if (vtx->get_cluster_id() != main_cluster->get_cluster_id() &&  total_length < 6*units::cm){
 	map_vertex_num[vtx] -= 0.25 * num_tracks;
       }
-      if (flag_print) std::cout << "E: " << map_vertex_num[vtx] << " " << num_tracks << total_length/units::cm << std::endl;
+   
     }
+    if (flag_print) std::cout << "E: " << map_vertex_num[vtx] << " "  << std::endl;
   }
   
 
