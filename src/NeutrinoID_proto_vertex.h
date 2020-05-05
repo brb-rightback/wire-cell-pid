@@ -1239,26 +1239,69 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
 	if (dir.Mag() > 10*units::cm || dir.Mag()>8*units::cm && new_sg->get_length() > 13*units::cm){
 	  for (auto it1 = map_vertex_segments.begin(); it1!=map_vertex_segments.end();it1++){
 	    WCPPID::ProtoVertex *vtx = it1->first;
+	    if (vtx->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
 	    if (vtx == v1 || vtx == v2) continue;
 	    TVector3 dir1(vtx->get_fit_pt().x - v1->get_wcpt().x, vtx->get_fit_pt().y - v1->get_wcpt().y, vtx->get_fit_pt().z - v1->get_wcpt().z);
 	    TVector3 dir2(vtx->get_fit_pt().x - v2->get_wcpt().x, vtx->get_fit_pt().y - v2->get_wcpt().y, vtx->get_fit_pt().z - v2->get_wcpt().z);
+	    //std::cout << dir1.Mag()/units::cm << " " << dir2.Mag()/units::cm << " "<< fabs(drift_dir.Angle(dir1)/3.1415926*180.-90.) << std::endl;
 	    // check one vertex
 	    if (dir1.Mag() < 6*units::cm && fabs(drift_dir.Angle(dir1)/3.1415926*180.-90.)< 15. ) flag_parallel = modify_vertex_isochronous(vtx, v1, new_sg, v2, temp_cluster);
 	    //check the other vertex
 	    if ((!flag_parallel) && dir2.Mag() < 6*units::cm && fabs(drift_dir.Angle(dir2)/3.1415926*180.-90.) < 15. ) flag_parallel = modify_vertex_isochronous(vtx, v2, new_sg, v1, temp_cluster);
 	    if (flag_parallel) break;
 	  }
+	  
 	  if (!flag_parallel){
+	    double min_dis1 = 1e9; WCPPID::ProtoSegment *min_sg1 = 0;
+	    double min_dis2 = 1e9; WCPPID::ProtoSegment *min_sg2 = 0;
+	    
 	    for (auto it1 = map_segment_vertices.begin(); it1 != map_segment_vertices.end(); it1++){
 	      WCPPID::ProtoSegment *sg1 = it1->first;
-	      if (sg1->get_closest_point(v1->get_fit_pt()).first < 6*units::cm){
+	      if (sg1->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+	      //std::cout << sg1->get_closest_point(v1->get_fit_pt()).first/units::cm << "  "<< sg1->get_closest_point(v2->get_fit_pt()).first/units::cm << std::endl;
+	      double dis1 = sg1->get_closest_point(v1->get_fit_pt()).first;
+	      double dis2 = sg1->get_closest_point(v2->get_fit_pt()).first;
+	      if ( dis1 < 6*units::cm){
 		flag_parallel = modify_segment_isochronous(sg1, v1, new_sg, v2, temp_cluster);
 	      }
-	      if ((!flag_parallel) && sg1->get_closest_point(v2->get_fit_pt()).first < 6*units::cm){
+	      if ((!flag_parallel) &&  dis2 < 6*units::cm){
 		flag_parallel = modify_segment_isochronous(sg1, v2, new_sg, v1, temp_cluster);
 	      }
 	      if (flag_parallel) break;
+	      if (dis1 < min_dis1){
+		min_dis1 = dis1;
+		min_sg1 = sg1;
+	      }
+	      if (dis2 < min_dis2){
+		min_dis2 = dis2;
+		min_sg2 = sg1;
+	      }
 	    }
+	    //	    std::cout << min_dis1/units::cm << " " << min_dis2/units::cm << " " << min_sg1 << " " << min_sg2 << " " << dir.Mag()/units::cm << std::endl;
+
+	    //  long track ...
+	    if (!flag_parallel && dir.Mag() > 18*units::cm){
+	      if (min_dis1 < min_dis2 && min_dis1 < 10*units::cm){
+		flag_parallel = modify_segment_isochronous(min_sg1, v1, new_sg, v2, temp_cluster, 10*units::cm, 8, 15*units::cm);
+		if (!flag_parallel) flag_parallel = modify_segment_isochronous(min_sg1, v1, new_sg, v2, temp_cluster, 10*units::cm, 8, 30*units::cm);
+	      }else if (min_dis2 < min_dis1 && min_dis2 < 10*units::cm){ 
+		flag_parallel = modify_segment_isochronous(min_sg2, v2, new_sg, v1, temp_cluster, 10*units::cm, 8, 15*units::cm);
+		if (!flag_parallel) flag_parallel = modify_segment_isochronous(min_sg2, v2, new_sg, v1, temp_cluster, 10*units::cm, 8, 30*units::cm);
+	      } 
+	    }
+	    
+	    // very long track ...
+	    if (!flag_parallel && dir.Mag() > 36*units::cm){
+	      if (min_dis1 < min_dis2 && min_dis1 < 18*units::cm){
+		flag_parallel = modify_segment_isochronous(min_sg1, v1, new_sg, v2, temp_cluster, 18*units::cm, 5, 15*units::cm);
+		if (!flag_parallel) flag_parallel = modify_segment_isochronous(min_sg1, v1, new_sg, v2, temp_cluster, 18*units::cm, 5, 30*units::cm);
+	      }else if (min_dis2 < min_dis1 && min_dis2 < 18*units::cm){ 
+		flag_parallel = modify_segment_isochronous(min_sg2, v2, new_sg, v1, temp_cluster, 18*units::cm, 5, 15*units::cm);
+		if (!flag_parallel)   flag_parallel = modify_segment_isochronous(min_sg2, v2, new_sg, v1, temp_cluster, 18*units::cm, 5, 30*units::cm);
+	      } 
+	    }  
+	      
+	     
 	  }
 	}
 
@@ -1377,10 +1420,14 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::find_vertex_other_segment(WCPPID::PR3DC
  return v1;
 }
 
-bool WCPPID::NeutrinoID::modify_segment_isochronous(WCPPID::ProtoSegment* sg1, WCPPID::ProtoVertex *v1, WCPPID::ProtoSegment* sg, WCPPID::ProtoVertex *v2, WCPPID::PR3DCluster* temp_cluster){
+bool WCPPID::NeutrinoID::modify_segment_isochronous(WCPPID::ProtoSegment* sg1, WCPPID::ProtoVertex *v1, WCPPID::ProtoSegment* sg, WCPPID::ProtoVertex *v2, WCPPID::PR3DCluster* temp_cluster, double dis_cut, double angle_cut, double extend_cut){
   bool flag = false;
 
-  TVector3 dir1 = sg->cal_dir_3vector(v1->get_fit_pt(), 15*units::cm) * (-1);
+  TVector3 dir1 = sg->cal_dir_3vector(v1->get_fit_pt(), extend_cut) * (-1);
+  TVector3 drift_dir(1,0,0);
+  //  std::cout << fabs(drift_dir.Angle(dir1)/3.1415926*180.-90) << std::endl;
+  //  if (fabs(drift_dir.Angle(dir1)/3.1415926*180.-90)<5)
+  //  dir1 = sg->cal_dir_3vector(v1->get_fit_pt(), 30*units::cm) * (-1);
   if (dir1.X()==0) return flag;
 
   PointVector& pts = sg1->get_point_vec();
@@ -1388,21 +1435,26 @@ bool WCPPID::NeutrinoID::modify_segment_isochronous(WCPPID::ProtoSegment* sg1, W
   WCP::WCPointCloud<double>::WCPoint vtx_new_wcp;
   
   
-  TVector3 drift_dir(1,0,0);
+  
   for (size_t i=0;i!=pts.size();i++){
     TVector3 dir(pts.at(i).x - v1->get_fit_pt().x, pts.at(i).y - v1->get_fit_pt().y, pts.at(i).z - v1->get_fit_pt().z);
 
-    if (dir.Mag() > 6*units::cm || fabs(drift_dir.Angle(dir)/3.1415926*180.-90.)>= 15.) continue;
+   
+    if (dir.Mag() > dis_cut || fabs(drift_dir.Angle(dir)/3.1415926*180.-90.)>= angle_cut) continue;
+    
     
     Point test_p = v1->get_fit_pt();
     test_p.x += pts.at(i).x - v1->get_fit_pt().x;
     test_p.y += dir1.Y()/dir1.X() *(pts.at(i).x - v1->get_fit_pt().x);
     test_p.z += dir1.Z()/dir1.X() *(pts.at(i).x - v1->get_fit_pt().x);
     vtx_new_wcp = pcloud->get_closest_wcpoint(test_p);
-    
 
+ 
     double tmp_dis = sqrt(pow(vtx_new_wcp.x - v1->get_fit_pt().x,2)+pow(vtx_new_wcp.y - v1->get_fit_pt().y,2)+pow(vtx_new_wcp.z - v1->get_fit_pt().z,2));
 
+    // std::cout << dir.Mag()/units::cm << " " << fabs(drift_dir.Angle(dir)/3.1415926*180.-90.) << " " << tmp_dis/units::cm << " " << test_p << " " << v1->get_fit_pt() << " " << fabs(drift_dir.Angle(dir1)/3.1415926*180.-90) << std::endl;
+
+    
     if (tmp_dis > 5*units::cm) continue;
   
     // check connectivity between vtx_new_wcp and the vtx one ...
@@ -1417,7 +1469,7 @@ bool WCPPID::NeutrinoID::modify_segment_isochronous(WCPPID::ProtoSegment* sg1, W
 		   start_p.z + (end_p.z - start_p.z)/ncount*i);
       if (!ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0)) n_bad ++;
     }
-    
+    //    std::cout << n_bad << std::endl;
     if (n_bad ==0){
       flag = true;
       break;
@@ -2328,7 +2380,8 @@ bool WCPPID::NeutrinoID::examine_vertices_2(WCPPID::PR3DCluster* temp_cluster){
 bool WCPPID::NeutrinoID::examine_vertices_4(WCPPID::PR3DCluster *temp_cluster){
   bool flag_continue = false;
   WCP::ToyPointCloud *pcloud = temp_cluster->get_point_cloud_steiner();
- 
+  TVector3 drift_dir(1,0,0);
+  
   for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
@@ -2336,9 +2389,12 @@ bool WCPPID::NeutrinoID::examine_vertices_4(WCPPID::PR3DCluster *temp_cluster){
     WCPPID::ProtoVertex *v1 = pair_vertices.first;
     WCPPID::ProtoVertex *v2 = pair_vertices.second;
 
-    //    std::cout << sg->get_id() << " " << sg->get_direct_length()/units::cm << " " << map_vertex_segments[v1].size() << " " << map_vertex_segments[v2].size() << std::endl;
+    TVector3 tmp_dir(sg->get_point_vec().front().x - sg->get_point_vec().back().x,
+		     sg->get_point_vec().front().y - sg->get_point_vec().back().y,
+		     sg->get_point_vec().front().z - sg->get_point_vec().back().z);
+    //    std::cout << sg->get_id() << " " << sg->get_direct_length()/units::cm << " " << drift_dir.Angle(tmp_dir)/3.1415926*180. << " " << map_vertex_segments[v1].size() << " " << map_vertex_segments[v2].size() << std::endl;
     
-    if (sg->get_direct_length() < 2.0*units::cm){
+    if (sg->get_direct_length() < 2.0*units::cm || tmp_dir.Mag() < 3.5*units::cm && fabs(drift_dir.Angle(tmp_dir)/3.1415926*180.-90)<10){
 
       //      if (map_vertex_segments[v1].size() <= 1 || map_vertex_segments[v2].size() <=1) continue;
       //      if (v1 == main_vertex || v2 == main_vertex) continue;

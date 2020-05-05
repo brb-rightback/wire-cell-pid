@@ -64,7 +64,7 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
     }
 
     bool flag_print = false;
-    //    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
+    // if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
     //    if (sg->get_cluster_id()==67) flag_print = true;
     
     if (sg->get_flag_shower_trajectory()){
@@ -1629,14 +1629,14 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
 	    }
 	  }else{
 	    if (current_sg->get_particle_type()==0 && (!current_sg->get_flag_shower())){
-	      if (current_sg->get_medium_dQ_dx()/(43e3/units::cm) > 1.3){
+	      if (current_sg->get_medium_dQ_dx()/(43e3/units::cm) > 1.4){
 		current_sg->set_particle_type(2212);
 		current_sg->set_particle_mass(mp.get_mass_proton());
 	      }else{
 		current_sg->set_particle_type(13);
 		current_sg->set_particle_mass(mp.get_mass_muon());
 	      }
-	      //std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << std::endl;
+	      //	      std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << " " << current_sg->get_medium_dQ_dx()/(43e3/units::cm) << std::endl;
 	    }
 	  }
 	}
