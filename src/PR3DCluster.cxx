@@ -71,7 +71,7 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
       pts.push_back(p2);
     }
   }
-
+ 
 
   // for (size_t i=0;i+1!=pts.size();i++){
   //   std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
@@ -117,9 +117,9 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
     }
   }
 
-  if (pts.size()==0) return;
+  if (pts.size()<=1) return;
   
-  //  std::cout << pts.back() << std::endl;
+
   if (flag_2nd_tracking){
     // second round trajectory fit ...
     low_dis_limit = 0.6*units::cm;
@@ -163,6 +163,8 @@ void WCPPID::PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud, std:
     //std::cout << pts.size() << std::endl;
     // std::cout << "dQ/dx fit " << pts.size() << std::endl;
   }
+
+ 
   // for (size_t i=0;i+1!=pts.size();i++){
   //   std::cout << i << " " << pts.at(i) << " " << sqrt(pow(pts.at(i+1).x-pts.at(i).x,2)+pow(pts.at(i+1).y - pts.at(i).y,2)+pow(pts.at(i+1).z-pts.at(i).z,2))<< std::endl;
   // }

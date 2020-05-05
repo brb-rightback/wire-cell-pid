@@ -70,18 +70,19 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
   if (temp_cluster->get_point_cloud_steiner()==0) return false;
   if (temp_cluster->get_point_cloud_steiner()->get_num_points()<2) return false;
 
-  
+
+
   
   WCPPID::ProtoSegment* sg1 = init_first_segment(temp_cluster, flag_back_search);
 
-
+  
   
   if (sg1 == 0) return false;
 
 
-  
-  
   //  std::cout << "haha1 " << std::endl;
+  
+
   if (temp_cluster == main_cluster) main_cluster_initial_pair_vertices = find_vertices(sg1);
   
   if (sg1->get_wcpt_vec().size()>1){
@@ -423,7 +424,7 @@ WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster
   temp_cluster->cal_shortest_path(wcps.second,2);
 
   
-  // std::cout << temp_cluster->get_cluster_id() << " " << wcps.first.index << " " << wcps.first.x << " " << wcps.first.y << " " << wcps.first.z << " " << wcps.first.index_u << " " << wcps.first.index_v << " " << wcps.first.index_w << " " << wcps.second.index << " " << wcps.second.x << " " << wcps.second.y << " " << wcps.second.z << " " << wcps.second.index_u << " " << wcps.second.index_v << " " << wcps.second.index_w << " " << std::endl; 
+  //  std::cout << temp_cluster->get_cluster_id() << " " << wcps.first.index << " " << wcps.first.x << " " << wcps.first.y << " " << wcps.first.z << " " << wcps.first.index_u << " " << wcps.first.index_v << " " << wcps.first.index_w << " " << wcps.second.index << " " << wcps.second.x << " " << wcps.second.y << " " << wcps.second.z << " " << wcps.second.index_u << " " << wcps.second.index_v << " " << wcps.second.index_w << " " << std::endl; 
   /* { */
   /*   Point test_p(wcps.first.x, wcps.first.y, wcps.first.z); */
   /*   std::vector<int> results = ct_point_cloud->convert_3Dpoint_time_ch(test_p); */
@@ -442,9 +443,12 @@ WCPPID::ProtoSegment* WCPPID::NeutrinoID::init_first_segment(WCPPID::PR3DCluster
     
     temp_cluster->collect_charge_trajectory(*ct_point_cloud);
     // fit dQ/dx and everything ...
-   
-    temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true);
+
+    //std::cout << "haha " << std::endl;
     
+    temp_cluster->do_tracking(*ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true);
+
+    //    std::cout << "haha1 " << std::endl;
 
     if (temp_cluster->get_fine_tracking_path().size()<=1){
       delete v1; delete v2; delete sg1;
