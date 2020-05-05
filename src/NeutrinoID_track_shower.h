@@ -1453,11 +1453,24 @@ float WCPPID::NeutrinoID::calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex){
 
 bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, bool flag_final){
 
+  double max_vtx_length = 0;
+  double min_vtx_length = 1e9;
   bool flag_only_showers = true;
   {
     for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
       WCPPID::ProtoVertex *vtx = it->first;
       if (vtx->get_cluster_id() != temp_vertex->get_cluster_id()) continue;
+      if (vtx == temp_vertex){
+	for (auto it1 = it->second.begin(); it1 != it->second.end();it1++){
+	  double length = (*it1)->get_length();
+	  if (length > max_vtx_length) {
+	    max_vtx_length = length;
+	  }
+	  if (length < min_vtx_length){
+	    min_vtx_length = length;
+	  }
+	}
+      }
       auto results = examine_main_vertex_candidate(vtx);
       bool flag_in = std::get<0>(results);
       int ntracks = std::get<1>(results), nshowers = std::get<2>(results);    
@@ -1467,7 +1480,8 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
       }
     }
   }
-  if (map_vertex_segments[temp_vertex].size()>2) flag_only_showers = false;
+  
+  if (map_vertex_segments[temp_vertex].size()>2 || map_vertex_segments[temp_vertex].size()==2 && (max_vtx_length > 30*units::cm || min_vtx_length > 15*units::cm)) flag_only_showers = false;
   
   /* if (flag_final){ */
   /*   for (auto it = map_vertex_segments[temp_vertex].begin(); it!= map_vertex_segments[temp_vertex].end(); it++){ */
