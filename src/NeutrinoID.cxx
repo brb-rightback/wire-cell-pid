@@ -97,7 +97,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     shower_determing_in_main_cluster(main_cluster);
     determine_main_vertex(main_cluster);
     //improve_vertex(main_cluster, false); // do not search for vertex activities ...
-    
+
+    //    std::cout << main_cluster->get_cluster_id() << " " << main_cluster << " " << main_vertex << std::endl;
     
     map_cluster_main_vertices[main_cluster] = main_vertex;
     main_vertex = 0;
@@ -115,8 +116,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   if (flag_other_clusters){
     for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
       //if (skip_clusters.find(*it) != skip_clusters.end()) continue;
-      // if ((*it)->get_cluster_id()!=121) continue;
-      std::cout << (*it)->get_cluster_id() << " " << map_cluster_length[*it]/units::cm << std::endl;
+      //if ((*it)->get_cluster_id()!=75) continue;
+      //      std::cout << (*it)->get_cluster_id() << " " << map_cluster_length[*it]/units::cm << std::endl;
       
       if (map_cluster_length[*it] > 6*units::cm){
 	// find the proto vertex ...
@@ -158,9 +159,6 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     determine_overall_main_vertex();  
   
   if (flag_main_cluster && main_vertex !=0){
-
-
-    
 
     
     // fit the vertex in 3D 
@@ -326,16 +324,23 @@ void WCPPID::NeutrinoID::check_switch_main_cluster(){
   bool flag_all_showers = false;
 
   bool flag_print = true;
-  
-  WCPPID::ProtoVertex *temp_main_vertex = map_cluster_main_vertices[main_cluster];
-  int n_showers = 0;
 
-  //  std::cout << main_cluster->get_cluster_id() << " " << temp_main_vertex << std::endl;
+ 
+  WCPPID::ProtoVertex *temp_main_vertex = 0;
+
+  if (map_cluster_main_vertices.find(main_cluster) != map_cluster_main_vertices.end()){
+    temp_main_vertex = map_cluster_main_vertices[main_cluster];
+    int n_showers = 0;
+    
+    //    std::cout << main_cluster->get_cluster_id() << " " << main_cluster << " " << temp_main_vertex << std::endl;
   
-  for (auto it = map_vertex_segments[temp_main_vertex].begin(); it!= map_vertex_segments[temp_main_vertex].end(); it++){
-    if ((*it)->get_flag_shower()) n_showers ++;
+    for (auto it = map_vertex_segments[temp_main_vertex].begin(); it!= map_vertex_segments[temp_main_vertex].end(); it++){
+      if ((*it)->get_flag_shower()) n_showers ++;
+    }
+    if (n_showers == map_vertex_segments[temp_main_vertex].size()) flag_all_showers = true;
+  }else{
+    flag_all_showers = true;
   }
-  if (n_showers == map_vertex_segments[temp_main_vertex].size()) flag_all_showers = true;
   
   if (flag_all_showers){
     WCPPID::ProtoVertexSelection vertex_candidates;
@@ -355,7 +360,11 @@ void WCPPID::NeutrinoID::check_switch_main_cluster(){
     
     WCPPID::ProtoVertex *temp_main_vertex_1 = compare_main_vertices_global(vertex_candidates);
     if (temp_main_vertex_1 != temp_main_vertex){
-      std::cout << "Switch Main Cluster " << temp_main_vertex->get_cluster_id() << " to " << temp_main_vertex_1->get_cluster_id() << std::endl;
+      if (temp_main_vertex != 0){
+	std::cout << "Switch Main Cluster " << temp_main_vertex->get_cluster_id() << " to " << temp_main_vertex_1->get_cluster_id() << std::endl;
+      }else{
+	std::cout << "Switch Main Cluster  to " << temp_main_vertex_1->get_cluster_id() << std::endl;
+      }
       for (auto it = map_cluster_main_vertices.begin(); it!= map_cluster_main_vertices.end(); it++){
 	if (it->second == temp_main_vertex_1){
 	  swap_main_cluster(it->first);
@@ -1325,10 +1334,18 @@ void WCPPID::NeutrinoID::fill_skeleton_info_magnify(int mother_cluster_id, WCPPI
       std::vector<double> rr_vec(pts.size(),0);
       {
 	WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
-	for (auto it1 = map_segment_vertices[it->first].begin(); it1!=map_segment_vertices[it->first].end(); it1++){
-	  if ((*it1)->get_wcpt().index == it->first->get_wcpt_vec().front().index) start_v = *it1;
-	  if ((*it1)->get_wcpt().index == it->first->get_wcpt_vec().back().index) end_v = *it1;
+	if ( (*it->second.begin())->get_wcpt().index == it->first->get_wcpt_vec().front().index){
+	  start_v = (*it->second.begin());
+	  end_v = (*it->second.rbegin());
+	}else{
+	  end_v = (*it->second.begin());
+	  start_v = (*it->second.rbegin());
 	}
+	//	for (auto it1 = map_segment_vertices[it->first].begin(); it1!=map_segment_vertices[it->first].end(); it1++){
+	//  if ((*it1)->get_wcpt().index == it->first->get_wcpt_vec().front().index) start_v = *it1;
+	// if ((*it1)->get_wcpt().index == it->first->get_wcpt_vec().back().index) end_v = *it1;
+	//}
+	
 	int start_n = map_vertex_segments[start_v].size();
 	int end_n = map_vertex_segments[end_v].size();
 

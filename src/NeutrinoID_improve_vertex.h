@@ -175,11 +175,19 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
       if (sg1->get_particle_type()==0){
 	sg1->is_shower_topology();
 	
-	WCPPID::ProtoVertex *start_v=0, *end_v=0; 
-	for (auto it = map_segment_vertices[sg1].begin(); it!=map_segment_vertices[sg1].end(); it++){
-	  if ((*it)->get_wcpt().index == sg1->get_wcpt_vec().front().index) start_v = *it;
-	  if ((*it)->get_wcpt().index == sg1->get_wcpt_vec().back().index) end_v = *it;
+	WCPPID::ProtoVertex *start_v=0, *end_v=0;
+	if ( (*it->second.begin())->get_wcpt().index == sg1->get_wcpt_vec().front().index){
+	  start_v = (*it->second.begin());
+	  end_v = (*it->second.rbegin());
+	}else{
+	  end_v = (*it->second.begin());
+	  start_v = (*it->second.rbegin());
 	}
+	//	for (auto it = map_segment_vertices[sg1].begin(); it!=map_segment_vertices[sg1].end(); it++){
+	//  if ((*it)->get_wcpt().index == sg1->get_wcpt_vec().front().index) start_v = *it;
+	// if ((*it)->get_wcpt().index == sg1->get_wcpt_vec().back().index) end_v = *it;
+	//}
+	
 	if (sg1->get_flag_shower_trajectory()){
 	  // trajectory shower
 	  sg1->determine_dir_shower_trajectory(map_vertex_segments[start_v].size(), map_vertex_segments[end_v].size(), false);
@@ -203,10 +211,19 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
       if ((pair_result.first <=2  || sg->get_medium_dQ_dx()/(43e3/units::cm) > 1.6 && pair_result.first <= 3)&& sg->get_flag_shower_trajectory()){
 	if (!sg->is_shower_trajectory()){
 	  WCPPID::ProtoVertex *start_v=0, *end_v=0;
-	  for (auto it = map_segment_vertices[sg].begin(); it!=map_segment_vertices[sg].end(); it++){
-	    if ((*it)->get_wcpt().index == sg->get_wcpt_vec().front().index) start_v = *it;
-	    if ((*it)->get_wcpt().index == sg->get_wcpt_vec().back().index) end_v = *it;
+	  
+	  if ( (*map_segment_vertices[sg].begin())->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	    start_v = (*map_segment_vertices[sg].begin());
+	    end_v = (*map_segment_vertices[sg].rbegin());
+	  }else{
+	    end_v = (*map_segment_vertices[sg].begin());
+	    start_v = (*map_segment_vertices[sg].rbegin());
 	  }
+	  
+	  /* for (auto it = map_segment_vertices[sg].begin(); it!=map_segment_vertices[sg].end(); it++){ */
+	  /*   if ((*it)->get_wcpt().index == sg->get_wcpt_vec().front().index) start_v = *it; */
+	  /*   if ((*it)->get_wcpt().index == sg->get_wcpt_vec().back().index) end_v = *it; */
+	  /* } */
 	  sg->determine_dir_track(map_vertex_segments[start_v].size(), map_vertex_segments[end_v].size(), false);
 	}
 	//	std::cout << sg->get_id() << " " << sg->is_shower_trajectory() << std::endl;
@@ -217,10 +234,17 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
       if (pair_result.first ==1 && sg->get_flag_shower_topology()){
 	int dir_save = sg->get_flag_dir();
 	WCPPID::ProtoVertex *start_v=0, *end_v=0;
-	for (auto it = map_segment_vertices[sg].begin(); it!=map_segment_vertices[sg].end(); it++){
-	  if ((*it)->get_wcpt().index == sg->get_wcpt_vec().front().index) start_v = *it;
-	  if ((*it)->get_wcpt().index == sg->get_wcpt_vec().back().index) end_v = *it;
+	if ( (*map_segment_vertices[sg].begin())->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	  start_v = (*map_segment_vertices[sg].begin());
+	  end_v = (*map_segment_vertices[sg].rbegin());
+	}else{
+	  end_v = (*map_segment_vertices[sg].begin());
+	  start_v = (*map_segment_vertices[sg].rbegin());
 	}
+	//for (auto it = map_segment_vertices[sg].begin(); it!=map_segment_vertices[sg].end(); it++){
+	//	  if ((*it)->get_wcpt().index == sg->get_wcpt_vec().front().index) start_v = *it;
+	//	  if ((*it)->get_wcpt().index == sg->get_wcpt_vec().back().index) end_v = *it;
+	//}
 	sg->set_flag_shower_topology(false);
 	sg->determine_dir_track(map_vertex_segments[start_v].size(), map_vertex_segments[end_v].size(), false);
 	//	std::cout << sg->get_id() << " " << sg->get_particle_type() << " " << sg->get_particle_score() << std::endl;

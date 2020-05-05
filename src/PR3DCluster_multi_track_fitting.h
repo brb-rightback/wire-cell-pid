@@ -1,6 +1,36 @@
 
 void WCPPID::PR3DCluster::do_multi_tracking(WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments, WCPPID::Map_Proto_Segment_Vertices& map_segment_vertices, WCP::ToyCTPointCloud& ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double time, bool flag_dQ_dx_fit_reg, bool flag_dQ_dx_fit, bool flag_exclusion){
 
+  /* for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){ */
+  /*   std::cout << (*it)->get_wcps().front().index << " " << (*it)->get_wcps */
+  /* } */
+  /* for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){ */
+  /*   std::cout << it->first->get_cluster_id() << " " << it->first->get_id() << " " << it->first->get_wcpt().index << " " << it->second.size() << std::endl; */
+  /* } */
+  {
+    /* std::set<WCPPID::ProtoSegment*> removed_segments; */
+    /* for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){ */
+    /*   if (it->first->get_cluster_id() != cluster_id) continue; */
+    /*   if ( (*it->second.rbegin())->get_wcpt().index ==  (*it->second.begin())->get_wcpt().index ){ */
+    /* 	removed_segments.insert(it->first); */
+    /*   } */
+    /* } */
+
+    
+    /* for (auto it = removed_segments.begin(); it!= removed_segments.end(); it++){ */
+    /*   WCPPID::ProtoSegment *sg = (*it); */
+    /*   for (auto it1 = map_segment_vertices[sg].begin(); it1 != map_segment_vertices[sg].end(); it1++){ */
+    /* 	map_vertex_segments[*it1].erase(sg); */
+    /* 	if (map_vertex_segments[*it1].size()==0) map_vertex_segments.erase(*it1); */
+    /*   } */
+    /*   map_segment_vertices.erase(sg); */
+    /* } */
+    /*  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){ */
+    /*   if (it->first->get_cluster_id() != cluster_id) continue; */
+    /*   std::cout << it->first->get_id() << " " << it->second.size() << " " << it->first->get_wcpt_vec().size() << " " << it->first->get_wcpt_vec().front().index << " " << it->first->get_wcpt_vec().back().index << " " << (*it->second.begin()) << "  " << (*it->second.rbegin()) << std::endl; */
+    /*  } */
+  }
+  
 
   bool flag_special = false;
 
@@ -466,14 +496,21 @@ void WCPPID::PR3DCluster::multi_trajectory_fit(WCPPID::Map_Proto_Vertex_Segments
     if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoSegment *sg = it->first;
     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
-    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
-      WCPPID::ProtoVertex *vt = *it1;
-      if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
-	start_v = vt;
-      }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
-	end_v = vt;
-      }
+    if ( (*it->second.begin())->get_wcpt().index == sg->get_wcpt_vec().front().index){
+      start_v = (*it->second.begin());
+      end_v = (*it->second.rbegin());
+    }else{
+      end_v = (*it->second.begin());
+      start_v = (*it->second.rbegin());
     }
+    /* for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){ */
+    /*   WCPPID::ProtoVertex *vt = *it1; */
+    /*   if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){ */
+    /* 	start_v = vt; */
+    /*   }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){ */
+    /* 	end_v = vt; */
+    /*   } */
+    /* } */
     PointVector init_ps = sg->get_point_vec();
     std::vector<int> init_indices = sg->get_fit_index_vec();
     std::vector<bool> init_fit_skip = sg->get_fit_flag_skip();
@@ -862,14 +899,22 @@ void WCPPID::PR3DCluster::form_map_multi_segments(WCPPID::Map_Proto_Vertex_Segme
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
-    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
-      WCPPID::ProtoVertex *vt = *it1;
-      if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
-	start_v = vt;
-      }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
-	end_v = vt;
-      }
+    if ( (*it->second.begin())->get_wcpt().index == sg->get_wcpt_vec().front().index){
+      start_v = (*it->second.begin());
+      end_v = (*it->second.rbegin());
+    }else{
+      end_v = (*it->second.begin());
+      start_v = (*it->second.rbegin());
     }
+    
+    /* for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){ */
+    /*   WCPPID::ProtoVertex *vt = *it1; */
+    /*   if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){ */
+    /* 	start_v = vt; */
+    /*   }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){ */
+    /* 	end_v = vt; */
+    /*   } */
+    /* } */
     std::vector<WCP::Point >& pts = sg->get_point_vec();
     PointVector saved_pts;
     std::vector<int> saved_index;
@@ -1224,14 +1269,21 @@ void WCPPID::PR3DCluster::organize_segments_path_3rd(WCP::ToyCTPointCloud& ct_po
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
-    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
-      WCPPID::ProtoVertex *vt = *it1;
-      if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
-	start_v = vt;
-      }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
-	end_v = vt;
-      }
-    }
+    if ( (*it->second.begin())->get_wcpt().index == sg->get_wcpt_vec().front().index){
+       start_v = (*it->second.begin());
+       end_v = (*it->second.rbegin());
+     }else{
+       end_v = (*it->second.begin());
+       start_v = (*it->second.rbegin());
+     }
+    //for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
+    // WCPPID::ProtoVertex *vt = *it1;
+    //  if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
+    //	start_v = vt;
+    // }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
+    //	end_v = vt;
+    // }
+    //}
     // check the distance between the two vertices ...
     if (sqrt(pow(start_v->get_fit_pt().x - end_v->get_fit_pt().x,2) + pow(start_v->get_fit_pt().y - end_v->get_fit_pt().y,2) + pow(start_v->get_fit_pt().z - end_v->get_fit_pt().z,2)) < 0.01*units::cm){
       //      std::cout << "too close" << std::endl;
@@ -1252,14 +1304,21 @@ void WCPPID::PR3DCluster::organize_segments_path_3rd(WCP::ToyCTPointCloud& ct_po
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
-    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
-      WCPPID::ProtoVertex *vt = *it1;
-      if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
-	start_v = vt;
-      }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
-	end_v = vt;
-      }
-    }
+    if ( (*it->second.begin())->get_wcpt().index == sg->get_wcpt_vec().front().index){
+       start_v = (*it->second.begin());
+       end_v = (*it->second.rbegin());
+     }else{
+       end_v = (*it->second.begin());
+       start_v = (*it->second.rbegin());
+     }
+    //for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
+    // WCPPID::ProtoVertex *vt = *it1;
+    // if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
+    //	start_v = vt;
+    // }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
+    //	end_v = vt;
+    // }
+    //}
     bool flag_startv_end = true;
     bool flag_endv_end = true;
     if (map_vertex_segments[start_v].size()>1) flag_startv_end = false;
@@ -1435,14 +1494,21 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCP::ToyCTPointCloud& ct_po
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
-    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
-      WCPPID::ProtoVertex *vt = *it1;
-      if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
-	start_v = vt;
-      }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
-	end_v = vt;
-      }
-    }
+    if ( (*it->second.begin())->get_wcpt().index == sg->get_wcpt_vec().front().index){
+       start_v = (*it->second.begin());
+       end_v = (*it->second.rbegin());
+     }else{
+       end_v = (*it->second.begin());
+       start_v = (*it->second.rbegin());
+     }
+    //for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
+    // WCPPID::ProtoVertex *vt = *it1;
+    // if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
+    //	start_v = vt;
+    // }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
+    //	end_v = vt;
+    // }
+    //}
     // check the distance between the two vertices ...
     if (sqrt(pow(start_v->get_fit_pt().x - end_v->get_fit_pt().x,2) + pow(start_v->get_fit_pt().y - end_v->get_fit_pt().y,2) + pow(start_v->get_fit_pt().z - end_v->get_fit_pt().z,2)) < 0.01*units::cm){
       //      std::cout << "too close" << std::endl;
@@ -1462,14 +1528,21 @@ void WCPPID::PR3DCluster::organize_segments_path_2nd(WCP::ToyCTPointCloud& ct_po
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
-    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
-      WCPPID::ProtoVertex *vt = *it1;
-      if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
-	start_v = vt;
-      }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
-	end_v = vt;
-      }
-    }
+    if ( (*it->second.begin())->get_wcpt().index == sg->get_wcpt_vec().front().index){
+       start_v = (*it->second.begin());
+       end_v = (*it->second.rbegin());
+     }else{
+       end_v = (*it->second.begin());
+       start_v = (*it->second.rbegin());
+     }
+    //for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
+    // WCPPID::ProtoVertex *vt = *it1;
+    // if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
+    //	start_v = vt;
+    //}else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
+    //	end_v = vt;
+    //}
+    //}
     bool flag_startv_end = true;
     bool flag_endv_end = true;
     if (map_vertex_segments[start_v].size()>1) flag_startv_end = false;
@@ -1627,15 +1700,25 @@ void WCPPID::PR3DCluster::organize_segments_path(WCP::ToyCTPointCloud& ct_point_
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != cluster_id) continue;
-    WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
-    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
-      WCPPID::ProtoVertex *vt = *it1;
-      if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
-	start_v = vt;
-      }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
-	end_v = vt;
-      }
-    }
+    
+     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;     
+    /* for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){ */
+    /*   WCPPID::ProtoVertex *vt = *it1; */
+    /*   if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){ */
+    /* 	start_v = vt; */
+    /*   }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){ */
+    /* 	end_v = vt; */
+    /*   } */
+    /* } */
+     if ( (*it->second.begin())->get_wcpt().index == sg->get_wcpt_vec().front().index){
+       start_v = (*it->second.begin());
+       end_v = (*it->second.rbegin());
+     }else{
+       end_v = (*it->second.begin());
+       start_v = (*it->second.rbegin());
+     }
+     
+    
     bool flag_startv_end = true;
     bool flag_endv_end = true;
     if (map_vertex_segments[start_v].size()>1) flag_startv_end = false;

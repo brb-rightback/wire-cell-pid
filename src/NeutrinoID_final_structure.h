@@ -194,59 +194,71 @@ bool WCPPID::NeutrinoID::examine_structure_final_1(WCPPID::PR3DCluster* temp_clu
       if (it->second.size()!=2) continue;
       WCPPID::ProtoSegment *sg1 = *(it->second.begin());
       WCPPID::ProtoSegment *sg2 = *(it->second.rbegin());
-      double length1 = sg1->get_length();
-      double length2 = sg2->get_length();
-      
-      WCPPID::ProtoVertex *vtx1 = find_other_vertex(sg1, vtx);
-      WCPPID::ProtoVertex *vtx2 = find_other_vertex(sg2, vtx);
-      
-      double step_size = 0.6*units::cm;
-      Point start_p = vtx1->get_fit_pt();
-      Point end_p = vtx2->get_fit_pt();
-      int ncount = std::round(sqrt(pow(start_p.x-end_p.x,2)+pow(start_p.y-end_p.y,2)+pow(start_p.z-end_p.z,2))/step_size);
-      
-      PointVector new_pts;
-      bool flag_replace = true;
-      int n_bad = 0;
-      for (int i=1;i<ncount;i++){
-	Point test_p;
-	test_p.x = start_p.x + (end_p.x - start_p.x)/ncount*i;
-	test_p.y = start_p.y + (end_p.y - start_p.y)/ncount*i;
-	test_p.z = start_p.z + (end_p.z - start_p.z)/ncount*i;
-	new_pts.push_back(test_p);
-	if (!ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0)) n_bad ++;
-	if (n_bad>1) flag_replace = false;
-	//	std::cout << i << " " << test_p << " " << ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0) << std::endl;
-      }
-      // std::cout << flag_replace << " " << sg1->get_id() << " " << sg2->get_id() << " " << length1/units::cm << " " << length2/units::cm << " " << n_bad << " " << ncount * step_size << std::endl;
-      
-      if (flag_replace){
-	// form a new segment
-	std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Final stage merge two short segments: " << sg1->get_id() << " " << sg2->get_id() << " with a straight one, vtx id "  << vtx->get_id() << std::endl;
-	
-	WCP::ToyPointCloud* pcloud_steiner = temp_cluster->get_point_cloud_steiner();
-	std::list<WCP::WCPointCloud<double>::WCPoint > wcps;
-	WCP::WCPointCloud<double>::WCPoint start_wcp = vtx1->get_wcpt();
-	WCP::WCPointCloud<double>::WCPoint end_wcp = vtx2->get_wcpt();
-	wcps.push_back(start_wcp);
-	for (size_t i=0; i!=new_pts.size(); i++){
-	  WCP::WCPointCloud<double>::WCPoint& wcp =  pcloud_steiner->get_closest_wcpoint(new_pts.at(i));
-	  if (wcp.index != wcps.back().index) wcps.push_back(wcp);
-	}
-	if (end_wcp.index != wcps.back().index) wcps.push_back(end_wcp);
 
-
-	WCPPID::ProtoSegment *sg3 = new WCPPID::ProtoSegment(acc_segment_id, wcps, temp_cluster->get_cluster_id()); acc_segment_id++;
-	add_proto_connection(vtx1,sg3,temp_cluster);
-	add_proto_connection(vtx2,sg3,temp_cluster);
-	
-	del_proto_segment(sg1);
+      if (sg1->get_wcpt_vec().front().index == sg2->get_wcpt_vec().front().index && sg1->get_wcpt_vec().back().index == sg2->get_wcpt_vec().back().index
+	  || sg1->get_wcpt_vec().front().index == sg2->get_wcpt_vec().back().index && sg1->get_wcpt_vec().back().index == sg2->get_wcpt_vec().front().index){
 	del_proto_segment(sg2);
-	del_proto_vertex(vtx);
-	
 	flag_update = true;
 	flag_continue = true;
 	break;
+      }else{
+	double length1 = sg1->get_length();
+	double length2 = sg2->get_length();
+	
+	
+	WCPPID::ProtoVertex *vtx1 = find_other_vertex(sg1, vtx);
+	WCPPID::ProtoVertex *vtx2 = find_other_vertex(sg2, vtx);
+	
+	//      std::cout << map_segment_vertices[sg1].size() << " " << map_segment_vertices[sg2].size() << " " << sg1->get_id() << " " << sg1->get_wcpt_vec().front().index << " " << sg1->get_wcpt_vec().back().index << " " << sg2->get_id() << " " << sg2->get_wcpt_vec().front().index << " " << sg2->get_wcpt_vec().back().index << std::endl;
+	
+	double step_size = 0.6*units::cm;
+	Point start_p = vtx1->get_fit_pt();
+	Point end_p = vtx2->get_fit_pt();
+	int ncount = std::round(sqrt(pow(start_p.x-end_p.x,2)+pow(start_p.y-end_p.y,2)+pow(start_p.z-end_p.z,2))/step_size);
+	
+	PointVector new_pts;
+	bool flag_replace = true;
+	int n_bad = 0;
+	for (int i=1;i<ncount;i++){
+	  Point test_p;
+	  test_p.x = start_p.x + (end_p.x - start_p.x)/ncount*i;
+	  test_p.y = start_p.y + (end_p.y - start_p.y)/ncount*i;
+	  test_p.z = start_p.z + (end_p.z - start_p.z)/ncount*i;
+	  new_pts.push_back(test_p);
+	  if (!ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0)) n_bad ++;
+	  if (n_bad>1) flag_replace = false;
+	  //	std::cout << i << " " << test_p << " " << ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0) << std::endl;
+	}
+	// std::cout << flag_replace << " " << sg1->get_id() << " " << sg2->get_id() << " " << length1/units::cm << " " << length2/units::cm << " " << n_bad << " " << ncount * step_size << std::endl;
+	
+	if (flag_replace){
+	  // form a new segment
+	  std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Final stage merge two short segments: " << sg1->get_id() << " " << sg2->get_id() << " with a straight one, vtx id "  << vtx->get_id() << std::endl;
+	  
+	  WCP::ToyPointCloud* pcloud_steiner = temp_cluster->get_point_cloud_steiner();
+	  std::list<WCP::WCPointCloud<double>::WCPoint > wcps;
+	  WCP::WCPointCloud<double>::WCPoint start_wcp = vtx1->get_wcpt();
+	  WCP::WCPointCloud<double>::WCPoint end_wcp = vtx2->get_wcpt();
+	  wcps.push_back(start_wcp);
+	  for (size_t i=0; i!=new_pts.size(); i++){
+	    WCP::WCPointCloud<double>::WCPoint& wcp =  pcloud_steiner->get_closest_wcpoint(new_pts.at(i));
+	    if (wcp.index != wcps.back().index) wcps.push_back(wcp);
+	  }
+	  if (end_wcp.index != wcps.back().index) wcps.push_back(end_wcp);
+	  
+	  
+	  WCPPID::ProtoSegment *sg3 = new WCPPID::ProtoSegment(acc_segment_id, wcps, temp_cluster->get_cluster_id()); acc_segment_id++;
+	  add_proto_connection(vtx1,sg3,temp_cluster);
+	  add_proto_connection(vtx2,sg3,temp_cluster);
+	  
+	  del_proto_segment(sg1);
+	  del_proto_segment(sg2);
+	  del_proto_vertex(vtx);
+	  
+	  flag_update = true;
+	  flag_continue = true;
+	  break;
+	}
       }
     }
   } // continue

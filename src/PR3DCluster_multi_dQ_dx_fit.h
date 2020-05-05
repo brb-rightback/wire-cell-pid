@@ -75,14 +75,21 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
     if (it->first->get_cluster_id() != cluster_id) continue;
     WCPPID::ProtoSegment *sg = it->first;
     WCPPID::ProtoVertex *start_v = 0, *end_v = 0;
-    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
-      WCPPID::ProtoVertex *vt = *it1;
-      if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
-	start_v = vt;
-      }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
-	end_v = vt;
-      }
-    }
+    if ( (*it->second.begin())->get_wcpt().index == sg->get_wcpt_vec().front().index){
+       start_v = (*it->second.begin());
+       end_v = (*it->second.rbegin());
+     }else{
+       end_v = (*it->second.begin());
+       start_v = (*it->second.rbegin());
+     }
+    //    for (auto it1=it->second.begin(); it1!=it->second.end(); it1++){
+    // WCPPID::ProtoVertex *vt = *it1;
+    // if ( vt->get_wcpt().index == sg->get_wcpt_vec().front().index){
+    //	start_v = vt;
+    // }else if ( vt->get_wcpt().index == sg->get_wcpt_vec().back().index){
+    //	end_v = vt;
+    // }
+    //}
     std::vector<WCP::Point >& pts = sg->get_point_vec();
     std::vector<int>& indices = sg->get_fit_index_vec();
     //std::cout << pts.size() << " " << indices.size() << std::endl;

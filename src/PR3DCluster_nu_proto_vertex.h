@@ -194,10 +194,17 @@ void WCPPID::PR3DCluster::set_fit_parameters(WCPPID::Map_Proto_Vertex_Segments& 
   //  int tmp_id = cluster_id*1000 + 1; // hack ...
   for (auto it=map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
     WCPPID::ProtoVertex *start_v=0, *end_v=0;
-    for (auto it1 = map_segment_vertices[it->first].begin(); it1!=map_segment_vertices[it->first].end(); it1++){
-      if ((*it1)->get_wcpt().index == it->first->get_wcpt_vec().front().index) start_v = *it1;
-      if ((*it1)->get_wcpt().index == it->first->get_wcpt_vec().back().index) end_v = *it1;
+    if ( (*it->second.begin())->get_wcpt().index == it->first->get_wcpt_vec().front().index){
+      start_v = (*it->second.begin());
+      end_v = (*it->second.rbegin());
+    }else{
+      end_v = (*it->second.begin());
+      start_v = (*it->second.rbegin());
     }
+    //    for (auto it1 = map_segment_vertices[it->first].begin(); it1!=map_segment_vertices[it->first].end(); it1++){
+    //if ((*it1)->get_wcpt().index == it->first->get_wcpt_vec().front().index) start_v = *it1;
+    //if ((*it1)->get_wcpt().index == it->first->get_wcpt_vec().back().index) end_v = *it1;
+    //}
     int start_n = map_vertex_segments[start_v].size();
     int end_n = map_vertex_segments[end_v].size();
     
