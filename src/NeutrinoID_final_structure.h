@@ -6,6 +6,7 @@ bool WCPPID::NeutrinoID::examine_structure_final(WCPPID::PR3DCluster* temp_clust
   
   examine_structure_final_2(temp_cluster);
 
+  
   examine_structure_final_3(temp_cluster);
 }
 
@@ -19,7 +20,8 @@ bool WCPPID::NeutrinoID::examine_structure_final_3(WCPPID::PR3DCluster* temp_clu
     bool flag_continue = true;
     while(flag_continue){
       flag_continue = false;
-
+      flag_update = false;
+      
       for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); 
 it++){
         WCPPID::ProtoSegment *sg = *it;
@@ -92,7 +94,8 @@ it++){
             }
 	  } // loop over segment around main_vertex
 
-	  //	  std::cout << flag_update << std::endl;
+	  //	  std::cout << temp_cluster->get_cluster_id() << " " << flag_update << " " << map_vertex_segments[main_vertex].size() << " " << map_vertex_segments[vtx1].size() << " " << dis/units::cm << " " << vtx1->get_id() << " " << main_vertex->get_id() << std::endl;
+	  
 	  if (flag_update){
 	    for (auto it1 = map_vertex_segments[main_vertex].begin(); it1 != map_vertex_segments[main_vertex].end(); it1++) { 
               WCPPID::ProtoSegment *sg1 = *it1;
@@ -203,7 +206,7 @@ bool WCPPID::NeutrinoID::examine_structure_final_2(WCPPID::PR3DCluster* temp_clu
 	WCPPID::ProtoSegment *sg = *it;
 	WCPPID::ProtoVertex *vtx1 = find_other_vertex(sg, main_vertex);
 
-	if (map_vertex_segments[vtx1].size()==1) continue;
+	if (map_vertex_segments[vtx1].size()==1 || map_vertex_segments[main_vertex].size()==1) continue;
 	double dis = sqrt(pow(main_vertex->get_fit_pt().x - vtx1->get_fit_pt().x,2) + pow(main_vertex->get_fit_pt().y - vtx1->get_fit_pt().y, 2) + pow(main_vertex->get_fit_pt().z - vtx1->get_fit_pt().z,2));
 
 	if (dis <2.0*units::cm){
