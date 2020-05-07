@@ -97,6 +97,8 @@ it++){
 	  //	  std::cout << temp_cluster->get_cluster_id() << " " << flag_update << " " << map_vertex_segments[main_vertex].size() << " " << map_vertex_segments[vtx1].size() << " " << dis/units::cm << " " << vtx1->get_id() << " " << main_vertex->get_id() << std::endl;
 	  
 	  if (flag_update){
+	    std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Final stage merge main_vertex " << main_vertex->get_id() << " " << main_vertex->get_fit_pt() << " " << vtx1->get_id() <<  " " << vtx1->get_fit_pt() << std::endl;
+	    
 	    for (auto it1 = map_vertex_segments[main_vertex].begin(); it1 != map_vertex_segments[main_vertex].end(); it1++) { 
               WCPPID::ProtoSegment *sg1 = *it1;
               if (sg1 == sg) continue;
@@ -251,6 +253,8 @@ bool WCPPID::NeutrinoID::examine_structure_final_2(WCPPID::PR3DCluster* temp_clu
 		}
 	      }	    
 	    }
+
+	    // std::cout << min_index << " " << pts.size() << " " << min_point << " " << flag_connect << std::endl;
 	    
 	    if (flag_connect){
 	      double step_size = 0.3  *units::cm;
@@ -267,10 +271,30 @@ bool WCPPID::NeutrinoID::examine_structure_final_2(WCPPID::PR3DCluster* temp_clu
 		}
 	      }
 	      if (n_bad >0) flag_update = false;
+	      // std::cout << flag_connect << " " << n_bad << " " << start_p << " " << end_p << " " << ncount << std::endl;
 	    }
 	  } // loop segments connecting to vtx1
+
+	  //	  std::cout << flag_update << " " << vtx1->get_id() << " " << vtx1->get_fit_pt() << " " << main_vertex->get_id()  << " " << main_vertex->get_fit_pt() << std::endl;
+
+	  // sg needs to be solid in all three views ...
+	  if ((!flag_update) && map_vertex_segments[vtx1].size()==2){
+	    PointVector& tmp_pts = sg->get_point_vec();
+	    for (size_t i=0;i!= tmp_pts.size(); i++){
+	      Point test_p = tmp_pts.at(i);
+	      if (!ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0)) flag_update = true;
+	      if (i+1 != tmp_pts.size()){
+		test_p.x += (tmp_pts.at(i+1).x - tmp_pts.at(i).x)/2.;
+		test_p.y += (tmp_pts.at(i+1).y - tmp_pts.at(i).y)/2.;
+		test_p.z += (tmp_pts.at(i+1).z - tmp_pts.at(i).z)/2.;
+		if (!ct_point_cloud->is_good_point(test_p, 0.2*units::cm, 0, 0)) flag_update = true;
+	      }
+	    }
+	  }
+
 	  
 	  if (flag_update){
+	    std::cout << "Cluster: " << temp_cluster->get_cluster_id() << " Final stage merge vertex to main vertex " << vtx1->get_id() << " " << vtx1->get_fit_pt() << " " << main_vertex->get_id()  << " " << main_vertex->get_fit_pt() << std::endl;
 	    for (auto it1 = map_vertex_segments[vtx1].begin(); it1 != map_vertex_segments[vtx1].end(); it1++){
 	      WCPPID::ProtoSegment *sg1 = *it1;
 	      if (sg1 == sg) continue;

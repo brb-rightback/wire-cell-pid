@@ -64,7 +64,7 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
     }
 
     bool flag_print = false;
-    // if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
+    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
     //    if (sg->get_cluster_id()==67) flag_print = true;
     
     if (sg->get_flag_shower_trajectory()){
@@ -1365,6 +1365,23 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
   }
 
   bool flag_print = false;
+
+  WCPPID::ProtoSegment* max_length_muon = 0;
+  double max_length = 0;
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (it->first->get_cluster_id() != vertex_candidates.front()->get_cluster_id()) continue;
+    if (sg->get_flag_shower()) continue;
+    if (sg->get_particle_type()==2212) continue;
+    double length = sg->get_length();
+    if (length > max_length){
+      max_length = length;
+      max_length_muon = sg;
+    }
+  }
+  
+  
+
   
   // find the proton in and out ...
   for (auto it = vertex_candidates.begin(); it!=vertex_candidates.end(); it++){
@@ -1399,7 +1416,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
     }
     
     // positive is good ...
-    map_vertex_num[vtx] -= (n_proton_in - n_proton_out);   // proton information ...
+    map_vertex_num[vtx] -= (n_proton_in - n_proton_out)/4.;   // proton information ...
     if (flag_print) std::cout << "A: " << map_vertex_num[vtx] << " " << n_proton_in << " " << n_proton_out << std::endl;
   }
 
@@ -1427,7 +1444,10 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
 	map_vertex_num[vtx] += 1/4.; // has a clear proton ...
       else if (sg->get_flag_dir()!=0 && (!sg->get_flag_shower()))
 	map_vertex_num[vtx] += 1/4./2.; // has a direction with track ..
-      
+
+      if (max_length > 35*units::cm && sg == max_length_muon)
+	map_vertex_num[vtx] += 1/4./2.; // long muon add some weight ...
+      //std::cout << sg->get_length() << std::endl;
     }
 
     
@@ -2016,6 +2036,9 @@ std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex* > WCPPID::NeutrinoID::find
   WCPPID::ProtoVertex *vtx1 = 0;
 
   bool flag_cont = false;
+
+  double max_ratio1 = 0;
+  double max_ratio1_length = 0;
   
   for (auto it = map_vertex_segments[vtx].begin(); it!= map_vertex_segments[vtx].end(); it++){
     WCPPID::ProtoSegment* sg2 = *it;
@@ -2030,7 +2053,9 @@ std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex* > WCPPID::NeutrinoID::find
     double angle = (3.1415926-dir1.Angle(dir2))/3.1415926*180.;
     double ratio = sg2->get_medium_dQ_dx()/(43e3/units::cm);
 
-    //    std::cout << "A: " << angle << " " << length/units::cm << " " << ratio << std::endl;
+    
+    // std::cout << "A: " << angle << " " << length/units::cm << " " << ratio << std::endl;
+    
     if (angle < 10. &&  ratio < 1.3){
       flag_cont = true;
       if (length *cos(angle/180.*3.1415926) > max_length){
@@ -2040,9 +2065,16 @@ std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex* > WCPPID::NeutrinoID::find
 	sg1 = sg2;
 	vtx1 = vtx2;
       }
+    }else{
+      if (ratio > max_ratio1){
+	max_ratio1 = ratio;
+	max_ratio1_length = length;
+      }
     }
   }
-
+  //  if (max_ratio1 > 1.2 && max_ratio1_length > 5*units::cm)
+  //  flag_cont = false;
+    //    std::cout << flag_cont << " " << max_ratio1 << " " << max_ratio1_length << std::endl;
 
   if (flag_cont){
     //    std::cout << max_angle << " " << max_length/units::cm << " " << max_ratio << std::endl;
