@@ -163,15 +163,10 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     
     // fit the vertex in 3D 
     improve_vertex(main_cluster);
-
-    
-
     
     clustering_points(main_cluster);
     examine_direction(main_vertex);
-
-
-
+    
     
     std::cout << "Overall main Vertex " << main_vertex->get_fit_pt() << " connecting to: ";
     for (auto it = map_vertex_segments[main_vertex].begin(); it!=map_vertex_segments[main_vertex].end(); it++){
@@ -294,12 +289,16 @@ void WCPPID::NeutrinoID::examine_main_vertices(){
 	}
       }
       if (!flag_removed){
-	if (length < 5*units::cm && pcloud->get_closest_dis(vertex->get_fit_pt()) > 150*units::cm)
+	if (length < 5*units::cm && pcloud->get_closest_dis(vertex->get_fit_pt()) > 100*units::cm)
 	  flag_removed = true;
 	//std::cout << cluster->get_cluster_id() << " " << length/units::cm << " " << pcloud->get_closest_dis(vertex->get_fit_pt()) << std::endl;
       }
       if (flag_removed)
 	clusters_to_be_removed.push_back(cluster);
+    }else{
+      if (pcloud->get_closest_dis(vertex->get_fit_pt()) > 200*units::cm)
+	clusters_to_be_removed.push_back(cluster);
+      //      std::cout << cluster->get_cluster_id() << " " << pcloud->get_closest_dis(vertex->get_fit_pt())/units::cm << std::endl;
     }
   }
   for (auto it = clusters_to_be_removed.begin(); it!= clusters_to_be_removed.end(); it++){

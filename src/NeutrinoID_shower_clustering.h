@@ -110,6 +110,7 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
 
   if (map_vertex_segments[main_vertex].size()==2){
     bool flag_return = true;
+    int num_showers = 0;
     for (auto it = map_vertex_segments[main_vertex].begin(); it!= map_vertex_segments[main_vertex].end(); it++){
       WCPPID::ProtoSegment *sg =*it;
       if (map_segment_in_shower.find(sg) == map_segment_in_shower.end()){
@@ -117,8 +118,11 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
 	  flag_return = false;
 	}
 	// std::cout << (*map_vertex_segments[main_vertex].begin())->get_length()/units::cm << " " << (*map_vertex_segments[main_vertex].rbegin())->get_length()/units::cm << std::endl;
+      }else{
+	num_showers ++;
       }
     }
+    if (flag_return && num_showers == map_vertex_segments[main_vertex].size()) flag_return = false;
     if (flag_return) return;
   }
 
@@ -126,7 +130,7 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
   std::map<WCPPID::WCShower*, WCP::Line *> map_shower_line;
   //std::cout << map_vertex_to_shower[main_vertex].size() << std::endl;
   for (auto it = map_vertex_to_shower[main_vertex].begin(); it!= map_vertex_to_shower[main_vertex].end(); it++){
-    //    std::cout << (*it)->get_start_segment()->get_cluster_id() << " " << (*it)->get_start_segment()->get_particle_type() << std::endl;
+    // std::cout << (*it)->get_start_segment()->get_cluster_id() << " " << (*it)->get_start_segment()->get_particle_type() << std::endl;
     if ((*it)->get_start_segment()->get_particle_type()==13) continue; // a muon
     if ((*it)->get_total_length() < 3*units::cm) continue; // too short ...
     if (pi0_showers.find(*it) != pi0_showers.end()) continue; // cannot be already in a pi0
@@ -135,7 +139,7 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
     TVector3 dir = (*it)->cal_dir_3vector(test_p, 15*units::cm);
     WCP::Line *line = new Line(test_p, dir);
     map_shower_line[*it] = line;
-    //    std::cout << (*it)->get_start_segment()->get_cluster_id() << " " << std::endl;
+    //std::cout << (*it)->get_start_segment()->get_cluster_id() << " " << std::endl;
   }
   for (auto it = map_vertex_to_shower.begin(); it!= map_vertex_to_shower.end(); it++){
     if (it->first == main_vertex) continue;
@@ -219,7 +223,7 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
 	    double angle = dir1.Angle(dir2);
 	    double mass_pio = sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2));
 	    map_shower_pair_mass_point[std::make_pair(shower_1,shower_2)] = std::make_pair(mass_pio, center);
-	    //  std::cout << dir1.Mag()/units::cm << " B " << dir2.Mag()/units::cm << " " << dir1.Angle(l1->get_dir())/3.1415926*180. << " " << dir2.Angle(l3.get_dir())/3.1415926*180. << " " << l1->closest_dis(*l2)/units::cm << " " << mass_pio/units::MeV << std::endl;
+	    //	    std::cout << dir1.Mag()/units::cm << " B " << dir2.Mag()/units::cm << " " << dir1.Angle(l1->get_dir())/3.1415926*180. << " " << dir2.Angle(l3.get_dir())/3.1415926*180. << " " << l1->closest_dis(*l2)/units::cm << " " << mass_pio/units::MeV << std::endl;
 	  }else{
 	     center.x = (pair_points.first.x + pair_points.second.x)/2.;
 	     center.y = (pair_points.first.y + pair_points.second.y)/2.;
@@ -336,9 +340,14 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
   std::set<WCPPID::ProtoVertex*> candidate_vertices;
   candidate_vertices.insert(main_vertex);
   for (auto it = map_vertex_to_shower.begin(); it!= map_vertex_to_shower.end(); it++){
-    candidate_vertices.insert(it->first);
+    bool flag_add = true;
+    if (map_vertex_in_shower.find(it->first) != map_vertex_in_shower.end()){
+      flag_add = false;
+      if (it->first == map_vertex_in_shower[it->first]->get_start_vertex().first)         flag_add = true; 
+    }
+    if (flag_add) candidate_vertices.insert(it->first);
   }
-
+  //std::cout << candidate_vertices.size() << std::endl;
 
   std::map<std::pair<WCPPID::WCShower*, WCPPID::WCShower*>, std::vector<std::pair<double, WCPPID::ProtoVertex*> > > map_shower_pair_mass_vertex;
   
@@ -1201,6 +1210,19 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
   std::map<WCPPID::WCShower*, TVector3> map_shower_dir;
   std::map<WCPPID::WCShower*, double> map_shower_angle_offset;
   TVector3 drift_dir(1,0,0);
+  WCPPID::ProtoSegment* max_length_segment = 0;
+  {
+    double max_length = 0;
+    for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+      WCPPID::ProtoSegment *seg = it->first;
+      if (seg->get_cluster_id() != main_cluster->get_cluster_id()) continue;
+      double length = seg->get_length();
+      if (length > max_length && length > 6*units::cm){
+	max_length = length;
+	max_length_segment = seg;
+      }
+    }
+  }
   
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *seg = it->first;
@@ -1212,8 +1234,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
     if (fabs(shower->get_particle_type())==13) continue;
     //    std::cout << shower->get_particle_type() << std::endl;
     
-    if (seg == shower->get_start_segment()){
-      
+    if (seg == shower->get_start_segment()){   
       if ( seg->get_flag_shower_topology() || shower->get_num_segments()>2 || seg->get_medium_dQ_dx(0,100) > 43e3/units::cm * 1.5){
 	if (seg->get_length() > 10*units::cm){
 	  TVector3 dir_shower = seg->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 15*units::cm);
@@ -1234,6 +1255,12 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
 	  }
 	}
       }
+
+      if (seg == max_length_segment && map_shower_dir.find(shower) == map_shower_dir.end()){
+	TVector3 dir_shower = shower->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 15*units::cm);
+	map_shower_dir[shower] = dir_shower;
+      }
+      
       if (map_shower_dir.find(shower) != map_shower_dir.end()){
 	map_shower_angle_offset[shower] = 0;
 	if (fabs(map_shower_dir[shower].Angle(drift_dir)/3.1415926*180.-90)<5){
@@ -1247,7 +1274,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
     }
   }
 
-  //std::cout << showers.size() << " " << map_shower_dir.size() << std::endl;
+  //  std::cout << showers.size() << " " << map_shower_dir.size() << std::endl;
 
   if (map_shower_dir.size() == 0){
     std::map<WCPPID::WCShower*, double> map_shower_length;

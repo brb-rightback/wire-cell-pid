@@ -196,9 +196,7 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
 	}
       }
     }
-  } // flag activities ...
-
-
+  } // flag vertex activities ...
 
   
   // if a track connecting to the vertex is trajectory shower, recheck, probably issue with vertex location ...
@@ -260,7 +258,6 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
 	  sg->set_particle_mass( mp.get_mass_electron());
 	}
       }
-
     }
   }
   
