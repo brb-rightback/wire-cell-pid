@@ -260,6 +260,48 @@ void WCPPID::NeutrinoID::examine_good_tracks(int temp_cluster_id){
   }
 }
 
+void WCPPID::NeutrinoID::judge_no_dir_tracks_close_to_showers(int temp_cluster_id){
+  std::set<WCPPID::ProtoSegment* > shower_set;
+  std::set<WCPPID::ProtoSegment* > no_dir_track_set;
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+      WCPPID::ProtoSegment *sg = it->first;
+      if (sg->get_cluster_id() != temp_cluster_id) continue;
+      if (sg->get_flag_shower()){
+	shower_set.insert(sg);
+      }else{
+	if (sg->get_flag_dir()==0) no_dir_track_set.insert(sg);
+      }
+  }
+
+  
+  //  std::cout <<  no_dir_track_set.size() << " " << shower_set.size() << std::endl;
+  for (auto it = no_dir_track_set.begin(); it != no_dir_track_set.end(); it++){
+    WCPPID::ProtoSegment *sg = *it;
+    bool flag_change = true;
+    PointVector& pts = sg->get_point_vec();
+    
+    for (size_t i=0; i!= pts.size(); i++){
+      double min_u_dis = 1e9, min_v_dis = 1e9, min_w_dis = 1e9;
+      for (auto it1 = shower_set.begin(); it1 != shower_set.end(); it1++){
+	auto results = (*it1)->get_closest_2d_dis(pts.at(i));
+	if (std::get<0>(results) < min_u_dis) min_u_dis = std::get<0>(results);
+	if (std::get<1>(results) < min_v_dis) min_v_dis = std::get<1>(results);
+	if (std::get<2>(results) < min_w_dis) min_w_dis = std::get<2>(results);
+      }
+      if (min_u_dis > 0.6*units::cm || min_v_dis > 0.6*units::cm || min_w_dis > 0.6*units::cm){
+	flag_change = false;
+      }
+    }
+    if (flag_change){
+      sg->set_particle_type(11);
+      TPCParams& mp = Singleton<TPCParams>::Instance();
+      sg->set_particle_mass(mp.get_mass_electron());
+    }
+    //    std::cout << sg->get_id() << " " << flag_change << std::endl;
+  }
+  
+}
+
 void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 
   TVector3 drift_dir(1,0,0);
@@ -1028,6 +1070,27 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   
   // find the main vertex ...
   bool flag_save_only_showers = true;
+  for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
+    WCPPID::ProtoVertex *vtx = it->first;
+    if (vtx->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+    auto results = examine_main_vertex_candidate(vtx);
+    bool flag_in = std::get<0>(results);
+    int ntracks = std::get<1>(results), nshowers = std::get<2>(results);
+    if (!flag_in){
+      if (ntracks > 0) {
+	flag_save_only_showers = false;
+	break;
+      }
+    }
+  }
+
+  if ((!flag_save_only_showers) && temp_cluster == main_cluster)  {
+    improve_vertex(temp_cluster, false);
+    // if one shower in and a good track out, reverse the shower ..
+    fix_maps_shower_in_track_out(temp_cluster->get_cluster_id());
+  }
+  
+
   std::map<ProtoVertex*, std::pair<int, int> > map_vertex_track_shower;
   WCPPID::ProtoVertexSelection main_vertex_candidates;
   for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
@@ -1039,7 +1102,6 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
     int ntracks = std::get<1>(results), nshowers = std::get<2>(results);
     
     if (!flag_in){
-      if (ntracks > 0) flag_save_only_showers = false;
       map_vertex_track_shower[vtx] = std::make_pair(ntracks, nshowers);
     }
   }
@@ -1095,7 +1157,6 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
 
   if (!flag_save_only_showers){
     // examine structure before examine directions ??? ...
-    if (temp_cluster == main_cluster)  improve_vertex(temp_cluster, false);
     examine_structure_final(temp_cluster);
   }
 
@@ -1112,7 +1173,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   }
 
   
-  //std::cout << "Information after main vertex determination: " << std::endl;
+  //  std::cout << "Information after main vertex determination: " << std::endl;
   //print_segs_info(main_vertex);
   
 }
@@ -1505,7 +1566,8 @@ float WCPPID::NeutrinoID::calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex){
       if (sg2->get_flag_shower_trajectory() || sg1->get_flag_shower() && sg2->get_flag_shower())
 	flag_check = false;
 
-      //      std::cout << max_angle << " " << sg1->get_id() << " " << sg2->get_id() << std::endl;
+      //      std::cout << max_angle << " " << sg1->get_id() << " " << sg2->get_id() << " " << sg1->get_particle_type() << " " << sg2->get_particle_type() << " " << sg1->get_flag_shower() << " " << sg2->get_flag_shower() << std::endl;
+      
       if (max_angle >=0 && flag_check){
 	if (max_angle < 35) num_conflicts += 5;
 	else if (max_angle < 70) num_conflicts += 3; // angle does not look right ...
@@ -1634,6 +1696,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
 
 
       WCPPID::ProtoSegment *current_sg = it->second;
+      // std::cout << prev_vtx->get_id() << " V " << current_sg->get_id() << std::endl;
       if (used_segments.find(current_sg)!=used_segments.end()) continue; // looked at it before ...
       double length = current_sg->get_length();
       //      std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << " " << flag_shower_in << std::endl;
@@ -1771,8 +1834,11 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
       used_segments.insert(current_sg);
 
       WCPPID::ProtoVertex* curr_vertex = find_other_vertex(current_sg, prev_vtx);
+
       if (used_vertices.find(curr_vertex) != used_vertices.end()) continue;
+      //std::cout << map_vertex_segments[curr_vertex].size() << std::endl;
       for (auto it1 = map_vertex_segments[curr_vertex].begin(); it1!= map_vertex_segments[curr_vertex].end(); it1++){
+	//	std::cout << current_sg->get_id() << " " << (*it1)->get_id() << std::endl;
 	temp_segments.push_back(std::make_pair(curr_vertex, *it1));
       }
       used_vertices.insert(curr_vertex);

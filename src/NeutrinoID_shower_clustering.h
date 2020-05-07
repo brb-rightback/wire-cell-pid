@@ -58,10 +58,12 @@ void WCPPID::NeutrinoID::shower_determing_in_main_cluster(WCPPID::PR3DCluster *t
   improve_maps_multiple_tracks_in(temp_cluster->get_cluster_id());
   
   //  print_segs_info(temp_cluster->get_cluster_id());
-  
+
   // if one shower in and a good track out, reverse the shower ..
   fix_maps_shower_in_track_out(temp_cluster->get_cluster_id());
 
+  // judgement ...
+  judge_no_dir_tracks_close_to_showers(temp_cluster->get_cluster_id());
   
   // examine map ...
   examine_maps(temp_cluster);
@@ -103,11 +105,22 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv(){
 }
 
 void WCPPID::NeutrinoID::id_pi0_without_vertex(){
+
+  //  std::cout << (*map_vertex_segments[main_vertex].begin())->get_cluster_id() << " " << (*map_vertex_segments[main_vertex].begin())->get_id() << " " << (*map_vertex_segments[main_vertex].rbegin())->get_cluster_id() << " " << (*map_vertex_segments[main_vertex].rbegin())->get_id() << std::endl;
+    
   // test main vertex ...
   if (map_vertex_segments[main_vertex].size()>2) return; // more than one shower
   if (map_segment_in_shower.find(*map_vertex_segments[main_vertex].begin()) == map_segment_in_shower.end() &&
       map_segment_in_shower.find(*map_vertex_segments[main_vertex].rbegin()) == map_segment_in_shower.end() ) return; // not a shower connecting to main vertex ...
-
+  {
+    auto it = map_vertex_to_shower.find(main_vertex);
+    if (it != map_vertex_to_shower.end()){
+      for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+	if (pi0_showers.find(*it1) != pi0_showers.end()) return;
+      }
+    }
+  }
+  
   if (map_vertex_segments[main_vertex].size()==2){
     bool flag_return = true;
     int num_showers = 0;
@@ -626,7 +639,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
     
     double vtx_dis = sqrt(pow(main_vertex->get_fit_pt().x - min_pi.min_vertex->get_fit_pt().x,2) + pow(main_vertex->get_fit_pt().y - min_pi.min_vertex->get_fit_pt().y,2) + pow(main_vertex->get_fit_pt().z - min_pi.min_vertex->get_fit_pt().z,2));
 
-    //    std::cout << cluster->get_cluster_id() << " " << main_pi.min_point  << " " << main_vertex->get_fit_pt() << " " <<  main_pi.min_angle << " " << min_pi.min_angle << " " << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << " " << vtx_dis/units::cm << std::endl;
+    // std::cout << cluster->get_cluster_id() << " " << main_pi.min_point  << " " << main_vertex->get_fit_pt() << " " <<  main_pi.min_angle << " " << min_pi.min_angle << " " << " " << main_pi.min_dis/units::cm << " " << min_pi.min_dis/units::cm << " " << vtx_dis/units::cm << std::endl;
     
     if (main_pi.min_angle < min_pi.min_angle + 3  && main_pi.min_dis < min_pi.min_dis * 1.2 &&
 	(min_pi.min_angle > 0.9 * main_pi.min_angle || vtx_dis < 1.5*units::cm)
@@ -677,7 +690,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
 
     //    std::cout <<  angle << " " << vec_pi.at(i).min_dis/units::cm << std::endl;
     
-    if (angle > 45 && vec_pi.at(i).min_dis > 6*units::cm || angle > 60) continue;
+    if (angle > 50 && vec_pi.at(i).min_dis > 6*units::cm || angle > 60) continue;
     
     for (auto it = map_cluster_segments[cluster].begin(); it!=map_cluster_segments[cluster].end();it++){
       WCPPID::ProtoSegment *sg = *it;
@@ -791,14 +804,15 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
       double angle1 = dir_shower.Angle(v2);
 
       double tmp_shower_dis = seg1->get_closest_point(shower->get_start_segment()->get_point_vec().front()).first;
+      double close_shower_dis = shower->get_closest_dis(seg1); 
       
       
-      //     std::cout << seg1->get_cluster_id() << " " << seg1->get_id() << " " << angle1/3.1415926*180. << " " << angle/3.1415926*180. << " " << dis1/units::cm <<" " << pair_dis_point.first/units::cm << " " << tmp_shower_dis/units::cm << std::endl;
+      //  std::cout << seg1->get_cluster_id() << " " << seg1->get_id() << " " << angle1/3.1415926*180. << " " << angle/3.1415926*180. << " " << dis1/units::cm <<" " << pair_dis_point.first/units::cm << " " << tmp_shower_dis/units::cm << " " << close_shower_dis/units::cm << std::endl;
       
       if (angle1/3.1415926*180. > 30) continue;
       
-      if ((angle/3.1415926*180.< 25 && pair_dis_point.first < 80*units::cm || angle1/3.1415926*180. < 25 && tmp_shower_dis < 40*units::cm)  ||
-	  (angle/3.1415926*180 < 12.5 && pair_dis_point.first < 120*units::cm || angle1/3.1415926*180. < 12.5 && tmp_shower_dis < 80*units::cm)  ){
+      if ((angle/3.1415926*180.< 25 && (pair_dis_point.first < 80*units::cm || close_shower_dis < 25*units::cm) || angle1/3.1415926*180. < 25 && (tmp_shower_dis < 40*units::cm || close_shower_dis < 25*units::cm))  ||
+	  (angle/3.1415926*180 < 12.5 && (pair_dis_point.first < 120*units::cm  || close_shower_dis < 40*units::cm)|| angle1/3.1415926*180. < 12.5 && (tmp_shower_dis < 80*units::cm || close_shower_dis < 40*units::cm))  ){
 	if (it1 != map_cluster_associated_vertex.end() && seg1->get_cluster_id() != shower->get_start_segment()->get_cluster_id()){
 	  if (it1->second != vertex){ //continue;
 	    double dis1 = shower->get_dis(seg1);

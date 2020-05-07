@@ -1010,7 +1010,7 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
     WCPPID::ProtoSegment* sg= it->first;
     if (map_segment_in_shower.find(sg)!=map_segment_in_shower.end()) continue;
     if (sg->get_cluster_id() != main_vertex->get_cluster_id() ) continue;
-    //    std::cout << sg->get_cluster_id() << " " << main_vertex->get_cluster_id() << " " << sg->get_length()/units::cm << std::endl;
+    //    std::cout << sg->get_cluster_id() << " " << main_vertex->get_cluster_id() << " " << sg->get_id() << " " << sg->get_length()/units::cm << " " << sg->get_flag_dir() << std::endl;
     fill_reco_tree(sg, rtree);
     std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> pair_vertices = find_vertices(sg);
     if (map_vertex_segments[pair_vertices.first].size()==1 || map_vertex_segments[pair_vertices.second].size()==1 ){

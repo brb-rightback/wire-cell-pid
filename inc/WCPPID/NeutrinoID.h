@@ -242,6 +242,7 @@ namespace WCPPID{
     void improve_maps_shower_in_track_out(int temp_cluster_id, bool flag_strong_check = true);
     void improve_maps_multiple_tracks_in(int temp_cluster_id);
     void improve_maps_no_dir_tracks(int temp_cluster_id);
+    void judge_no_dir_tracks_close_to_showers(int temp_cluster_id);
     void examine_good_tracks(int temp_cluster_id);
     
     void examine_all_showers(WCPPID::PR3DCluster* temp_cluster);

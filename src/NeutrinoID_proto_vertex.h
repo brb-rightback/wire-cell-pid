@@ -1894,10 +1894,51 @@ void WCPPID::NeutrinoID::examine_segment(WCPPID::PR3DCluster* temp_cluster){
   }
   
 
+  {
+    std::set<WCPPID::ProtoVertex*> all_vertices;
+    for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
+      WCPPID::ProtoVertex *vtx = it->first;
+      if (vtx->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+      all_vertices.insert(vtx);
+    }
+    
+    bool flag_merge =true;
+    while(flag_merge){
+      flag_merge = false;
+      WCPPID::ProtoVertex *vtx1 = 0, *vtx2 = 0;
+      for (auto it1 = all_vertices.begin(); it1 != all_vertices.end(); it1++){
+	vtx1 = *it1;
+	for (auto it2 = it1; it2 != all_vertices.end(); it2++){
+	  vtx2 = *it2;
+	  if (vtx1 != vtx2 && vtx1->get_wcpt().index == vtx2->get_wcpt().index){
+	    // merge vtx 2 to vtx1 ...
+	    std::vector<WCPPID::ProtoSegment*> to_be_removed_segments;
+	    for (auto it = map_vertex_segments[vtx2].begin(); it != map_vertex_segments[vtx2].end(); it++){
+	      WCPPID::ProtoSegment *sg = *it;
+	      if (map_vertex_segments[vtx1].find(sg) != map_vertex_segments[vtx1].end()) to_be_removed_segments.push_back(sg);
+	      else add_proto_connection(vtx1, sg, temp_cluster);
+	    }
+	    del_proto_vertex(vtx2);
+	    for (auto it = to_be_removed_segments.begin(); it != to_be_removed_segments.end(); it++){
+	      del_proto_segment(*it);
+	    }
+	    all_vertices.erase(vtx2);
+	    flag_merge = true;
+	    break;
+	  }
+	}
+	if (flag_merge) break;
+      }
+    }
+  }
+  
+
+  
 
   std::set<WCPPID::ProtoSegment*> segments_to_be_removed;
   for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
     WCPPID::ProtoVertex *vtx = it->first;
+    if (vtx->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
     std::vector<WCPPID::ProtoSegment*> tmp_segments(it->second.begin(), it->second.end());
     for (size_t i=0;i!=tmp_segments.size();i++){
       auto it1 = find_vertices(tmp_segments.at(i));
@@ -1907,6 +1948,7 @@ void WCPPID::NeutrinoID::examine_segment(WCPPID::PR3DCluster* temp_cluster){
 	    it1.second->get_wcpt().index == it2.second->get_wcpt().index ||
 	    it1.first->get_wcpt().index == it2.second->get_wcpt().index &&
 	    it1.second->get_wcpt().index == it2.first->get_wcpt().index){
+	  //	  std::cout << i << " " << j << " " << tmp_segments.at(j)->get_id() << " " << it1.first->get_id() << " " << it1.second->get_id() << " " << it2.first->get_id() << " " << it1.first->get_wcpt().index << " " << it1.second->get_wcpt().index << " " << it2.first->get_wcpt().index << " " << it2.second->get_wcpt().index << " " << it2.second->get_id() << std::endl;
 	  segments_to_be_removed.insert(tmp_segments.at(j));
 	}
       }
@@ -2152,12 +2194,8 @@ void WCPPID::NeutrinoID::examine_vertices(WCPPID::PR3DCluster* temp_cluster){
   while(flag_continue){
     flag_continue = false;
     
-      
-    
     //    std::cout << "haha0 " << " " << flag_continue << std::endl;
     examine_segment(temp_cluster);
-
-    
     
     //    std::cout << "haha1 " << " " << flag_continue << std::endl;
     // merge vertex if the kink is not at right location
