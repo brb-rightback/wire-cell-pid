@@ -970,7 +970,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
 		       || tracks_score == 0) )
 	       ){
       flag_change_showers = true;
-      if (length_showers == 0 && n_tracks<=2)	flag_change_showers = false;      
+      if (length_showers == 0 && n_tracks<=2 && (temp_cluster == main_cluster || length_tracks >15*units::cm))	flag_change_showers = false;      
     }else if ( length_tracks < 35*units::cm &&  length_tracks + length_showers  < 50*units::cm && length_showers < 15*units::cm){
       flag_change_showers = true;
       for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
