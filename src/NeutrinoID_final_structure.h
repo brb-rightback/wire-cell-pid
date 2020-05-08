@@ -172,7 +172,13 @@ it++){
 	    for (auto it1 = map_vertex_segments[vtx1].begin(); it1 != map_vertex_segments[vtx1].end(); it1++){
 	      WCPPID::ProtoSegment *sg1 = (*it1);
 	      if (sg1 == sg) continue;
-	      add_proto_connection(main_vertex, sg1, temp_cluster);
+
+	      WCPPID::ProtoVertex *tt_vtx = find_other_vertex(sg1, vtx1);
+	      if (tt_vtx != main_vertex){
+		add_proto_connection(main_vertex, sg1, temp_cluster);
+	      }else{
+		del_proto_segment(sg1);
+	      }
 	    }
 	    del_proto_vertex(vtx1);
 	    del_proto_segment(sg);
@@ -207,6 +213,7 @@ bool WCPPID::NeutrinoID::examine_structure_final_2(WCPPID::PR3DCluster* temp_clu
       for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
 	WCPPID::ProtoSegment *sg = *it;
 	WCPPID::ProtoVertex *vtx1 = find_other_vertex(sg, main_vertex);
+	//	std::cout << vtx1 << " " << main_vertex << " " << sg->get_id() << " " << map_segment_vertices[sg].size() << std::endl;
 
 	if (map_vertex_segments[vtx1].size()==1 || map_vertex_segments[main_vertex].size()==1) continue;
 	double dis = sqrt(pow(main_vertex->get_fit_pt().x - vtx1->get_fit_pt().x,2) + pow(main_vertex->get_fit_pt().y - vtx1->get_fit_pt().y, 2) + pow(main_vertex->get_fit_pt().z - vtx1->get_fit_pt().z,2));
@@ -362,8 +369,13 @@ bool WCPPID::NeutrinoID::examine_structure_final_2(WCPPID::PR3DCluster* temp_clu
 	      vec_wcps.clear();
 	      vec_wcps.reserve(old_list.size());
 	      std::copy(std::begin(old_list), std::end(old_list), std::back_inserter(vec_wcps));
-	      
-	      add_proto_connection(main_vertex, sg1, temp_cluster);	  
+
+	      WCPPID::ProtoVertex *tt_vtx = find_other_vertex(sg1, vtx1);
+	      if (tt_vtx != main_vertex){
+		add_proto_connection(main_vertex, sg1, temp_cluster);
+	      }else{
+		del_proto_segment(sg1);
+	      }
 	    }
 	    
 	    del_proto_vertex(vtx1);
@@ -399,6 +411,7 @@ bool WCPPID::NeutrinoID::examine_structure_final_1(WCPPID::PR3DCluster* temp_clu
       WCPPID::ProtoVertex *vtx = it->first;
       if (vtx->get_cluster_id()!=temp_cluster->get_cluster_id()) continue;
       if (it->second.size()!=2) continue;
+      if (vtx == main_vertex) continue;
       WCPPID::ProtoSegment *sg1 = *(it->second.begin());
       WCPPID::ProtoSegment *sg2 = *(it->second.rbegin());
 

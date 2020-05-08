@@ -98,11 +98,11 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     determine_main_vertex(main_cluster);
     //improve_vertex(main_cluster, false); // do not search for vertex activities ...
 
-    //    std::cout << main_cluster->get_cluster_id() << " " << main_cluster << " " << main_vertex << std::endl;
     
-    map_cluster_main_vertices[main_cluster] = main_vertex;
-    main_vertex = 0;
-
+    if (main_vertex !=0){
+      map_cluster_main_vertices[main_cluster] = main_vertex;
+      main_vertex = 0;
+    }
     
    
     
