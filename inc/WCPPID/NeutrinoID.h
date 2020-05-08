@@ -246,7 +246,8 @@ namespace WCPPID{
     void examine_good_tracks(int temp_cluster_id);
     
     void examine_all_showers(WCPPID::PR3DCluster* temp_cluster);
-
+    TVector3 calc_dir_cluster(int tmp_cluster_id, WCP::Point& test_p, double dis_cut);
+    
     std::pair<int, double> calculate_num_daughter_showers(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, bool flag_count_shower = true);
     
     
@@ -259,6 +260,7 @@ namespace WCPPID{
     void print_segs_info(WCPPID::PR3DCluster* temp_cluster);
     void print_segs_info(WCPPID::ProtoVertex *temp_vertex);
     void print_segs_info(int temp_cluster_id, WCPPID::ProtoVertex *spec_vertex=0);
+    
     
     WCPPID::ProtoVertex* compare_main_vertices_all_showers(WCPPID::ProtoVertexSelection& vertex_candidates, WCPPID::PR3DCluster *temp_cluster);
     WCPPID::ProtoVertex* compare_main_vertices(WCPPID::ProtoVertexSelection& vertex_candidates);

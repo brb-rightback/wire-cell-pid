@@ -304,8 +304,68 @@ void WCPPID::NeutrinoID::examine_main_vertices(){
   for (auto it = clusters_to_be_removed.begin(); it!= clusters_to_be_removed.end(); it++){
     map_cluster_main_vertices.erase(*it);
   }
-  
+  clusters_to_be_removed.clear();
 
+  // additional cut to remove global main vertex candidates ...
+  if (map_cluster_main_vertices.find(main_cluster) != map_cluster_main_vertices.end() ){
+    std::map<int, bool> map_cluster_id_shower;
+    for (auto it = map_cluster_main_vertices.begin(); it != map_cluster_main_vertices.end(); it++){
+      map_cluster_id_shower[it->first->get_cluster_id()] = true;
+    }
+
+    bool flag_main_vertex_all_showers = true;
+    for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
+      //      if (it->first->get_cluster_id() != main_cluster->get_cluster_id()) continue;
+      WCPPID::ProtoSegment *sg = it->first;
+      if (map_cluster_id_shower.find(sg->get_cluster_id())  == map_cluster_id_shower.end()) continue; 
+      if (!sg->get_flag_shower()){
+	map_cluster_id_shower[sg->get_cluster_id()] = false;
+	//flag_main_vertex_all_showers = false;
+      }
+    }
+    flag_main_vertex_all_showers = map_cluster_id_shower[main_cluster->get_cluster_id()];
+
+    //    std::cout << main_cluster->get_cluster_id() << " " << flag_main_vertex_all_showers << std::endl;
+    if (flag_main_vertex_all_showers){
+      TVector3 dir_main = calc_dir_cluster(main_cluster->get_cluster_id(), map_cluster_main_vertices[main_cluster]->get_fit_pt(), 15*units::cm);
+      ToyPointCloud *pcloud = main_cluster->get_point_cloud_steiner();
+      for (auto it = map_cluster_main_vertices.begin(); it != map_cluster_main_vertices.end(); it++){
+	if (it->first == main_cluster) continue;
+	double closest_dis = pcloud->get_closest_dis(it->second->get_fit_pt());
+	TVector3 dir1(it->second->get_fit_pt().x - map_cluster_main_vertices[main_cluster]->get_fit_pt().x,
+		     it->second->get_fit_pt().y - map_cluster_main_vertices[main_cluster]->get_fit_pt().y,
+		     it->second->get_fit_pt().z - map_cluster_main_vertices[main_cluster]->get_fit_pt().z);
+	double angle = dir_main.Angle(dir1)/3.14115926*180. ;
+
+	//std::cout << it->first->get_cluster_id() << " " << closest_dis/units::cm << " " << dir_main.Angle(dir1)/3.14115926*180. << " " << map_cluster_length[it->first]/units::cm << std::endl;
+
+	if (angle < 10){
+	  if (map_cluster_length[it->first] < 15*units::cm && closest_dis < 40*units::cm){
+	    clusters_to_be_removed.push_back(it->first);
+	  }else if (map_cluster_length[it->first] < 7*units::cm && closest_dis < 60*units::cm){
+	    clusters_to_be_removed.push_back(it->first);
+	  }
+	}else if (angle > 160){
+	  if (map_cluster_id_shower[it->first->get_cluster_id()] && map_cluster_length[it->first] > 10*units::cm && map_cluster_length[it->first] > 0.5 * map_cluster_length[main_cluster]){
+	    TVector3 dir2 = calc_dir_cluster(it->first->get_cluster_id(), it->second->get_fit_pt(), 15*units::cm);
+	    double closest_dis = std::get<2>(it->first->get_point_cloud()->get_closest_points(main_cluster->get_point_cloud()));
+	    double angle = dir2.Angle(dir_main)/3.1415926*180.;
+	    if (closest_dis < 10*units::cm && angle < 25){
+	      //	      clusters_to_be_removed.push_back(main_cluster);
+	      swap_main_cluster(it->first);
+	    }
+	    //	    std::cout << dir2.Angle(dir_main)/3.1415926*180. << " " << closest_dis/units::cm << std::endl;
+	  }
+	}
+      }
+    }
+
+    for (auto it = clusters_to_be_removed.begin(); it!= clusters_to_be_removed.end(); it++){
+      map_cluster_main_vertices.erase(*it);
+    }
+    clusters_to_be_removed.clear();
+
+  }
   
   // for (auto it = map_cluster_main_vertices.begin(); it!= map_cluster_main_vertices.end(); it++){
   //   WCPPID::PR3DCluster* cluster = it->first;
@@ -313,6 +373,50 @@ void WCPPID::NeutrinoID::examine_main_vertices(){
   //   double length = map_cluster_length[cluster];
     //    std::cout << cluster->get_cluster_id() << " " << length/units::cm << " " << vertex->get_fit_pt() << std::endl;
   // }
+}
+
+
+TVector3 WCPPID::NeutrinoID::calc_dir_cluster(int tmp_cluster_id, WCP::Point& orig_p, double dis_cut){
+  Point ave_p(0,0,0);
+  int num = 0;
+
+  for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() != tmp_cluster_id) continue;
+    WCP::PointVector& pts = sg->get_point_vec();
+    for (size_t i=1;i+1<pts.size();i++){
+      double dis = sqrt(pow(pts.at(i).x - orig_p.x,2) + pow(pts.at(i).y - orig_p.y,2) + pow(pts.at(i).z - orig_p.z,2));
+      if (dis < dis_cut){
+	ave_p.x += pts.at(i).x;
+	ave_p.y += pts.at(i).y;
+	ave_p.z += pts.at(i).z;
+	num ++;
+      }
+    }
+  }
+  for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
+    WCPPID::ProtoVertex *vtx = it->first;
+    if (vtx->get_cluster_id() != tmp_cluster_id) continue;
+    double dis = sqrt(pow(vtx->get_fit_pt().x - orig_p.x,2) + pow(vtx->get_fit_pt().y - orig_p.y,2) + pow(vtx->get_fit_pt().z - orig_p.z,2));
+    if (dis < dis_cut){
+      ave_p.x += vtx->get_fit_pt().x;
+      ave_p.y += vtx->get_fit_pt().y;
+      ave_p.z += vtx->get_fit_pt().z;
+      num ++;
+    }
+  }
+
+  TVector3 dir(0,0,0);
+  
+  if (num >0){
+    ave_p.x /= num;
+    ave_p.y /= num;
+    ave_p.z /= num;
+
+    dir.SetXYZ(ave_p.x - orig_p.x, ave_p.y - orig_p.y, ave_p.z - orig_p.z);
+    dir = dir.Unit();
+  }
+  return dir;
 }
 
 

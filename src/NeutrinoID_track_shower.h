@@ -920,6 +920,10 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
   double length_good_tracks = 0, length_tracks = 0, length_showers = 0;
   double tracks_score = 0;
   WCPPID::ProtoSegment *good_track = 0;
+
+  double maximal_length = 0;
+  WCPPID::ProtoSegment *maximal_length_track = 0;
+  
   for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
@@ -935,6 +939,10 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
       }else{
 	n_tracks ++;
 	length_tracks += length;
+	if (length > maximal_length){
+	  maximal_length = length;
+	  maximal_length_track = sg;
+	}
 	if (sg->get_particle_score()!=100) tracks_score += sg->get_particle_score();
       }
     }
@@ -986,8 +994,86 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
       }
     }
 
-    
+    if (map_vertex_segments[pair_vertices.first].size() == 1 && map_vertex_segments[pair_vertices.second].size() > 1){
+      double max_length = 0;
+      WCPPID::ProtoSegment *max_segment = 0;
+      for (auto it = map_vertex_segments[pair_vertices.second].begin(); it != map_vertex_segments[pair_vertices.second].end(); it++){
+	WCPPID::ProtoSegment *sg = *it;
+	if (sg->get_flag_shower()){
+	  double length = sg->get_length();
+	  if (length > max_length){
+	    max_length = length;
+	    max_segment = sg;
+	  }
+	}
+      }
+      if (max_segment !=0 && max_length > 5*units::cm){
+	TVector3 dir = max_segment->cal_dir_3vector(pair_vertices.second->get_fit_pt(), 15*units::cm);
+	TVector3 beam_dir(0,0,1);
+	if (beam_dir.Angle(dir)/3.1415926*180. > 90) {
+	  n_good_tracks = 0;
+	  length_tracks += length_good_tracks;
+	}
+	//	std::cout << beam_dir.Angle(dir)/3.1415926*180. << " " << max_length/units::cm << std::endl;
+      }
+    }else if ( map_vertex_segments[pair_vertices.first].size() > 1 && map_vertex_segments[pair_vertices.second].size() == 1){
+
+      double max_length = 0;
+      WCPPID::ProtoSegment *max_segment = 0;
+      for (auto it = map_vertex_segments[pair_vertices.first].begin(); it != map_vertex_segments[pair_vertices.first].end(); it++){
+	WCPPID::ProtoSegment *sg = *it;
+	if (sg->get_flag_shower()){
+	  double length = sg->get_length();
+	  if (length > max_length){
+	    max_length = length;
+	    max_segment = sg;
+	  }
+	}
+      }
+      if (max_segment !=0 && max_length > 5*units::cm){
+	TVector3 dir = max_segment->cal_dir_3vector(pair_vertices.first->get_fit_pt(), 15*units::cm);
+	TVector3 beam_dir(0,0,1);
+	if (beam_dir.Angle(dir)/3.1415926*180. > 90) {
+	  n_good_tracks = 0;
+	  length_tracks += length_good_tracks;
+	}
+	//	std::cout << beam_dir.Angle(dir)/3.1415926*180. << " " << max_length/units::cm << std::endl;
+      }
+    }
+  }else if (n_good_tracks == 0 && (n_tracks == 2 && length_tracks <= 35*units::cm) ){
+    // change score ...
+     auto pair_vertices = find_vertices(maximal_length_track);
+
+     if (map_vertex_segments[pair_vertices.first].size() < map_vertex_segments[pair_vertices.second].size()){
+       
+       TVector3 dir = maximal_length_track->cal_dir_3vector(pair_vertices.second->get_fit_pt(), 15*units::cm);
+	TVector3 beam_dir(0,0,1);
+	if (beam_dir.Angle(dir)/3.1415926*180. > 90) {
+	  n_tracks --;
+	  length_tracks -= maximal_length;
+	  n_showers ++;
+	  length_showers += maximal_length;
+	}
+	//	std::cout << beam_dir.Angle(dir)/3.1415926*180.  << std::endl;
+
+	
+     }else if ( map_vertex_segments[pair_vertices.first].size() > map_vertex_segments[pair_vertices.second].size()){
+       TVector3 dir = maximal_length_track->cal_dir_3vector(pair_vertices.second->get_fit_pt(), 15*units::cm);
+       TVector3 beam_dir(0,0,1);
+       if (beam_dir.Angle(dir)/3.1415926*180. > 90) {
+	 n_tracks --;
+	 length_tracks -= maximal_length;
+	 n_showers ++;
+	 length_showers += maximal_length;
+       }
+       //       std::cout << beam_dir.Angle(dir)/3.1415926*180. << std::endl;
+     }
+     
+     
   }
+
+
+  
   
   
 
@@ -1001,6 +1087,8 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
       }else if (length_tracks < 0.18 * length_showers && ((length_showers + length_tracks) < 60*units::cm || length_tracks < 12*units::cm)){
 	flag_change_showers = true;
       }else if (length_tracks < 0.25 *length_showers && (tracks_score ==0 && length_tracks < 30*units::cm || length_tracks < 10*units::cm)){
+	flag_change_showers = true;
+      }else if (n_tracks == 1 && tracks_score == 0 && length_tracks < 15*units::cm&& length_tracks < 1./3. *length_showers){
 	flag_change_showers = true;
       }
     }else if ( length_tracks < 35*units::cm &&  length_tracks + length_showers  < 50*units::cm && length_showers < 15*units::cm
@@ -1313,13 +1401,22 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_all_showers(WCPPI
 	tmp_sg->determine_shower_direction();
 
 	
-	//	std::cout << max_vtx->get_cluster_id() << " " << max_vtx->get_fit_pt() << " " << min_vtx->get_fit_pt() << " " << tmp_sg->get_flag_dir() << std::endl;
+	//	std::cout << max_vtx->get_cluster_id() << " " << max_vtx->get_fit_pt() << " " << min_vtx->get_fit_pt() << " " << tmp_sg->get_flag_dir() << " " << tmp_sg->get_length()/units::cm << std::endl;
 	
 	if (tmp_sg->get_flag_dir()==1){
 	  temp_main_vertex = max_vtx;
 	}else if (tmp_sg->get_flag_dir()==-1){
 	  temp_main_vertex = min_vtx;
 	}else{
+	  if (max_vtx->get_fit_pt().z < min_vtx->get_fit_pt().z){ // pick the forward one ...
+	    temp_main_vertex = max_vtx;
+	  }else{
+	    temp_main_vertex = min_vtx;
+	  }
+	}
+
+	// for a large shower, anyway front vertex ...
+	if (tmp_sg->get_length() > 80*units::cm && fabs(max_vtx->get_fit_pt().z - min_vtx->get_fit_pt().z) > 40*units::cm){
 	  if (max_vtx->get_fit_pt().z < min_vtx->get_fit_pt().z){ // pick the forward one ...
 	    temp_main_vertex = max_vtx;
 	  }else{
@@ -1368,6 +1465,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
 
   WCPPID::ProtoSegment* max_length_muon = 0;
   double max_length = 0;
+ 
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     if (it->first->get_cluster_id() != vertex_candidates.front()->get_cluster_id()) continue;
@@ -1441,6 +1539,10 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices(WCPPID::ProtoVert
       //  std::cout << sg->get_id() << " " << sg->get_flag_shower() << " " << sg->get_particle_type() << " " << sg->get_flag_dir() << " " << sg->is_dir_weak() << std::endl;
       if (sg->get_flag_shower()){
 	map_vertex_num[vtx] += 1/4./2.; // number of showers
+
+	auto pair_results =  calculate_num_daughter_showers(vtx, sg);
+	if (pair_results.second > 45*units::cm)
+	  map_vertex_num[vtx] += 1/4./2.; 
       }else{
 	map_vertex_num[vtx] += 1/4.; // number of tracks
       }
@@ -1544,6 +1646,8 @@ float WCPPID::NeutrinoID::calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex){
     //
   }
   //  std::cout << num_conflicts << " ";
+
+  TVector3 dir_beam(0,0,1);
   
   // now calculate conflicts based on vertices // two things in, one track in one shower out
   for (auto it = used_vertices.begin(); it != used_vertices.end(); it++){
@@ -1553,7 +1657,8 @@ float WCPPID::NeutrinoID::calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex){
     int n_in = 0;
     int n_in_shower = 0;
     int n_out_tracks = 0;
-
+    int n_out_showers = 0;
+    
     std::map<WCPPID::ProtoSegment*, TVector3> map_in_segment_dirs;
     std::map<WCPPID::ProtoSegment*, TVector3> map_out_segment_dirs;
     
@@ -1568,6 +1673,7 @@ float WCPPID::NeutrinoID::calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex){
 	map_in_segment_dirs[sg] = sg->cal_dir_3vector(vtx->get_fit_pt(), 10*units::cm);
       }else if (vtx==vtx1){
 	if (!sg->get_flag_shower()) n_out_tracks ++;
+	else n_out_showers ++;
 	map_out_segment_dirs[sg] = sg->cal_dir_3vector(vtx->get_fit_pt(),10*units::cm);
       }
     }
@@ -1586,17 +1692,34 @@ float WCPPID::NeutrinoID::calc_conflict_maps(WCPPID::ProtoVertex *temp_vertex){
 	  }
 	}
       }
+      
       bool flag_check = true;
       if (sg2->get_flag_shower_trajectory() || sg1->get_flag_shower() && sg2->get_flag_shower())
 	flag_check = false;
 
-      //      std::cout << max_angle << " " << sg1->get_id() << " " << sg2->get_id() << " " << sg1->get_particle_type() << " " << sg2->get_particle_type() << " " << sg1->get_flag_shower() << " " << sg2->get_flag_shower() << std::endl;
+      double angle_beam = map_in_segment_dirs[sg1].Angle(dir_beam)/3.1415926*180.;
+
+      //std::cout << max_angle << " " << sg1->get_id() << " " << sg2->get_id() << " " << sg1->get_particle_type() << " " << sg2->get_particle_type() << " " << sg1->get_flag_shower() << " " << sg2->get_flag_shower() << " " << angle_beam << std::endl;
+
       
       if (max_angle >=0 && flag_check){
-	if (max_angle < 35) num_conflicts += 5;
-	else if (max_angle < 70) num_conflicts += 3; // angle does not look right ...
-	else if (max_angle < 85) num_conflicts += 1;
-	else if (max_angle < 110) num_conflicts += 0.25;
+	if (max_angle < 35) {
+	  num_conflicts += 5;
+	}else if (max_angle < 70) {
+	  num_conflicts += 3; // angle does not look right ...
+	}else if (max_angle < 85) {
+	  num_conflicts += 1;
+	}else if (max_angle < 110) {
+	  num_conflicts += 0.25;
+	}
+	
+	// go back ward ...
+	if (angle_beam < 60 && max_angle < 110){
+	  num_conflicts += 1;
+	}else if (angle_beam < 45 && max_angle < 70){
+	 num_conflicts += 3;
+	}
+	
       }
     }
     

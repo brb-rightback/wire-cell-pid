@@ -1255,7 +1255,8 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
     // long muon ...
     if (fabs(shower->get_particle_type())==13) continue;
     //    std::cout << shower->get_particle_type() << std::endl;
-    
+
+    double total_length = shower->get_total_length();
     if (seg == shower->get_start_segment()){   
       if ( seg->get_flag_shower_topology() || shower->get_num_segments()>2 || seg->get_medium_dQ_dx(0,100) > 43e3/units::cm * 1.5){
 	if (seg->get_length() > 10*units::cm){
@@ -1266,7 +1267,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
 	  map_shower_dir[shower] = dir_shower;
 	}
       }else if (shower->get_num_segments()<=2){
-	double total_length = shower->get_total_length();
+
 	if (total_length > 30*units::cm){
 	  if (seg->get_length()>10*units::cm){
 	    TVector3 dir_shower = seg->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 15*units::cm);
@@ -1278,6 +1279,12 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
 	}
       }
 
+      // very large shower ...
+      if (total_length > 100*units::cm){
+	TVector3 dir_shower = shower->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 60*units::cm);
+	map_shower_dir[shower] = dir_shower;
+      }
+      
       if (seg == max_length_segment && map_shower_dir.find(shower) == map_shower_dir.end()){
 	TVector3 dir_shower = shower->cal_dir_3vector(shower->get_start_vertex().first->get_fit_pt(), 15*units::cm);
 	map_shower_dir[shower] = dir_shower;
