@@ -291,13 +291,15 @@ void WCPPID::NeutrinoID::examine_main_vertices(){
       if (!flag_removed){
 	if (length < 5*units::cm && pcloud->get_closest_dis(vertex->get_fit_pt()) > 100*units::cm)
 	  flag_removed = true;
-	//std::cout << cluster->get_cluster_id() << " " << length/units::cm << " " << pcloud->get_closest_dis(vertex->get_fit_pt()) << std::endl;
+
+	//	std::cout << cluster->get_cluster_id() << " " << length/units::cm << " " << pcloud->get_closest_dis(vertex->get_fit_pt()) << std::endl;
       }
       if (flag_removed)
 	clusters_to_be_removed.push_back(cluster);
     }else{
       if (pcloud->get_closest_dis(vertex->get_fit_pt()) > 200*units::cm)
 	clusters_to_be_removed.push_back(cluster);
+
       //      std::cout << cluster->get_cluster_id() << " " << pcloud->get_closest_dis(vertex->get_fit_pt())/units::cm << std::endl;
     }
   }
@@ -562,11 +564,11 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_global(WCPPID::Pr
       if (dir.Angle(dir1)/3.1415926*180. < 15){
 	map_vertex_num[vtx] += 0.25;
 	delta ++;
-      }else if (dir.Angle(dir1)/3.1415926*180.<30){
+      }else if (dir.Angle(dir1)/3.1415926*180.< 30){
 	map_vertex_num[vtx] += 0.25/2.;
 	delta ++;
       }
-      //      if (flag_print) std::cout << "D: " << vtx->get_cluster_id() << " " << map_vertex_num[vtx] << " " << dir.Angle(dir1)/3.1415926*180. << " " << main_cluster->get_cluster_id() << " " << dir.Mag()/units::cm << std::endl;
+      // if (flag_print) std::cout << "D: " << vtx->get_cluster_id() << " " << map_vertex_num[vtx] << " " << dir.Angle(dir1)/3.1415926*180. << " " << main_cluster->get_cluster_id() << " " << dir.Mag()/units::cm << std::endl;
     }
     
     // nothing point to this one ...

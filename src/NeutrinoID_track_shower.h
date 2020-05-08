@@ -64,8 +64,8 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
     }
 
     bool flag_print = false;
-    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
-    //    if (sg->get_cluster_id()==67) flag_print = true;
+    // if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
+    //if (sg->get_cluster_id()==20) flag_print = true;
     
     if (sg->get_flag_shower_trajectory()){
       // trajectory shower
@@ -1058,7 +1058,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
 
 	
      }else if ( map_vertex_segments[pair_vertices.first].size() > map_vertex_segments[pair_vertices.second].size()){
-       TVector3 dir = maximal_length_track->cal_dir_3vector(pair_vertices.second->get_fit_pt(), 15*units::cm);
+       TVector3 dir = maximal_length_track->cal_dir_3vector(pair_vertices.first->get_fit_pt(), 15*units::cm);
        TVector3 beam_dir(0,0,1);
        if (beam_dir.Angle(dir)/3.1415926*180. > 90) {
 	 n_tracks --;
@@ -1066,7 +1066,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
 	 n_showers ++;
 	 length_showers += maximal_length;
        }
-       //       std::cout << beam_dir.Angle(dir)/3.1415926*180. << std::endl;
+       //       std::cout << beam_dir.Angle(dir)/3.1415926*180. << " " << maximal_length << " " << pair_vertices.second->get_fit_pt() << " " << pair_vertices.first->get_fit_pt() << std::endl;
      }
      
      
@@ -1088,7 +1088,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
 	flag_change_showers = true;
       }else if (length_tracks < 0.25 *length_showers && (tracks_score ==0 && length_tracks < 30*units::cm || length_tracks < 10*units::cm)){
 	flag_change_showers = true;
-      }else if (n_tracks == 1 && tracks_score == 0 && length_tracks < 15*units::cm&& length_tracks < 1./3. *length_showers){
+      }else if (n_tracks == 1 && tracks_score == 0 && length_tracks < 15*units::cm && length_tracks < 1./3. * length_showers){
 	flag_change_showers = true;
       }
     }else if ( length_tracks < 35*units::cm &&  length_tracks + length_showers  < 50*units::cm && length_showers < 15*units::cm
