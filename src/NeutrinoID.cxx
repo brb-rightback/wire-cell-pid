@@ -141,7 +141,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
 	clustering_points(*it);
 	separate_track_shower(*it);
 	determine_direction(*it);
-	
+	shower_determing_in_main_cluster(*it);
 	determine_main_vertex(*it, false);	
 	if (main_vertex !=0){
 	  map_cluster_main_vertices[*it] = main_vertex;
@@ -159,10 +159,9 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     determine_overall_main_vertex();  
   
   if (flag_main_cluster && main_vertex !=0){
-
     
     // fit the vertex in 3D 
-    improve_vertex(main_cluster);
+    improve_vertex(main_cluster, true, true);
     
     clustering_points(main_cluster);
     examine_direction(main_vertex);
@@ -531,8 +530,7 @@ WCPPID::ProtoVertex* WCPPID::NeutrinoID::compare_main_vertices_global(WCPPID::Pr
   // whether the vetex is at boundary or not ...
   for (auto it = vertex_candidates.begin(); it!=vertex_candidates.end(); it++){
     WCPPID::ProtoVertex *vtx = *it;
-    if (fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x))
-      map_vertex_num[vtx] +=0.5; // good      // fiducial volume ..
+    if (fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) || vtx->get_cluster_id() == main_cluster->get_cluster_id())  map_vertex_num[vtx] +=0.5; // good      // fiducial volume ..
     if (flag_print) std::cout << "B: " << map_vertex_num[vtx] << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(),offset_x) << std::endl;
   }
 

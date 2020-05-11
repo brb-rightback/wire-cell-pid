@@ -64,7 +64,7 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
     }
 
     bool flag_print = false;
-    // if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
+    //    if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
     //if (sg->get_cluster_id()==20) flag_print = true;
     
     if (sg->get_flag_shower_trajectory()){
@@ -915,6 +915,10 @@ void WCPPID::NeutrinoID::print_segs_info(WCPPID::PR3DCluster* temp_cluster){
 }
 
 void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
+
+  //  print_segs_info(temp_cluster);
+
+
   TPCParams& mp = Singleton<TPCParams>::Instance();
   int n_good_tracks = 0, n_tracks = 0, n_showers = 0;
   double length_good_tracks = 0, length_tracks = 0, length_showers = 0;
@@ -949,7 +953,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
   }
 
   // if there is only one good track ...
-  if (n_good_tracks ==1 && length_good_tracks < 0.15 * length_showers && length_good_tracks < 10*units::cm){
+  if (n_good_tracks ==1 && (length_good_tracks < 0.15 * (length_showers + length_tracks) ) && length_good_tracks < 10*units::cm){
     auto pair_vertices = find_vertices(good_track);
 
     int num_s1 = 0, num_s2 = 0;
@@ -966,7 +970,7 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
       TVector3 dir1 = good_track->cal_dir_3vector(pair_vertices.second->get_fit_pt(), 15*units::cm);
       for (auto it1 = map_vertex_segments[pair_vertices.second].begin(); it1!= map_vertex_segments[pair_vertices.second].end(); it1++){
 	if (*it1 == good_track) continue;
-	if (! (*it1)->get_flag_shower()) continue;
+	//if (! (*it1)->get_flag_shower()) continue;
 	TVector3 dir2 = (*it1)->cal_dir_3vector(pair_vertices.second->get_fit_pt(), 15*units::cm);
 	double  angle = dir1.Angle(dir2)/3.1415926*180;
 	if (max_angle < angle) max_angle = angle;
@@ -983,11 +987,12 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
       TVector3 dir1 = good_track->cal_dir_3vector(pair_vertices.first->get_fit_pt(), 15*units::cm);
       for (auto it1 = map_vertex_segments[pair_vertices.first].begin(); it1!= map_vertex_segments[pair_vertices.first].end(); it1++){
 	if (*it1 == good_track) continue;
-	if (! (*it1)->get_flag_shower()) continue;
+	//if (! (*it1)->get_flag_shower()) continue;
 	TVector3 dir2 = (*it1)->cal_dir_3vector(pair_vertices.first->get_fit_pt(), 15*units::cm);
 	double  angle = dir1.Angle(dir2)/3.1415926*180;
 	if (max_angle < angle) max_angle = angle;
       }
+      // std::cout << max_angle << std::endl;
       if (max_angle > 165) {
 	n_good_tracks = 0;
 	length_tracks += length_good_tracks;
@@ -1048,13 +1053,13 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
        
        TVector3 dir = maximal_length_track->cal_dir_3vector(pair_vertices.second->get_fit_pt(), 15*units::cm);
 	TVector3 beam_dir(0,0,1);
-	if (beam_dir.Angle(dir)/3.1415926*180. > 90) {
+	if (beam_dir.Angle(dir)/3.1415926*180. > 100) {
 	  n_tracks --;
 	  length_tracks -= maximal_length;
 	  n_showers ++;
 	  length_showers += maximal_length;
 	}
-	//	std::cout << beam_dir.Angle(dir)/3.1415926*180.  << std::endl;
+	//std::cout << beam_dir.Angle(dir)/3.1415926*180.  << std::endl;
 
 	
      }else if ( map_vertex_segments[pair_vertices.first].size() > map_vertex_segments[pair_vertices.second].size()){
@@ -1152,8 +1157,8 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   // examine_maps(temp_cluster);
   // print ...
 
-  //  std::cout << "Information after initial logic examination: " << std::endl;
-  // print_segs_info(temp_cluster);
+  //std::cout << "Information after initial logic examination: " << std::endl;
+  //print_segs_info(temp_cluster);
 
   
   // find the main vertex ...
@@ -1210,7 +1215,8 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
       if (it->second.first >0) main_vertex_candidates.push_back(it->first);
     }
   }
- 
+
+
 
   if (flag_save_only_showers){
     if (main_vertex_candidates.size()>0){

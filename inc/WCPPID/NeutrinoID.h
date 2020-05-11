@@ -181,6 +181,8 @@ namespace WCPPID{
     // after the main vertex determination ... examine structure ... fix mistakes ...
     bool examine_structure_final(WCPPID::PR3DCluster* temp_cluster); 
     bool examine_structure_final_1(WCPPID::PR3DCluster* temp_cluster); // merge two segments if a direct connection is better ...
+    bool examine_structure_final_1p(WCPPID::PR3DCluster* temp_cluster); // merge two segments if a direct connection is better for main vertex ...
+    
     bool examine_structure_final_2(WCPPID::PR3DCluster* temp_cluster); // merge vertices close to the main vertex
     bool examine_structure_final_3(WCPPID::PR3DCluster* temp_cluster); // move main vertex to a nearby vertex, if it is close ...
 
@@ -198,7 +200,7 @@ namespace WCPPID{
     // merge two tracks into one if their angle are consistent ...
     bool examine_structure_3(WCPPID::PR3DCluster *temp_cluster);
     // search for missing tracks  ...
-    bool examine_structure_4(WCPPID::ProtoVertex *vertex, WCPPID::PR3DCluster *temp_cluster);
+    bool examine_structure_4(WCPPID::ProtoVertex *vertex, WCPPID::PR3DCluster *temp_cluster, bool flag_final_vertex = false);
 
     
     void find_other_segments(WCPPID::PR3DCluster* temp_cluster, bool flag_break_track = true, double search_range = 1.5*units::cm, double scaling_2d = 0.8);
@@ -214,7 +216,7 @@ namespace WCPPID{
 
     
     // improve vertex ...
-    void improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool flag_search_vertex_activity = true);
+    void improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool flag_search_vertex_activity = true, bool flag_final_vertex = false);
     bool fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster);
     bool search_for_vertex_activities(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster, double search_range = 1.5*units::cm);
     bool eliminate_short_vertex_activities(WCPPID::PR3DCluster *temp_cluster);

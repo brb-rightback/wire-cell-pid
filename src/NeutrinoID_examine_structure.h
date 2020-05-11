@@ -245,11 +245,11 @@ bool WCPPID::NeutrinoID::examine_structure_3(WCPPID::PR3DCluster *temp_cluster){
 }
 
 
-bool WCPPID::NeutrinoID::examine_structure_4(WCPPID::ProtoVertex* vertex, WCPPID::PR3DCluster *temp_cluster){
+bool WCPPID::NeutrinoID::examine_structure_4(WCPPID::ProtoVertex* vertex, WCPPID::PR3DCluster *temp_cluster, bool flag_final_vertex){
   bool flag_update = false;
   for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
     WCPPID::ProtoVertex *vtx = it->first;
-    if (it->second.size()<2) continue;
+    if (it->second.size()<2 && (!flag_final_vertex) ) continue;
     if (vtx != vertex) continue;
 
     ToyPointCloud* pcloud = temp_cluster->get_point_cloud_steiner();

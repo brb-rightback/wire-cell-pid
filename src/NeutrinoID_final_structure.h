@@ -3,6 +3,7 @@ bool WCPPID::NeutrinoID::examine_structure_final(WCPPID::PR3DCluster* temp_clust
   
   // results need to repeat the fit and the PID related work ...
   examine_structure_final_1(temp_cluster);
+  examine_structure_final_1p(temp_cluster);
   
   examine_structure_final_2(temp_cluster);
 
@@ -396,6 +397,147 @@ bool WCPPID::NeutrinoID::examine_structure_final_2(WCPPID::PR3DCluster* temp_clu
   return flag_updated;
 }
 
+
+bool WCPPID::NeutrinoID::examine_structure_final_1p(WCPPID::PR3DCluster* temp_cluster){
+  bool flag_update = false;
+  std::set<WCPPID::ProtoSegment*> new_segments; // need to fit and then PID ...
+
+  auto it = map_vertex_segments.find(main_vertex);
+  if (it == map_vertex_segments.end() || it->second.size()!=2) return flag_update;
+  
+  WCPPID::ProtoSegment *sg1 = *(it->second.begin());
+  WCPPID::ProtoSegment *sg2 = *(it->second.rbegin());
+
+  TVector3 dir1 = sg1->cal_dir_3vector(main_vertex->get_fit_pt(), 15*units::cm);
+  TVector3 dir2 = sg2->cal_dir_3vector(main_vertex->get_fit_pt(), 15*units::cm);
+  double angle = dir1.Angle(dir2)/3.1415926*180.;
+  double length1 = sg1->get_length();
+  double length2 = sg2->get_length();
+
+  //  std::cout << angle << " " << main_vertex->get_wcpt().index << std::endl;
+  
+  if (angle > 175){
+    if (length1 < 6*units::cm && length1 < length2){
+      WCPPID::ProtoVertex *vtx = find_other_vertex(sg1, main_vertex);
+      std::vector<WCP::WCPointCloud<double>::WCPoint >& vec_wcps = sg2->get_wcpt_vec();
+      bool flag_front;
+      if (vec_wcps.front().index == main_vertex->get_wcpt().index){
+	flag_front = true;
+      }else{
+	flag_front = false;
+      }
+      std::vector<WCP::WCPointCloud<double>::WCPoint >& vec_wcps1 = sg1->get_wcpt_vec();
+      bool flag_front1;
+      if (vec_wcps1.front().index == main_vertex->get_wcpt().index){
+	flag_front1 = true;
+      }else{
+	flag_front1 = false;
+      }
+      
+      
+      std::list<WCP::WCPointCloud<double>::WCPoint> old_list;
+      std::copy(vec_wcps.begin(), vec_wcps.end(), std::back_inserter(old_list));
+
+      if (flag_front && flag_front1){
+	for (auto it1 = vec_wcps1.begin(); it1 != vec_wcps1.end(); it1++){
+	  if ((*it1).index != old_list.front().index) old_list.push_front(*it1);
+	}
+      }else if (flag_front && (!flag_front1)){
+	for (auto it1 = vec_wcps1.rbegin(); it1 != vec_wcps1.rend(); it1++){
+	  if ((*it1).index != old_list.front().index) old_list.push_front(*it1);
+	}
+      }else if ((!flag_front) && flag_front1){
+	for (auto it1 = vec_wcps1.begin(); it1 != vec_wcps1.end(); it1++){
+	  if ((*it1).index != old_list.back().index) old_list.push_back(*it1);
+	}
+      }else if ((!flag_front) && (!flag_front1)){
+	for (auto it1 = vec_wcps1.rbegin(); it1 != vec_wcps1.rend(); it1++){
+	  if ((*it1).index != old_list.back().index) old_list.push_back(*it1);
+	}
+      }
+      
+      vec_wcps.clear();
+      vec_wcps.reserve(old_list.size());
+      std::copy(std::begin(old_list), std::end(old_list), std::back_inserter(vec_wcps));
+      main_vertex->set_wcpt(vtx->get_wcpt());
+
+      //      std::cout << main_vertex->get_wcpt().index << " A " << vtx->get_wcpt().index << std::endl;
+      
+      for (auto it1 = map_vertex_segments[vtx].begin(); it1 != map_vertex_segments[vtx].end(); it1++){
+	if ((*it1) == sg1) continue;
+	add_proto_connection(main_vertex,*it1,temp_cluster);
+      }
+      del_proto_segment(sg1);
+      del_proto_vertex(vtx);
+
+      flag_update =true;
+      
+    }else if (length2 < 6*units::cm && length2 < length1){
+      
+      WCPPID::ProtoVertex *vtx = find_other_vertex(sg2, main_vertex);
+      std::vector<WCP::WCPointCloud<double>::WCPoint >& vec_wcps = sg1->get_wcpt_vec();
+      bool flag_front;
+      if (vec_wcps.front().index == main_vertex->get_wcpt().index){
+	flag_front = true;
+      }else{
+	flag_front = false;
+      }
+      std::vector<WCP::WCPointCloud<double>::WCPoint >& vec_wcps1 = sg2->get_wcpt_vec();
+      bool flag_front1;
+      if (vec_wcps1.front().index == main_vertex->get_wcpt().index){
+	flag_front1 = true;
+      }else{
+	flag_front1 = false;
+      }
+      
+      
+      std::list<WCP::WCPointCloud<double>::WCPoint> old_list;
+      std::copy(vec_wcps.begin(), vec_wcps.end(), std::back_inserter(old_list));
+
+      if (flag_front && flag_front1){
+	for (auto it1 = vec_wcps1.begin(); it1 != vec_wcps1.end(); it1++){
+	  if ((*it1).index != old_list.front().index) old_list.push_front(*it1);
+	}
+      }else if (flag_front && (!flag_front1)){
+	for (auto it1 = vec_wcps1.rbegin(); it1 != vec_wcps1.rend(); it1++){
+	  if ((*it1).index != old_list.front().index) old_list.push_front(*it1);
+	}
+      }else if ((!flag_front) && flag_front1){
+	for (auto it1 = vec_wcps1.begin(); it1 != vec_wcps1.end(); it1++){
+	  if ((*it1).index != old_list.back().index) old_list.push_back(*it1);
+	}
+      }else if ((!flag_front) && (!flag_front1)){
+	for (auto it1 = vec_wcps1.rbegin(); it1 != vec_wcps1.rend(); it1++){
+	  if ((*it1).index != old_list.back().index) old_list.push_back(*it1);
+	}
+      }
+      
+      vec_wcps.clear();
+      vec_wcps.reserve(old_list.size());
+      std::copy(std::begin(old_list), std::end(old_list), std::back_inserter(vec_wcps));
+      main_vertex->set_wcpt(vtx->get_wcpt());
+      
+
+      //      std::cout << main_vertex->get_wcpt().index << " B " << vtx->get_wcpt().index << std::endl;
+      
+      for (auto it1 = map_vertex_segments[vtx].begin(); it1 != map_vertex_segments[vtx].end(); it1++){
+	if ((*it1) == sg2) continue;
+	add_proto_connection(main_vertex,*it1,temp_cluster);
+      }
+      del_proto_segment(sg2);
+      del_proto_vertex(vtx);
+
+      flag_update =true;
+    }
+    
+    //    std::cout << main_vertex->get_wcpt().index << std::endl;
+    
+    if (flag_update)
+      temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+  }
+  
+  return flag_update;
+}
 
 
 bool WCPPID::NeutrinoID::examine_structure_final_1(WCPPID::PR3DCluster* temp_cluster){

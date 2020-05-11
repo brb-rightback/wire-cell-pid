@@ -533,6 +533,9 @@ bool WCPPID::ProtoSegment::is_shower_topology(bool tmp_val){
 bool WCPPID::ProtoSegment::is_shower_trajectory(double step_size){
   flag_shower_trajectory = false;
   double length = get_length();
+  // too long
+  if (length > 50*units::cm) return flag_shower_trajectory;
+  
   int ncount = std::round(length/step_size);
   if (ncount ==0 ) ncount = 1;
 
