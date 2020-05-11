@@ -219,7 +219,7 @@ namespace WCPPID{
     void improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool flag_search_vertex_activity = true, bool flag_final_vertex = false);
     bool fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster);
     bool search_for_vertex_activities(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegmentSet& sg_set, WCPPID::PR3DCluster* temp_cluster, double search_range = 1.5*units::cm);
-    bool eliminate_short_vertex_activities(WCPPID::PR3DCluster *temp_cluster);
+    bool eliminate_short_vertex_activities(WCPPID::PR3DCluster *temp_cluster, std::set<WCPPID::ProtoSegment*>& existing_segments);
 
     std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* >& get_map_cluster_vertex(){return map_cluster_main_vertices;};
       

@@ -44,6 +44,7 @@ bool WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
 
 void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool flag_search_vertex_activity , bool flag_final_vertex ){
 
+  std::set<WCPPID::ProtoSegment* > existing_segments;
   // if all showers, no need to fit vertex with only two legs ...
   bool flag_skip_two_legs = false;
   {
@@ -51,10 +52,11 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
     for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
       WCPPID::ProtoSegment *sg = it->first;
       if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+      existing_segments.insert(sg);
       if (!sg->get_flag_shower()) ntracks++;
     }
     if (ntracks ==0 )
-      flag_skip_two_legs = true;
+      flag_skip_two_legs = true; // also all showers ...
   }
   
   bool flag_found_vertex_activities = false;
@@ -175,7 +177,7 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
       }
       if (flag_update_fit)     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
       // eliminate the short tracks ...
-      eliminate_short_vertex_activities(temp_cluster);
+      if (eliminate_short_vertex_activities(temp_cluster, existing_segments)) temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
     }
 
 
@@ -269,13 +271,34 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
 	  sg->set_particle_mass( mp.get_mass_electron());
 	}
       }
+
+      if (flag_skip_two_legs && existing_segments.find(sg) == existing_segments.end()){
+	WCPPID::ProtoVertex *start_v=0, *end_v=0;
+	if ( (*map_segment_vertices[sg].begin())->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	  start_v = (*map_segment_vertices[sg].begin());
+	  end_v = (*map_segment_vertices[sg].rbegin());
+	}else{
+	  end_v = (*map_segment_vertices[sg].begin());
+	  start_v = (*map_segment_vertices[sg].rbegin());
+	}
+	sg->determine_dir_track(map_vertex_segments[start_v].size(), map_vertex_segments[end_v].size(), false);
+	if ((sg->get_particle_type()==0 || sg->is_dir_weak()) && sg->get_medium_dQ_dx()/(43e3/units::cm) < 1.3){
+	  sg->set_particle_type(11);
+	  sg->set_particle_score(100);
+	  TPCParams& mp = Singleton<TPCParams>::Instance();
+	  sg->set_particle_mass( mp.get_mass_electron());
+	}
+	//	std::cout << sg->get_id() << " " << sg->get_particle_type() << " " << sg->get_particle_score() << " " << sg->get_medium_dQ_dx()/(43e3/units::cm) << std::endl;
+	
+      }
     }
   }
   
 }
 
-bool WCPPID::NeutrinoID::eliminate_short_vertex_activities(WCPPID::PR3DCluster *temp_cluster){
+bool WCPPID::NeutrinoID::eliminate_short_vertex_activities(WCPPID::PR3DCluster *temp_cluster, std::set<WCPPID::ProtoSegment*>& existing_segments){
 
+  bool flag_updated = false;
   bool flag_continue = true;
 
   while(flag_continue){
@@ -317,7 +340,8 @@ bool WCPPID::NeutrinoID::eliminate_short_vertex_activities(WCPPID::PR3DCluster *
 	  flag_continue = true;
 	  break;
 	}
-      }else{
+      }else if ( v1 == main_vertex && map_vertex_segments[v1].size()>1 ||
+		 v2 == main_vertex && map_vertex_segments[v2].size()>1){
 	if (length < 0.1*units::cm){
 	  to_be_removed_segments.insert(sg);
 	  to_be_removed_vertices.insert(v2);
@@ -365,17 +389,42 @@ bool WCPPID::NeutrinoID::eliminate_short_vertex_activities(WCPPID::PR3DCluster *
 	    }
 	  }
 	}
+
+      if (!flag_continue && existing_segments.find(sg) == existing_segments.end() && length > 0.9*units::cm){
+	int n_good = 0;
+	PointVector& pts = sg->get_point_vec();
+	for (size_t i=0; i!= pts.size(); i++){
+	  double dis_u = 1e9, dis_v = 1e9, dis_w = 1e9;
+	  for (auto it1 = existing_segments.begin(); it1 != existing_segments.end(); it1++){
+	    auto tuple_results = (*it1)->get_closest_2d_dis(pts.at(i));
+	    if (std::get<0>(tuple_results) < dis_u) dis_u = std::get<0>(tuple_results);
+	    if (std::get<1>(tuple_results) < dis_v) dis_v = std::get<1>(tuple_results);
+	    if (std::get<2>(tuple_results) < dis_w) dis_w = std::get<2>(tuple_results);
+	    
+	  }
+	  //	  std::cout << i << " " << dis_u/units::cm << " " << dis_v/units::cm << " " << dis_w/units::cm << std::endl;
+	  if (dis_u > 0.45*units::cm || dis_v > 0.45*units::cm || dis_w > 0.45*units::cm) n_good ++;
+	}
+	if (n_good == 0){
+	  to_be_removed_segments.insert(sg);
+	  if (map_vertex_segments[v1].size()==1) to_be_removed_vertices.insert(v1);
+	  if (map_vertex_segments[v2].size()==1) to_be_removed_vertices.insert(v2);
+	}
+      }
+      
       if (flag_continue) break;
     } // for loop of segment
     
     for (auto it = to_be_removed_segments.begin(); it!=to_be_removed_segments.end(); it++){
+      flag_updated = true;
       del_proto_segment(*it);
     }
     for (auto it = to_be_removed_vertices.begin(); it!=to_be_removed_vertices.end(); it++){
       del_proto_vertex(*it);
     }
   }
-  
+
+  return flag_updated;
 }
 
 

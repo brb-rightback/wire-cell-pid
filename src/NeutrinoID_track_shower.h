@@ -952,6 +952,8 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
     }
   }
 
+  if (n_good_tracks + n_tracks + n_showers == 1) return;
+  
   // if there is only one good track ...
   if (n_good_tracks ==1 && (length_good_tracks < 0.15 * (length_showers + length_tracks) ) && length_good_tracks < 10*units::cm){
     auto pair_vertices = find_vertices(good_track);
