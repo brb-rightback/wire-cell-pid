@@ -318,8 +318,10 @@ namespace WCPPID{
     // fill_fit_parameters();
     void fill_fit_parameters();
     WCPPID::ProtoVertex* get_main_vertex(){return main_vertex;};
+    int get_neutrino_type(){return neutrino_type;};
     
   protected:
+    int neutrino_type;
     int acc_vertex_id;
     int acc_segment_id;
 

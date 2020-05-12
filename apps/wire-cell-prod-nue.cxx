@@ -1231,6 +1231,7 @@ int main(int argc, char* argv[])
   
   
   std::vector<WCPPID::NeutrinoID *> neutrino_vec;
+  std::map<std::pair<int, int>, WCPPID::NeutrinoID* > map_flash_tpc_pair_neutrino_id;
   // Code to select nue ...
   for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
     //    double flash_time = map_flash_info[it->first].second;
@@ -1259,7 +1260,7 @@ int main(int argc, char* argv[])
     double offset_x =     (flash_time - time_offset)*2./nrebin*time_slice_width;
     WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process);
     neutrino_vec.push_back(neutrino);
-    
+    map_flash_tpc_pair_neutrino_id[std::make_pair(it->first, it->second)] = neutrino;
   }
 
   
@@ -1362,10 +1363,18 @@ int main(int argc, char* argv[])
   T_match1->Branch("chi2",&chi2,"chi2/D");
   T_match1->Branch("ndf",&ndf,"ndf/I");
   T_match1->Branch("cluster_length",&cluster_length,"cluster_length/D");
-
+  int neutrino_type = 0;
+  T_match1->Branch("neutrino_type",&neutrino_type,"neutrino_type/I");
+  
   for (int i=0;i!=T_match->GetEntries();i++){
     T_match->GetEntry(i);
     if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
+    neutrino_type = 0;
+    
+    auto it = map_flash_tpc_pair_neutrino_id.find(std::make_pair(flash_id, tpc_cluster_id));
+    if (it != map_flash_tpc_pair_neutrino_id.end()){
+      neutrino_type = it->second->get_neutrino_type();
+    }
     T_match1->Fill();
   }
 

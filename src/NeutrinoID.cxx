@@ -38,6 +38,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   , type(0)
   , main_vertex(0)
   , main_cluster_initial_pair_vertices(std::make_pair((WCPPID::ProtoVertex*)0, (WCPPID::ProtoVertex*)0))
+  , neutrino_type(0)
 {
   bool flag_other_clusters = true;
   bool flag_main_cluster = true;
