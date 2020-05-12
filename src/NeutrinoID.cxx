@@ -23,6 +23,11 @@ using namespace WCP;
 #include "NeutrinoID_energy_reco.h"
 #include "NeutrinoID_shower_clustering.h"
 
+#include "NeutrinoID_cosmic_tagger.h"
+#include "NeutrinoID_numu_tagger.h"
+#include "NeutrinoID_nue_tagger.h"
+#include "NeutrinoID_pio_tagger.h"
+
 WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<WCPPID::PR3DCluster*>& other_clusters1, std::vector<WCPPID::PR3DCluster*>& all_clusters1, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x, int flag_neutrino_id_process)
   : acc_vertex_id(0)
   , acc_segment_id(0)

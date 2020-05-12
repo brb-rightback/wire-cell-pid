@@ -319,6 +319,9 @@ namespace WCPPID{
     void fill_fit_parameters();
     WCPPID::ProtoVertex* get_main_vertex(){return main_vertex;};
     int get_neutrino_type(){return neutrino_type;};
+
+    void cosmic_tagger();
+    
     
   protected:
     int neutrino_type;
