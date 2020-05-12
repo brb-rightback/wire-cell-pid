@@ -101,7 +101,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv(){
   id_pi0_with_vertex();
 
   id_pi0_without_vertex();
-  //std::cout << showers.size() << std::endl;
+ 
 }
 
 void WCPPID::NeutrinoID::id_pi0_without_vertex(){
@@ -110,6 +110,7 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
     
   // test main vertex ...
   if (map_vertex_segments[main_vertex].size()>2) return; // more than one shower
+  // std::cout << map_vertex_segments[main_vertex].size() << std::endl;
   if (map_segment_in_shower.find(*map_vertex_segments[main_vertex].begin()) == map_segment_in_shower.end() &&
       map_segment_in_shower.find(*map_vertex_segments[main_vertex].rbegin()) == map_segment_in_shower.end() ) return; // not a shower connecting to main vertex ...
   {

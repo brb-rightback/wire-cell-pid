@@ -190,6 +190,7 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
       
       
     }
+    
     // eliminate the short tracks ...
     if (eliminate_short_vertex_activities(temp_cluster, existing_segments)) temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
 
@@ -321,6 +322,8 @@ bool WCPPID::NeutrinoID::eliminate_short_vertex_activities(WCPPID::PR3DCluster *
     for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
       WCPPID::ProtoSegment *sg = it->first;
       if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+      if (existing_segments.find(sg) != existing_segments.end()) continue;
+      
       WCPPID::ProtoVertex *v1 = *it->second.begin();
       WCPPID::ProtoVertex *v2 = *it->second.rbegin();
 
