@@ -1365,11 +1365,21 @@ int main(int argc, char* argv[])
   T_match1->Branch("cluster_length",&cluster_length,"cluster_length/D");
   int neutrino_type = 0;
   T_match1->Branch("neutrino_type",&neutrino_type,"neutrino_type/I");
+  Double_t flash_time;
+  T_match1->Branch("flash_time",&flash_time,"flash_time/D");
   
   for (int i=0;i!=T_match->GetEntries();i++){
     T_match->GetEntry(i);
     if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
     neutrino_type = 0;
+    
+    bool flag_flash = map_flash_info.find(flash_id) != map_flash_info.end() ;
+    flash_time = -1000;
+
+    if (flag_flash){
+      flash_time =  map_flash_info[flash_id]->get_time();
+    }
+    //    std::cout << flash_id << " " << flag << std::endl; 
     
     auto it = map_flash_tpc_pair_neutrino_id.find(std::make_pair(flash_id, tpc_cluster_id));
     if (it != map_flash_tpc_pair_neutrino_id.end()){
