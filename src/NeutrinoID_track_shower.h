@@ -1048,12 +1048,14 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
       }
     }
   }else if (n_good_tracks == 0 && (n_tracks == 2 && length_tracks <= 35*units::cm) ){
-    // change score ...
-     auto pair_vertices = find_vertices(maximal_length_track);
-
-     if (map_vertex_segments[pair_vertices.first].size() < map_vertex_segments[pair_vertices.second].size()){
-       
-       TVector3 dir = maximal_length_track->cal_dir_3vector(pair_vertices.second->get_fit_pt(), 15*units::cm);
+    //    std::cout << temp_cluster->get_cluster_id() << " " << maximal_length_track << " " << n_tracks << " " << length_tracks << std::endl;
+    if (maximal_length_track !=0){
+      // change score ...
+      auto pair_vertices = find_vertices(maximal_length_track);
+      
+      if (map_vertex_segments[pair_vertices.first].size() < map_vertex_segments[pair_vertices.second].size()){
+	
+	TVector3 dir = maximal_length_track->cal_dir_3vector(pair_vertices.second->get_fit_pt(), 15*units::cm);
 	TVector3 beam_dir(0,0,1);
 	if (beam_dir.Angle(dir)/3.1415926*180. > 100) {
 	  n_tracks --;
@@ -1062,19 +1064,19 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
 	  length_showers += maximal_length;
 	}
 	//std::cout << beam_dir.Angle(dir)/3.1415926*180.  << std::endl;
-
-	
-     }else if ( map_vertex_segments[pair_vertices.first].size() > map_vertex_segments[pair_vertices.second].size()){
-       TVector3 dir = maximal_length_track->cal_dir_3vector(pair_vertices.first->get_fit_pt(), 15*units::cm);
-       TVector3 beam_dir(0,0,1);
-       if (beam_dir.Angle(dir)/3.1415926*180. > 90) {
-	 n_tracks --;
-	 length_tracks -= maximal_length;
-	 n_showers ++;
-	 length_showers += maximal_length;
-       }
-       //       std::cout << beam_dir.Angle(dir)/3.1415926*180. << " " << maximal_length << " " << pair_vertices.second->get_fit_pt() << " " << pair_vertices.first->get_fit_pt() << std::endl;
-     }
+      	
+      }else if ( map_vertex_segments[pair_vertices.first].size() > map_vertex_segments[pair_vertices.second].size()){
+	TVector3 dir = maximal_length_track->cal_dir_3vector(pair_vertices.first->get_fit_pt(), 15*units::cm);
+	TVector3 beam_dir(0,0,1);
+	if (beam_dir.Angle(dir)/3.1415926*180. > 90) {
+	  n_tracks --;
+	  length_tracks -= maximal_length;
+	  n_showers ++;
+	  length_showers += maximal_length;
+	}
+	//       std::cout << beam_dir.Angle(dir)/3.1415926*180. << " " << maximal_length << " " << pair_vertices.second->get_fit_pt() << " " << pair_vertices.first->get_fit_pt() << std::endl;
+      }
+    }
      
      
   }
