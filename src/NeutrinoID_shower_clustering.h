@@ -1328,7 +1328,8 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_main_cluster(){
 	if (map_segment_in_shower.find(seg1) != map_segment_in_shower.end()) continue;
 	double min_dis = 1e9;
 	WCPPID::WCShower *min_shower = 0;
-	for (size_t i=0; i!= showers.size();i++){ 
+	for (size_t i=0; i!= showers.size();i++){
+	  if (showers.at(i)->get_start_segment()->get_particle_type()==13) continue;
 	  if (seg1->get_length() > 0.75 * map_shower_length[showers.at(i)] ) continue;
 	  double dis = showers.at(i)->get_closest_dis(seg1);
 	  if (dis < min_dis){
