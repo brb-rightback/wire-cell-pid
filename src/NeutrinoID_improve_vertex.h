@@ -128,7 +128,14 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
   flag_update_fit = false;
   if (flag_search_vertex_activity){
 
-   
+    // search for vertex activities ...
+    if (!flag_found_vertex_activities)
+      if ( examine_structure_4(main_vertex, temp_cluster, flag_final_vertex)){
+	flag_found_vertex_activities = true;
+	if (map_vertex_segments[main_vertex].size()==3) refit_vertices.push_back(main_vertex);
+	flag_update_fit = true;
+      }
+    
       
     for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end();it++){
       WCPPID::ProtoVertex *vtx = it->first;
@@ -148,6 +155,10 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
       if (vtx == main_vertex && flag_found_vertex_activities) continue;
       if (flag_skip_two_legs && it->second.size()<=2) continue;
 
+
+      
+
+      
       double search_range = 1.5*units::cm;
       if (it->second.size()==1) search_range = 3.0*units::cm;
       
@@ -176,10 +187,11 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
 	if (flag_update) 	flag_update_fit = true;
       }
       if (flag_update_fit)     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
-      // eliminate the short tracks ...
-      if (eliminate_short_vertex_activities(temp_cluster, existing_segments)) temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+      
+      
     }
-
+    // eliminate the short tracks ...
+    if (eliminate_short_vertex_activities(temp_cluster, existing_segments)) temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
 
     
     for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
@@ -390,7 +402,7 @@ bool WCPPID::NeutrinoID::eliminate_short_vertex_activities(WCPPID::PR3DCluster *
 	  }
 	}
 
-      if (!flag_continue && existing_segments.find(sg) == existing_segments.end() && length > 0.9*units::cm){
+      if (!flag_continue && existing_segments.find(sg) == existing_segments.end() && length > 0.45*units::cm ){
 	int n_good = 0;
 	PointVector& pts = sg->get_point_vec();
 	for (size_t i=0; i!= pts.size(); i++){
@@ -402,8 +414,8 @@ bool WCPPID::NeutrinoID::eliminate_short_vertex_activities(WCPPID::PR3DCluster *
 	    if (std::get<2>(tuple_results) < dis_w) dis_w = std::get<2>(tuple_results);
 	    
 	  }
-	  //	  std::cout << i << " " << dis_u/units::cm << " " << dis_v/units::cm << " " << dis_w/units::cm << std::endl;
-	  if (dis_u > 0.45*units::cm || dis_v > 0.45*units::cm || dis_w > 0.45*units::cm) n_good ++;
+	  // std::cout << i << " " << dis_u/units::cm << " " << dis_v/units::cm << " " << dis_w/units::cm << " " << length/units::cm << std::endl;
+	  if ((dis_u > 0.45*units::cm || dis_v > 0.45*units::cm || dis_w > 0.45*units::cm) ) n_good ++;
 	}
 	if (n_good == 0){
 	  to_be_removed_segments.insert(sg);

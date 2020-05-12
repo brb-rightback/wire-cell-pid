@@ -292,31 +292,31 @@ bool WCPPID::NeutrinoID::examine_structure_4(WCPPID::ProtoVertex* vertex, WCPPID
 	  if (std::get<2>(results_2d) < min_dis_w) min_dis_w = std::get<2>(results_2d);
 	}
 
-	//	std::cout << " " << candidate_wcps.at(i).index_u << " " << candidate_wcps.at(i).index_v << " " << candidate_wcps.at(i).index_w << " " << dis/units::cm << " " << min_dis/units::cm << " " << min_dis_u/units::cm << " " <<  min_dis_v/units::cm << " " <<  min_dis_w/units::cm << std::endl;
+
 	
 	if (min_dis > 0.9*units::cm   && min_dis_u + min_dis_v + min_dis_w > 1.8*units::cm &&
 	    (min_dis_u > 0.8*units::cm && min_dis_v > 0.8*units::cm
 	     || min_dis_u > 0.8*units::cm && min_dis_w > 0.8*units::cm
 	     || min_dis_v > 0.8*units::cm && min_dis_w > 0.8*units::cm
 	     )){
-	  double step_size = 0.6*units::cm;
+	  double step_size = 0.3*units::cm;
 	  Point start_p = vtx->get_fit_pt();
 	  Point end_p = test_p;
 	  int ncount = std::round(sqrt(pow(start_p.x-end_p.x,2)+pow(start_p.y-end_p.y,2)+pow(start_p.z-end_p.z,2))/step_size);
 	  bool flag_pass = true;
 	  int n_bad = 0;
-	  for (int j=1;j<ncount+1;j++){
+	  for (int j=1;j<ncount;j++){
 	    Point test_p1;
 	    test_p1.x = start_p.x + (end_p.x - start_p.x)/ncount*j;
 	    test_p1.y = start_p.y + (end_p.y - start_p.y)/ncount*j;
 	    test_p1.z = start_p.z + (end_p.z - start_p.z)/ncount*j;
-	    if (!ct_point_cloud->is_good_point(test_p1, 0.2*units::cm, 0, 0)) n_bad ++;
+	    if (!ct_point_cloud->is_good_point(test_p1, 0.3*units::cm, 0, 0)) n_bad ++;
 	    if (n_bad>0) {
 	      flag_pass = false;
-	      break;
 	    }
 	  }
 
+	  //	  std::cout << " " << candidate_wcps.at(i).index_u << " " << candidate_wcps.at(i).index_v << " " << candidate_wcps.at(i).index_w << " " << dis/units::cm << " " << min_dis/units::cm << " " << min_dis_u/units::cm << " " <<  min_dis_v/units::cm << " " <<  min_dis_w/units::cm << " " << flag_pass << " " << n_bad << " " << ncount << std::endl;
 	  //	  std::cout << dis/units::cm << " " << min_dis/units::cm << " " << min_dis_u/units::cm << " " <<  min_dis_v/units::cm << " " <<  min_dis_w/units::cm << std::endl;
 	  
 	  if (flag_pass){
