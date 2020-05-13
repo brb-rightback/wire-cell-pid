@@ -1113,7 +1113,7 @@ std::vector<double> WCPPID::ProtoSegment::do_track_comp(std::vector<double>& L ,
   TGraph *g_proton = mp.get_proton_dq_dx();
   TGraph *g_electron = mp.get_electron_dq_dx();
   
-  double end_L = L.back() + 0.15*units::cm;
+  double end_L = L.back() + 0.15*units::cm-offset_length;
   
   
   int ncount = 0;
@@ -1188,7 +1188,7 @@ bool WCPPID::ProtoSegment::eval_ks_ratio(double ks1, double ks2, double ratio1, 
  }
 
 
-bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range , double offset_length ){
+bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range , double offset_length, bool flag_force ){
   std::vector<double> rL(L.size(),0);
   std::vector<double> rdQ_dx(L.size(),0);
   // get reverse  vectors ...
@@ -1232,8 +1232,8 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
     backward_particle_type = 11;
   }
 
-  //  std::cout << id << " " << get_length()/units::cm << " " << result_forward.at(0) << " m: " << result_forward.at(1)  << " p: " << result_forward.at(2) << " e: " << result_forward.at(3)  << std::endl;
-  // std::cout << id << " " << get_length()/units::cm << " " << result_backward.at(0) << " m: " << result_backward.at(1)  << " p: " << result_backward.at(2)  << " e: " << result_backward.at(3) <<  std::endl;
+  // std::cout << id << " " << get_length()/units::cm << " " << flag_forward << " " << result_forward.at(0) << " m: " << result_forward.at(1)  << " p: " << result_forward.at(2) << " e: " << result_forward.at(3)  << std::endl;
+  // std::cout << id << " " << get_length()/units::cm << " " << flag_backward << " " << result_backward.at(0) << " m: " << result_backward.at(1)  << " p: " << result_backward.at(2)  << " e: " << result_backward.at(3) <<  std::endl;
 
   
   if (flag_forward == 1 && flag_backward == 0){
@@ -1257,15 +1257,18 @@ bool WCPPID::ProtoSegment::do_track_pid(std::vector<double>& L , std::vector<dou
       particle_score = min_backward_val;
     }
     return true;
+  }else if (flag_forward ==0 && flag_backward == 0 && flag_force){
+    if (min_forward_val < min_backward_val){
+      particle_score = min_forward_val;
+      particle_type = forward_particle_type;
+      flag_dir = 1;
+    }else{
+      particle_score = min_backward_val;
+      particle_type = backward_particle_type;
+      flag_dir = -1;
+    }
+    return true;
   }
-  // else if (flag_forward ==0 && flag_backward == 0){
-  //   if (forward_particle_type == backward_particle_type){
-  //     particle_score = std::min(min_forward_val, min_backward_val);
-  //     particle_type = forward_particle_type;
-  //     flag_dir = 0;
-  //     return false;
-  //   }
-  // }
 
   // reset before return ...
   flag_dir = 0;
@@ -1452,6 +1455,13 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
     npoints -=1;
     start_n1 = 1;
   }
+  // if (start_n == 1 && end_n == 1){
+  //   end_n1 = npoints - 2;
+  //   npoints -= 1;
+    
+  //   npoints -=1;
+  //   start_n1 = 1;
+  // }
   
   // if (id == 1) std::cout << id << " " << npoints << " " << end_n1 << " " << start_n1 << std::endl;
   
@@ -1469,11 +1479,17 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
   }
     
   if (npoints >=2){ // reasonably long ...
-    // can use the dQ/dx to do PID and direction ...
-    bool tmp_flag_pid = do_track_pid(L, dQ_dx);
-    if (!tmp_flag_pid) tmp_flag_pid =do_track_pid(L, dQ_dx, 15*units::cm);
-    if (!tmp_flag_pid) tmp_flag_pid = do_track_pid(L, dQ_dx, 35*units::cm, 3*units::cm);
-    if (!tmp_flag_pid) tmp_flag_pid =do_track_pid(L, dQ_dx, 15*units::cm, 3*units::cm);
+     if (start_n == 1 && end_n == 1 &&  npoints >=15){
+      // can use the dQ/dx to do PID and direction ...
+       bool tmp_flag_pid = do_track_pid(L, dQ_dx, 35*units::cm, 1*units::cm, true);
+       if (!tmp_flag_pid) tmp_flag_pid =do_track_pid(L, dQ_dx, 15*units::cm, 1*units::cm, true);
+     }else{
+       // can use the dQ/dx to do PID and direction ...
+       bool tmp_flag_pid = do_track_pid(L, dQ_dx);
+       if (!tmp_flag_pid) tmp_flag_pid =do_track_pid(L, dQ_dx, 15*units::cm);
+       // if (!tmp_flag_pid) tmp_flag_pid = do_track_pid(L, dQ_dx, 35*units::cm, 3*units::cm);
+       // if (!tmp_flag_pid) tmp_flag_pid =do_track_pid(L, dQ_dx, 15*units::cm, 3*units::cm);
+     }
   }
 
  
@@ -1507,6 +1523,7 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
   }
 
   
+  
   // vertex activities ...
   if (length < 1.5*units::cm && (start_n == 1 || end_n == 1)){
     if (start_n ==1 && end_n > 2){
@@ -1533,8 +1550,7 @@ void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag
     particle_score = 200;
     flag_dir = 0;
   }
-  
-  //
+ 
   
   if (particle_type!=0){
     TPCParams& mp = Singleton<TPCParams>::Instance();

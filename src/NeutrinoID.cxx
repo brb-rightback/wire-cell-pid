@@ -47,7 +47,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
 {
   bool flag_other_clusters = true;
   bool flag_main_cluster = true;
-
+  bool flag_tagger = true;
   // hack the main cluster
   // for (auto it = other_clusters.begin(); it != other_clusters.end(); it++){
   //   WCPPID::PR3DCluster *cluster = *it;    
@@ -165,10 +165,14 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     determine_overall_main_vertex();  
   
   if (flag_main_cluster && main_vertex !=0){
+
+    
     
     // fit the vertex in 3D 
     improve_vertex(main_cluster, true, true);
+
     
+	
     clustering_points(main_cluster);
     examine_direction(main_vertex);
     
@@ -190,10 +194,13 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     
     // cluster E&M ...
     shower_clustering_with_nv();
-
-
-   
+    
   }
+
+  if (flag_tagger){
+    bool flag_cosmic = cosmic_tagger();
+  }
+
   
   // std::cout << "Final Information: " << std::endl;
   // print_segs_info(main_vertex);

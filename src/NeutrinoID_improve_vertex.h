@@ -115,9 +115,27 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
   if (flag_update_fit){
     // do the overall fit again
     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
-    
-    
+
+    bool flag_keep_main_vertex = false;
+    Point main_vtx_pt;
+    if (main_vertex != 0){
+      main_vtx_pt = main_vertex->get_fit_pt();
+      flag_keep_main_vertex = true;
+    }
     examine_vertices(temp_cluster);
+
+    if (flag_keep_main_vertex)
+      if (map_vertex_segments.find(main_vertex)==map_vertex_segments.end()){
+	double min_dis = 1e9;
+	for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
+	  if (it->first->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
+	  double dis = sqrt(pow(it->first->get_fit_pt().x - main_vtx_pt.x,2) + pow(it->first->get_fit_pt().y - main_vtx_pt.y,2) + pow(it->first->get_fit_pt().z - main_vtx_pt.z,2));
+	  if (dis < min_dis){
+	    min_dis = dis;
+	    main_vertex = it->first;
+	  }
+	}
+      }
   }
 
 

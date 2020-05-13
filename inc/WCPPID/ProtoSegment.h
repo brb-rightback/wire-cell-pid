@@ -109,7 +109,7 @@ namespace WCPPID{
 
     
     void determine_dir_track(int start_n, int end_n, bool flag_print = false);
-    bool do_track_pid(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range = 35*units::cm, double offset_length = 0*units::cm);
+    bool do_track_pid(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range = 35*units::cm, double offset_length = 0*units::cm, bool flag_force = false);
     std::vector<double> do_track_comp(std::vector<double>& L , std::vector<double>& dQ_dx, double compare_range = 35*units::cm, double offset_length = 0*units::cm);
     bool eval_ks_ratio(double ks1, double ks2, double ratio1, double ratio2);
     void cal_4mom();

@@ -320,7 +320,7 @@ namespace WCPPID{
     WCPPID::ProtoVertex* get_main_vertex(){return main_vertex;};
     int get_neutrino_type(){return neutrino_type;};
 
-    void cosmic_tagger();
+    bool cosmic_tagger();
     
     
   protected:
