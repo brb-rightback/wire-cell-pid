@@ -321,7 +321,8 @@ namespace WCPPID{
     int get_neutrino_type(){return neutrino_type;};
 
     bool cosmic_tagger();
-    
+    bool numu_tagger();
+    bool nue_tagger();
     
   protected:
     int neutrino_type;

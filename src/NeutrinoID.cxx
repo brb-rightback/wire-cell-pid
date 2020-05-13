@@ -199,6 +199,10 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
 
   if (flag_tagger){
     bool flag_cosmic = cosmic_tagger();
+    if (!flag_cosmic){
+      bool flag_long_muon = numu_tagger();
+      if (!flag_long_muon) nue_tagger();
+    }
   }
 
   
