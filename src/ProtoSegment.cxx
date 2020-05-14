@@ -449,7 +449,7 @@ bool WCPPID::ProtoSegment::is_shower_topology(bool tmp_val){
     flag_shower_topology = true;
       
   }
-  // std::cout << id << " " << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << std::endl;
+  //  std::cout << cluster_id << " " << id << " " << max_spread/units::cm << " " << large_spread_length/units::cm <<  " " << total_effective_length/units::cm << std::endl;
   
   
   if (flag_shower_topology){

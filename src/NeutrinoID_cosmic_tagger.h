@@ -79,7 +79,7 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
        
       if (it->first == main_vertex->get_cluster_id() &&
 	  (map_cluster_id_shower_points[it->first] * 1./it->second.size() > 0.7 && map_cluster_id_length[it->first] < 45 *units::cm
-	   ||   map_cluster_id_shower_points[it->first] * 1./it->second.size() <0.3 && map_cluster_id_length[it->first] > 40 *units::cm )){
+	   ||   map_cluster_id_shower_points[it->first] * 1./it->second.size() <0.7 && map_cluster_id_length[it->first] > 40 *units::cm )){
 	Point vector(0,0,0);
 	for (size_t i=0; i!= it->second.size();i++){
 	  vector.x += it->second.at(i).x - main_vertex->get_fit_pt().x;
@@ -87,9 +87,10 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	  vector.z += it->second.at(i).z - main_vertex->get_fit_pt().z;
 	}
 	TVector3 dir(vector.x, vector.y, vector.z);
-	angle_cosmic = 180 - dir.Angle(dir_vertical)/3.1415926*180.;
 	angle_beam = dir.Angle(dir_beam)/3.1415926*180.;
 	if (angle_beam > 90) angle_beam = 180 - angle_beam;
+
+	angle_cosmic = 180 - dir.Angle(dir_vertical)/3.1415926*180.;
       }else{
 	main_cluster->Calc_PCA(it->second);
 	auto vector = main_cluster->get_PCA_axis(0);
@@ -120,7 +121,7 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	  if (max_length < map_cluster_id_length[it->first]) max_length = map_cluster_id_length[it->first];
 	}
       }else{
-	if (angle_cosmic < 20){
+	if (angle_cosmic < 20 || angle_cosmic < 30 && highest_y > 100*units::cm && it->first == main_vertex->get_cluster_id()){
 	  acc_cosmic_length += map_cluster_id_length[it->first];
 	  num_cosmic ++;
 	  if (max_length < map_cluster_id_length[it->first]) max_length = map_cluster_id_length[it->first];
@@ -129,14 +130,16 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
       acc_total_length += map_cluster_id_length[it->first];
     }
     
-
+    //    std::cout << num_cosmic << " Xin " << acc_cosmic_length/units::cm << " " << acc_small_length/units::cm << " " << acc_total_length/units::cm << " " << main_vertex->get_fit_pt() << " " << showers.size() << " " << highest_y/units::cm << " " << max_length/units::cm << " " << flag_main_cluster << std::endl;   
     
     if ( (num_cosmic >2 && acc_cosmic_length + acc_small_length  > 0.55 * (acc_total_length)||
-	  num_cosmic >=2 && acc_cosmic_length + acc_small_length  > 0.7 * (acc_total_length)) && main_vertex->get_fit_pt().y > 0 && flag_main_cluster && highest_y > 80*units::cm
+	  num_cosmic >=2 && acc_cosmic_length + acc_small_length  > 0.7 * (acc_total_length) ||
+	  num_cosmic ==1 && acc_cosmic_length + acc_small_length  > 0.625 * (acc_total_length) && highest_y > 102*units::cm
+	   ) && main_vertex->get_fit_pt().y > 0 && flag_main_cluster && highest_y > 80*units::cm 
 	 ) {
       neutrino_type |= 1UL << 1;
       //      std::cout << "A: " << true << std::endl;
-      // std::cout << num_cosmic << " Xin " << acc_cosmic_length/units::cm << " " << acc_small_length/units::cm << " " << acc_total_length/units::cm << " " << main_vertex->get_fit_pt() << " " << showers.size() << " " << highest_y/units::cm << " " << max_length/units::cm << std::endl;   
+      
       return true;
     }
   } // else

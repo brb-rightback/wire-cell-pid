@@ -238,6 +238,13 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	    WCPointCloud<double>::WCPoint wp1 = cloud.pts.at(std::get<0>(index_index_dis[j][k]));
 	    WCPointCloud<double>::WCPoint wp2 = cloud.pts.at(std::get<1>(index_index_dis[j][k]));
 	    double length = sqrt(pow(wp1.x-wp2.x,2) + pow(wp1.y-wp2.y,2) + pow(wp1.z-wp2.z,2));
+
+	    /* bool flag_print = false; */
+	    /* if (wp1.z <776*units::cm && wp1.z > 772*units::cm && wp2.z <776*units::cm && wp2.z > 772*units::cm && wp1.x < 32*units::cm && wp2.x > 62*units::cm){ */
+	    /*   std::cout << wp1.x/units::cm << " "<< wp2.x/units::cm << " " << length/units::cm << " " << j << " " << k << std::endl; */
+	    /*   // flag_print = true; */
+	    /* } */
+	    
 	    if (length > 3*units::cm){
 	      std::set<int> connections;
 	      
@@ -246,9 +253,12 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 		Point test_p(wp1.x + (wp2.x-wp1.x)*qx/ncount, wp1.y + (wp2.y-wp1.y)*qx/ncount, wp1.z + (wp2.z-wp1.z)*qx/ncount);
 		for (int qx1 = 0; qx1!=num; qx1++){
 		  if (qx1 == j || qx1 == k) continue;
+
+		  //		  if (flag_print) std::cout << pt_clouds.at(qx1)->get_closest_dis(test_p)/units::cm << std::endl;
+		  
 		  if (pt_clouds.at(qx1)->get_closest_dis(test_p)<0.6*units::cm)
 		    connections.insert(qx1);
-		  //    std::cout << pt_clouds.at(qx1)->get_closest_dis(test_p)/units::cm << std::endl;
+		  //
 		}
 	      }
 	      if (connections.size()!=0)  map_add_connections[std::make_pair(j,k)] = connections;
@@ -258,24 +268,35 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	} // loop over k
       } // loop over j
 
-      for (auto it = map_add_connections.begin(); it!= map_add_connections.end(); it++){
-	int j = it->first.first;
-	int k = it->first.second;
-	bool flag_disconnect = true;
-
-	for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
-	  int qx = *it1;
-	  if ( (std::get<0>(index_index_dis[j][qx])!=-1 || std::get<0>(index_index_dis_dir1[j][qx])!=-1 || std::get<0>(index_index_dis_dir2[j][qx])!=-1) && 
-	       (std::get<0>(index_index_dis[k][qx])!=-1 || std::get<0>(index_index_dis_dir1[k][qx])!=-1 || std::get<0>(index_index_dis_dir2[k][qx])!=-1)
-	       ){
-	    flag_disconnect = false;
-	    break;
+      bool flag_continue = true;
+      while(flag_continue){
+	flag_continue = false;
+	std::set<std::pair<int, int> > used_pairs;
+	for (auto it = map_add_connections.begin(); it!= map_add_connections.end(); it++){
+	  int j = it->first.first;
+	  int k = it->first.second;
+	  bool flag_disconnect = true;
+	  
+	  for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+	    int qx = *it1;
+	    if ( (std::get<0>(index_index_dis[j][qx])!=-1 || std::get<0>(index_index_dis_dir1[j][qx])!=-1 || std::get<0>(index_index_dis_dir2[j][qx])!=-1) && 
+		 (std::get<0>(index_index_dis[k][qx])!=-1 || std::get<0>(index_index_dis_dir1[k][qx])!=-1 || std::get<0>(index_index_dis_dir2[k][qx])!=-1)
+		 ){
+	      flag_disconnect = false;
+	      break;
+	    }
+	  }
+	  //	if (j==19 || k== 19)
+	  // std::cout << j << " " << k << " " << flag_disconnect << std::endl;
+	  if (flag_disconnect){
+	    flag_continue = true;
+	    index_index_dis[j][k] = std::make_tuple(-1,-1,1e9);
+	    index_index_dis[k][j] = index_index_dis[j][k];
+	    used_pairs.insert(it->first);
 	  }
 	}
-	
-	if (flag_disconnect){
-	  index_index_dis[j][k] = std::make_tuple(-1,-1,1e9);
-	  index_index_dis[k][j] = index_index_dis[j][k];
+	for (auto it = used_pairs.begin(); it!= used_pairs.end(); it++){
+	  map_add_connections.erase(*it);
 	}
       }
     }
@@ -310,24 +331,34 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	} // loop over k
       } // loop over j
 
-      for (auto it = map_add_connections.begin(); it!= map_add_connections.end(); it++){
-	int j = it->first.first;
-	int k = it->first.second;
-	bool flag_disconnect = true;
-
-	for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
-	  int qx = *it1;
-	  if ( (std::get<0>(index_index_dis[j][qx])!=-1 || std::get<0>(index_index_dis_dir1[j][qx])!=-1 || std::get<0>(index_index_dis_dir2[j][qx])!=-1) && 
-	       (std::get<0>(index_index_dis[k][qx])!=-1 || std::get<0>(index_index_dis_dir1[k][qx])!=-1 || std::get<0>(index_index_dis_dir2[k][qx])!=-1)
-	       ){
-	    flag_disconnect = false;
-	    break;
+      bool flag_continue = true;
+      while(flag_continue){
+	flag_continue = false;
+	std::set<std::pair<int, int> > used_pairs;
+	for (auto it = map_add_connections.begin(); it!= map_add_connections.end(); it++){
+	  int j = it->first.first;
+	  int k = it->first.second;
+	  bool flag_disconnect = true;
+	  
+	  for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+	    int qx = *it1;
+	    if ( (std::get<0>(index_index_dis[j][qx])!=-1 || std::get<0>(index_index_dis_dir1[j][qx])!=-1 || std::get<0>(index_index_dis_dir2[j][qx])!=-1) && 
+		 (std::get<0>(index_index_dis[k][qx])!=-1 || std::get<0>(index_index_dis_dir1[k][qx])!=-1 || std::get<0>(index_index_dis_dir2[k][qx])!=-1)
+		 ){
+	      flag_disconnect = false;
+	      break;
+	    }
+	  }
+	  
+	  if (flag_disconnect){
+	    flag_continue = true;
+	    index_index_dis_dir1[j][k] = std::make_tuple(-1,-1,1e9);
+	    index_index_dis_dir1[k][j] = index_index_dis_dir1[j][k];
+	    used_pairs.insert(it->first);
 	  }
 	}
-	
-	if (flag_disconnect){
-	  index_index_dis_dir1[j][k] = std::make_tuple(-1,-1,1e9);
-	  index_index_dis_dir1[k][j] = index_index_dis_dir1[j][k];
+	for (auto it = used_pairs.begin(); it!= used_pairs.end(); it++){
+	  map_add_connections.erase(*it);
 	}
       }
     }
@@ -361,26 +392,36 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	} // loop over k
       } // loop over j
 
-      for (auto it = map_add_connections.begin(); it!= map_add_connections.end(); it++){
-	int j = it->first.first;
-	int k = it->first.second;
-	bool flag_disconnect = true;
-
-	for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
-	  int qx = *it1;
-	  if ( (std::get<0>(index_index_dis[j][qx])!=-1 || std::get<0>(index_index_dis_dir1[j][qx])!=-1 || std::get<0>(index_index_dis_dir2[j][qx])!=-1) && 
-	       (std::get<0>(index_index_dis[k][qx])!=-1 || std::get<0>(index_index_dis_dir1[k][qx])!=-1 || std::get<0>(index_index_dis_dir2[k][qx])!=-1)
-	       ){
-	    flag_disconnect = false;
-	    break;
+      bool flag_continue = true;
+      while(flag_continue){
+	flag_continue = false;
+	std::set<std::pair<int, int> > used_pairs;
+	for (auto it = map_add_connections.begin(); it!= map_add_connections.end(); it++){
+	  int j = it->first.first;
+	  int k = it->first.second;
+	  bool flag_disconnect = true;
+	  
+	  for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+	    int qx = *it1;
+	    if ( (std::get<0>(index_index_dis[j][qx])!=-1 || std::get<0>(index_index_dis_dir1[j][qx])!=-1 || std::get<0>(index_index_dis_dir2[j][qx])!=-1) && 
+		 (std::get<0>(index_index_dis[k][qx])!=-1 || std::get<0>(index_index_dis_dir1[k][qx])!=-1 || std::get<0>(index_index_dis_dir2[k][qx])!=-1)
+		 ){
+	      flag_disconnect = false;
+	      break;
+	    }
+	  }
+	  
+	  if (flag_disconnect){
+	    index_index_dis_dir2[j][k] = std::make_tuple(-1,-1,1e9);
+	    index_index_dis_dir2[k][j] = index_index_dis_dir2[j][k];
 	  }
 	}
-	
-	if (flag_disconnect){
-	  index_index_dis_dir2[j][k] = std::make_tuple(-1,-1,1e9);
-	  index_index_dis_dir2[k][j] = index_index_dis_dir2[j][k];
+	for (auto it = used_pairs.begin(); it!= used_pairs.end(); it++){
+	  map_add_connections.erase(*it);
 	}
       }
+      
+      
     }
     
     
@@ -391,10 +432,12 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
       for (int k=j+1; k!=num; k++){
 	// adding edges ...
 	if (std::get<0>(index_index_dis[j][k])>=0){
+	  //	  if (j==19 || k==19) std::cout << j << " A " << k << " " << std::endl;
 	  auto edge = add_edge(std::get<0>(index_index_dis[j][k]),std::get<1>(index_index_dis[j][k]), WCPPID::EdgeProp(std::get<2>(index_index_dis[j][k])), *graph);
 	}
 
 	if (std::get<0>(index_index_dis_dir1[j][k])>=0){
+	  //if (j==19 || k==19) std::cout << j << " B " << k << std::endl;
 	  if (std::get<2>(index_index_dis_dir1[j][k])>5*units::cm){
 	    auto edge = add_edge(std::get<0>(index_index_dis_dir1[j][k]),std::get<1>(index_index_dis_dir1[j][k]), WCPPID::EdgeProp(std::get<2>(index_index_dis_dir1[j][k])*1.2), *graph);
 	  }else{
@@ -403,6 +446,7 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	}
 
 	if (std::get<0>(index_index_dis_dir2[j][k])>=0){
+	  //if (j==19 || k==19) std::cout << j << " C " << k << std::endl;
 	  if (std::get<2>(index_index_dis_dir2[j][k])>5*units::cm){
 	    auto edge = add_edge(std::get<0>(index_index_dis_dir2[j][k]),std::get<1>(index_index_dis_dir2[j][k]), WCPPID::EdgeProp(std::get<2>(index_index_dis_dir2[j][k])*1.2), *graph);
 	  }else{
