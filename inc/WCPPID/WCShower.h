@@ -51,6 +51,7 @@ namespace WCPPID{
     TVector3& get_init_dir(){return init_dir;};
 
     double get_total_length();
+    double get_total_track_length();
     
     int get_num_segments(){return  map_seg_vtxs.size();};
     void update_particle_type();

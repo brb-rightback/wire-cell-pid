@@ -74,12 +74,12 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
     int num_showers = 0;
     for (auto it = map_cluster_id_points.begin(); it != map_cluster_id_points.end(); it++){
       double angle_cosmic, angle_beam;
-
-
        
       if (it->first == main_vertex->get_cluster_id() &&
 	  (map_cluster_id_shower_points[it->first] * 1./it->second.size() > 0.7 && map_cluster_id_length[it->first] < 45 *units::cm
-	   ||   map_cluster_id_shower_points[it->first] * 1./it->second.size() <0.7 && map_cluster_id_length[it->first] > 40 *units::cm )){
+	   ||   map_cluster_id_shower_points[it->first] * 1./it->second.size() <0.7 && map_cluster_id_length[it->first] > 40 *units::cm )
+	  || map_cluster_id_length[it->first] > 60 *units::cm
+	  ){
 	Point vector(0,0,0);
 	for (size_t i=0; i!= it->second.size();i++){
 	  vector.x += it->second.at(i).x - main_vertex->get_fit_pt().x;
@@ -105,6 +105,8 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
       // main track is not cosmic like ...
       if ( it->first == main_vertex->get_cluster_id() && map_cluster_id_shower_points[it->first] * 1./it->second.size() <0.3 && map_cluster_id_length[it->first] > 20*units::cm && angle_cosmic > 40){
 	flag_main_cluster = false;
+      }else if (it->first == main_vertex->get_cluster_id() && map_cluster_id_length[it->first] > 80*units::cm && angle_cosmic > 25){
+	flag_main_cluster = false;
       }
       
       //      std::cout << angle_cosmic << " " << angle_beam << " " << map_cluster_id_length[it->first]/units::cm << " " << map_cluster_id_shower_points[it->first] * 1./it->second.size() <<  " " << map_cluster_id_high_point[it->first] << std::endl;
@@ -121,7 +123,7 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	  if (max_length < map_cluster_id_length[it->first]) max_length = map_cluster_id_length[it->first];
 	}
       }else{
-	if (angle_cosmic < 20 || angle_cosmic < 30 && highest_y > 100*units::cm && it->first == main_vertex->get_cluster_id()){
+	if (angle_cosmic < 20 || angle_cosmic < 30 && highest_y > 100*units::cm && it->first == main_vertex->get_cluster_id() ){
 	  acc_cosmic_length += map_cluster_id_length[it->first];
 	  num_cosmic ++;
 	  if (max_length < map_cluster_id_length[it->first]) max_length = map_cluster_id_length[it->first];
