@@ -323,6 +323,10 @@ namespace WCPPID{
     bool cosmic_tagger();
     bool numu_tagger();
     bool nue_tagger();
+    bool gap_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment* sg);
+    bool mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg);
+
+    
     
   protected:
     int neutrino_type;
