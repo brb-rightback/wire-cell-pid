@@ -324,7 +324,7 @@ namespace WCPPID{
     bool numu_tagger();
     bool nue_tagger();
     bool gap_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment* sg);
-    bool mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg);
+    int mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg);
     bool pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg);
     bool bad_reconstruction(WCPPID::WCShower* shower);
 
