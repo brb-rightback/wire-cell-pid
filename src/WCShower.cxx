@@ -68,6 +68,16 @@ double WCPPID::WCShower::get_total_track_length(){
   return total_length;
 }
 
+double WCPPID::WCShower::get_total_length(int tmp_cluster_id){
+  double total_length = 0;
+  for (auto it = map_seg_vtxs.begin(); it!= map_seg_vtxs.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() == tmp_cluster_id)
+      total_length += sg->get_length();
+  }
+  return total_length;
+}
+
 double WCPPID::WCShower::get_total_length(){
   double total_length = 0;
   for (auto it = map_seg_vtxs.begin(); it!= map_seg_vtxs.end(); it++){

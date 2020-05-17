@@ -321,10 +321,10 @@ namespace WCPPID{
     int get_neutrino_type(){return neutrino_type;};
 
     bool cosmic_tagger();
-    bool numu_tagger();
-    bool nue_tagger();
+    std::pair<bool, double> numu_tagger();
+    bool nue_tagger(double muon_kine_energy = 0);
     bool gap_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment* sg);
-    int mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg);
+    int mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower);
     bool pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg);
     bool bad_reconstruction(WCPPID::WCShower* shower);
 
