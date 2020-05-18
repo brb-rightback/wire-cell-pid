@@ -1029,10 +1029,10 @@ std::pair<int, int> WCPPID::NeutrinoID::fill_pi0_reco_tree(WCPPID::WCShower* sho
     
     rtree.mc_dir_weak[rtree.mc_Ntrack] = 0;
     
-    rtree.mc_startMomentum[rtree.mc_Ntrack][0] = sqrt(pow(map_pio_id_mass[map_shower_pio_id[shower]]+135*units::MeV,2) - pow(135*units::MeV,2))/units::GeV;
+    rtree.mc_startMomentum[rtree.mc_Ntrack][0] = sqrt(pow(map_pio_id_mass[map_shower_pio_id[shower]].first+135*units::MeV,2) - pow(135*units::MeV,2))/units::GeV;
     rtree.mc_startMomentum[rtree.mc_Ntrack][1] = 0;
     rtree.mc_startMomentum[rtree.mc_Ntrack][2] = 0;
-    rtree.mc_startMomentum[rtree.mc_Ntrack][3] = (map_pio_id_mass[map_shower_pio_id[shower]]+135*units::MeV)/units::GeV;
+    rtree.mc_startMomentum[rtree.mc_Ntrack][3] = (map_pio_id_mass[map_shower_pio_id[shower]].first+135*units::MeV)/units::GeV;
     
     rtree.mc_mother[rtree.mc_Ntrack] = 0;
     rtree.mc_Ntrack++;

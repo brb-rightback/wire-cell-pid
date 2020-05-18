@@ -292,7 +292,7 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
       int pio_id = acc_segment_id; acc_segment_id ++;
       map_shower_pio_id[shower_1] = pio_id;
       map_shower_pio_id[shower_2] = pio_id;
-      map_pio_id_mass[pio_id] = mass_save;
+      map_pio_id_mass[pio_id] = std::make_pair(mass_save,2);
       map_pio_id_showers[pio_id].push_back(shower_1);
       map_pio_id_showers[pio_id].push_back(shower_2);
 
@@ -456,7 +456,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
       int pio_id = acc_segment_id; acc_segment_id ++;
       map_shower_pio_id[shower_1] = pio_id;
       map_shower_pio_id[shower_2] = pio_id;
-      map_pio_id_mass[pio_id] = mass_save;
+      map_pio_id_mass[pio_id] = std::make_pair(mass_save,1);
       map_pio_id_showers[pio_id].push_back(shower_1);
       map_pio_id_showers[pio_id].push_back(shower_2);
 

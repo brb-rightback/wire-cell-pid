@@ -66,6 +66,7 @@ namespace WCPPID{
     std::pair<std::set<WCPPID::ProtoSegment*>, std::set<WCPPID::ProtoVertex*> > get_connected_pieces(WCPPID::ProtoSegment* seg);
     
     Map_Proto_Segment_Vertices& get_map_seg_vtxs(){return map_seg_vtxs; };
+    Map_Proto_Vertex_Segments& get_map_vtx_segs(){return map_vtx_segs; };
   protected:
     int particle_type;
     bool flag_shower;
