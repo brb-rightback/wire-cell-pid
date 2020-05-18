@@ -200,6 +200,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   if (flag_tagger){
     bool flag_cosmic = cosmic_tagger();
     if (!flag_cosmic){
+      examine_showers();
       auto results = numu_tagger();
       bool flag_long_muon = results.first;
       if (!flag_long_muon) {

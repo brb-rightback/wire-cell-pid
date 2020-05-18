@@ -323,6 +323,7 @@ namespace WCPPID{
     bool cosmic_tagger();
     std::pair<bool, double> numu_tagger();
     bool nue_tagger(double muon_kine_energy = 0);
+    void examine_showers();
     bool gap_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment* sg);
     int mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower);
     bool pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower);
