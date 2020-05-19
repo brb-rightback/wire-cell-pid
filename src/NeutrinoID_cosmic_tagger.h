@@ -19,6 +19,218 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
     return true;
   }
 
+
+  // single muon, nothing there ...
+  {
+    double max_length = 0;
+    WCPPID::ProtoSegment *muon = 0;
+    Int_t valid_tracks = 0;
+    for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end() ;it++){
+      WCPPID::ProtoSegment *sg = *it;
+      double length = sg->get_length();
+      double medium_dQ_dx = sg->get_medium_dQ_dx();
+      double dQ_dx_cut = 0.8866+0.9533 *pow(18*units::cm/length, 0.4234);
+      
+      if (sg->get_particle_type() == 13 || (!sg->get_flag_shower()) && medium_dQ_dx < dQ_dx_cut * 1.05 * 43e3/units::cm){
+	if (length > max_length){
+	  max_length = length;
+	  muon = sg;
+	}
+      }
+      //  std::cout << "Xin_3: " << length/units::cm << " " << map_vertex_segments[main_vertex].size() << " " << sg->get_particle_type() << " " << sg->is_dir_weak() << std::endl;
+      if (length > 2.5*units::cm || length > 1.2*units::cm && sg->get_particle_type()==2212 || (!sg->is_dir_weak())) {
+	//	std::cout << "Xin_3: " << sg->get_medium_dQ_dx()/(43e3/units::cm) << " " << length/units::cm << " " << sg->get_particle_type() << " " << sg->is_dir_weak() << std::endl;
+	if (length < 15*units::cm && sg->get_medium_dQ_dx()/(43e3/units::cm)  < 0.75 && sg->is_dir_weak()) continue;
+	valid_tracks ++;
+      }
+    }
+
+    int connected_showers = 0;
+    // high energy showers ...
+    for (auto it = map_vertex_to_shower[main_vertex].begin(); it != map_vertex_to_shower[main_vertex].end(); it++){
+    //    for (auto it = showers.begin(); it != showers.end(); it++){
+      WCPPID::WCShower *shower = *it;
+      double Eshower = 0;
+      if (shower->get_kine_best() != 0){ 
+	Eshower = shower->get_kine_best();
+      }else{
+	Eshower = shower->get_kine_charge();
+      }
+      if (shower->get_start_vertex().second >2) continue;
+      if (Eshower > 150*units::MeV && (!bad_reconstruction(shower)) )
+	valid_tracks ++;
+      if (shower->get_start_vertex().second == 1 && Eshower > 70*units::MeV && (!bad_reconstruction(shower)) &&
+	  shower->get_start_segment()->get_particle_type()!=13)
+	connected_showers ++;
+      //      std::cout << Eshower/units::MeV << " " << bad_reconstruction(shower) << " " << shower->get_start_vertex().second << " " << shower->get_start_segment()->get_cluster_id() << std::endl;
+    }
+    //    std::cout << " " << map_vertex_to_shower[main_vertex].size() << std::endl;
+    
+    if (valid_tracks == 1 && muon != 0){
+      WCPPID::ProtoSegment *sg = muon;
+      WCPPID::ProtoVertex *other_vtx = find_other_vertex(sg, main_vertex);
+      Point test_p1 = other_vtx->get_fit_pt();
+      TVector3 dir = sg->cal_dir_3vector(main_vertex->get_fit_pt(), 15*units::cm);
+      bool flag_inside = fid->inside_fiducial_volume(test_p1, offset_x);
+
+      double dQ_dx_front = 0;
+      double dQ_dx_end = 0;
+      if (sg->get_wcpt_vec().front().index==main_vertex->get_wcpt().index){
+	dQ_dx_front = sg->get_medium_dQ_dx(0,10);
+	dQ_dx_end =sg->get_medium_dQ_dx(int(sg->get_point_vec().size())-10,sg->get_point_vec().size());
+      }else{
+	dQ_dx_end = sg->get_medium_dQ_dx(0,10);
+	dQ_dx_front = sg->get_medium_dQ_dx(int(sg->get_point_vec().size())-10,sg->get_point_vec().size());
+      }
+
+      
+      //      std::cout << "Xin_1: " << sg->get_length()/units::cm << " " << sg->get_particle_type() << " " << fid->inside_fiducial_volume(test_p1, offset_x) << " " << sg->is_dir_weak() << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << dir.Angle(dir_vertical)/3.1415926*180. << " " << dir.Angle(dir_drift)/3.1415926*180. << " " << dQ_dx_front/(43e3/units::cm) << " " << dQ_dx_end/(43e3/units::cm) << std::endl;
+      
+      if (sg->get_particle_type() == 13 && ( (!flag_inside) && dir.Angle(dir_beam)/3.1415926*180. > 40
+					     || (flag_inside && 
+						 (sg->is_dir_weak() && (!(dQ_dx_end > 1.4 *43e3/units::cm && dQ_dx_end > 1.2 * dQ_dx_front)) || dir.Angle(dir_beam)/3.1415926*180. > 60))
+					     )){
+	neutrino_type |= 1UL << 1;
+	// std::cout << "C: " << test_p << " " << true << std::endl;
+	return true;
+      }/* else if (sg->get_particle_type()==13 && flag_inside && (!sg->is_dir_weak()) && */
+      /* 		(dir.Angle(dir_drift)/3.1415926*180. > 165     // prolonged towards anode ... */
+      /* 		 || dir.Angle(dir_vertical)/3.1415926*180. > 150) // vertical down ... */
+      /* 		){ */
+      /* 	neutrino_type |= 1UL << 1; */
+      /* 	return true; */
+      /* } */
+           
+    }
+
+    if (muon != 0){
+      WCPPID::ProtoSegment *sg = muon;
+      WCPPID::ProtoVertex *other_vtx = find_other_vertex(sg, main_vertex);
+      Point test_p1 = other_vtx->get_fit_pt();
+      TVector3 dir = sg->cal_dir_3vector(main_vertex->get_fit_pt(), 15*units::cm);
+      bool flag_inside = fid->inside_fiducial_volume(test_p1, offset_x);
+
+      std::cout << "Xin: " << sg->get_length()/units::cm << " " << flag_inside << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << connected_showers << std::endl;
+      if ( (!flag_inside) && dir.Angle(dir_beam)/3.1415926*180. > 100 && connected_showers ==0){
+	neutrino_type |= 1UL << 1; 
+     	return true; 
+      }
+    }
+  }
+  
+  // stopped muon with a  Michel electron ...
+  {
+    WCPPID::WCShower *michel_ele = 0;
+    WCPPID::ProtoSegment *muon = 0;
+    WCPPID::ProtoSegment *muon_2nd = 0;
+    Int_t valid_tracks = 0;
+    
+    for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
+      WCPPID::ProtoSegment *sg = *it;
+      double length = sg->get_length();
+      
+      
+      if (sg->get_flag_shower()){
+	for (auto it1 = showers.begin(); it1!=showers.end(); it1++){
+	  WCPPID::WCShower *shower = *it1;
+	  // calculate energy 
+	  if (shower->get_start_segment() == sg){
+	    michel_ele = shower;
+	  }
+	}
+      }else{
+	if (sg->get_particle_type()==13){
+	  if (muon == 0){
+	    muon = sg;
+	  }else{
+	    if (sg->get_length() > muon->get_length()){
+	      muon_2nd = muon;
+	      muon = sg;
+	    }
+	  }
+	}
+      }
+    }
+
+    for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
+      WCPPID::ProtoSegment *sg = *it;
+      double length = sg->get_length();
+      if (sg == muon) continue;
+      if (michel_ele != 0)
+      	if (sg == michel_ele->get_start_segment()) continue;
+      
+      if (length > 2.5*units::cm || length > 1.2*units::cm && sg->get_particle_type()==2212 || (!sg->is_dir_weak())) {
+      	if (length < 15*units::cm && sg->get_medium_dQ_dx()/(43e3/units::cm)  < 0.75 && sg->is_dir_weak()) continue;
+	if (sg->get_flag_shower()) continue;
+	
+      	valid_tracks ++;
+      }
+    }
+    
+    
+
+    for (auto it = map_vertex_to_shower[main_vertex].begin(); it != map_vertex_to_shower[main_vertex].end(); it++){
+      WCPPID::WCShower *shower = *it;
+      if (shower == michel_ele) continue;
+      double Eshower = 0;
+      if (shower->get_kine_best() != 0){ 
+	Eshower = shower->get_kine_best();
+      }else{
+	Eshower = shower->get_kine_charge();
+      }
+      if (shower->get_start_vertex().second >2) continue;
+      if (Eshower > 150*units::MeV && (!bad_reconstruction(shower))) valid_tracks ++;
+      //      std::cout << Eshower/units::MeV << " " << bad_reconstruction(shower) << " " << shower->get_start_vertex().second << " " << shower->get_start_segment()->get_cluster_id() << std::endl;
+    }
+
+    std::cout << muon << " " << michel_ele << " " << valid_tracks << std::endl;
+
+    if (muon != 0 && michel_ele != 0 && valid_tracks == 0){
+      double Eshower = 0;
+      if (michel_ele->get_kine_best() != 0){ 
+	Eshower = michel_ele->get_kine_best();
+      }else{
+	Eshower = michel_ele->get_kine_charge();
+      }
+      
+      WCPPID::ProtoVertex *other_vtx = find_other_vertex(muon, main_vertex);
+      Point test_p1 = other_vtx->get_fit_pt();
+      TVector3 dir = muon->cal_dir_3vector(main_vertex->get_fit_pt(), 15*units::cm);
+      bool flag_inside = fid->inside_fiducial_volume(test_p1, offset_x);
+
+      double dQ_dx_front = 0;
+      double dQ_dx_end = 0;
+      if (muon->get_wcpt_vec().front().index==main_vertex->get_wcpt().index){
+	dQ_dx_front = muon->get_medium_dQ_dx(0,10);
+	dQ_dx_end = muon->get_medium_dQ_dx(int(muon->get_point_vec().size())-10,muon->get_point_vec().size());
+      }else{
+	dQ_dx_end = muon->get_medium_dQ_dx(0,10);
+	dQ_dx_front = muon->get_medium_dQ_dx(int(muon->get_point_vec().size())-10,muon->get_point_vec().size());
+      }
+      
+      //      std::cout << "Xin_2: " << Eshower/units::MeV << " " << muon->get_length()/units::cm << " " << muon->get_particle_type() << " " << fid->inside_fiducial_volume(test_p1, offset_x) << " " << muon->is_dir_weak() << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << dir.Angle(dir_vertical)/3.1415926*180. << " " << dir.Angle(dir_drift)/3.1415926*180. << " " << dQ_dx_front/(43e3/units::cm) << " " << dQ_dx_end/(43e3/units::cm) << std::endl;
+      
+      if (Eshower < 70*units::MeV){
+	if (muon->get_particle_type() == 13 && ( (!flag_inside) && dir.Angle(dir_beam)/3.1415926*180. > 40
+						 || (flag_inside  && (muon->is_dir_weak() && (!(dQ_dx_end > 1.4 *43e3/units::cm && dQ_dx_end > 1.2 * dQ_dx_front)) || dir.Angle(dir_beam)/3.1415926*180. > 60)))){
+	  neutrino_type |= 1UL << 1;
+	  return true;
+	}/* else if (muon->get_particle_type()==13 && flag_inside && (!muon->is_dir_weak()) && */
+	/* 	  (dir.Angle(dir_drift)/3.1415926*180. > 165     // prolonged towards anode ... */
+	/* 	   || dir.Angle(dir_vertical)/3.1415926*180. > 150) // vertical down ... */
+	/* 	  ){ */
+	/*   neutrino_type |= 1UL << 1; */
+	/*   return true; */
+	/* } */
+      }
+           
+    } // two things ...
+  }
+  
+
+  
+
+  
   {
     bool flag_main_cluster = true;
     

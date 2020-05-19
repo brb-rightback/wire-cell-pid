@@ -256,8 +256,11 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 
 		  //		  if (flag_print) std::cout << pt_clouds.at(qx1)->get_closest_dis(test_p)/units::cm << std::endl;
 		  
-		  if (pt_clouds.at(qx1)->get_closest_dis(test_p)<0.6*units::cm)
+		  // skip the small ones ...
+		  if (pt_clouds.at(qx1)->get_closest_dis(test_p)<0.6*units::cm && pt_clouds.at(qx1)->get_num_points() >=50){
+		    // std::cout << j << " " << k << " " << qx1 << " " << pt_clouds.at(qx1)->get_num_points() << std::endl;
 		    connections.insert(qx1);
+		  }
 		  //
 		}
 	      }
@@ -290,6 +293,7 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	  // std::cout << j << " " << k << " " << flag_disconnect << std::endl;
 	  if (flag_disconnect){
 	    flag_continue = true;
+	    //std::cout << j << " " << k << std::endl;
 	    index_index_dis[j][k] = std::make_tuple(-1,-1,1e9);
 	    index_index_dis[k][j] = index_index_dis[j][k];
 	    used_pairs.insert(it->first);
@@ -412,8 +416,10 @@ void WCPPID::PR3DCluster::Connect_graph_overclustering_protection(WCP::ToyCTPoin
 	  }
 	  
 	  if (flag_disconnect){
+	    flag_continue = true;
 	    index_index_dis_dir2[j][k] = std::make_tuple(-1,-1,1e9);
 	    index_index_dis_dir2[k][j] = index_index_dis_dir2[j][k];
+	    used_pairs.insert(it->first);
 	  }
 	}
 	for (auto it = used_pairs.begin(); it!= used_pairs.end(); it++){
