@@ -34,6 +34,8 @@ namespace WCPPID{
 
     void calculate_kinematics();
     void calculate_kinematics_long_muon(std::set<WCPPID::ProtoSegment*> segments_in_muons);
+    std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*> get_last_segment_vertex_long_muon(std::set<WCPPID::ProtoSegment*> segments_in_muons);
+    
     TVector3 cal_dir_3vector(WCP::Point p, double dis_cut = 15*units::cm);
     
     void set_flag_kinematics(bool val){flag_kinematics = val;};
@@ -49,6 +51,8 @@ namespace WCPPID{
     WCP::Point& get_start_point(){return start_point;};
     WCP::Point& get_end_point(){return end_point;};
     TVector3& get_init_dir(){return init_dir;};
+
+ 
 
     double get_total_length();
     double get_total_length(int tmp_cluster_id);

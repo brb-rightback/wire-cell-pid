@@ -251,6 +251,8 @@ namespace WCPPID{
     TVector3 calc_dir_cluster(int tmp_cluster_id, WCP::Point& test_p, double dis_cut);
     
     std::pair<int, double> calculate_num_daughter_showers(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, bool flag_count_shower = true);
+
+    std::pair<int, double> calculate_num_daughter_tracks(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, bool flag_count_shower = false, double length_cut = 0);
     
     
     bool examine_maps(WCPPID::PR3DCluster* temp_cluster);

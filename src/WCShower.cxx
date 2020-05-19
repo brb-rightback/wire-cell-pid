@@ -116,6 +116,42 @@ void WCPPID::WCShower::build_point_clouds(){
   }
 }
 
+std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*> WCPPID::WCShower::get_last_segment_vertex_long_muon(std::set<WCPPID::ProtoSegment*> segments_in_muons){
+  WCPPID::ProtoVertex *s_vtx = start_vertex;
+  WCPPID::ProtoSegment *s_seg = start_segment;
+
+  //  std::cout << map_vtx_segs[s].size() << " " << map_seg_vtxs.size() << std::endl;
+  
+  bool flag_continue = true;
+  while(flag_continue){
+    flag_continue = false;
+
+    if (s_vtx == start_vertex){
+      flag_continue = true;
+    }else{
+      for (auto it = map_vtx_segs[s_vtx].begin(); it!= map_vtx_segs[s_vtx].end(); it++){
+	WCPPID::ProtoSegment *sg = *it;
+	if (segments_in_muons.find(sg) != segments_in_muons.end() && sg != s_seg){
+	  s_seg = sg;
+	  flag_continue = true;
+	  break;
+	}
+      }
+    }
+    
+    if (flag_continue){
+      for (auto it = map_seg_vtxs[s_seg].begin(); it != map_seg_vtxs[s_seg].end(); it++){
+	WCPPID::ProtoVertex *vtx = *it;
+	if (vtx != s_vtx){
+	  s_vtx = vtx;
+	  break;
+	}
+      }
+    }
+  }
+  return std::make_pair(s_seg, s_vtx);
+}
+
 void WCPPID::WCShower::calculate_kinematics_long_muon(std::set<WCPPID::ProtoSegment*> segments_in_muons){
    particle_type = start_segment->get_particle_type();
    flag_shower = false;

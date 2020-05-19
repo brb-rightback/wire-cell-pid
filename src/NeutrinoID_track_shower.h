@@ -672,6 +672,47 @@ std::pair<int, double> WCPPID::NeutrinoID::calculate_num_daughter_showers(WCPPID
   return std::make_pair(number_showers, acc_length);
 }
 
+std::pair<int, double> WCPPID::NeutrinoID::calculate_num_daughter_tracks(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, bool flag_count_shower, double length_cut){
+  int number_tracks = 0;
+  double acc_length = 0;
+  
+  std::set<WCPPID::ProtoVertex* > used_vertices;
+  std::set<WCPPID::ProtoSegment* > used_segments;
+
+  std::vector<std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> > segments_to_be_examined;
+  segments_to_be_examined.push_back(std::make_pair(vtx, sg));
+  used_vertices.insert(vtx);
+
+  while(segments_to_be_examined.size()>0){
+    std::vector<std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> > temp_segments;
+    for (auto it = segments_to_be_examined.begin(); it!= segments_to_be_examined.end(); it++){
+      WCPPID::ProtoVertex *prev_vtx = it->first;
+      WCPPID::ProtoSegment *current_sg = it->second;
+      if (used_segments.find(current_sg)!=used_segments.end()) continue; // looked at it before ...
+
+
+      if ((!current_sg->get_flag_shower()) || flag_count_shower){
+	double length = current_sg->get_length();
+	if (length > length_cut){
+	  acc_length += length;
+	  number_tracks ++;
+	}
+      }
+      used_segments.insert(current_sg);
+
+      WCPPID::ProtoVertex* curr_vertex = find_other_vertex(current_sg, prev_vtx);
+      if (used_vertices.find(curr_vertex) != used_vertices.end()) continue;
+      for (auto it1 = map_vertex_segments[curr_vertex].begin(); it1!= map_vertex_segments[curr_vertex].end(); it1++){
+	temp_segments.push_back(std::make_pair(curr_vertex, *it1));
+      }
+      used_vertices.insert(curr_vertex);
+    }
+    segments_to_be_examined = temp_segments;
+  }
+
+  return std::make_pair(number_tracks, acc_length);
+}
+
 
 void WCPPID::NeutrinoID::fix_maps_multiple_tracks_in(int temp_cluster_id){
   for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end();it++){
