@@ -50,6 +50,13 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	  }
 	}
       }
+    }
+    for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
+      WCPPID::ProtoSegment *sg = *it;
+      double length = sg->get_length();
+      if (sg == muon ) continue;
+      if (long_muon != 0)
+	if (sg == long_muon->get_start_segment()) continue;
       
       //  std::cout << "Xin_3: " << length/units::cm << " " << map_vertex_segments[main_vertex].size() << " " << sg->get_particle_type() << " " << sg->is_dir_weak() << std::endl;
       if (length > 2.5*units::cm || length > 0.9*units::cm && sg->get_particle_type()==2212 || (!sg->is_dir_weak())) {
@@ -83,7 +90,7 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
     }
     //    std::cout << " " << map_vertex_to_shower[main_vertex].size() << std::endl;
 
-    if (valid_tracks == 1){
+    if (valid_tracks == 0){
       if ( muon != 0){
 	WCPPID::ProtoSegment *sg = muon;
 	WCPPID::ProtoVertex *other_vtx = find_other_vertex(sg, main_vertex);
@@ -110,6 +117,7 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 					       || (flag_inside && 
 						   (sg->is_dir_weak() && (!(dQ_dx_end > 1.4 *43e3/units::cm && dQ_dx_end > 1.2 * dQ_dx_front)) || dir.Angle(dir_beam)/3.1415926*180. > 60))
 					       )){
+
 	  neutrino_type |= 1UL << 1;
 	  if (flag_print) std::cout << "Xin_B: " << sg->get_length()/units::cm << " " << sg->get_particle_type() << " " << fid->inside_fiducial_volume(test_p1, offset_x) << " " << sg->is_dir_weak() << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << dir.Angle(dir_vertical)/3.1415926*180. << " " << dir.Angle(dir_drift)/3.1415926*180. << " " << dQ_dx_front/(43e3/units::cm) << " " << dQ_dx_end/(43e3/units::cm) << std::endl;
 	  return true;
@@ -247,7 +255,6 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
     }
 
     max_length = 0;
-
     for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
       WCPPID::ProtoSegment *sg = *it;
       double length = sg->get_length();
@@ -257,17 +264,29 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
       if (michel_ele != 0)
       	if (sg == michel_ele->get_start_segment()) continue;
       if (sg->get_flag_shower()) continue;
-      
-      if (length > 2.5*units::cm || length > 0.9*units::cm && sg->get_particle_type()==2212 || (!sg->is_dir_weak())) {
-      	if (length < 15*units::cm && sg->get_medium_dQ_dx()/(43e3/units::cm)  < 0.75 && sg->is_dir_weak()) continue;
-	valid_tracks ++;
-      }
 
       if ((!sg->get_flag_shower()) && (sg->get_particle_type()!=2212)){
 	if (length > max_length){
 	  max_length = length;
 	  muon_2nd = sg;
 	}
+      }
+    }
+    
+    for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
+      WCPPID::ProtoSegment *sg = *it;
+      double length = sg->get_length();
+      if (sg == muon ) continue;
+      if (long_muon != 0)
+	if (sg == long_muon->get_start_segment()) continue;
+      if (michel_ele != 0)
+      	if (sg == michel_ele->get_start_segment()) continue;
+      if (sg->get_flag_shower()) continue;
+      if (sg == muon_2nd) continue;
+      
+      if (length > 2.5*units::cm || length > 0.9*units::cm && sg->get_particle_type()==2212 || (!sg->is_dir_weak())) {
+      	if (length < 15*units::cm && sg->get_medium_dQ_dx()/(43e3/units::cm)  < 0.75 && sg->is_dir_weak()) continue;
+	valid_tracks ++;
       }
     }
 
@@ -289,7 +308,15 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
     }
 
     //    std::cout << long_muon << " " << muon << " " << michel_ele << " " << muon_2nd << " " << valid_tracks << std::endl;
-    if ( (muon!=0 || long_muon !=0) && michel_ele != 0 && muon_2nd !=0 && valid_tracks >= 1){
+    if ( (muon!=0 || long_muon !=0) && michel_ele != 0 && muon_2nd !=0 ){
+      {
+	double length = muon_2nd->get_length();
+	if (length > 2.5*units::cm || length > 0.9*units::cm && muon_2nd->get_particle_type()==2212 || (!muon_2nd->is_dir_weak())) {
+	  if (length < 15*units::cm && muon_2nd->get_medium_dQ_dx()/(43e3/units::cm)  < 0.75 && muon_2nd->is_dir_weak()){
+	  }else	  valid_tracks ++;
+	}
+      }
+      
       TVector3 dir1;
       if (muon != 0){
 	dir1 = muon->cal_dir_3vector(main_vertex->get_fit_pt(), 15*units::cm);
@@ -331,7 +358,7 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
    
     //    std::cout << muon << " " << michel_ele << " " << valid_tracks << std::endl;
 
-    if ( (muon!=0 || long_muon!=0) && (michel_ele !=0 && valid_tracks == 0 || valid_tracks == 1 && muon_2nd !=0 && michel_ele == 0)){
+    if ( (muon!=0 || long_muon!=0) && (michel_ele !=0 && valid_tracks == 0 || valid_tracks == 0 && muon_2nd !=0 && michel_ele == 0)){
       // muon related ..
       double dQ_dx_front = 0;
       double dQ_dx_end = 0;

@@ -98,6 +98,9 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv(){
   //std::cout << showers.size() << std::endl;
   calculate_shower_kinematics();
 
+  // examine shower trunk and added to shower
+  examine_showers();
+  
   id_pi0_with_vertex();
 
   id_pi0_without_vertex();
@@ -334,7 +337,6 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
   }
   
 }
-
 
 
 void WCPPID::NeutrinoID::id_pi0_with_vertex(){

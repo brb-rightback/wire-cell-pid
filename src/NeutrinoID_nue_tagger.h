@@ -453,6 +453,7 @@ bool WCPPID::NeutrinoID::low_energy_overlapping(WCPPID::WCShower* shower){
 bool WCPPID::NeutrinoID::pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower){
   bool flag_pi0 = false;
 
+  
   auto it = map_shower_pio_id.find(shower);
   if (it != map_shower_pio_id.end()){
     std::vector<WCShower*> tmp_pi0_showers = map_pio_id_showers[it->second];
@@ -640,6 +641,9 @@ void WCPPID::NeutrinoID::examine_showers(){
   for (auto it = map_merge_seg_shower.begin(); it != map_merge_seg_shower.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     WCPPID::WCShower *shower = it->second;
+
+    std::cout << "EM shower modification: " << shower->get_start_segment()->get_id() << " -> " << sg->get_id() << std::endl;
+    
     auto pair_result = shower->get_start_vertex();
     if (pair_result.second != 1){
       shower->add_segment(sg, map_segment_vertices);

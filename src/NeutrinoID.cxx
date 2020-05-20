@@ -203,7 +203,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   if (flag_tagger){
     bool flag_cosmic = cosmic_tagger();
     if (!flag_cosmic){
-      examine_showers();
+      
       auto results = numu_tagger();
       bool flag_long_muon = results.first;
       if (!flag_long_muon) {
@@ -407,7 +407,7 @@ void WCPPID::NeutrinoID::examine_main_vertices(){
 
 
 void WCPPID::NeutrinoID::examine_main_vertices(WCPPID::ProtoVertexSelection& vertices){
-
+  
   
   if (vertices.size()==1) return;
 
@@ -425,18 +425,19 @@ void WCPPID::NeutrinoID::examine_main_vertices(WCPPID::ProtoVertexSelection& ver
       for (auto it1 = map_vertex_segments[vtx].begin(); it1 != map_vertex_segments[vtx].end(); it1++){
 	WCPPID::ProtoSegment *sg1 = *it1;
 	if (sg1->get_length() < 10*units::cm) continue;
-	TVector3 dir1 = sg1->cal_dir_3vector(vtx->get_fit_pt(), 25*units::cm);
+	TVector3 dir1 = sg1->cal_dir_3vector(vtx->get_fit_pt(), 15*units::cm);
+	TVector3 dir3 = sg1->cal_dir_3vector(vtx->get_fit_pt(), 30*units::cm);
 	if (sg1->get_length() > max_length) max_length = sg1->get_length();
 	for (auto it2 = it1; it2 != map_vertex_segments[vtx].end(); it2++){
 	  WCPPID::ProtoSegment *sg2 = *it2;
 	  if (sg1 == sg2) continue;
 	  if (sg2->get_length()<10*units::cm) continue;
-	  TVector3 dir2 = sg2->cal_dir_3vector(vtx->get_fit_pt(), 25*units::cm);
+	  TVector3 dir2 = sg2->cal_dir_3vector(vtx->get_fit_pt(), 15*units::cm);
+	  TVector3 dir4 = sg2->cal_dir_3vector(vtx->get_fit_pt(), 30*units::cm);
 
-
-	  //	  std::cout << sg1->get_length()/units::cm << " " << sg2->get_length()/units::cm << " " << dir1.Angle(dir2)/3.1415926*180. << std::endl;
+	  //	  std::cout << sg1->get_length()/units::cm << " " << sg2->get_length()/units::cm << " " << dir1.Angle(dir2)/3.1415926*180. << " " << dir3.Angle(dir4)/3.1415926*180. << std::endl;
 	  
-	  if (dir1.Angle(dir2)/3.1415926*180. > 165 && (sg1->get_particle_type()==13 || sg2->get_particle_type()==13) && (sg1->get_length() > 30*units::cm|| sg2->get_length() > 30*units::cm)){
+	  if ( (dir1.Angle(dir2)/3.1415926*180. > 165 || dir3.Angle(dir4)/3.1415926*180. > 165)&& (sg1->get_particle_type()==13 || sg2->get_particle_type()==13) && (sg1->get_length() > 30*units::cm|| sg2->get_length() > 30*units::cm)){
 
 	    //std::cout << "Xin: " << sg1->get_id() << " " << sg1->get_particle_type() << " " << sg1->get_length()/units::cm << std::endl;
 	    //std::cout << "Xin: " << sg2->get_id() << " " << sg2->get_particle_type() << " " << sg2->get_length()/units::cm << std::endl;
@@ -507,7 +508,7 @@ void WCPPID::NeutrinoID::examine_main_vertices(WCPPID::ProtoVertexSelection& ver
     } // else
   } // loop vertices ...
 
-  //  print_segs_info(vertices.front()->get_cluster_id());
+  //print_segs_info(vertices.front()->get_cluster_id());
   
   
   if (tmp_vertices.size()==0) return;
@@ -1428,6 +1429,7 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
        
        int psuedo_particle_id = fill_psuedo_reco_tree(shower, rtree);
        
+       //       std::cout << pio_info_pair.first << " " << pio_info_pair.second << " " << pair_vertex.first << " " << main_vertex << std::endl;
        
        if (pair_vertex.first == main_vertex){
 	 // pio
