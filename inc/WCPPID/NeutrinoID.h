@@ -234,6 +234,7 @@ namespace WCPPID{
     void determine_overall_main_vertex();
 
     void examine_main_vertices();
+    void examine_main_vertices(WCPPID::ProtoVertexSelection& vertices);
     void check_switch_main_cluster(WCPPID::ProtoVertex *temp_main_vertex, WCPPID::PR3DCluster *max_length_cluster);
     void check_switch_main_cluster();
     
@@ -254,6 +255,7 @@ namespace WCPPID{
 
     std::pair<int, double> calculate_num_daughter_tracks(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, bool flag_count_shower = false, double length_cut = 0);
     
+    void change_daughter_type(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, int particle_type, double mass);
     
     bool examine_maps(WCPPID::PR3DCluster* temp_cluster);
     bool examine_maps(WCPPID::ProtoVertex *temp_vertex);

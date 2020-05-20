@@ -634,7 +634,39 @@ void WCPPID::NeutrinoID::improve_maps_no_dir_tracks(int temp_cluster_id){
 }
 
 
-
+void WCPPID::NeutrinoID::change_daughter_type(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, int particle_type, double mass){
+  WCPPID::ProtoVertex *other_vtx = find_other_vertex(sg, vtx);
+  TVector3 dir1 = sg->cal_dir_3vector(other_vtx->get_fit_pt(), 15*units::cm);
+  
+  for (auto it = map_vertex_segments[other_vtx].begin(); it != map_vertex_segments[other_vtx].end(); it++){
+    WCPPID::ProtoSegment *sg1 = *it;
+    if (sg1 == sg) continue;
+    if (sg1->get_particle_type() == particle_type) continue;
+    if ( sg1->get_flag_shower_trajectory() || (!sg1->is_dir_weak()) && sg1->get_flag_dir() !=0) continue;
+    if (sg1->get_flag_shower_topology() && sg1->get_flag_dir() == 0 && sg1->get_length() > 40*units::cm){
+      TVector3 dir2 = sg1->cal_dir_3vector(other_vtx->get_fit_pt(), 40*units::cm);
+      //      std::cout <<dir1.Angle(dir2)/3.1415926*180. << " " << sg1->get_id() << std::endl;
+      if (dir1.Angle(dir2)/3.1415926*180. > 170){
+	sg1->set_particle_type(particle_type);
+	sg1->set_particle_mass(mass);
+	sg1->set_flag_shower_topology(false);
+	change_daughter_type(other_vtx, sg1, particle_type, mass);
+	change_daughter_type(find_other_vertex(sg1, other_vtx), sg1, particle_type, mass);
+      }
+    }else continue;
+    
+    if (sg1->get_length() > 10*units::cm){
+      TVector3 dir2 = sg1->cal_dir_3vector(other_vtx->get_fit_pt(), 15*units::cm);
+      if (dir1.Angle(dir2)/3.1415926*180. > 165){
+	sg1->set_particle_type(particle_type);
+	sg1->set_particle_mass(mass);
+	change_daughter_type(other_vtx, sg1, particle_type, mass);
+	change_daughter_type(find_other_vertex(sg1, other_vtx), sg1, particle_type, mass);
+      }
+      //      std::cout << dir1.Angle(dir2)/3.1415926*180. << std::endl;
+    }
+  }
+}
 
 std::pair<int, double> WCPPID::NeutrinoID::calculate_num_daughter_showers(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, bool flag_count_shower){
   int number_showers = 0;
@@ -1202,8 +1234,8 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   // examine_maps(temp_cluster);
   // print ...
 
-  //std::cout << "Information after initial logic examination: " << std::endl;
-  //print_segs_info(temp_cluster);
+  //  std::cout << "Information after initial logic examination: " << std::endl;
+  // print_segs_info(temp_cluster);
 
   
   // find the main vertex ...
@@ -1272,6 +1304,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
       return;
     }
   }else{
+    examine_main_vertices(main_vertex_candidates);
     if (flag_print){
       //  std::cout << main_vertex_candidates.size() << std::endl;
       for (auto it = main_vertex_candidates.begin(); it!= main_vertex_candidates.end(); it++){
@@ -1283,7 +1316,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
       }
     }
 
-
+    
     if (main_vertex_candidates.size()==1){
       main_vertex = main_vertex_candidates.front();
     }else if (main_vertex_candidates.size()>1){
@@ -2061,7 +2094,9 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
       std::vector<WCPPID::ProtoVertex* > acc_vertices;
       acc_segments.push_back(sg);
       acc_vertices.push_back(vtx);
-      //std::cout << sg->get_flag_shower_topology() << " " << sg->get_flag_shower_trajectory() << " " << sg->get_length()/units::cm << " " << " " << sg->get_medium_dQ_dx()/(43e3/units::cm) << std::endl;
+
+      //      std::cout << sg->get_flag_shower_topology() << " " << sg->get_flag_shower_trajectory() << " " << sg->get_length()/units::cm << " " << " " << sg->get_medium_dQ_dx()/(43e3/units::cm) << std::endl;
+      
       auto results = find_cont_muon_segment(sg, vtx);
       while(results.first !=0){
 	acc_segments.push_back(results.first);
@@ -2074,6 +2109,8 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
 	total_length += length;
 	if (length > max_length) max_length = length;
       }
+      //      std::cout << sg->get_id() << " " << max_length/units::cm << " " << total_length/units::cm << std::endl;
+      
       if (total_length > 45*units::cm && max_length > 35*units::cm && acc_segments.size()>1){
 	for (auto it1 = acc_segments.begin(); it1!=acc_segments.end(); it1++){
 	  // change to muon ...
@@ -2231,10 +2268,16 @@ std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex* > WCPPID::NeutrinoID::find
     double angle = (3.1415926-dir1.Angle(dir2))/3.1415926*180.;
     double ratio = sg2->get_medium_dQ_dx()/(43e3/units::cm);
 
+    double angle1 = angle;
+    if (length > 50*units::cm){
+      TVector3 dir3 = sg->cal_dir_3vector(vtx->get_fit_pt(), 50*units::cm);
+      TVector3 dir4 = sg2->cal_dir_3vector(vtx->get_fit_pt(), 50*units::cm);
+      angle1 = (3.1415926-dir3.Angle(dir4))/3.1415926*180.;
+    }
     
-    // std::cout << "A: " << angle << " " << length/units::cm << " " << ratio << std::endl;
+    //    std::cout << "A: " << angle << " " << angle1 << " " << length/units::cm << " " << ratio << std::endl;
     
-    if (angle < 10. &&  (ratio < 1.3 || flag_ignore_dQ_dx)){
+    if ( (angle < 10. || angle1 < 10) &&  (ratio < 1.3 || flag_ignore_dQ_dx)){
       flag_cont = true;
       if (length *cos(angle/180.*3.1415926) > max_length){
 	max_length = length *cos(angle/180.*3.1415926) ;

@@ -291,6 +291,8 @@ void WCPPID::NeutrinoID::determine_overall_main_vertex(){
   
 }
 
+
+
 void WCPPID::NeutrinoID::examine_main_vertices(){
  
 
@@ -401,6 +403,157 @@ void WCPPID::NeutrinoID::examine_main_vertices(){
   //   double length = map_cluster_length[cluster];
     //    std::cout << cluster->get_cluster_id() << " " << length/units::cm << " " << vertex->get_fit_pt() << std::endl;
   // }
+}
+
+
+void WCPPID::NeutrinoID::examine_main_vertices(WCPPID::ProtoVertexSelection& vertices){
+
+  
+  if (vertices.size()==1) return;
+
+  double max_length = 0;
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  std::set<WCPPID::ProtoVertex*> tmp_vertices; 
+
+
+  for (auto it = vertices.begin(); it != vertices.end(); it++){
+    WCPPID::ProtoVertex* vtx = *it;
+    if (map_vertex_segments[vtx].size()==1){
+      tmp_vertices.insert(vtx);
+    }else{
+      std::set<WCPPID::ProtoSegment*> used_segments;
+      for (auto it1 = map_vertex_segments[vtx].begin(); it1 != map_vertex_segments[vtx].end(); it1++){
+	WCPPID::ProtoSegment *sg1 = *it1;
+	if (sg1->get_length() < 10*units::cm) continue;
+	TVector3 dir1 = sg1->cal_dir_3vector(vtx->get_fit_pt(), 25*units::cm);
+	if (sg1->get_length() > max_length) max_length = sg1->get_length();
+	for (auto it2 = it1; it2 != map_vertex_segments[vtx].end(); it2++){
+	  WCPPID::ProtoSegment *sg2 = *it2;
+	  if (sg1 == sg2) continue;
+	  if (sg2->get_length()<10*units::cm) continue;
+	  TVector3 dir2 = sg2->cal_dir_3vector(vtx->get_fit_pt(), 25*units::cm);
+
+
+	  //	  std::cout << sg1->get_length()/units::cm << " " << sg2->get_length()/units::cm << " " << dir1.Angle(dir2)/3.1415926*180. << std::endl;
+	  
+	  if (dir1.Angle(dir2)/3.1415926*180. > 165 && (sg1->get_particle_type()==13 || sg2->get_particle_type()==13) && (sg1->get_length() > 30*units::cm|| sg2->get_length() > 30*units::cm)){
+
+	    //std::cout << "Xin: " << sg1->get_id() << " " << sg1->get_particle_type() << " " << sg1->get_length()/units::cm << std::endl;
+	    //std::cout << "Xin: " << sg2->get_id() << " " << sg2->get_particle_type() << " " << sg2->get_length()/units::cm << std::endl;
+	    
+	    used_segments.insert(sg1);
+	    used_segments.insert(sg2);
+	  }
+	} // loop second track
+      } // loop first track
+
+      if (used_segments.size()>0){
+	bool flag_skip = true;
+	for (auto it1 = map_vertex_segments[vtx].begin(); it1 != map_vertex_segments[vtx].end(); it1++){
+	  WCPPID::ProtoSegment *sg1 = *it1;
+	  if (used_segments.find(sg1) != used_segments.end()) continue;
+	  double length = sg1->get_length();
+	  if (sg1->get_flag_shower()){ // shower
+	    auto pair_result = calculate_num_daughter_showers(vtx, sg1, false); // count all
+	    if (pair_result.second > 35*units::cm){
+	      flag_skip = false;
+	      break;
+	    }
+	  }else{ // not shower 
+	    if ((!sg1->is_dir_weak()) && length > 5*units::cm){
+	      flag_skip = false;
+	      break;
+	    }
+	  }
+	  //std::cout << sg1->get_id() << " " << sg1->get_length()/units::cm << " " << sg1->is_dir_weak() << " " << sg1->get_particle_type() << std::endl;
+	}
+	if (!flag_skip) tmp_vertices.insert(vtx);
+	else{
+	  // change direction ...
+	  for (auto it1 = used_segments.begin(); it1!=used_segments.end(); it1++){
+	    WCPPID::ProtoSegment *sg1 = *it1;
+	    // std::cout << sg1->get_id() << " " << sg1->get_length()/units::cm << std::endl;
+	    if ( sg1->get_flag_shower_trajectory()) continue;
+	    else if (sg1->get_flag_shower_topology()){
+	      if (sg1->get_length() > 40*units::cm && sg1->get_flag_dir()==0){
+		sg1->set_particle_type(13);
+		sg1->set_particle_mass(mp.get_mass_muon());
+		change_daughter_type(vtx, sg1, 13, mp.get_mass_muon());
+		change_daughter_type(find_other_vertex(sg1, vtx), sg1, 13, mp.get_mass_muon());
+		sg1->set_flag_shower_topology(false);
+	      }else continue;
+	    }else if (sg1->get_particle_type()!=13){
+	      sg1->set_particle_type(13);
+	      sg1->set_particle_mass(mp.get_mass_muon());
+	      change_daughter_type(vtx, sg1, 13, mp.get_mass_muon());
+	      change_daughter_type(find_other_vertex(sg1, vtx), sg1, 13, mp.get_mass_muon());
+	    }
+
+	    
+	    std::vector<WCPPID::ProtoVertex*> acc_vertices;
+	    auto results = find_cont_muon_segment(sg1, vtx);
+	    while(results.first !=0){
+	      acc_vertices.push_back(results.second);
+	      results = find_cont_muon_segment(results.first, results.second);
+	    }
+	    if (acc_vertices.size()>0 && acc_vertices.back()!=0)
+	      tmp_vertices.insert(acc_vertices.back());
+	    
+	  }
+	}
+      }else{
+	tmp_vertices.insert(vtx);
+      }
+    } // else
+  } // loop vertices ...
+
+  //  print_segs_info(vertices.front()->get_cluster_id());
+  
+  
+  if (tmp_vertices.size()==0) return;
+  vertices.clear();
+  vertices.resize(tmp_vertices.size());
+  std::copy(tmp_vertices.begin(), tmp_vertices.end(), vertices.begin());
+
+
+
+  /*
+  if (max_length > 40*units::cm){
+    if (vertices.size()==1) return;
+    
+    tmp_vertices.clear();
+    for (auto it = vertices.begin(); it!= vertices.end(); it++){
+      WCPPID::ProtoVertex *vtx = *it;
+      if (map_vertex_segments[vtx].size()>1){
+	tmp_vertices.push_back(vtx);
+      }else{
+	WCPPID::ProtoSegment *sg = (*map_vertex_segments[vtx].begin());
+	WCPPID::ProtoVertex *other_vtx = find_other_vertex(sg, vtx);
+	//      std::cout << sg->get_length()/units::cm << std::endl;
+	TVector3 dir1 = sg->cal_dir_3vector(other_vtx->get_fit_pt(), 15*units::cm);
+	double max_angle = 0;
+	double length = sg->get_length();
+	if (length < 1*units::cm){
+	}else if (length < 5*units::cm){
+	  for (auto it1 = map_vertex_segments[other_vtx].begin(); it1 != map_vertex_segments[other_vtx].end(); it1++){
+	    WCPPID::ProtoSegment *sg1 = *it1;
+	    if (sg1 == sg) continue;
+	    TVector3 dir2 = sg1->cal_dir_3vector(other_vtx->get_fit_pt(), 15*units::cm);
+	    double angle = dir1.Angle(dir2)/3.1415926*180.;
+	    if (angle > max_angle) max_angle = angle;
+	  }
+	  if (max_angle > 155) tmp_vertices.push_back(vtx);
+	  //	std::cout << max_angle << " " << sg->get_length()/units::cm << std::endl;
+	}else{
+	  tmp_vertices.push_back(vtx);
+	}
+      }
+    }
+    
+    if (tmp_vertices.size() == 0) return;
+    vertices = tmp_vertices;
+  }
+  */
 }
 
 
