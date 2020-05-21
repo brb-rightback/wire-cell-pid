@@ -40,14 +40,15 @@ void WCPPID::NeutrinoID::shower_determing_in_main_cluster(WCPPID::PR3DCluster *t
   // if there is one good track in, turn everything else to out
   improve_maps_one_in(temp_cluster); // one in and many out ...
 
-  //print_segs_info(temp_cluster->get_cluster_id());
+  //  print_segs_info(temp_cluster->get_cluster_id());
   // if one shower in and a track out, change the track to shower
   improve_maps_shower_in_track_out(temp_cluster->get_cluster_id()); // use shower information to determine the rest ...
-
+  //  print_segs_info(temp_cluster->get_cluster_id());
+  
   // help to change tracks around shower to showers
   improve_maps_no_dir_tracks(temp_cluster->get_cluster_id());
 
-  //  print_segs_info(temp_cluster->get_cluster_id());
+  //print_segs_info(temp_cluster->get_cluster_id());
   
   // if one shower in and a track out, change the track to shower
   improve_maps_shower_in_track_out(temp_cluster->get_cluster_id(), false); // use shower information to determine the rest ...
@@ -114,7 +115,9 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
   // test main vertex ...
   if (map_vertex_segments[main_vertex].size()>2) return; // more than one shower
   if (map_segment_in_shower.find(*map_vertex_segments[main_vertex].begin()) == map_segment_in_shower.end() &&
-      map_segment_in_shower.find(*map_vertex_segments[main_vertex].rbegin()) == map_segment_in_shower.end() ) return; // not a shower connecting to main vertex ...
+      map_segment_in_shower.find(*map_vertex_segments[main_vertex].rbegin()) == map_segment_in_shower.end() || segments_in_long_muon.find(*map_vertex_segments[main_vertex].begin()) != segments_in_long_muon.end() ||
+      segments_in_long_muon.find(*map_vertex_segments[main_vertex].rbegin()) != segments_in_long_muon.end() 
+      ) return; // not a shower connecting to main vertex ...
   {
     auto it = map_vertex_to_shower.find(main_vertex);
     if (it != map_vertex_to_shower.end()){
@@ -135,6 +138,7 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
 	}
 	// std::cout << (*map_vertex_segments[main_vertex].begin())->get_length()/units::cm << " " << (*map_vertex_segments[main_vertex].rbegin())->get_length()/units::cm << std::endl;
       }else{
+	//	if (segments_in_long_muon.find(sg) != segments_in_long_muon.end()) return;
 	num_showers ++;
       }
     }

@@ -3,7 +3,7 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
   TVector3 dir_drift(1,0,0);
   TVector3 dir_vertical(0,1,0);
 
-  bool flag_print = true;
+  bool flag_print = false;
   
   double tmp_dis = sqrt(pow(main_vertex->get_fit_pt().x  - main_vertex->get_wcpt().x,2) + pow(main_vertex->get_fit_pt().y  - main_vertex->get_wcpt().y,2) + pow(main_vertex->get_fit_pt().z  - main_vertex->get_wcpt().z,2));
   //  std::cout << tmp_dis/units::cm << std::endl;

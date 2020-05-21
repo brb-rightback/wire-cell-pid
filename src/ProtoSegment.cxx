@@ -520,8 +520,13 @@ bool WCPPID::ProtoSegment::is_shower_topology(bool tmp_val){
     }else if (1.1*(total_length1 + max_length1) < total_length2 + max_length2){
       flag_dir = -1;
     }
-    
-    //    std::cout << cluster_id << " " << id << " " << total_length1/units::cm << " " << total_length2/units::cm << " " << max_length1/units::cm << " " << max_length2/units::cm << " " << flag_dir << std::endl;
+    double tmp_total_length = get_length();
+    if (tmp_total_length > 50*units::cm && total_length1 < 0.25* tmp_total_length && total_length2 < 0.25* tmp_total_length ){
+      flag_dir = 0;
+      flag_shower_topology = false;
+    }
+	
+    //    std::cout << cluster_id << " " << id << " " << total_length1/units::cm << " " << total_length2/units::cm << " " << max_length1/units::cm << " " << max_length2/units::cm << " " << flag_dir << " " << get_length()/units::cm << std::endl;
     
   }
   
