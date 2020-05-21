@@ -97,6 +97,9 @@ double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::WCShower *shower){
   WCP::ToyPointCloud* pcloud1 = shower->get_associated_pcloud();
   WCP::ToyPointCloud* pcloud2 = shower->get_fit_pcloud();
   
+  if (pcloud1 == 0 && pcloud2 == 0) return 0;
+  else if (pcloud1 ==0 && pcloud2 !=0) pcloud1 = pcloud2;
+  else if (pcloud2 ==0 && pcloud1 !=0) pcloud2 = pcloud1;
   
   for (auto it = charge_2d_u.begin(); it!= charge_2d_u.end(); it++){
     std::pair<double, double> p2d = ct_point_cloud->convert_time_ch_2Dpoint(it->first.first, it->first.second, 0);
@@ -317,6 +320,12 @@ double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::ProtoSegment *sg){
 
   WCP::ToyPointCloud* pcloud1 = sg->get_associated_pcloud();
   WCP::ToyPointCloud* pcloud2 = sg->get_fit_pcloud();
+
+  if (pcloud1 == 0 && pcloud2 == 0) return 0;
+  else if (pcloud1 ==0 && pcloud2 !=0) pcloud1 = pcloud2;
+  else if (pcloud2 ==0 && pcloud1 !=0) pcloud2 = pcloud1;
+  
+  //  std::cout << sg->get_cluster_id() << " " << sg->get_id() << " " << pcloud1 << " " << pcloud2 << " " << pcloud1->get_num_points() << " " << pcloud2->get_num_points() << std::endl;
   
   for (auto it = charge_2d_u.begin(); it!= charge_2d_u.end(); it++){
     std::pair<double, double> p2d = ct_point_cloud->convert_time_ch_2Dpoint(it->first.first, it->first.second, 0);
