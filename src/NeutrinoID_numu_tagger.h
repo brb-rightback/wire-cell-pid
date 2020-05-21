@@ -171,6 +171,7 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
 	n_daughter_tracks = calculate_num_daughter_tracks(pair_vertices.second, last_sg, false, 3*units::cm).first;
 	n_daughter_all = calculate_num_daughter_tracks(pair_vertices.second, last_sg, true, 3*units::cm).first;
       }
+      //      std::cout << "last segment: " << last_sg->get_id() << std::endl;
       if (!last_sg->get_flag_shower()){
 	n_daughter_tracks -= 1;
       }

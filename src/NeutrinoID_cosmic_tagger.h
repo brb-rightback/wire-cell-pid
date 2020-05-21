@@ -3,6 +3,8 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
   TVector3 dir_drift(1,0,0);
   TVector3 dir_vertical(0,1,0);
 
+
+  
   bool flag_print = false;
   
   double tmp_dis = sqrt(pow(main_vertex->get_fit_pt().x  - main_vertex->get_wcpt().x,2) + pow(main_vertex->get_fit_pt().y  - main_vertex->get_wcpt().y,2) + pow(main_vertex->get_fit_pt().z  - main_vertex->get_wcpt().z,2));
@@ -21,7 +23,7 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
     return true;
   }
 
-
+  //  std::cout << "Entering cosmic tagger" << std::endl;
   // single muon, nothing there ...
   {
     double max_length = 0;
@@ -88,6 +90,7 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	connected_showers ++;
       //      std::cout << Eshower/units::MeV << " " << bad_reconstruction(shower) << " " << shower->get_start_vertex().second << " " << shower->get_start_segment()->get_cluster_id() << std::endl;
     }
+
     //    std::cout << " " << map_vertex_to_shower[main_vertex].size() << std::endl;
 
     if (valid_tracks == 0){
@@ -168,6 +171,8 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
       }
     }
 
+    //    std::cout << muon << " " << long_muon << std::endl;
+
     if (muon != 0 ){
       WCPPID::ProtoSegment *sg =muon;
       WCPPID::ProtoVertex *other_vtx = find_other_vertex(sg, main_vertex);
@@ -199,7 +204,8 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
       
     }
   }
-  
+
+
   // stopped muon with a  Michel electron ...
   {
     WCPPID::WCShower *michel_ele = 0;
@@ -455,8 +461,8 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
     } // two things ...
   }
   
-
   
+
 
   
   {

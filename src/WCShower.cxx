@@ -120,19 +120,28 @@ std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*> WCPPID::WCShower::get_las
   WCPPID::ProtoVertex *s_vtx = start_vertex;
   WCPPID::ProtoSegment *s_seg = start_segment;
 
+  // std::cout << map_vtx_segs.size() << " " << map_seg_vtxs.size() << std::endl;
+  // for (auto it = map_seg_vtxs.begin(); it != map_seg_vtxs.end(); it++){
+  //   std::cout << it->first->get_id() << std::endl;
+  // }
   //  std::cout << map_vtx_segs[s].size() << " " << map_seg_vtxs.size() << std::endl;
+  std::set<ProtoSegment*> used_segments;
+  used_segments.insert(s_seg);
   
   bool flag_continue = true;
   while(flag_continue){
     flag_continue = false;
-
     if (s_vtx == start_vertex){
       flag_continue = true;
     }else{
       for (auto it = map_vtx_segs[s_vtx].begin(); it!= map_vtx_segs[s_vtx].end(); it++){
 	WCPPID::ProtoSegment *sg = *it;
-	if (segments_in_muons.find(sg) != segments_in_muons.end() && sg != s_seg){
+	if (segments_in_muons.find(sg) != segments_in_muons.end() &&
+	    used_segments.find(sg) == used_segments.end()){
+	  //	    sg != s_seg){
+	  //	  std::cout << sg->get_id() << " " << s_seg->get_id() << std::endl;
 	  s_seg = sg;
+	  used_segments.insert(s_seg);
 	  flag_continue = true;
 	  break;
 	}
@@ -141,8 +150,10 @@ std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex*> WCPPID::WCShower::get_las
     
     if (flag_continue){
       for (auto it = map_seg_vtxs[s_seg].begin(); it != map_seg_vtxs[s_seg].end(); it++){
+	//	std::cout <<s_seg->get_id() <<  " " << map_seg_vtxs[s_seg].size() << std::endl;
 	WCPPID::ProtoVertex *vtx = *it;
 	if (vtx != s_vtx){
+	 
 	  s_vtx = vtx;
 	  break;
 	}
@@ -597,14 +608,25 @@ void WCPPID::WCShower::complete_structure_with_start_segment(Map_Proto_Vertex_Se
       ProtoSegment *seg = new_segments.back();
       new_segments.pop_back();
       for (auto it = map_segment_vertices[seg].begin(); it!= map_segment_vertices[seg].end(); it++){
-  	ProtoVertex *vtx = *it;
-  	if (map_vtx_segs.find(vtx)!= map_vtx_segs.end() || vtx == start_vertex) continue;
-  	map_vtx_segs[vtx].insert(seg);
-  	map_seg_vtxs[seg].insert(vtx);
-  	new_vertices.push_back(vtx);
+	ProtoVertex *vtx = *it;
+	if (vtx == start_vertex) continue;
+	if (map_vtx_segs.find(vtx)!= map_vtx_segs.end()){
+	  map_vtx_segs[vtx].insert(seg);
+	  map_seg_vtxs[seg].insert(vtx);
+	}else{
+	  map_vtx_segs[vtx].insert(seg);
+	  map_seg_vtxs[seg].insert(vtx);
+	  new_vertices.push_back(vtx);
+	}
+  	
       }
     }
   }
+
+  // for (auto it = map_seg_vtxs.begin(); it!= map_seg_vtxs.end(); it++){
+  //   std::cout << it->first->get_id() << " " << it->second.size() << std::endl;
+  // }
+  
   rebuild_point_clouds();
   //std::cout << map_vtx_segs.size() << " " << map_seg_vtxs.size() << std::endl;
 }

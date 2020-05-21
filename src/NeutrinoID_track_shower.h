@@ -2099,6 +2099,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
       
       auto results = find_cont_muon_segment(sg, vtx);
       while(results.first !=0){
+	//	std::cout << results.first->get_id() << " " << results.second->get_id() << std::endl;
 	acc_segments.push_back(results.first);
 	acc_vertices.push_back(results.second);
 	results = find_cont_muon_segment(results.first, results.second);
@@ -2254,6 +2255,8 @@ std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex* > WCPPID::NeutrinoID::find
 
   double max_ratio1 = 0;
   double max_ratio1_length = 0;
+
+  double sg_length = sg->get_length();
   
   for (auto it = map_vertex_segments[vtx].begin(); it!= map_vertex_segments[vtx].end(); it++){
     WCPPID::ProtoSegment* sg2 = *it;
@@ -2275,9 +2278,9 @@ std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex* > WCPPID::NeutrinoID::find
       angle1 = (3.1415926-dir3.Angle(dir4))/3.1415926*180.;
     }
     
-    //    std::cout << "A: " << angle << " " << angle1 << " " << length/units::cm << " " << ratio << std::endl;
+    //    std::cout << "A: " << angle << " " << angle1 << " " << length/units::cm << " " << ratio << " " << sg->get_id() << " " << sg2->get_id() << std::endl;
     
-    if ( (angle < 10. || angle1 < 10) &&  (ratio < 1.3 || flag_ignore_dQ_dx)){
+    if ( (angle < 10. || angle1 < 10 || sg_length < 6*units::cm && (angle < 15 || angle1 < 15)) &&  (ratio < 1.3 || flag_ignore_dQ_dx)){
       flag_cont = true;
       if (length *cos(angle/180.*3.1415926) > max_length){
 	max_length = length *cos(angle/180.*3.1415926) ;

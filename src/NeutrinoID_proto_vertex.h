@@ -510,6 +510,7 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
  
   
   int count = 0;
+  std::set<int> saved_break_wcp_indices;
   
   while(remaining_segments.size()!=0 && count < 2){
     WCPPID::ProtoSegment* curr_sg = remaining_segments.back();
@@ -533,6 +534,8 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
       std::cout << "Error in finding vertices for a segment" << " " << start_v << " " << end_v << " " << curr_sg->get_id() << " " << map_segment_vertices[curr_sg].size() << std::endl; 
       //std::cout << "Vertex: " << start_v->get_wcpt().index << " " << end_v->get_wcpt().index << std::endl;
     }
+
+
     
     // initialize the start points
     WCP::WCPointCloud<double>::WCPoint break_wcp = start_v->get_wcpt();
@@ -559,6 +562,14 @@ void WCPPID::NeutrinoID::break_segments(std::vector<WCPPID::ProtoSegment*>& rema
 	// find the extreme point ... PR3DCluster function
 	break_wcp = temp_cluster->proto_extend_point(std::get<0>(kink_tuple), std::get<1>(kink_tuple), std::get<2>(kink_tuple), std::get<3>(kink_tuple));
 	//	std::cout << "Break point: " << remaining_segments.size() << " " << std::get<0>(kink_tuple) << " " << std::get<1>(kink_tuple).Mag() << " " << std::get<3>(kink_tuple) << " " << break_wcp.x/units::cm << " " << break_wcp.y/units::cm << " " << break_wcp.z/units::cm << " " << break_wcp.index << " " << sqrt(pow(start_v->get_wcpt().x - break_wcp.x,2) + pow(start_v->get_wcpt().y - break_wcp.y,2) + pow(start_v->get_wcpt().z - break_wcp.z,2))/units::cm << " " << sqrt(pow(end_v->get_wcpt().x - break_wcp.x,2) +  pow(end_v->get_wcpt().y - break_wcp.y,2) +   pow(end_v->get_wcpt().z - break_wcp.z,2))/units::cm << std::endl;
+	if (saved_break_wcp_indices.find(break_wcp.index) != saved_break_wcp_indices.end()){
+	  test_start_p = std::get<0>(kink_tuple);
+	  kink_tuple = curr_sg->search_kink(test_start_p);
+	  break_wcp = temp_cluster->proto_extend_point(std::get<0>(kink_tuple), std::get<1>(kink_tuple), std::get<2>(kink_tuple), std::get<3>(kink_tuple));
+	}else{
+	  saved_break_wcp_indices.insert(break_wcp.index);
+	}
+	
         if (sqrt(pow(start_v->get_wcpt().x - break_wcp.x,2) +
 	       pow(start_v->get_wcpt().y - break_wcp.y,2) +
 	       pow(start_v->get_wcpt().z - break_wcp.z,2)) <= 1*units::cm &&

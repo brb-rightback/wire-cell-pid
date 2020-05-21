@@ -80,11 +80,15 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
     // hack for now ...
     if (vtx->get_cluster_id() != temp_cluster->get_cluster_id() || it->second.size()<=2 && (vtx != main_vertex) ) continue;
     int ntracks = 0, nshowers = 0;
+    int n_long_muons = 0;
     for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
       if ((*it1)->get_flag_shower()) nshowers ++;
       else ntracks ++;
+      if (segments_in_long_muon.find(*it1) != segments_in_long_muon.end()) n_long_muons ++;
       //      std::cout << vtx->get_cluster_id() << " " << vtx->get_id() << " " << (*it1)->get_cluster_id() << " " << (*it1)->get_id() << " " << ntracks << " " << flag_skip_two_legs << " " << it->second.size() << std::endl;
     }
+    //    std::cout << n_long_muons << std::endl;
+    //    if (n_long_muons >1 && (vtx != main_vertex)) continue; // long muon ...
     if (ntracks == 0 && (vtx != main_vertex) ) continue;
     if (flag_skip_two_legs && it->second.size()<=2) continue;
     
