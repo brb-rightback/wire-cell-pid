@@ -378,6 +378,7 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
   // loop over vertices ...
   for (auto it = map_vertex_segments.begin(); it!= map_vertex_segments.end(); it++){
     if (it->first->get_cluster_id() != cluster_id) continue;
+    if (it->second.size() == 0) continue;
     WCPPID::ProtoVertex *vtx = it->first;
     Point curr_rec_pos = vtx->get_fit_pt();
     int index = vtx->get_fit_index();
@@ -442,6 +443,8 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
     std::vector<double> sigmas_W;
     std::vector<double> weights;
 
+    //    std::cout << vtx->get_id() << " " << connected_pts.size() << " " << map_vertex_segments[vtx].size() << std::endl;
+    
     for (int k=0;k!=connected_pts.size();k++){
       for (int j=0;j!=5;j++){
 	Point reco_pos;

@@ -624,9 +624,16 @@ bool WCPPID::NeutrinoID::examine_structure_final_1(WCPPID::PR3DCluster* temp_clu
       }
     }
   } // continue
-  if (flag_update)
-    temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+  if (flag_update){
 
+    /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end();it++){ */
+    /*   WCPPID::ProtoSegment *sg = it->first; */
+    /*   if (sg->get_cluster_id() != temp_cluster->get_cluster_id()) continue; */
+    /*   std::cout << sg->get_id() << " " << it->second.size() << " " << sg->get_wcpt_vec().front().index << " " << sg->get_wcpt_vec().back().index << " " << (*it->second.begin())->get_wcpt().index << " " << (*it->second.rbegin())->get_wcpt().index << std::endl; */
+    /* } */
+    
+    temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+  }
   return flag_update;
 }
 
