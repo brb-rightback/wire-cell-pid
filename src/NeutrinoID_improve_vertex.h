@@ -19,7 +19,6 @@ bool WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
   std::pair<bool, Point> results = fcn.FitVertex();
 
   
-  
   double old_charge = ct_point_cloud->get_ave_3d_charge(vtx->get_fit_pt());
   double new_charge = ct_point_cloud->get_ave_3d_charge(results.second);
 
@@ -44,6 +43,7 @@ bool WCPPID::NeutrinoID::fit_vertex(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegme
 
 void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool flag_search_vertex_activity , bool flag_final_vertex ){
 
+  std::set<WCPPID::ProtoVertex*> fitted_vertices;
   std::set<WCPPID::ProtoSegment* > existing_segments;
   // if all showers, no need to fit vertex with only two legs ...
   bool flag_skip_two_legs = false;
@@ -97,6 +97,7 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
    
     
     bool flag_update = fit_vertex(vtx, it->second, temp_cluster);
+    if (flag_update) fitted_vertices.insert(vtx);
     if (flag_update) {
       flag_update_fit = true;
 
@@ -142,8 +143,7 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
       }
   }
 
-
-
+ 
 
   
   std::vector<WCPPID::ProtoVertex* > refit_vertices;
@@ -206,19 +206,19 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
       // redo the fit ...
       for (auto it = refit_vertices.begin(); it!= refit_vertices.end(); it++){
 	bool flag_update = fit_vertex(*it, map_vertex_segments[*it], temp_cluster);
-	if (flag_update) 	flag_update_fit = true;
+	if (flag_update)   fitted_vertices.insert(*it);
+	if (flag_update)   flag_update_fit = true;
       }
       if (flag_update_fit)     temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
           
     }
 
-
-    
     
     // eliminate the short tracks ...
     if (eliminate_short_vertex_activities(temp_cluster, existing_segments)) temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
 
-    
+
+      
     for (auto it = map_segment_vertices.begin(); it != map_segment_vertices.end(); it++){
       WCPPID::ProtoSegment *sg1 = it->first;
       if (sg1->get_cluster_id() != temp_cluster->get_cluster_id()) continue;
@@ -246,7 +246,29 @@ void WCPPID::NeutrinoID::improve_vertex(WCPPID::PR3DCluster* temp_cluster, bool 
 	}
       }
     }
-  } // flag vertex activities ...
+  }else{ // flag vertex activities ...
+    for (auto it = fitted_vertices.begin(); it != fitted_vertices.end(); it++){
+      WCPPID::ProtoVertex *vtx = *it;
+      for (auto it1 = map_vertex_segments[vtx].begin(); it1 != map_vertex_segments[vtx].end(); it1++){
+	WCPPID::ProtoSegment *sg = *it1;
+	if (sg->get_particle_type()==0) sg->is_shower_topology();
+	WCPPID::ProtoVertex *start_v=0, *end_v=0;
+	for (auto it = map_segment_vertices[sg].begin(); it!=map_segment_vertices[sg].end(); it++){
+	  if ((*it)->get_wcpt().index == sg->get_wcpt_vec().front().index) start_v = *it;
+	  if ((*it)->get_wcpt().index == sg->get_wcpt_vec().back().index) end_v = *it;
+	}
+	bool flag_print = false;
+	if (!sg->get_flag_shower()){
+	  // track ...
+	  sg->determine_dir_track(map_vertex_segments[start_v].size(), map_vertex_segments[end_v].size(), flag_print);
+	  //std::cout << sg->get_id() << " " << sg->get_flag_dir() << std::endl;
+	}
+      }
+    }
+  }
+  
+
+
 
   
   // if a track connecting to the vertex is trajectory shower, recheck, probably issue with vertex location ...

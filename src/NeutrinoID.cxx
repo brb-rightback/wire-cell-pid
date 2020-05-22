@@ -304,7 +304,7 @@ void WCPPID::NeutrinoID::examine_main_vertices(){
     WCPPID::PR3DCluster* cluster = it->first;
     WCPPID::ProtoVertex* vertex = it->second;
     double length = map_cluster_length[cluster];
-    //
+    //    std::cout << cluster->get_cluster_id() << " " << length/units::cm << std::endl;
     if (length < cluster_length_cut){
       bool flag_removed = true;
       for (auto it1 = map_vertex_segments[vertex].begin(); it1 != map_vertex_segments[vertex].end(); it1++){
@@ -439,8 +439,8 @@ void WCPPID::NeutrinoID::examine_main_vertices(WCPPID::ProtoVertexSelection& ver
 	  
 	  if ( (dir1.Angle(dir2)/3.1415926*180. > 165 || dir3.Angle(dir4)/3.1415926*180. > 165)&& (sg1->get_particle_type()==13 || sg2->get_particle_type()==13) && (sg1->get_length() > 30*units::cm|| sg2->get_length() > 30*units::cm)){
 
-	    //std::cout << "Xin: " << sg1->get_id() << " " << sg1->get_particle_type() << " " << sg1->get_length()/units::cm << std::endl;
-	    //std::cout << "Xin: " << sg2->get_id() << " " << sg2->get_particle_type() << " " << sg2->get_length()/units::cm << std::endl;
+	    //  std::cout << "Xin: " << sg1->get_id() << " " << sg1->get_particle_type() << " " << sg1->get_length()/units::cm << std::endl;
+	    // std::cout << "Xin: " << sg2->get_id() << " " << sg2->get_particle_type() << " " << sg2->get_length()/units::cm << std::endl;
 	    
 	    used_segments.insert(sg1);
 	    used_segments.insert(sg2);

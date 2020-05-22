@@ -7,7 +7,7 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
   
   bool flag_numu_cc = false;
   
-  double dis_cut = 18*units::cm; // muon shorter than this is not useful ...
+  double dis_cut = 5*units::cm; // muon shorter than this is not useful ...
   // for electron, we cut on 60 MeV anyway ...
   double max_muon_length = 0;
   WCPPID::ProtoSegment* max_muon = 0;
@@ -21,10 +21,13 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
     double medium_dQ_dx = sg->get_medium_dQ_dx();
 
     /* if (sg->get_particle_type()==13){ */
-    //    std::cout << sg->get_particle_type() << " Xin " << length/units::cm << " " << medium_dQ_dx/(43e3/units::cm) << " " << direct_length/units::cm << std::endl; 
+    
     /* } */
     
     double dQ_dx_cut = 0.8866+0.9533 *pow(18*units::cm/length, 0.4234);//0.85+0.95 *sqrt(25./ (length / units::cm));
+
+    // std::cout << sg->get_particle_type() << " Xin1 " << length/units::cm << " " << medium_dQ_dx/(43e3/units::cm) << " " << direct_length/units::cm << " " << dQ_dx_cut << std::endl; 
+    
     if (abs(sg->get_particle_type())==13 && length > dis_cut && medium_dQ_dx < dQ_dx_cut * 43e3/units::cm && (length > 40*units::cm || length <= 40*units::cm && direct_length > 0.925 * length)){
       flag_numu_cc = true;
       
@@ -81,11 +84,11 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
     double medium_dQ_dx = sg->get_medium_dQ_dx();
     double dQ_dx_cut = 0.8866+0.9533 *pow(18*units::cm/length, 0.4234);
     
-    // std::cout << sg->get_id() << " " << sg->get_flag_shower() << " " << sg->get_flag_shower_topology() << " " << medium_dQ_dx/(43e3/units::cm) << " " << dQ_dx_cut << " " << length/units::cm << " " << direct_length/units::cm << std::endl;
+    //    std::cout << sg->get_id() << " " << sg->get_flag_shower() << " " << sg->get_flag_shower_topology() << " " << medium_dQ_dx/(43e3/units::cm) << " " << dQ_dx_cut << " " << length/units::cm << " " << direct_length/units::cm << std::endl;
     
     if (sg->get_flag_shower() && (!sg->get_flag_shower_topology()) || (!sg->get_flag_shower()) || length > 50*units::cm){
       
-      if (medium_dQ_dx < dQ_dx_cut * 1.05 * 43e3/units::cm  && medium_dQ_dx > 0.75 * 43e3/units::cm && direct_length > 0.925*length ){
+      if (medium_dQ_dx < dQ_dx_cut * 1.05 * 43e3/units::cm  && medium_dQ_dx > 0.75 * 43e3/units::cm && (direct_length > 0.925*length || length > 50*units::cm)){
 	if (length > max_length){
 	  max_length = length;
 	  max_direct_length = direct_length;
