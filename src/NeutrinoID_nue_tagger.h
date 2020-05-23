@@ -1,43 +1,107 @@
 bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
   bool flag_nue = false;
-
+  TVector3 dir_beam(0,0,1);
+  TVector3 dir_drift(1,0,0);
+  TVector3 dir_vertical(0,1,0);
 
   
   // check main_vertex ...
   {
+    WCPPID::WCShower* max_shower = 0;
+    double max_energy = 0;
+    std::set<WCShower*> good_showers;
+
+
+    
     auto it = map_vertex_to_shower.find(main_vertex);
     if (it != map_vertex_to_shower.end()){
+      bool flag_single_shower = false;
+      if (map_vertex_segments[main_vertex].size() == 1) flag_single_shower = true;
+      
       for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
 	WCPPID::WCShower *shower = *it1;
 	WCPPID::ProtoSegment *sg = shower->get_start_segment();
 	if (sg->get_particle_type()==13) continue;
 	
-
 	// higher than 70 MeV, and connect to the vertex ...
 	if (map_vertex_segments[main_vertex].find(sg) != map_vertex_segments[main_vertex].end() && (shower->get_kine_charge() > 70*units::MeV && shower->get_kine_best()==0 || shower->get_kine_best() > 70*units::MeV)){
 
-	  if (bad_reconstruction(shower)) continue;	
-	  if (low_energy_overlapping(shower)) continue; // low energy overlapping?
+	  if (bad_reconstruction(shower)) continue;	// bad reconstruction ...
+	  if (low_energy_overlapping(shower)) continue; // low energy overlapping 
 	
 	  
-	  double E_shower = shower->get_kine_charge();
+	  double E_shower = 0;
+	  if (shower->get_kine_best() != 0){ 
+	    E_shower = shower->get_kine_best();
+	  }else{
+	    E_shower = shower->get_kine_charge();
+	  }
+	  if (E_shower > max_energy)  {
+	    max_shower = shower;
+	    max_energy = E_shower;
+	  }
+	  
 	  //  std::cout << shower->get_kine_charge()/units::MeV << " " << muon_kine_energy/units::MeV << std::endl;
 	  
 	  // std::cout << "Xin: " << shower->get_total_length(main_vertex->get_cluster_id())/units::cm << " " << muon_length/units::cm << std::endl;
 	  if (shower->get_total_length(main_vertex->get_cluster_id()) < muon_length * 0.5) continue;
 	  
 	  if (!gap_identification(main_vertex, sg)){ // gap id
-	    int mip_id = mip_identification(main_vertex,sg, shower);
+	    int mip_id;
+	    if (flag_single_shower && E_shower < 400*units::MeV){
+	      mip_id = mip_identification(main_vertex,sg, shower, true); // dQ/dx id
+	    }else{
+	      mip_id = mip_identification(main_vertex,sg, shower); // dQ/dx id
+	    }
+	    
 	    if (mip_id == 1){
-	      flag_nue = true;
+	      good_showers.insert(shower);
+	      //	      flag_nue = true;
 	    }else if (mip_id == 0){
-	      if (!pi0_identification(main_vertex, sg, shower)){
-		flag_nue = true;
+	      if (!pi0_identification(main_vertex, sg, shower)){ // pi0 identification ...
+		good_showers.insert(shower);
+		//flag_nue = true;
 	      }
 	    }
 	  } // gap id
+ 	  
 	} // 70 MeV, and connected
       } // loop over showers
+
+      if (good_showers.find(max_shower)!=good_showers.end() && max_shower !=0){
+	Point test_p;
+	WCPPID::ProtoSegment *sg = max_shower->get_start_segment();
+	if (main_vertex->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	  test_p = sg->get_point_vec().front();
+	}else{
+	  test_p = sg->get_point_vec().back();
+	}
+	TVector3 dir = max_shower->cal_dir_3vector(test_p, 15*units::cm);
+	flag_nue = true;
+
+	if (flag_nue && flag_single_shower){ // single shower ...
+	  for (auto it1 = showers.begin(); it1 != showers.end() ;it1++){
+	    WCPPID::WCShower *shower = *it1;
+	    WCPPID::ProtoSegment *sg = shower->get_start_segment();
+	    if (sg->get_particle_type()==13) continue;
+	    if (sg->get_cluster_id() == main_vertex->get_cluster_id()) continue;
+	    if (bad_reconstruction(shower)) continue;	// bad reconstruction ...
+	    
+	    double E_shower = 0;
+	    if (shower->get_kine_best() != 0){ 
+	      E_shower = shower->get_kine_best();
+	    }else{
+	      E_shower = shower->get_kine_charge();
+	    }
+	    if (E_shower > max_energy){
+	      flag_nue = false;
+	      break;
+	    }
+	  }
+	}
+	
+	std::cout << "Xin: " << good_showers.size() << " " << flag_nue << " " << max_energy/units::MeV << " " << dir.Angle(dir_beam)/3.1415926*180. << std::endl;
+      }
     } // has a shower ...
   } // main vertex
   
@@ -52,11 +116,14 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 bool WCPPID::NeutrinoID::gap_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment* sg){
   bool flag_gap = false;
 
+  Point vertex_point;
   bool flag_start;
   if (vertex->get_wcpt().index == sg->get_wcpt_vec().front().index){
-    flag_start = true; // front ... 
+    flag_start = true; // front ...
+    vertex_point = sg->get_point_vec().front();
   }else{
     flag_start = false; // back ...
+    vertex_point = sg->get_point_vec().back();
   }
 
   PointVector &pts = sg->get_point_vec();
@@ -68,14 +135,14 @@ bool WCPPID::NeutrinoID::gap_identification(WCPPID::ProtoVertex* vertex, WCPPID:
     Point closest_p = pts.back();
     double min_dis = 1e9;
     for (int i=0;i<pts.size();i++){
-      double dis = fabs(sqrt(pow(pts.at(i).x - vertex->get_fit_pt().x,2) + pow(pts.at(i).y - vertex->get_fit_pt().y,2) + pow(pts.at(i).z - vertex->get_fit_pt().z,2))-3*units::cm);
+      double dis = fabs(sqrt(pow(pts.at(i).x - vertex_point.x,2) + pow(pts.at(i).y - vertex_point.y,2) + pow(pts.at(i).z - vertex_point.z,2))-3*units::cm);
       if (dis < min_dis){
         min_dis = dis;
 	closest_p = pts.at(i);
       }
     }
 
-    TVector3 dir(closest_p.x - vertex->get_fit_pt().x, closest_p.y - vertex->get_fit_pt().y, closest_p.z - vertex->get_fit_pt().z);
+    TVector3 dir(closest_p.x - vertex_point.x, closest_p.y - vertex_point.y, closest_p.z - vertex_point.z);
     std::vector<bool> flag = main_cluster->check_direction(dir);
     bool flag_prolong_u = flag.at(0);
     bool flag_prolong_v = flag.at(1);
@@ -130,21 +197,21 @@ bool WCPPID::NeutrinoID::gap_identification(WCPPID::ProtoVertex* vertex, WCPPID:
 	n_points ++;
 	//	if (!ct_point_cloud->is_good_point(test_p, 0.2*units::cm,0,0)) n_bad ++;
       }
-      double dis = sqrt(pow(pts.at(i+1).x - vertex->get_fit_pt().x,2) + pow(pts.at(i+1).y - vertex->get_fit_pt().y,2) + pow(pts.at(i+1).z - vertex->get_fit_pt().z,2));
+      double dis = sqrt(pow(pts.at(i+1).x - vertex_point.x,2) + pow(pts.at(i+1).y - vertex_point.y,2) + pow(pts.at(i+1).z - vertex_point.z,2));
       if (dis > 2.4*units::cm) break;
     }
   }else{
     Point closest_p = pts.back();
     double min_dis = 1e9;
     for (int i=0;i<pts.size();i++){
-      double dis = fabs(sqrt(pow(pts.at(i).x - vertex->get_fit_pt().x,2) + pow(pts.at(i).y - vertex->get_fit_pt().y,2) + pow(pts.at(i).z - vertex->get_fit_pt().z,2))-3*units::cm);
+      double dis = fabs(sqrt(pow(pts.at(i).x - vertex_point.x,2) + pow(pts.at(i).y - vertex_point.y,2) + pow(pts.at(i).z - vertex_point.z,2))-3*units::cm);
       if (dis < min_dis){
         min_dis = dis;
 	closest_p = pts.at(i);
       }
     }
 
-    TVector3 dir(closest_p.x - vertex->get_fit_pt().x, closest_p.y - vertex->get_fit_pt().y, closest_p.z - vertex->get_fit_pt().z);
+    TVector3 dir(closest_p.x - vertex_point.x, closest_p.y - vertex_point.y, closest_p.z - vertex_point.z);
     std::vector<bool> flag = main_cluster->check_direction(dir);
     bool flag_prolong_u = flag.at(0);
     bool flag_prolong_v = flag.at(1);
@@ -199,7 +266,7 @@ bool WCPPID::NeutrinoID::gap_identification(WCPPID::ProtoVertex* vertex, WCPPID:
 	n_points ++;
 	//	if (!ct_point_cloud->is_good_point(test_p, 0.2*units::cm,0,0)) n_bad ++;
       }
-      double dis = sqrt(pow(pts.at(i-1).x - vertex->get_fit_pt().x,2) + pow(pts.at(i-1).y - vertex->get_fit_pt().y,2) + pow(pts.at(i-1).z - vertex->get_fit_pt().z,2));
+      double dis = sqrt(pow(pts.at(i-1).x - vertex_point.x,2) + pow(pts.at(i-1).y - vertex_point.y,2) + pow(pts.at(i-1).z - vertex_point.z,2));
       if (dis > 2.4*units::cm) break;
     }
   }
@@ -210,7 +277,7 @@ bool WCPPID::NeutrinoID::gap_identification(WCPPID::ProtoVertex* vertex, WCPPID:
   return flag_gap;
 }
 
-int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower){
+int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, bool flag_strong_check){
   int mip_id = 1; 
   // 1 good, -1 bad, 0 not sure ...
 
@@ -342,6 +409,11 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
   /* } */
   else mip_id = -1;
 
+  if (flag_strong_check){
+    if (!((n_first_mip <=2 || (n_first_mip <= n_end_reduction &&
+			       (n_first_mip <=3 || n_first_mip <=4 && Eshower > 600*units::MeV || n_first_mip <=6 && Eshower > 1000*units::MeV))) && n_first_non_mip_2 - n_first_mip > 3)) mip_id = -1;
+	//  std::cout << "Xin_A:" << n_first_mip << " " << n_first_non_mip_2 - n_first_mip << std::endl;
+  }
   
   if (mip_id == 1 &&  map_vertex_segments[vertex].size() ==1 && Eshower < 500*units::MeV){
     //    std::cout << vec_dQ_dx.front() << " " << medium_dQ_dx << std::endl;
@@ -377,6 +449,13 @@ bool WCPPID::NeutrinoID::low_energy_overlapping(WCPPID::WCShower* shower){
   WCPPID::ProtoSegment *sg = shower->get_start_segment();
   auto pair_result = shower->get_start_vertex();
   WCPPID::ProtoVertex *vtx = pair_result.first;
+  Point vtx_point;
+  if (vtx->get_wcpt().index == sg->get_wcpt_vec().front().index){
+    vtx_point = sg->get_point_vec().front();
+  }else{
+    vtx_point = sg->get_point_vec().back();
+  }
+
   
   Map_Proto_Segment_Vertices& map_seg_vtxs = shower->get_map_seg_vtxs();
   Map_Proto_Vertex_Segments& map_vtx_segs = shower->get_map_vtx_segs();
@@ -395,6 +474,7 @@ bool WCPPID::NeutrinoID::low_energy_overlapping(WCPPID::WCShower* shower){
 	  if (it->second.size()==2){
 	    TVector3 dir1 = (*it->second.begin())->cal_dir_3vector(it->first->get_fit_pt(), 5*units::cm);
 	    TVector3 dir2 = (*it->second.rbegin())->cal_dir_3vector(it->first->get_fit_pt(), 5*units::cm);
+	    //std::cout << "Xin1: " << dir1.Mag() << " " << dir2.Mag() << std::endl;
 	    //	    std::cout << dir1.Angle(dir2)/3.1415926*180. << std::endl;
 	    if (dir1.Angle(dir2)/3.1415926*180. < 36){
 	      flag_overlap = true;
@@ -404,10 +484,10 @@ bool WCPPID::NeutrinoID::low_energy_overlapping(WCPPID::WCShower* shower){
 	} //loop all vertex
       }
     }else if (map_vertex_segments[vtx].size()>1 && Eshower < 250*units::MeV && shower->get_total_length(sg->get_cluster_id()) < 20*units::cm){
-      TVector3 dir1 = sg->cal_dir_3vector(vtx->get_fit_pt(), 5*units::cm);
+      TVector3 dir1 = sg->cal_dir_3vector(vtx_point, 5*units::cm);
       for (auto it = map_vertex_segments[vtx].begin(); it != map_vertex_segments[vtx].end(); it++){
 	if ((*it)==sg) continue;
-	TVector3 dir2 = (*it)->cal_dir_3vector(vtx->get_fit_pt(), 5*units::cm);
+	TVector3 dir2 = (*it)->cal_dir_3vector(vtx_point, 5*units::cm);
 	
 	if ((*it)->get_length() < 30*units::cm && dir1.Angle(dir2)/3.1415926*180.< 10 && (*it)->get_particle_type() == 13){
 	  //	  std::cout << shower->get_total_length(sg->get_cluster_id())/units::cm << std::endl;
@@ -420,18 +500,18 @@ bool WCPPID::NeutrinoID::low_energy_overlapping(WCPPID::WCShower* shower){
     }
 
     if (map_vertex_segments[vtx].size()==1 && shower->get_total_length(sg->get_cluster_id()) < 15*units::cm &&  Eshower > 30*units::MeV ){
-      TVector3 dir1 = sg->cal_dir_3vector(vtx->get_fit_pt(), 15*units::cm);
+      TVector3 dir1 = sg->cal_dir_3vector(vtx_point, 15*units::cm);
       int n_sum = 0;
       int n_out = 0;
       for (auto it = map_vtx_segs.begin(); it!= map_vtx_segs.end(); it++){
-	TVector3 dir2(it->first->get_fit_pt().x - vtx->get_fit_pt().x, it->first->get_fit_pt().y - vtx->get_fit_pt().y, it->first->get_fit_pt().z - vtx->get_fit_pt().z);
+	TVector3 dir2(it->first->get_fit_pt().x - vtx_point.x, it->first->get_fit_pt().y - vtx_point.y, it->first->get_fit_pt().z - vtx_point.z);
 	n_sum ++;
 	if (dir1.Angle(dir2)/3.1415926*180.>15) n_out ++;
       }
       for (auto it = map_seg_vtxs.begin(); it!= map_seg_vtxs.end(); it++){
 	PointVector& pts = it->first->get_point_vec();
 	for(size_t i=1; i+1 < pts.size();i++){
-	  TVector3 dir2(pts.at(i).x - vtx->get_fit_pt().x, pts.at(i).y - vtx->get_fit_pt().y, pts.at(i).z - vtx->get_fit_pt().z);
+	  TVector3 dir2(pts.at(i).x - vtx_point.x, pts.at(i).y - vtx_point.y, pts.at(i).z - vtx_point.z);
 	  n_sum ++;
 	  if (dir1.Angle(dir2)/3.1415926*180.>15) n_out ++;
 	}
