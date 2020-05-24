@@ -193,6 +193,17 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	  if (E_muon > max_energy) flag_nue = false;
 	  //	  std::cout << "Xin_A: " << max_energy << " " << E_muon << " " << muon_length/units::cm << std::endl;
 	}
+
+	if (flag_nue){ // long stem is not preferred ...
+	  WCPPID::ProtoSegment *sg = max_shower->get_start_segment();
+	  if (max_energy < 500*units::MeV && sg->get_length() > 50*units::cm){
+	    flag_nue = false;
+	  }
+	  //	  std::cout << "Xin_A: " << sg->get_length()/units::cm << " " << sg->get_direct_length()/units::cm << " " << max_energy << std::endl;
+	}
+
+	
+	
 	
 	std::cout << "Xin: " << good_showers.size() << " " << flag_nue << " " << max_energy/units::MeV << " " << dir.Angle(dir_beam)/3.1415926*180. << std::endl;
       }
