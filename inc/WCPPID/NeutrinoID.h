@@ -333,6 +333,7 @@ namespace WCPPID{
     bool pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower);
     bool bad_reconstruction(WCPPID::WCShower* shower);
     
+    bool bad_reconstruction_1(WCPPID::WCShower* shower);
     bool low_energy_overlapping(WCPPID::WCShower* shower);
     
     

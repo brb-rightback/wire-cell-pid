@@ -51,7 +51,7 @@ namespace WCPPID{
     WCP::Point& get_start_point(){return start_point;};
     WCP::Point& get_end_point(){return end_point;};
     TVector3& get_init_dir(){return init_dir;};
-
+    void fill_point_vec(WCP::PointVector& tmp_pts, bool flag_main = true);
  
 
     double get_total_length();

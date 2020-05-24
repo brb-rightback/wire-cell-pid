@@ -87,6 +87,24 @@ double WCPPID::WCShower::get_total_length(){
   return total_length;
 }
 
+void WCPPID::WCShower::fill_point_vec(PointVector& tmp_pts, bool flag_main){
+  for (auto it = map_seg_vtxs.begin(); it!= map_seg_vtxs.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (flag_main && sg->get_cluster_id() != start_segment->get_cluster_id()) continue;
+    WCP::PointVector& pts = sg->get_point_vec();
+    for (size_t i=1;i+1<pts.size();i++){
+      tmp_pts.push_back(pts.at(i));
+    }
+  }
+  for (auto it = map_vtx_segs.begin(); it!=map_vtx_segs.end();it++){
+    WCPPID::ProtoVertex *vtx = it->first;
+    if (flag_main && vtx->get_cluster_id() != start_segment->get_cluster_id()) continue;
+    tmp_pts.push_back(vtx->get_fit_pt());
+  }
+
+  
+}
+
 void WCPPID::WCShower::build_point_clouds(){
   if (pcloud_fit == 0){
     pcloud_fit = new ToyPointCloud();
