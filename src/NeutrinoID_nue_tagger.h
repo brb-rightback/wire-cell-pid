@@ -4,6 +4,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
   TVector3 dir_drift(1,0,0);
   TVector3 dir_vertical(0,1,0);
 
+ 
   
   // check main_vertex ...
   {
@@ -171,6 +172,27 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	  if (E_total > 0.6*max_energy) flag_nue = false;
 	}
 
+	if (flag_nue){ // compare with muon energy ...
+	  TPCParams& mp = Singleton<TPCParams>::Instance();
+	  TGraph *g_range = mp.get_muon_r2ke();
+	  // check muon  ...
+	  double E_muon = g_range->Eval(muon_length/units::cm) * units::MeV;
+	  
+	  for (auto it1 = map_vertex_segments[main_vertex].begin(); it1 != map_vertex_segments[main_vertex].end(); it1++){
+	    WCPPID::ProtoSegment *sg1 = *it1;
+	    if (sg1->get_particle_type()==13 || sg1->get_particle_type()==2212){ 
+	      double length = sg->get_length();
+	      double medium_dQ_dx = sg->get_medium_dQ_dx();
+	      double dQ_dx_cut = 0.8866+0.9533 *pow(18*units::cm/length, 0.4234);//0.85+0.95 *sqrt(25./ (length / units::cm));
+	      if (medium_dQ_dx < dQ_dx_cut * 43e3/units::cm){
+		double tmp_energy =  g_range->Eval(sg1->get_length()/units::cm) * units::MeV;
+		if (tmp_energy > E_muon) E_muon = tmp_energy;
+	      }
+	    }
+	  }
+	  if (E_muon > max_energy) flag_nue = false;
+	  //	  std::cout << "Xin_A: " << max_energy << " " << E_muon << " " << muon_length/units::cm << std::endl;
+	}
 	
 	std::cout << "Xin: " << good_showers.size() << " " << flag_nue << " " << max_energy/units::MeV << " " << dir.Angle(dir_beam)/3.1415926*180. << std::endl;
       }
