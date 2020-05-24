@@ -99,7 +99,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	      break;
 	    }
 	  }
-	  if (flag_nue){
+	  if (flag_nue){ // beginning not consistent with shower itself
 	    WCPPID::ProtoSegment *sg = max_shower->get_start_segment();
 	    PointVector tmp_pts;
 	    max_shower->fill_point_vec(tmp_pts, true);
@@ -146,7 +146,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	  }
 	}
 
-	if (flag_nue){
+	if (flag_nue){ // no multiple EM showers
 	  double E_total = 0;
 	  for (auto it1 = map_vertex_to_shower[main_vertex].begin(); it1 != map_vertex_to_shower[main_vertex].end(); it1++){
 	    WCPPID::WCShower *shower = *it1;
@@ -202,7 +202,40 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	  //	  std::cout << "Xin_A: " << sg->get_length()/units::cm << " " << sg->get_direct_length()/units::cm << " " << max_energy << std::endl;
 	}
 
-	
+	if (flag_nue){ // vertex inside the shower ...
+	  // shower direction ...
+	  TVector3 dir1;
+	  if (main_vertex->get_wcpt().index == max_shower->get_start_segment()->get_wcpt_vec().front().index){
+	    dir1 = max_shower->cal_dir_3vector(max_shower->get_start_segment()->get_point_vec().front(),30*units::cm);
+	  }else{
+	    dir1= max_shower->cal_dir_3vector(max_shower->get_start_segment()->get_point_vec().back(), 30*units::cm);
+	  }
+
+	  double max_angle = 0;
+	  WCPPID::ProtoSegment *max_sg = 0;
+	  int num_good_tracks = 0;
+	  for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
+	    WCPPID::ProtoSegment *sg = *it;
+	    if (sg == max_shower->get_start_segment()) continue;
+	    TVector3 dir2 = sg->cal_dir_3vector(main_vertex->get_fit_pt(),15*units::cm);
+	    double angle = dir2.Angle(dir1)/3.1415926*180.;
+	    if ((!sg->get_flag_shower()) && (!sg->is_dir_weak())){
+	      num_good_tracks ++;
+	    }
+	    if (angle > max_angle){
+	      max_angle = angle;
+	      max_sg = sg;
+	    }
+	  }
+
+	  if (max_sg !=0){
+	    if (map_vertex_segments[main_vertex].size()>=3 && num_good_tracks == 0 && max_angle > 150 && max_energy < 500*units::MeV && (max_sg->get_length() < 8*units::cm || max_shower->get_start_segment()->get_length() < 8*units::cm)){
+	      flag_nue = false;
+	    }
+	    //	    std::cout << "Xin_A: " << max_energy << " " << max_angle << " " << map_vertex_segments[main_vertex].size() << " " << max_sg->get_particle_type() << " " << max_sg->get_length()/units::cm << " " << max_sg->is_dir_weak() << " " << max_sg->get_medium_dQ_dx()/(43e3/units::cm) << " " << num_good_tracks << " " << max_shower->get_start_segment()->get_length()/units::cm << " " << std::endl;
+	  }
+	  
+	}
 	
 	
 	std::cout << "Xin: " << good_showers.size() << " " << flag_nue << " " << max_energy/units::MeV << " " << dir.Angle(dir_beam)/3.1415926*180. << std::endl;
@@ -211,6 +244,9 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
   } // main vertex
   
 
+
+
+  
   if (flag_nue){
     neutrino_type |= 1UL << 5; //numu
   }
