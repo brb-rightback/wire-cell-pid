@@ -3,7 +3,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
   TVector3 dir_beam(0,0,1);
   TVector3 dir_drift(1,0,0);
   TVector3 dir_vertical(0,1,0);
-
+  bool flag_print = true;
  
   
   // check main_vertex ...
@@ -79,7 +79,9 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	}
 	TVector3 dir = max_shower->cal_dir_3vector(test_p, 15*units::cm);
 	flag_nue = true;
+	
 
+	
 	if (flag_nue && flag_single_shower){ // single shower ...
 	  double total_other_energy;
 	  for (auto it1 = showers.begin(); it1 != showers.end() ;it1++){
@@ -102,10 +104,14 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 
 	    if (E_shower > max_energy){ // not the highest energy ...
 	      flag_nue = false;
+	      if (flag_print) std::cout << "Xin_A: " << max_energy << " " << E_shower << std::endl;
 	      break;
 	    }
 	  }
-	  if (max_energy < 150*units::MeV && total_other_energy > 0.4 * max_energy) flag_nue = false;
+	  if (max_energy < 150*units::MeV && total_other_energy > 0.4 * max_energy && flag_nue) {
+	    flag_nue = false;
+	    if (flag_print) std::cout << "Xin_A1: " << max_energy << " " << total_other_energy << std::endl;
+	  }
 	  //std::cout << "Xin_B: " << max_energy << " " << total_other_energy << std::endl;
 	  
 	  if (flag_nue){ // beginning not consistent with shower itself
@@ -143,12 +149,15 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	      }else if (max_energy > 500*units::MeV){ // high energy
 		if ((angle1 >10 || angle2 > 10)&& angle > 25){
 		  flag_nue = false;
+		  if (flag_print) std::cout << "Xin_B: " << max_energy << " " << angle1 << " " << angle2 << " " << angle << " " << ratio << std::endl;
 		}
 	      }else{
 		if (angle > 25 && (angle1 > 7.5 || angle2 > 7.5)){
 		  flag_nue = false;
+		  if (flag_print) std::cout << "Xin_B1: " << max_energy << " " << angle1 << " " << angle2 << " " << angle << " " << ratio << std::endl;
 		}else if ((angle1 > 7.5 || angle2 > 7.5) && ratio<0.97){
 		  flag_nue = false;
+		  if (flag_print) std::cout << "Xin_B2: " << max_energy << " " << angle1 << " " << angle2 << " " << angle << " " << ratio << std::endl;
 		}
 	      }
 	    }
@@ -172,13 +181,17 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	    }
 	    if ((E_shower > 0.6 * max_energy || E_shower > 0.45 * max_energy && max_energy - E_shower < 150*units::MeV) ){
 	      flag_nue = false;
+	      if (flag_print) std::cout << "Xin_C: " << max_energy << " " << E_shower << std::endl;
 	      break;
 	    }
 	    if (E_shower > 70*units::MeV)
 	      E_total += E_shower;
 	    //	    std::cout << "Xin_A: " << max_energy << " " << E_shower << " " << bad_reconstruction(shower) << " " << bad_reconstruction_1(shower) << std::endl;
 	  }
-	  if (E_total > 0.6*max_energy) flag_nue = false;
+	  if (E_total > 0.6*max_energy && flag_nue){
+	    flag_nue = false;
+	    if (flag_print) std::cout << "Xin_C1: " << max_energy << " " << E_total << std::endl;
+	  }
 
 	  double total_other_energy;
 	  for (auto it1 = showers.begin(); it1 != showers.end() ;it1++){
@@ -201,11 +214,16 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	    if (pair_result.second > 2) continue;
 	    if (E_shower > max_energy *1.5  && max_energy < 200*units::MeV){ // not the highest energy ...
 	      flag_nue = false;
+	      if (flag_print) std::cout << "Xin_D: " << max_energy << " " << E_shower << std::endl;
 	      break;
 	    }
 	  }
 	  //  std::cout << max_energy << " " << total_other_energy << std::endl;
-	  if (max_energy < 200*units::MeV && total_other_energy  > max_energy * 1.5) flag_nue = false;
+	  if (max_energy < 200*units::MeV && total_other_energy  - max_energy >200*units::MeV && flag_nue) {
+	    flag_nue = false;
+	    if (flag_print) std::cout << "Xin_D1: " << max_energy << " " << total_other_energy << std::endl;
+	  }
+	  
 	  
 
 	}
@@ -228,7 +246,10 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	      }
 	    }
 	  }
-	  if (E_muon > max_energy) flag_nue = false;
+	  if (E_muon > max_energy) {
+	    flag_nue = false;
+	    if (flag_print) std::cout << "Xin_E: " << max_energy << " " << E_muon << std::endl;
+	  }
 	  //	  std::cout << "Xin_A: " << max_energy << " " << E_muon << " " << muon_length/units::cm << std::endl;
 	}
 
@@ -236,6 +257,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	  WCPPID::ProtoSegment *sg = max_shower->get_start_segment();
 	  if (max_energy < 500*units::MeV && sg->get_length() > 50*units::cm){
 	    flag_nue = false;
+	    if (flag_print) std::cout << "Xin_F: " << max_energy << " " << sg->get_length()/units::cm << std::endl;
 	  }
 	  //	  std::cout << "Xin_A: " << sg->get_length()/units::cm << " " << sg->get_direct_length()/units::cm << " " << max_energy << std::endl;
 	}
@@ -260,7 +282,8 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	    if ((!sg->get_flag_shower()) && (!sg->is_dir_weak())){
 	      num_good_tracks ++;
 	    }
-	    if (angle > max_angle){
+	    //	    std::cout << sg->get_length()/units::cm << " " << angle << std::endl;
+	    if (angle > max_angle && sg->get_length() > 1.0*units::cm){
 	      max_angle = angle;
 	      max_sg = sg;
 	    }
@@ -269,6 +292,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	  if (max_sg !=0){
 	    if (map_vertex_segments[main_vertex].size()>=3 && num_good_tracks == 0 && max_angle > 150 && max_energy < 500*units::MeV && (max_sg->get_length() < 8*units::cm || max_shower->get_start_segment()->get_length() < 8*units::cm)){
 	      flag_nue = false;
+	      if (flag_print) std::cout << "Xin_G: " << max_energy << " " << map_vertex_segments[main_vertex].size() << " " << num_good_tracks << " " << max_angle << " " << max_sg->get_length()/units::cm << " " << max_shower->get_start_segment()->get_length()/units::cm << std::endl;
 	    }
 	    //	    std::cout << "Xin_A: " << max_energy << " " << max_angle << " " << map_vertex_segments[main_vertex].size() << " " << max_sg->get_particle_type() << " " << max_sg->get_length()/units::cm << " " << max_sg->is_dir_weak() << " " << max_sg->get_medium_dQ_dx()/(43e3/units::cm) << " " << num_good_tracks << " " << max_shower->get_start_segment()->get_length()/units::cm << " " << std::endl;
 	  }
@@ -276,11 +300,14 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	}
 
 	if (flag_nue){
-	  if (bad_reconstruction_2(main_vertex, max_shower)) flag_nue = false;	  
+	  if (bad_reconstruction_2(main_vertex, max_shower)) {
+	    flag_nue = false;
+	    if (flag_print) std::cout << "Xin_H: " << max_energy << std::endl;
+	  }
 	}
 	
 	
-	std::cout << "Xin: " << good_showers.size() << " " << flag_nue << " " << max_energy/units::MeV << " " << dir.Angle(dir_beam)/3.1415926*180. << std::endl;
+	//	std::cout << "Xin: " << good_showers.size() << " " << flag_nue << " " << max_energy/units::MeV << " " << dir.Angle(dir_beam)/3.1415926*180. << std::endl;
       }
     } // has a shower ...
   } // main vertex
@@ -290,7 +317,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 
   
   if (flag_nue){
-    neutrino_type |= 1UL << 5; //numu
+    neutrino_type |= 1UL << 5; //nue
   }
 
   return flag_nue;
@@ -796,10 +823,11 @@ bool WCPPID::NeutrinoID::bad_reconstruction_2(WCPPID::ProtoVertex* vertex, WCPPI
   double direct_length = sg->get_direct_length();
 
   // low energy, only one segment, and not wiggled ... 7008_184_9232
-  if (Eshower < 100*units::MeV && shower->get_num_segments() == 1 && (!sg->get_flag_shower_trajectory())) flag_bad = true;
+  if (Eshower < 100*units::MeV && shower->get_num_segments() == 1 && (!sg->get_flag_shower_trajectory()) && direct_length/length > 0.95) flag_bad = true;
   // not wiggle ...  7049_870_43513
   if (Eshower < 100*units::MeV && total_main_length/total_length > 0.95 && length/total_length > 0.85 && direct_length/length > 0.95 && sg->get_flag_shower_trajectory()) flag_bad = true;
 
+  // std::cout << Eshower << " " << total_main_length/total_length << " " << length/total_length << " " << direct_length/length << " " << sg->get_flag_shower_trajectory() << " " << flag_bad << std::endl;
   
   if ((!flag_bad) && Eshower < 600*units::MeV){
     Point vertex_point;
@@ -837,10 +865,10 @@ bool WCPPID::NeutrinoID::bad_reconstruction_2(WCPPID::ProtoVertex* vertex, WCPPI
       if (angle > 90 && dir1.Mag() > 10*units::cm) acc_length += length;
       total_length += length;
       if (angle > 150 && dir1.Mag() > 10*units::cm) flag_bad = true;
-      //      std::cout << dir.Angle(dir1)/3.1415926*180. << " " << dir1.Mag()/units::cm << std::endl;
+      //std::cout << dir.Angle(dir1)/3.1415926*180. << " " << dir1.Mag()/units::cm << std::endl;
     }
     if (acc_length > 0.33 * total_length) flag_bad = true;
-    //    std::cout << Eshower << " " << acc_length/units::cm << " " << total_length/units::cm << std::endl;
+    //std::cout << Eshower << " " << acc_length/units::cm << " " << total_length/units::cm << std::endl;
 
     
     if ((!flag_bad) && Eshower < 250*units::MeV){
@@ -862,10 +890,11 @@ bool WCPPID::NeutrinoID::bad_reconstruction_2(WCPPID::ProtoVertex* vertex, WCPPI
 	ave_p.x /= num_p;
 	ave_p.y /= num_p;
 	ave_p.z /= num_p;
+      
+	TVector3 dir1(ave_p.x - other_point.x, ave_p.y - other_point.y,  ave_p.z - other_point.z);
+	if (dir1.Mag() > 3*units::cm &&  dir.Angle(dir1)/3.1415926*180. > 60 && sg->get_length() > 10*units::cm) flag_bad = true;
+	//	std::cout << Eshower << " " << dir.Angle(dir1)/3.1415926*180. << " " << dir1.Mag()/units::cm << std::endl;
       }
-      TVector3 dir1(ave_p.x - other_point.x, ave_p.y - other_point.y,  ave_p.z - other_point.z);
-      if (dir1.Mag() > 3*units::cm &&  dir.Angle(dir1)/3.1415926*180. > 60 && sg->get_length() > 10*units::cm) flag_bad = true;
-      //      std::cout << Eshower << " " << dir.Angle(dir1)/3.1415926*180. << " " << dir1.Mag()/units::cm << std::endl;
     }
     
     if ((!flag_bad) &&  Eshower < 600*units::MeV){
