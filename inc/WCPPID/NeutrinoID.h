@@ -334,7 +334,7 @@ namespace WCPPID{
     bool bad_reconstruction(WCPPID::WCShower* shower);
     
     bool bad_reconstruction_1(WCPPID::WCShower* shower);
-    bool bad_reconstruction_2(WCPPID::WCShower* shower);
+    bool bad_reconstruction_2(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower);
     
     bool low_energy_overlapping(WCPPID::WCShower* shower);
     
