@@ -34,6 +34,17 @@ WCPPID::WCShower::~WCShower(){
   if (pcloud_associated != (ToyPointCloud*)0) delete pcloud_associated;
 }
 
+
+int WCPPID::WCShower::get_num_main_segments(){
+  int num = 0;
+  for (auto it = map_seg_vtxs.begin(); it != map_seg_vtxs.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if (sg->get_cluster_id() == start_segment->get_cluster_id()) num ++;
+  }
+  return num;
+}
+
+
 double WCPPID::WCShower::get_closest_dis(WCPPID::ProtoSegment *seg){
   Point test_p = get_closest_point(seg->get_point_vec().front()).second;
   test_p = seg->get_closest_point(test_p).second;

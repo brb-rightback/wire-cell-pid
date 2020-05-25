@@ -59,6 +59,7 @@ namespace WCPPID{
     double get_total_track_length();
     
     int get_num_segments(){return  map_seg_vtxs.size();};
+    int get_num_main_segments();
     void update_particle_type();
     
     void rebuild_point_clouds();
