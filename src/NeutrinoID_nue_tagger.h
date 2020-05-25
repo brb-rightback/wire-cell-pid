@@ -3,7 +3,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
   TVector3 dir_beam(0,0,1);
   TVector3 dir_drift(1,0,0);
   TVector3 dir_vertical(0,1,0);
-  bool flag_print = true;
+  bool flag_print = false;
  
   
   // check main_vertex ...
