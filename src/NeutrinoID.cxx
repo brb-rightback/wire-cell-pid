@@ -461,7 +461,7 @@ void WCPPID::NeutrinoID::examine_main_vertices(WCPPID::ProtoVertexSelection& ver
 	      break;
 	    }
 	  }else{ // not shower 
-	    if ((!sg1->is_dir_weak()) && length > 5*units::cm){
+	    if ((!sg1->is_dir_weak()) && length > 6*units::cm){
 	      flag_skip = false;
 	      break;
 	    }

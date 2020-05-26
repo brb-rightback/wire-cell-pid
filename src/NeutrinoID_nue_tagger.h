@@ -1079,6 +1079,8 @@ void WCPPID::NeutrinoID::examine_showers(){
   for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
     WCPPID::ProtoSegment *sg = *it;
     if (map_segment_in_shower.find(sg) != map_segment_in_shower.end()) continue;
+    if (sg->get_length() > 40*units::cm) continue;
+    //    std::cout << sg->get_length()/units::cm << std::endl;
     WCPPID::ProtoVertex *vtx = find_other_vertex(sg, main_vertex);
 
     bool flag_checked = false;
