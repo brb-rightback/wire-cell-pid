@@ -13,7 +13,7 @@ void WCPPID::NeutrinoID::separate_track_shower(){
   //  WCPPID::ProtoSegment *sg = it->first;
   //  sg->is_shower_trajectory();
   //  sg->is_shower_topology();
-    //  std::cout <<" C: " << sg->get_cluster_id() << " " << sg->get_id() << " " << sg->get_flag_shower_trajectory() << " " << sg->get_flag_shower_topology() << std::endl;
+  //  std::cout <<" C: " << sg->get_cluster_id() << " " << sg->get_id() << " " << sg->get_flag_shower_trajectory() << " " << sg->get_flag_shower_topology() << std::endl;
   //}
   
   PR3DClusterSelection all_clusters = other_clusters;
@@ -64,7 +64,7 @@ void WCPPID::NeutrinoID::determine_direction(WCPPID::PR3DCluster* temp_cluster){
     }
 
     bool flag_print = false;
-    //  if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
+    //if (sg->get_cluster_id() == main_cluster->get_cluster_id()) flag_print = true;
     //if (sg->get_cluster_id()==62) flag_print = true;
     
     if (sg->get_flag_shower_trajectory()){
@@ -1345,8 +1345,8 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   }
 
   
-  //  std::cout << "Information after main vertex determination: " << std::endl;
-  //print_segs_info(main_vertex);
+  // std::cout << "Information after main vertex determination: " << std::endl;
+  // print_segs_info(main_vertex);
   
 }
 
