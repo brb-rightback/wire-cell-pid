@@ -96,7 +96,8 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	    }else{
 	      E_shower = shower->get_kine_charge();
 	    }
-	    //	    std::cout << sg->get_cluster_id() << " " << pair_result.second << " " << E_shower << std::endl;
+
+	    //std::cout << sg->get_cluster_id() << " " << pair_result.second << " " << E_shower << std::endl;
 	    if (pair_result.second <=3)
 	      total_other_energy += E_shower;
 	    if (pair_result.second > 2) continue;
@@ -166,6 +167,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 
 	if (flag_nue){ // no multiple EM showers
 	  double E_total = 0;
+	  int nshowers = 0;
 	  for (auto it1 = map_vertex_to_shower[main_vertex].begin(); it1 != map_vertex_to_shower[main_vertex].end(); it1++){
 	    WCPPID::WCShower *shower = *it1;
 	    WCPPID::ProtoSegment *sg = shower->get_start_segment();
@@ -184,16 +186,20 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	      if (flag_print) std::cout << "Xin_C: " << max_energy << " " << E_shower << std::endl;
 	      break;
 	    }
-	    if (E_shower > 70*units::MeV)
+	    if (E_shower > 50*units::MeV){
 	      E_total += E_shower;
+	      nshowers ++;
+	    }
+
 	    //	    std::cout << "Xin_A: " << max_energy << " " << E_shower << " " << bad_reconstruction(shower) << " " << bad_reconstruction_1(shower) << std::endl;
 	  }
-	  if (E_total > 0.6*max_energy && flag_nue){
+	  if ((E_total > 0.6*max_energy || max_energy < 400*units::MeV && nshowers >=2 && E_total > 0.3 * max_energy ) && flag_nue){
 	    flag_nue = false;
 	    if (flag_print) std::cout << "Xin_C1: " << max_energy << " " << E_total << std::endl;
 	  }
 
 	  double total_other_energy=0;
+	  int total_num_showers = 0;
 	  for (auto it1 = showers.begin(); it1 != showers.end() ;it1++){
 	    WCPPID::WCShower *shower = *it1;
 	    WCPPID::ProtoSegment *sg = shower->get_start_segment();
@@ -209,17 +215,23 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	    if (bad_reconstruction(shower)) continue;
 	  
 	    //
-	    if (pair_result.second <=3) 	      total_other_energy += E_shower;
-	    //   std::cout << sg->get_cluster_id() << " " << pair_result.second << " " << E_shower << std::endl;
+	    if (pair_result.second <=3) 	  {
+	      total_other_energy += E_shower;
+	      if (E_shower > 50*units::MeV)
+		total_num_showers ++;
+	    }
+	    //  std::cout << sg->get_cluster_id() << " " << pair_result.second << " " << E_shower << " " << total_num_showers << std::endl;
 	    if (pair_result.second > 2) continue;
-	    if (E_shower > max_energy *1.5  && max_energy < 200*units::MeV){ // not the highest energy ...
+	    if (E_shower > max_energy *1.2  && max_energy < 250*units::MeV){ // not the highest energy ...
 	      flag_nue = false;
 	      if (flag_print) std::cout << "Xin_D: " << max_energy << " " << E_shower << std::endl;
 	      break;
 	    }
 	  }
-	  //  std::cout << max_energy << " " << total_other_energy << std::endl;
-	  if (max_energy < 200*units::MeV && total_other_energy  - max_energy >200*units::MeV && flag_nue) {
+	  //	  std::cout << max_energy << " " << total_other_energy << " "<< total_num_showers << std::endl;
+	  
+	  if (max_energy < 250*units::MeV && (total_other_energy  - max_energy >200*units::MeV 
+					      || total_other_energy - max_energy > 60*units::MeV && total_num_showers >=2 ) && flag_nue) {
 	    flag_nue = false;
 	    if (flag_print) std::cout << "Xin_D1: " << max_energy << " " << total_other_energy << std::endl;
 	  }
@@ -925,7 +937,8 @@ bool WCPPID::NeutrinoID::bad_reconstruction_2(WCPPID::ProtoVertex* vertex, WCPPI
       if (angle > 90 && dir1.Mag() > 10*units::cm) acc_length += length;
       total_length += length;
       if (angle > 150 && dir1.Mag() > 10*units::cm) flag_bad = true;
-      //std::cout << dir.Angle(dir1)/3.1415926*180. << " " << dir1.Mag()/units::cm << std::endl;
+      if (angle > 105 && sg1->get_length() > 15*units::cm) flag_bad = true;
+      //      std::cout << dir.Angle(dir1)/3.1415926*180. << " " << dir1.Mag()/units::cm << " " << sg1->get_length() << std::endl;
     }
     if (acc_length > 0.33 * total_length) flag_bad = true;
     //std::cout << Eshower << " " << acc_length/units::cm << " " << total_length/units::cm << std::endl;
@@ -1040,7 +1053,7 @@ bool WCPPID::NeutrinoID::bad_reconstruction(WCPPID::WCShower* shower){
 
  
         
-    //std::cout << Eshower << " " << n_connected << " " << max_length << std::endl;
+    //    std::cout << Eshower << " " << n_connected << " " << max_length << std::endl;
 
     if (Eshower < 400*units::MeV){
       if (n_connected <= 1 && max_length > 45*units::cm){
@@ -1073,7 +1086,7 @@ bool WCPPID::NeutrinoID::bad_reconstruction(WCPPID::WCShower* shower){
 	flag_bad_shower = true;
       }
     }else{
-      if (n_connected <= 1 && max_length > 55*units::cm){
+      if (n_connected <= 1 && max_length > 50*units::cm){
 	flag_bad_shower = true;
       }else if (n_connected == 2 && max_length > 60*units::cm){
 	flag_bad_shower = true;
@@ -1179,7 +1192,7 @@ bool WCPPID::NeutrinoID::bad_reconstruction(WCPPID::WCShower* shower){
 	  flag_bad_shower = true;
 	}
       }else{
-	if (n_connected <= 1 && max_length > 55*units::cm){
+	if (n_connected <= 1 && max_length > 50*units::cm){
 	  flag_bad_shower = true;
 	}else if (n_connected == 2 && max_length > 60*units::cm){
 	  flag_bad_shower = true;
