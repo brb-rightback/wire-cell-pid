@@ -197,7 +197,7 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
   
   // std::cout << "Xin1: " << max_muon_length/units::cm << std::endl;
   
-  if (max_muon_length > 100*units::cm || max_length_all > 120*units::cm) flag_long_muon = true;
+  if ((max_muon_length > 100*units::cm || max_length_all > 120*units::cm) && flag_numu_cc) flag_long_muon = true;
   
   if (flag_numu_cc){
     neutrino_type |= 1UL << 2; //numu

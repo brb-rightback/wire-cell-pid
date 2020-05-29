@@ -207,6 +207,7 @@ namespace WCPPID{
     WCPPID::ProtoSegment* find_incoming_segment(WCPPID::ProtoVertex *vtx);
     ProtoVertex* find_vertex_other_segment(WCPPID::PR3DCluster *temp_cluster, bool flag_forward, WCP::WCPointCloud<double>::WCPoint& wcp);
     std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex* > find_cont_muon_segment(WCPPID::ProtoSegment* sg, WCPPID::ProtoVertex* vtx, bool flag_ignore_dQ_dx = false);
+    std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex* > find_cont_muon_segment_nue(WCPPID::ProtoSegment* sg, WCPPID::ProtoVertex* vtx, bool flag_ignore_dQ_dx = false);
     
     // calculate charge
     void collect_2D_charges();
@@ -331,7 +332,7 @@ namespace WCPPID{
     bool gap_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment* sg);
     int mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, bool flag_strong_check = false);
     bool pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower);
-    bool bad_reconstruction(WCPPID::WCShower* shower);
+    bool bad_reconstruction(WCPPID::WCShower* shower, bool flag_print = false);
     
     bool bad_reconstruction_1(WCPPID::WCShower* shower);
     bool bad_reconstruction_2(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower);

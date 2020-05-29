@@ -4,7 +4,6 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
   TVector3 dir_drift(1,0,0);
   TVector3 dir_vertical(0,1,0);
   bool flag_print = true;
- 
   
   // check main_vertex ...
   {
@@ -22,15 +21,12 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	WCPPID::WCShower *shower = *it1;
 	WCPPID::ProtoSegment *sg = shower->get_start_segment();
 	if (sg->get_particle_type()==13) continue;
+
+	//	if (flag_print) std::cout << "Qian_I: " << sg->get_id() << " " << sg->get_particle_type() << " " << shower->get_kine_charge()/units::MeV << " " << shower->get_kine_best()/units::MeV << std::endl;
 	
 	// higher than 70 MeV, and connect to the vertex ...
 	if (map_vertex_segments[main_vertex].find(sg) != map_vertex_segments[main_vertex].end() && (shower->get_kine_charge() > 80*units::MeV && shower->get_kine_best()==0 || shower->get_kine_best() > 80*units::MeV)){
 
-	  if (bad_reconstruction(shower)) continue;	// bad reconstruction ...
-	  if (bad_reconstruction_1(shower)) continue;	// bad reconstruction ...
-	  if (low_energy_overlapping(shower)) continue; // low energy overlapping 
-	
-	  
 	  double E_shower = 0;
 	  if (shower->get_kine_best() != 0){ 
 	    E_shower = shower->get_kine_best();
@@ -41,11 +37,23 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	    max_shower = shower;
 	    max_energy = E_shower;
 	  }
+
+	  if (flag_print) std::cout << "Qian_O: " << E_shower/units::cm << " " << bad_reconstruction(shower) << " " << bad_reconstruction_1(shower) << " " << low_energy_overlapping(shower) << std::endl;
+
 	  
-	  //  std::cout << shower->get_kine_charge()/units::MeV << " " << muon_kine_energy/units::MeV << std::endl;
+	  if (bad_reconstruction(shower)) continue;	// bad reconstruction (mis ided track as shower)
+	  if (bad_reconstruction_1(shower)) continue;	// bad reconstruction ... ( stem does not match with shower direction)
+	  if (low_energy_overlapping(shower)) continue; // low energy overlapping situation 
+	
 	  
-	  // std::cout << "Xin: " << shower->get_total_length(main_vertex->get_cluster_id())/units::cm << " " << muon_length/units::cm << std::endl;
+	 
+	  
+	  //std::cout << shower->get_kine_charge()/units::MeV  << std::endl;
+	  //	  std::cout << ": " << shower->get_total_length(main_vertex->get_cluster_id())/units::cm << " " << muon_length/units::cm << std::endl;
+	  if (flag_print) std::cout << "Qian_A: " << E_shower/units::MeV << " " << shower->get_total_length(main_vertex->get_cluster_id())/units::cm << " " << muon_length/units::cm << std::endl;
+	  
 	  if (shower->get_total_length(main_vertex->get_cluster_id()) < muon_length * 0.5) continue;
+
 	  
 	  if (!gap_identification(main_vertex, sg)){ // gap id
 	    int mip_id;
@@ -54,6 +62,9 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	    }else{
 	      mip_id = mip_identification(main_vertex,sg, shower); // dQ/dx id
 	    }
+
+	    if (flag_print) std::cout << "Qian_B: " << E_shower/units::MeV << " " << mip_id << std::endl;
+	    
 	    
 	    if (mip_id == 1){
 	      good_showers.insert(shower);
@@ -64,8 +75,9 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 		//flag_nue = true;
 	      }
 	    }
-	  } // gap id
- 	  
+	  }else{ // gap id
+	    if (flag_print) std::cout << "Qian_C: gap founded" << E_shower/units::MeV << std::endl; 
+	  }
 	} // 80 MeV, and connected
       } // loop over showers
 
@@ -321,7 +333,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	  }
 	}
 	
-	
+	//	bad_reconstruction(max_shower, true);
 	std::cout << "Xin: " << good_showers.size() << " " << flag_nue << " " << max_energy/units::MeV << " " << dir.Angle(dir_beam)/3.1415926*180. << std::endl;
       }
     } // has a shower ...
@@ -988,8 +1000,8 @@ bool WCPPID::NeutrinoID::bad_reconstruction_2(WCPPID::ProtoVertex* vertex, WCPPI
 	//	std::cout << Eshower << " " << dir1.Angle(dir)/3.1415926*180. << " " << dir1.Mag()/units::cm << " " << sg1->get_length()/units::cm << std::endl;
       }      
     }
-    
   }
+
 
 
   //  std::cout << "Xin_A: " << Eshower << " " << direct_length/length << " " << length/total_length << " " << total_main_length/total_length << " " << total_length/units::cm << " " << shower->get_num_main_segments()  << std::endl;
@@ -998,7 +1010,7 @@ bool WCPPID::NeutrinoID::bad_reconstruction_2(WCPPID::ProtoVertex* vertex, WCPPI
   return flag_bad;
 }
 
-bool WCPPID::NeutrinoID::bad_reconstruction(WCPPID::WCShower* shower){
+bool WCPPID::NeutrinoID::bad_reconstruction(WCPPID::WCShower* shower, bool flag_print){
   bool flag_bad_shower = false;
   
   double Eshower = 0;
@@ -1020,6 +1032,8 @@ bool WCPPID::NeutrinoID::bad_reconstruction(WCPPID::WCShower* shower){
       flag_bad_shower = true;
   }
 
+  //  std::cout << flag_bad_shower << std::endl;
+  
   if (!flag_bad_shower){
     double max_length = 0;
     int n_connected = 0;
@@ -1030,49 +1044,77 @@ bool WCPPID::NeutrinoID::bad_reconstruction(WCPPID::WCShower* shower){
       double medium_dQ_dx = sg1->get_medium_dQ_dx();
       double dQ_dx_cut = 0.8866+0.9533 *pow(18*units::cm/length, 0.4234);
 
-      //std::cout << length/units::cm << " " << direct_length/units::cm << " " << medium_dQ_dx/(43e3/units::cm) << " " << dQ_dx_cut  << " " << sg1->get_flag_shower_topology() << std::endl;
+      //  std::cout << length/units::cm << " " << direct_length/units::cm << " " << medium_dQ_dx/(43e3/units::cm) << " " << dQ_dx_cut  << " " << sg1->get_flag_shower_topology() << std::endl;
       
       if ((!sg1->get_flag_shower_topology()) || direct_length > 0.94*length){
 	auto pair_vertices = find_vertices(sg1);
 	double tmp_length = length;
-	auto results1 = find_cont_muon_segment(sg1, pair_vertices.first, true);
-	if (results1.first != 0){
-	  tmp_length += results1.first->get_length();
+	if (pair_vertices.first != main_vertex){
+	  auto results1 = find_cont_muon_segment_nue(sg1, pair_vertices.first, true);
+	  if (results1.first != 0){
+	    if ((!results1.first->get_flag_shower_topology()) || results1.first->get_direct_length() > 0.94*results1.first->get_length() )
+	      tmp_length += results1.first->get_length();
+	  }
 	}
-	auto results2 = find_cont_muon_segment(sg1, pair_vertices.second, true);
-	if (results2.first != 0){
-	  tmp_length += results2.first->get_length();
+	if (pair_vertices.second != main_vertex){
+	  auto results2 = find_cont_muon_segment_nue(sg1, pair_vertices.second, true);
+	  if (results2.first != 0){
+	    if ((!results2.first->get_flag_shower_topology()) || results2.first->get_direct_length() > 0.94*results2.first->get_length())
+	      tmp_length += results2.first->get_length();
+	  }
 	}
+	
 	if (tmp_length > max_length) {
 	  max_length = tmp_length;
-	  n_connected = map_vertex_segments[pair_vertices.first].size() + map_vertex_segments[pair_vertices.second].size()-2;
+	  n_connected = 0;
+	  if (pair_vertices.first != main_vertex)
+	    n_connected += map_vertex_segments[pair_vertices.first].size()-1;
+	  if (pair_vertices.second != main_vertex)
+	    n_connected += map_vertex_segments[pair_vertices.second].size()-1;
 	  //	  std::cout << sg1->get_id() << " " << map_vertex_segments[pair_vertices.first].size() << " " << map_vertex_segments[pair_vertices.second].size() << " " << tmp_length/units::cm << std::endl;
 	}	
       }
     }
-
- 
-        
+    
     //    std::cout << Eshower << " " << n_connected << " " << max_length << std::endl;
-
-    if (Eshower < 400*units::MeV){
-      if (n_connected <= 1 && max_length > 45*units::cm){
+    if (Eshower < 200*units::MeV){
+      if (n_connected <= 1 && max_length > 38*units::cm){
 	flag_bad_shower = true;
       }else if (n_connected == 2 && max_length > 42*units::cm){
 	flag_bad_shower = true;
-      }else if (n_connected == 3 && max_length > 42*units::cm){
+      }else if (n_connected == 3 && max_length > 46*units::cm){
 	flag_bad_shower = true;
       }else if (max_length > 50*units::cm){
 	flag_bad_shower = true;
       }
+    }else if (Eshower < 400*units::MeV){
+      if (n_connected <= 1 && max_length > 42*units::cm){
+	flag_bad_shower = true;
+      }else if (n_connected == 2 && max_length > 49*units::cm){
+	flag_bad_shower = true;
+      }else if (n_connected == 3 && max_length > 52*units::cm){
+	flag_bad_shower = true;
+      }else if (max_length > 55*units::cm){
+	flag_bad_shower = true;
+      }
+    }else if (Eshower < 600*units::MeV){
+      if (n_connected <= 1 && max_length > 42*units::cm){
+	flag_bad_shower = true;
+      }else if (n_connected == 2 && max_length > 48*units::cm){
+	flag_bad_shower = true;
+      }else if (n_connected == 3 && max_length > 54*units::cm){
+	flag_bad_shower = true;
+      }else if (max_length > 62*units::cm){
+	flag_bad_shower = true;
+      }
     }else if (Eshower < 800*units::MeV){
-      if (n_connected <= 1 && max_length > 55*units::cm){
+      if (n_connected <= 1 && max_length > 46*units::cm){
 	flag_bad_shower = true;
-      }else if (n_connected == 2 && max_length > 60*units::cm){
+      }else if (n_connected == 2 && max_length > 52*units::cm){
 	flag_bad_shower = true;
-      }else if (n_connected == 3 && max_length > 75*units::cm){
+      }else if (n_connected == 3 && max_length > 56*units::cm){
 	flag_bad_shower = true;
-      }else if (max_length > 80*units::cm){
+      }else if (max_length > 62*units::cm){
 	flag_bad_shower = true;
       }
     }else if (Eshower < 1500*units::MeV){
@@ -1080,26 +1122,34 @@ bool WCPPID::NeutrinoID::bad_reconstruction(WCPPID::WCShower* shower){
 	flag_bad_shower = true;
       }else if (n_connected == 2 && max_length > 60*units::cm){
 	flag_bad_shower = true;
-      }else if (n_connected == 3 && max_length > 75*units::cm){
+      }else if (n_connected == 3 && max_length > 65*units::cm){
 	flag_bad_shower = true;
-      }else if (max_length > 80*units::cm){
+      }else if (max_length > 75*units::cm){
 	flag_bad_shower = true;
       }
     }else{
-      if (n_connected <= 1 && max_length > 50*units::cm){
+      if (n_connected <= 1 && max_length > 55*units::cm){
 	flag_bad_shower = true;
-      }else if (n_connected == 2 && max_length > 60*units::cm){
+      }else if (n_connected == 2 && max_length > 65*units::cm){
 	flag_bad_shower = true;
-      }else if (n_connected == 3 && max_length > 75*units::cm){
+      }else if (n_connected == 3 && max_length > 70*units::cm){
 	flag_bad_shower = true;
-      }else if (max_length > 80*units::cm){
+      }else if (max_length > 75*units::cm){
 	flag_bad_shower = true;
       }
     }
-    //    std::cout << "Xin: " << Eshower/units::MeV << " " << max_length/units::cm << " " << n_connected << std::endl;
 
+    if (max_length > 0.75*shower->get_total_length()) flag_bad_shower = true;
+    //  std::cout << flag_bad_shower << std::endl;
+    
+    if (flag_print){
+      std::cout << "XinQ: " << Eshower/units::MeV << " " << max_length/units::cm << " " << n_connected << " " << max_length/shower->get_total_length() << std::endl;
+    }
+
+    
     if (!flag_bad_shower){
-     
+      max_length = 0;
+      n_connected = 0;
       //std::cout << sg->get_id() << " " << sg->get_flag_shower_topology() << " " << sg->get_flag_shower_trajectory() << " " << shower->get_num_main_segments() << " " << sg->get_length()/units::cm << std::endl;
       if ( ((!sg->get_flag_shower_topology()) || sg->get_flag_shower_topology() && Eshower < 200*units::MeV) && (!sg->get_flag_shower_trajectory()) && shower->get_num_main_segments()  == 1 ){
 	double main_length = sg->get_length();
@@ -1149,16 +1199,16 @@ bool WCPPID::NeutrinoID::bad_reconstruction(WCPPID::WCShower* shower){
 	} // 
       }
 
-      // std::cout << Eshower << " " << max_length/units::cm << " " << n_connected << std::endl;
+      //      std::cout << Eshower << " " << max_length/units::cm << " " << n_connected << std::endl;
 
       if (Eshower < 200*units::MeV){
       	if (n_connected <= 1 && max_length > 36*units::cm){
       	  flag_bad_shower = true;
-      	}else if (n_connected == 2 && max_length > 36*units::cm){
+      	}else if (n_connected == 2 && max_length > 42*units::cm){
       	  flag_bad_shower = true;
-      	}else if (n_connected == 3 && max_length > 50*units::cm){
+      	}else if (n_connected == 3 && max_length > 48*units::cm){
       	  flag_bad_shower = true;
-      	}else if (max_length > 60*units::cm){
+      	}else if (max_length > 54*units::cm){
       	  flag_bad_shower = true;
       	}
       }else if (Eshower < 400*units::MeV){
@@ -1204,9 +1254,9 @@ bool WCPPID::NeutrinoID::bad_reconstruction(WCPPID::WCShower* shower){
       }
     }
   }
+  
  
  
-
   
   return flag_bad_shower;
 }
@@ -1278,6 +1328,12 @@ void WCPPID::NeutrinoID::examine_showers(){
     WCPPID::ProtoVertex *vtx = find_other_vertex(sg, main_vertex);
 
     bool flag_checked = false;
+
+    /* for (auto it1 = map_vertex_segments[vtx].begin(); it1 != map_vertex_segments[vtx].end(); it1++){ */
+    /*   WCPPID::ProtoSegment *sg1 = *it1; */
+    /*   if (sg1 == sg) continue; */
+    /*   std::cout << sg1->get_length()/units::cm << " " << sg1->get_particle_type() << " " << sg1->is_dir_weak() << std::endl; */
+    /* } */
     
     // case I ...
     if (map_vertex_to_shower.find(vtx) != map_vertex_to_shower.end()){
@@ -1300,7 +1356,7 @@ void WCPPID::NeutrinoID::examine_showers(){
 	
 	if (Eshower > 800*units::MeV && 180 - dir1.Angle(dir2)/3.1415926*180. < 30
 	    || Eshower > 150*units::MeV && 180 - dir1.Angle(dir2)/3.1415926*180. < 10){
-	  //	  std::cout << shower->get_kine_charge()/units::MeV << " " << dir1.Angle(dir2)/3.1415926*180. << " " << pair_result.second << " " << dir1.Angle(drift_dir)/3.1415926*180. << " " << dir2.Angle(drift_dir)/3.1415926*180. << std::endl;
+	  //std::cout << shower->get_kine_charge()/units::MeV << " " << dir1.Angle(dir2)/3.1415926*180. << " " << pair_result.second << " " << dir1.Angle(drift_dir)/3.1415926*180. << " " << dir2.Angle(drift_dir)/3.1415926*180. << std::endl;
 	  map_merge_seg_shower[sg] = shower;
 	  continue;
 	}

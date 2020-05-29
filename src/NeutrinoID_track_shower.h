@@ -2310,3 +2310,75 @@ std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex* > WCPPID::NeutrinoID::find
   }
   
 }
+
+
+std::pair<WCPPID::ProtoSegment*, WCPPID::ProtoVertex* > WCPPID::NeutrinoID::find_cont_muon_segment_nue(WCPPID::ProtoSegment* sg, WCPPID::ProtoVertex* vtx, bool flag_ignore_dQ_dx){
+  WCPPID::ProtoSegment *sg1 = 0;
+  double max_length = 0;
+  double max_angle = 0;
+  double max_ratio = 0;
+  WCPPID::ProtoVertex *vtx1 = 0;
+
+  bool flag_cont = false;
+
+  double max_ratio1 = 0;
+  double max_ratio1_length = 0;
+
+  double sg_length = sg->get_length();
+  
+  for (auto it = map_vertex_segments[vtx].begin(); it!= map_vertex_segments[vtx].end(); it++){
+    WCPPID::ProtoSegment* sg2 = *it;
+    if (sg2 == sg) continue;
+    WCPPID::ProtoVertex* vtx2 = find_other_vertex(sg2, vtx);
+
+    // check ...
+    TVector3 dir1 = sg->cal_dir_3vector(vtx->get_fit_pt(), 15*units::cm);
+    TVector3 dir2 = sg2->cal_dir_3vector(vtx->get_fit_pt(), 15*units::cm);
+
+    double length = sg2->get_length();
+    double angle = (3.1415926-dir1.Angle(dir2))/3.1415926*180.;
+    double ratio = sg2->get_medium_dQ_dx()/(43e3/units::cm);
+
+    double angle1 = angle;
+    //  double angle2 = angle;
+    //double angle3 = angle;
+    if (length > 30*units::cm || sg_length > 30*units::cm){
+      TVector3 dir3 = sg->cal_dir_3vector(vtx->get_fit_pt(), 30*units::cm);
+      TVector3 dir4 = sg2->cal_dir_3vector(vtx->get_fit_pt(), 30*units::cm);
+      angle1 = (3.1415926-dir3.Angle(dir4))/3.1415926*180.;
+      //angle2 = (3.1415926-dir3.Angle(dir2))/3.1415926*180.;
+      //angle3 = (3.1415926-dir1.Angle(dir4))/3.1415926*180.;
+    }
+    
+    //    std::cout << "A: " << angle << " " << angle1 << " "  << " " << length/units::cm << " " << ratio << " " << sg->get_id() << " " << sg2->get_id() << std::endl;
+    
+    if ( (angle < 12.5 || angle1 < 12.5 || sg_length < 6*units::cm && (angle < 15 || angle1 < 15)) &&  (ratio < 1.3 || flag_ignore_dQ_dx)){
+      flag_cont = true;
+      if (length *cos(angle/180.*3.1415926) > max_length){
+	max_length = length *cos(angle/180.*3.1415926) ;
+	max_angle = angle;
+	max_ratio = ratio;
+	sg1 = sg2;
+	vtx1 = vtx2;
+      }
+    }else{
+      if (ratio > max_ratio1){
+	max_ratio1 = ratio;
+	max_ratio1_length = length;
+      }
+    }
+  }
+  //  if (max_ratio1 > 1.2 && max_ratio1_length > 5*units::cm)
+  //  flag_cont = false;
+    //    std::cout << flag_cont << " " << max_ratio1 << " " << max_ratio1_length << std::endl;
+
+  if (flag_cont){
+    //    std::cout << max_angle << " " << max_length/units::cm << " " << max_ratio << std::endl;
+    return std::make_pair(sg1, vtx1);
+  }else{
+    sg1 = 0;
+    vtx1 = 0;
+    return std::make_pair(sg1, vtx1);
+  }
+  
+}
