@@ -438,16 +438,24 @@ void WCPPID::NeutrinoID::examine_main_vertices(WCPPID::ProtoVertexSelection& ver
 	  TVector3 dir2 = sg2->cal_dir_3vector(vtx->get_fit_pt(), 15*units::cm);
 	  TVector3 dir4 = sg2->cal_dir_3vector(vtx->get_fit_pt(), 30*units::cm);
 
-	  //	  std::cout << sg1->get_length()/units::cm << " " << sg2->get_length()/units::cm << " " << dir1.Angle(dir2)/3.1415926*180. << " " << dir3.Angle(dir4)/3.1415926*180. << std::endl;
+	  // std::cout << sg1->get_length()/units::cm << " " << sg2->get_length()/units::cm << " " << dir1.Angle(dir2)/3.1415926*180. << " " << dir3.Angle(dir4)/3.1415926*180. << " " << sg1->get_particle_type() << " " << sg2->get_particle_type() << std::endl;
 	  
-	  if ( (dir1.Angle(dir2)/3.1415926*180. > 165 || dir3.Angle(dir4)/3.1415926*180. > 165)&& (sg1->get_particle_type()==13 || sg2->get_particle_type()==13) && (sg1->get_length() > 30*units::cm|| sg2->get_length() > 30*units::cm)){
+	  if ( (dir1.Angle(dir2)/3.1415926*180. > 165 || dir3.Angle(dir4)/3.1415926*180. > 165)&& (sg1->get_particle_type()==13 || sg2->get_particle_type()==13 ) && (sg1->get_length() > 30*units::cm|| sg2->get_length() > 30*units::cm )){
 
-	    //  std::cout << "Xin: " << sg1->get_id() << " " << sg1->get_particle_type() << " " << sg1->get_length()/units::cm << std::endl;
+	    // std::cout << "Xin: " << sg1->get_id() << " " << sg1->get_particle_type() << " " << sg1->get_length()/units::cm << std::endl;
+	    // std::cout << "Xin: " << sg2->get_id() << " " << sg2->get_particle_type() << " " << sg2->get_length()/units::cm << std::endl;
+	    
+	    used_segments.insert(sg1);
+	    used_segments.insert(sg2);
+	  }else if ((dir1.Angle(dir2)/3.1415926*180. > 170 || dir3.Angle(dir4)/3.1415926*180. > 170)&& (sg1->get_particle_type()==2212 && (sg2->get_particle_type()==0 || sg2->get_particle_type()==2212) || sg2->get_particle_type()==2212 && (sg1->get_particle_type()==0 || sg1->get_particle_type()==2212)) && (sg1->get_length() > 20*units::cm &&  sg2->get_length() > 20*units::cm )){
+	    // std::cout << "Xin: " << sg1->get_id() << " " << sg1->get_particle_type() << " " << sg1->get_length()/units::cm << std::endl;
 	    // std::cout << "Xin: " << sg2->get_id() << " " << sg2->get_particle_type() << " " << sg2->get_length()/units::cm << std::endl;
 	    
 	    used_segments.insert(sg1);
 	    used_segments.insert(sg2);
 	  }
+
+	  
 	} // loop second track
       } // loop first track
 

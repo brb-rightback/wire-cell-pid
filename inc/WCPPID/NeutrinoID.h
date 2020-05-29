@@ -308,6 +308,7 @@ namespace WCPPID{
     void shower_clustering_with_nv_in_main_cluster();
     void shower_clustering_with_nv_from_main_cluster();
     void shower_clustering_with_nv_from_vertices();
+    void examine_merge_showers();
     // holder for now ...
     void shower_clustering_in_other_clusters(bool flag_save = true);
     void id_pi0_with_vertex();
