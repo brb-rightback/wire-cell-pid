@@ -209,12 +209,14 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     if (!flag_cosmic){
       auto results = numu_tagger();
       bool flag_long_muon = results.first;
-      if (!flag_long_muon) {
-	//	TPCParams& mp = Singleton<TPCParams>::Instance();
-	//	TGraph *g_range = mp.get_muon_r2ke();
-	//double muon_kine_energy = g_range->Eval(results.second/units::cm) * units::MeV;
-	nue_tagger(results.second);
-      }
+      // if (!flag_long_muon) {
+      //	TPCParams& mp = Singleton<TPCParams>::Instance();
+      //	TGraph *g_range = mp.get_muon_r2ke();
+      //double muon_kine_energy = g_range->Eval(results.second/units::cm) * units::MeV;
+      nue_tagger(results.second);
+      //      }else{
+      //	std::cout << "Long muon " << " " << results.second/units::cm << std::endl;
+      // }
     }
   }
 
