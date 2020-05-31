@@ -35,6 +35,99 @@ WCPPID::WCShower::~WCShower(){
 }
 
 
+std::vector<double> WCPPID::WCShower::get_stem_dQ_dx(WCPPID::ProtoVertex *vertex, WCPPID::ProtoSegment *sg, int limit){
+  std::vector<double> vec_dQ_dx;
+  {
+    std::vector<double>& vec_dQ = sg->get_dQ_vec();
+    std::vector<double>& vec_dx = sg->get_dx_vec();    
+    if (vertex->get_wcpt().index == sg->get_wcpt_vec().front().index){
+      for (size_t i=0;i!=vec_dQ.size();i++){
+	vec_dQ_dx.push_back(vec_dQ.at(i)/(vec_dx.at(i)+1e-9)/(43e3/units::cm));
+	if (vec_dQ_dx.size() >= limit) break;
+      }
+    }else{
+      for (int i=int(vec_dQ.size())-1;i>=0;i--){
+	vec_dQ_dx.push_back(vec_dQ.at(i)/(vec_dx.at(i)+1e-9)/(43e3/units::cm));
+	if (vec_dQ_dx.size() >= limit) break;
+      }
+    }
+  }
+  
+  if (sg == start_segment && vec_dQ_dx.size() < limit){
+    WCPPID::ProtoVertex *curr_vertex = vertex;
+    WCPPID::ProtoSegment *curr_segment = sg;
+    WCPPID::ProtoVertex *next_vertex = 0;
+    WCPPID::ProtoSegment *next_segment = 0;
+    int count = 0;
+    while(vec_dQ_dx.size()< limit && count < 3){
+      // find next vertex
+      for (auto it = map_seg_vtxs[curr_segment].begin(); it != map_seg_vtxs[curr_segment].end(); it++){
+	if ( (*it) == curr_vertex ) continue;
+	next_vertex = *it;
+      }
+      //      std::cout << "V: " << next_vertex << std::endl;
+      if (next_vertex ==0) break;
+
+      // find the next segment
+      TVector3 dir1(curr_vertex->get_fit_pt().x - next_vertex->get_fit_pt().x,
+		    curr_vertex->get_fit_pt().y - next_vertex->get_fit_pt().y,
+		    curr_vertex->get_fit_pt().z - next_vertex->get_fit_pt().z);
+      TVector3 dir2;
+      double max_angle = 0;
+      for (auto it = map_vtx_segs[next_vertex].begin(); it != map_vtx_segs[next_vertex].end(); it++){
+	if ((*it) == curr_segment) continue;
+	TVector3 tmp_dir = (*it)->cal_dir_3vector(next_vertex->get_fit_pt(), 10*units::cm);
+	double angle = dir1.Angle(tmp_dir)/3.1415926*180.;
+	if (angle > max_angle){
+	  max_angle = angle;
+	  next_segment = *it;
+	  dir2 = tmp_dir;
+	}
+      }
+      //std::cout << "S: " << next_segment << std::endl;
+      
+      if (next_segment ==0) break;
+      // check the next segment
+      bool flag_bad = false;
+      for (auto it = map_vtx_segs[next_vertex].begin(); it != map_vtx_segs[next_vertex].end(); it++){
+	if ((*it) == curr_segment) continue;
+	if ((*it) == next_segment) continue;
+	TVector3 tmp_dir = (*it)->cal_dir_3vector(next_vertex->get_fit_pt(), 10*units::cm);
+	if ((*it)->get_length() > 3*units::cm && dir2.Angle(tmp_dir)/3.1415926*180. < 25) flag_bad = true;
+      }
+      //std::cout << "C: " << flag_bad << std::endl;
+      if (flag_bad) break;
+      // keep add dQ/dx
+
+      vec_dQ_dx.pop_back();
+      std::vector<double>& vec_dQ = next_segment->get_dQ_vec();
+      std::vector<double>& vec_dx = next_segment->get_dx_vec();    
+      if (next_vertex->get_wcpt().index == next_segment->get_wcpt_vec().front().index){
+	for (size_t i=0;i!=vec_dQ.size();i++){
+	  vec_dQ_dx.push_back(vec_dQ.at(i)/(vec_dx.at(i)+1e-9)/(43e3/units::cm));
+	  if (vec_dQ_dx.size() >= limit) break;
+	}
+      }else{
+	for (int i=int(vec_dQ.size())-1;i>=0;i--){
+	  vec_dQ_dx.push_back(vec_dQ.at(i)/(vec_dx.at(i)+1e-9)/(43e3/units::cm));
+	  if (vec_dQ_dx.size() >= limit) break;
+	}
+      }
+      
+      if (vec_dQ_dx.size() >= limit) break;
+      // prepare the next ...
+      curr_vertex = next_vertex;
+      next_vertex = 0;
+      curr_segment = next_segment;
+      next_segment = 0;
+      count ++;
+    }
+  }
+  
+  return vec_dQ_dx;
+}
+
+
 int WCPPID::WCShower::get_num_main_segments(){
   int num = 0;
   for (auto it = map_seg_vtxs.begin(); it != map_seg_vtxs.end(); it++){

@@ -582,27 +582,25 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
   int mip_id = 1; 
   // 1 good, -1 bad, 0 not sure ...
 
-  std::vector<double> vec_dQ_dx;
-
-  std::vector<double>& vec_dQ = sg->get_dQ_vec();
-  std::vector<double>& vec_dx = sg->get_dx_vec();
-
-  
-  if (vertex->get_wcpt().index == sg->get_wcpt_vec().front().index){
-    for (size_t i=0;i!=vec_dQ.size();i++){
-      vec_dQ_dx.push_back(vec_dQ.at(i)/(vec_dx.at(i)+1e-9)/(43e3/units::cm));
-      if (vec_dQ_dx.size() >=20) break;
-    }
+  double Eshower = 0;
+  if (shower->get_kine_best() != 0){ 
+    Eshower = shower->get_kine_best();
   }else{
-    for (int i=int(vec_dQ.size())-1;i>=0;i--){
-      vec_dQ_dx.push_back(vec_dQ.at(i)/(vec_dx.at(i)+1e-9)/(43e3/units::cm));
-      if (vec_dQ_dx.size() >=20) break;
-    }
+    Eshower = shower->get_kine_charge();
   }
+  
+  double dQ_dx_cut  = 1.6;
+  if (Eshower > 1200*units::MeV) dQ_dx_cut = 1.85;
+  else if (Eshower > 800*units::MeV) dQ_dx_cut = 1.7;
+  else if (Eshower < 450*units::MeV) dQ_dx_cut = 1.5;
+  else if (Eshower < 300*units::MeV) dQ_dx_cut = 1.3;
+  
+  std::vector<double> vec_dQ_dx = shower->get_stem_dQ_dx(vertex, sg, 20);
+  
 
   std::vector<int> vec_threshold(vec_dQ_dx.size(), 0);
   for (size_t i=0;i!=vec_dQ_dx.size(); i++){
-    if (vec_dQ_dx.at(i)>1.3) vec_threshold.at(i) = 1;
+    if (vec_dQ_dx.at(i)>dQ_dx_cut) vec_threshold.at(i) = 1;
   }
 
   int n_end_reduction = 0;
@@ -611,7 +609,7 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
     if (vec_dQ_dx.at(i) < prev_vec_dQ_dx){
       n_end_reduction = i;
       prev_vec_dQ_dx = vec_dQ_dx.at(i);
-      if (vec_dQ_dx.at(i) < 1.3) break;
+      if (vec_dQ_dx.at(i) < dQ_dx_cut) break;
     }
   }
   
@@ -659,93 +657,40 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
     if (it != map_vertex_to_shower.end()){
       for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
 	WCPPID::WCShower *shower = *it1;
-	WCPPID::ProtoSegment *sg = shower->get_start_segment();
-	if (sg->get_particle_type()==13) continue;
-	if (map_vertex_segments[main_vertex].find(sg) != map_vertex_segments[main_vertex].end()){
+	WCPPID::ProtoSegment *sg1 = shower->get_start_segment();
+	if (sg1->get_particle_type()==13) continue;
+	if (map_vertex_segments[main_vertex].find(sg1) != map_vertex_segments[main_vertex].end()){
 	  n_showers ++;
 	}
       }
     }
     for (auto it1 = map_vertex_segments[vertex].begin(); it1 != map_vertex_segments[vertex].end(); it1++){
-      WCPPID::ProtoSegment *sg = *it1;
-      if (sg->get_flag_shower()) continue;
+      WCPPID::ProtoSegment *sg1 = *it1;
+      if (sg1->get_flag_shower()) continue;
       n_tracks ++;
-      if (sg->get_particle_type()==2212) n_protons ++;
+      if (sg1->get_particle_type()==2212) n_protons ++;
     }
   }
 
-  double Eshower = 0;
-  if (shower->get_kine_best() != 0){ 
-    //std::cout << "Xin: "<< sg->get_id() << " " << n_end_reduction << " " << n_first_mip << " " << n_first_non_mip << " " << n_first_non_mip_1 << " " << n_first_non_mip_2 << " " << shower->get_kine_best()/units::MeV  << " " << n_showers << " " << n_tracks << " " << n_protons << " " << map_vertex_segments[vertex].size() << std::endl;
-    Eshower = shower->get_kine_best();
-  }else{
-    // std::cout << "Xin: "<< sg->get_id() << " " << n_end_reduction << " " << n_first_mip << " " << n_first_non_mip << " " << n_first_non_mip_1 << " " << n_first_non_mip_2 << " "  << shower->get_kine_charge()/units::MeV << " " << n_showers << " " << n_tracks << " " << n_protons << " " << map_vertex_segments[vertex].size() << std::endl;
-    Eshower = shower->get_kine_charge();
-  }
 
-  //  std::cout << "Xin: "<< sg->get_id() << " " << n_end_reduction << " " << n_first_mip << " " << n_first_non_mip << " " << n_first_non_mip_1 << " " << n_first_non_mip_2 << " "  << shower->get_kine_charge()/units::MeV << " " << n_showers << " " << n_tracks << " " << n_protons << " " << map_vertex_segments[vertex].size() << std::endl;
-  
-  // quality check ...
-  double medium_dQ_dx = 1;
+
+   // quality check ...
   {
-    std::vector<double> tmp_vec_dQ_dx = vec_dQ_dx;
-    std::nth_element(tmp_vec_dQ_dx.begin(), tmp_vec_dQ_dx.begin() + tmp_vec_dQ_dx.size()/2, tmp_vec_dQ_dx.end());
-    medium_dQ_dx  = *std::next(tmp_vec_dQ_dx.begin(), tmp_vec_dQ_dx.size()/2);
-  }
-  
-  // shower split ...
-  if (n_showers == 2 && n_tracks ==0 && Eshower < 500*units::MeV) mip_id = -1; // bad
-  else if (n_first_non_mip_2 - n_first_mip >=2 && // dQ_dx cut ...
-	   (n_first_mip <=2 || (n_first_mip <= n_end_reduction &&
-				(n_first_mip <=3 || n_first_mip <=4 && Eshower > 600*units::MeV || n_first_mip <=6 && Eshower > 1000*units::MeV) ))
-	   ) mip_id = 1;
-  /* else if (n_first_non_mip_2 - n_first_mip >=1 && // dQ_dx cut ... */
-  /* 	   (n_first_mip <=2 || */
-  /* 	    n_first_mip <= n_end_reduction && */
-  /* 	    (n_first_mip <=3 || n_first_mip <=4 && Eshower > 600*units::MeV || n_first_mip <=6 && Eshower > 1000*units::MeV) )){ */
-  /*   if(n_first_mip > 1){  */
-  /*     if (vec_dQ_dx.at(n_first_mip-1) < 1.5) mip_id = 1; // nue CC */
-  /*     else mip_id = -1; */
-  /*   }else{ */
-  /*     mip_id = -1; */
-  /*   } */
-  /* } */
-  else mip_id = -1;
-
-  if (Eshower < 600*units::MeV){
-    int n_good_tracks = 0;
-    for (auto it = map_vertex_segments[vertex].begin(); it!= map_vertex_segments[vertex].end(); it++){
-      WCPPID::ProtoSegment *sg1 = *it;
-      if (sg1 == sg) continue;
-      if (!sg1->is_dir_weak() || sg1->get_length() > 10*units::cm) n_good_tracks ++;
+    double medium_dQ_dx = 1;
+    {
+      std::vector<double> tmp_vec_dQ_dx = vec_dQ_dx;
+      std::nth_element(tmp_vec_dQ_dx.begin(), tmp_vec_dQ_dx.begin() + tmp_vec_dQ_dx.size()/2, tmp_vec_dQ_dx.end());
+      medium_dQ_dx  = *std::next(tmp_vec_dQ_dx.begin(), tmp_vec_dQ_dx.size()/2);
     }
-    // 6043_4_243 event
-    if (n_good_tracks >1 && n_first_non_mip_2 <=2) mip_id = -1;
-    //    std::cout << n_good_tracks << " " << n_first_non_mip_2 << " " << Eshower << std::endl;
+    // low energy only ...
+    if (medium_dQ_dx < 0.75 && Eshower < 150*units::MeV) {
+      mip_id = -1;
+      std::cout << "kaka1: " << medium_dQ_dx << " " << Eshower/units::MeV << std::endl;
+      return mip_id;
+    }
   }
   
-  if (flag_strong_check){
-    if (!((n_first_mip <=2 || (n_first_mip <= n_end_reduction &&
-			       (n_first_mip <=3 || n_first_mip <=4 && Eshower > 600*units::MeV || n_first_mip <=6 && Eshower > 1000*units::MeV))) && n_first_non_mip_2 - n_first_mip > 3)) mip_id = -1;
-	//  std::cout << "Xin_A:" << n_first_mip << " " << n_first_non_mip_2 - n_first_mip << std::endl;
-  }
-
-
-  
-  if (mip_id == 1 &&  map_vertex_segments[vertex].size() ==1 && Eshower < 500*units::MeV){
-    //    std::cout << vec_dQ_dx.front() << " " << medium_dQ_dx << std::endl;
-    if (Eshower < 180*units::MeV || n_first_mip>0 || vec_dQ_dx.front() > 1.15 && n_end_reduction >= n_first_mip && Eshower < 360*units::MeV)
-      mip_id = 0;
-  }
-
-  //  std::cout << mip_id << " " << map_vertex_segments[vertex].size() << " " << Eshower/units::MeV << std::endl;
-  
-  
-  
-  if (medium_dQ_dx < 0.75 && Eshower < 150*units::MeV) mip_id = -1;
-    //std::cout << "Xin: " << medium_dQ_dx << " " << Eshower/units::MeV << std::endl;
-  
-  {
+  if (Eshower < 800*units::MeV){
     // check overlapping situation ...
     PointVector test_pts;
     if (vertex->get_wcpt().index == sg->get_wcpt_vec().front().index){
@@ -772,13 +717,73 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
     	if (std::get<2>(tuple_result) < min_w) min_w = std::get<2>(tuple_result);
 	//std::tuple<double, double, double> get_closest_2d_dis(WCP::Point &p);
       }
-      //std::cout << "Xin_B: " << i << " " << min_u/units::cm << " " << min_v/units::cm << " " << min_w/units::cm << std::endl;
-      if (min_u < 0.3*units::cm && min_v < 0.3*units::cm && min_w < 0.3*units::cm) mip_id = -1;
+      //
+      if (min_u < 0.3*units::cm && min_v < 0.3*units::cm && min_w < 0.3*units::cm) {
+	mip_id = -1;
+	std::cout << "kaka2: " << Eshower << " " << i << " " << min_u/units::cm << " " << min_v/units::cm << " " << min_w/units::cm << std::endl;
+	return mip_id;
+      }
     }
     
-    
   }
-     
+
+   // shower split ...
+  if (n_showers == 2 && n_tracks ==0 && Eshower < 500*units::MeV) {
+    mip_id = -1; // bad
+    std::cout << "kaka3: " << Eshower << std::endl;
+    return mip_id;
+  }
+
+  
+
+  
+ 
+  if (n_first_non_mip_2 - n_first_mip >=2 && // dQ_dx cut ...
+      (n_first_mip <=2 || (n_first_mip <= n_end_reduction &&
+			   (n_first_mip <=3
+			    || n_first_mip <=4 && Eshower > 600*units::MeV
+			    || n_first_mip <=5 && Eshower > 800*units::MeV
+			    || n_first_mip <=6 && Eshower > 1000*units::MeV
+			    || n_first_mip <=10 && Eshower > 1000*units::MeV && n_first_non_mip_1 - n_first_mip > 5
+			    || n_first_mip <=10 && Eshower > 1250*units::MeV) )
+       //       || (n_first_mip <= n_end_reduction &&
+       //   (n_first_non_mip_1 - n_first_mip >= 5 && n_first_mip <= 6))
+       )) mip_id = 1;
+  else mip_id = -1;
+  
+  if (flag_strong_check){
+    if (!((n_first_mip <=2 || (n_first_mip <= n_end_reduction &&
+			       (n_first_mip <=3
+				|| n_first_mip <=4 && Eshower > 600*units::MeV
+				|| n_first_mip <=5 && Eshower > 800*units::MeV
+				|| n_first_mip <=6 && Eshower > 1000*units::MeV
+				|| n_first_mip <=10 && Eshower > 1250*units::MeV)))
+	  && n_first_non_mip_2 - n_first_mip > 3)) mip_id = -1;
+    //  std::cout << "Xin_A:" << n_first_mip << " " << n_first_non_mip_2 - n_first_mip << std::endl;
+  }
+  
+  if (Eshower < 600*units::MeV){
+    int n_good_tracks = 0;
+    for (auto it = map_vertex_segments[vertex].begin(); it!= map_vertex_segments[vertex].end(); it++){
+      WCPPID::ProtoSegment *sg1 = *it;
+      if (sg1 == sg) continue;
+      if (!sg1->is_dir_weak() || sg1->get_length() > 10*units::cm) n_good_tracks ++;
+    }
+    // 6043_4_243 event
+    if (n_good_tracks >1 && n_first_non_mip_2 <=2) mip_id = -1;
+    //    std::cout << n_good_tracks << " " << n_first_non_mip_2 << " " << Eshower << std::endl;
+  }
+  
+  // single shower situation with energy lower than 500 MeV
+  if (mip_id == 1 &&  map_vertex_segments[vertex].size() ==1 && Eshower < 500*units::MeV){
+    //    std::cout << vec_dQ_dx.front() << " " << medium_dQ_dx << std::endl;
+    if (Eshower < 180*units::MeV || n_first_mip>0 || vec_dQ_dx.front() > 1.15 && n_end_reduction >= n_first_mip && Eshower < 360*units::MeV)
+      mip_id = 0;
+  }
+  
+  std::cout << "kaka4: "<< mip_id<< " " << sg->get_id() << " " << n_end_reduction << " " << n_first_mip << " " << n_first_non_mip << " " << n_first_non_mip_1 << " " << n_first_non_mip_2 << " "  << Eshower/units::MeV << " " << n_showers << " " << n_tracks << " " << n_protons << " " << map_vertex_segments[vertex].size() << std::endl;
+  
+  
   
   return mip_id;
 }

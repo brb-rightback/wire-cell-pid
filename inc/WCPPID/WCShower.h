@@ -53,7 +53,8 @@ namespace WCPPID{
     TVector3& get_init_dir(){return init_dir;};
     void fill_point_vec(WCP::PointVector& tmp_pts, bool flag_main = true);
  
-
+    std::vector<double> get_stem_dQ_dx(WCPPID::ProtoVertex *vertex, WCPPID::ProtoSegment *sg, int limit = 20);
+    
     double get_total_length();
     double get_total_length(int tmp_cluster_id);
     double get_total_track_length();
