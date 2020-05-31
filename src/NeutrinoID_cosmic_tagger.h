@@ -17,11 +17,11 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
     test_p.z = main_vertex->get_wcpt().z;
   }
   
-  std::vector<double> stm_tol_vec =     {3.0, 3.0, 3.0, 3.0, 3.0};
+  std::vector<double> stm_tol_vec =     {-1.5*units::cm, -1.5*units::cm, -1.5*units::cm, -1.5*units::cm, -1.5*units::cm};
   //  std::cout << fid->inside_fiducial_volume(test_p, offset_x) << " " << fid->inside_fiducial_volume(test_p, offset_x, &stm_tol_vec) << std::endl;
-
+  
   if (! fid->inside_fiducial_volume(test_p, offset_x, &stm_tol_vec)){  // Xiangpan's boundary
-  // if (!fid->inside_fiducial_volume(test_p, offset_x)){ // original boundary
+    // if (!fid->inside_fiducial_volume(test_p, offset_x)){ // original boundary
     neutrino_type |= 1UL << 1;
     if (flag_print) std::cout << "Xin_A: " << test_p << " " << true << std::endl;
     return true;
