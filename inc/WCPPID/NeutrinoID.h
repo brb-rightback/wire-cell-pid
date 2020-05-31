@@ -336,9 +336,13 @@ namespace WCPPID{
     bool bad_reconstruction(WCPPID::WCShower* shower, bool flag_print = false);
     
     bool bad_reconstruction_1(WCPPID::WCShower* shower);
-    bool bad_reconstruction_2(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower);
     
-    bool low_energy_overlapping(WCPPID::WCShower* shower);
+    bool bad_reconstruction_2(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower);
+
+    // main shower stem separated from the other parts
+    bool bad_reconstruction_3(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower);
+    
+    bool low_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false);
     
     
   protected:
