@@ -948,6 +948,7 @@ bool WCPPID::NeutrinoID::pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID:
 
 bool WCPPID::NeutrinoID::bad_reconstruction_3(WCPPID::ProtoVertex* vertex, WCPPID::WCShower *shower){
   bool flag_bad = false;
+  TVector3 drift_dir(1,0,0);
 
   double Eshower = 0;
   if (shower->get_kine_best() != 0){ 
@@ -989,6 +990,64 @@ bool WCPPID::NeutrinoID::bad_reconstruction_3(WCPPID::ProtoVertex* vertex, WCPPI
   if (main_length < 0.05*total_length && min_dis > 8*units::cm) flag_bad = true;
 
   //std::cout << "kaka: " << Eshower << " " << main_length/units::cm << " " << total_length/units::cm << " " << min_dis/units::cm << std::endl;
+
+
+  if (!flag_bad){
+    Point vertex_point;
+    
+    if (shower->get_start_segment()->get_wcpt_vec().front().index == shower->get_start_vertex().first->get_wcpt().index){
+      vertex_point = shower->get_start_segment()->get_point_vec().front();
+    }else{
+      vertex_point = shower->get_start_segment()->get_point_vec().back();
+    }
+
+
+    TVector3 dir;
+    if (shower->get_start_segment()->get_length() > 12*units::cm){
+      dir = shower->get_start_segment()->cal_dir_3vector(vertex_point,15*units::cm);
+    }else{
+      dir = shower->cal_dir_3vector(vertex_point,15*units::cm);
+    }
+    if (fabs(dir.Angle(drift_dir)/3.1415926*180.-90)<10) dir = shower->cal_dir_3vector(vertex_point,25*units::cm);
+
+    Int_t ncount = 0;
+    Int_t ncount_15 = 0;
+    Int_t ncount_25 = 0;
+    Int_t ncount_35 = 0;
+    Int_t ncount_45 = 0;
+    
+    for (auto it = map_seg_vtxs.begin(); it!= map_seg_vtxs.end(); it++){
+      WCPPID::ProtoSegment *sg = it->first;
+      if (sg->get_cluster_id() != vertex->get_cluster_id()) continue;
+      PointVector& pts = sg->get_point_vec();
+      for (size_t i=1; i+1 < pts.size();i++){
+	TVector3 dir1(pts.at(i).x-vertex_point.x, pts.at(i).y-vertex_point.y, pts.at(i).z-vertex_point.z);
+	double angle = dir1.Angle(dir)/3.1415926*180.;
+
+	if (angle < 15) ncount_15 ++;
+	if (angle < 25) ncount_25 ++;
+	if (angle < 35) ncount_35 ++;
+	if (angle < 45) ncount_45 ++;
+	ncount ++;
+	
+      }
+      for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+	TVector3 dir1((*it1)->get_fit_pt().x-vertex_point.x, (*it1)->get_fit_pt().y-vertex_point.y, (*it1)->get_fit_pt().z-vertex_point.z);
+	double angle = dir1.Angle(dir)/3.1415926*180.;
+
+	if (angle < 15) ncount_15 ++;
+	if (angle < 25) ncount_25 ++;
+	if (angle < 35) ncount_35 ++;
+	if (angle < 45) ncount_45 ++;
+	ncount ++;
+      }
+    }
+
+    //    std::cout << "kaka: " << Eshower << " " << ncount_15/(ncount+1e-9) << " " << ncount_25/(ncount + 1e-9) << " " << ncount_35/(ncount + 1e-9) << " " << ncount_45/(ncount + 1e-9) << " " << fabs(dir.Angle(drift_dir)/3.1415926*180.-90) << std::endl;
+
+    if (ncount_45 < 0.7*ncount || ncount_25 < 0.6*ncount || ncount_25 < 0.8*ncount && ncount_15 < 0.3*ncount
+	|| ncount_15 < 0.35*ncount && ncount_25 > 0.9*ncount && Eshower < 1000*units::MeV ) flag_bad = true;
+  }
   
   return flag_bad;
 }
