@@ -367,7 +367,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	}
 
 	if (flag_nue){
-	  if (bad_reconstruction_2(main_vertex, max_shower) || 	bad_reconstruction_3(main_vertex, max_shower)) {
+	  if (bad_reconstruction_2(main_vertex, max_shower) || 	bad_reconstruction_3(main_vertex, max_shower) || high_energy_overlapping(max_shower)) {
 	    flag_nue = false;
 	    if (flag_print) std::cout << "Xin_H: " << max_energy << std::endl;
 	  }
@@ -375,7 +375,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 
 
 	
-	//	bad_reconstruction(max_shower, true);
+	
 	std::cout << "Xin: " << good_showers.size() << " " << flag_nue << " " << max_energy/units::MeV << " " << dir.Angle(dir_beam)/3.1415926*180. << std::endl;
       }
     } // has a shower ...
@@ -712,7 +712,7 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
   }
   
   if (Eshower < 800*units::MeV){
-    // check overlapping situation ...
+    // check overlapping situation (inside shower)
     PointVector test_pts;
     if (vertex->get_wcpt().index == sg->get_wcpt_vec().front().index){
       for (size_t i=0;i!=sg->get_point_vec().size();i++){
@@ -800,7 +800,14 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
     //    std::cout << vec_dQ_dx.front() << " " << medium_dQ_dx << std::endl;
     if (Eshower < 180*units::MeV || n_first_mip>0 || vec_dQ_dx.front() > 1.15 && n_end_reduction >= n_first_mip && Eshower < 360*units::MeV)
       mip_id = 0;
+  }else if (mip_id==1 && map_vertex_segments[vertex].size() > 1 && Eshower < 300*units::MeV){
+    if (vec_dQ_dx.size() >=3){ // 7017_482_24127, a dip?
+      if (vec_dQ_dx.at(1) < 0.6 || vec_dQ_dx.at(2) < 0.6) mip_id = 0;
+    }
+    //    std::cout << vec_dQ_dx.at(0) << " " << vec_dQ_dx.at(1) << " " << vec_dQ_dx.at(2) << std::endl;
   }
+
+  
   
   //  std::cout << "kaka4: "<< mip_id<< " " << sg->get_id() << " " << n_end_reduction << " " << n_first_mip << " " << n_first_non_mip << " " << n_first_non_mip_1 << " " << n_first_non_mip_2 << " "  << Eshower/units::MeV << " " << n_showers << " " << n_tracks << " " << n_protons << " " << map_vertex_segments[vertex].size() << std::endl;
   
@@ -808,11 +815,71 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
   
   return mip_id;
 }
+bool WCPPID::NeutrinoID::high_energy_overlapping(WCPPID::WCShower* shower, bool flag_print){
+  bool flag_overlap = false;
+  double Eshower = 0 ;
+  if (shower->get_kine_best() != 0){ 
+    Eshower = shower->get_kine_best();
+  }else{
+    Eshower = shower->get_kine_charge();
+  }
+  
+  if (Eshower < 1500*units::MeV){
+    WCPPID::ProtoSegment *sg = shower->get_start_segment();
+    auto pair_result = shower->get_start_vertex();
+    WCPPID::ProtoVertex *vtx = pair_result.first;
+    Point vtx_point;
+    if (vtx->get_wcpt().index == sg->get_wcpt_vec().front().index){
+      vtx_point = sg->get_point_vec().front();
+    }else{
+      vtx_point = sg->get_point_vec().back();
+    }
+    
+    // 7012_1195_59764 + 7017_1158_57929 
+    if (pair_result.second == 1){
+      TVector3 dir1 = sg->cal_dir_3vector(vtx_point, 15*units::cm);
+      int n_valid_tracks = 0;
+      double min_angle = 180;
+      for (auto it = map_vertex_segments[vtx].begin(); it != map_vertex_segments[vtx].end(); it++){
+	if ((*it)==sg) continue;
+	if ((*it)->get_particle_type()==11){
+	  TVector3 dir2 = (*it)->cal_dir_3vector(vtx_point, 5*units::cm);
+	  if (dir2.Mag() == 0) continue;
+	  double angle = dir1.Angle(dir2)/3.1415926*180.;
+	  if (angle < min_angle) min_angle = angle;
+	}
+	if ((!(*it)->is_dir_weak() || (*it)->get_particle_type() == 2212 || ((*it)->get_length() > 20*units::cm))  && (!(*it)->get_flag_shower())) n_valid_tracks ++;
+      }
+      for (auto it1 = map_vertex_to_shower[vtx].begin(); it1 != map_vertex_to_shower[vtx].end(); it1++){
+	WCPPID::WCShower *shower1 = *it1;
+	if (shower1->get_start_segment()->get_particle_type()==13) continue;
+	if (shower1 == shower) continue;
+	
+	auto pair_result1 = shower1->get_start_vertex();
+	double Eshower1 = 0;
+	if (shower1->get_kine_best() != 0){ 
+	  Eshower1 = shower1->get_kine_best();
+	}else{
+	  Eshower1 = shower1->get_kine_charge();
+	}
+	//	std::cout << Eshower << std::endl;
+	if (pair_result1.second == 1 && Eshower1 > 250*units::MeV) n_valid_tracks ++;
+      }
+
+      
+      if (n_valid_tracks ==0 && min_angle < 30) flag_overlap = true;
+      //    std::cout << "kaka: " << n_valid_tracks << " " << min_angle << std::endl;
+    }
+  }
+
+  return flag_overlap;
+}
+
 
 
 bool WCPPID::NeutrinoID::low_energy_overlapping(WCPPID::WCShower* shower, bool flag_print){
   bool flag_overlap = false;
-
+  TVector3 dir_beam(0,0,1);
   double Eshower = 0;
   if (shower->get_kine_best() != 0){ 
     Eshower = shower->get_kine_best();
@@ -857,7 +924,7 @@ bool WCPPID::NeutrinoID::low_energy_overlapping(WCPPID::WCShower* shower, bool f
 	  } // two segment 
 	} //loop all vertex
       }
-    }else if (map_vertex_segments[vtx].size()>1 && Eshower < 250*units::MeV && shower->get_total_length(sg->get_cluster_id()) < 20*units::cm){
+    }else if (map_vertex_segments[vtx].size()>1 && Eshower < 300*units::MeV && shower->get_total_length(sg->get_cluster_id()) < 20*units::cm){
       TVector3 dir1 = sg->cal_dir_3vector(vtx_point, 5*units::cm);
       for (auto it = map_vertex_segments[vtx].begin(); it != map_vertex_segments[vtx].end(); it++){
 	if ((*it)==sg) continue;
@@ -868,10 +935,23 @@ bool WCPPID::NeutrinoID::low_energy_overlapping(WCPPID::WCShower* shower, bool f
 	  flag_overlap = true;
 	  //	  std::cout << "B: " << std::endl;
 	}
-	// std::cout << dir1.Angle(dir2)/3.1415926*180. << " " << (*it)->get_length()/units::cm << " " << (*it)->get_particle_type()<< std::endl;
+	//	std::cout << dir1.Angle(dir2)/3.1415926*180. << " " << (*it)->get_length()/units::cm << " " << (*it)->get_particle_type()<< std::endl;
+      }
+      if ( dir1.Angle(dir_beam)/3.1415926*180.>60){ // 7010_194_9750 
+	int n_valid_tracks = 0;
+	double min_angle = 180;
+	for (auto it = map_vertex_segments[vtx].begin(); it != map_vertex_segments[vtx].end(); it++){
+	  if ((*it)==sg) continue;
+	  TVector3 dir2 = (*it)->cal_dir_3vector(vtx_point, 5*units::cm);
+	  double tmp_angle = dir2.Angle(dir1)/3.1415926*180.;
+	  if (tmp_angle < min_angle) min_angle = tmp_angle;
+	  if ((!(*it)->is_dir_weak() || (*it)->get_particle_type() == 2212 || ((*it)->get_length() > 20*units::cm)) && (!(*it)->get_flag_shower())) n_valid_tracks ++;
+	}
+	if (n_valid_tracks==0 && min_angle < 80) flag_overlap = true;
+	//std::cout << dir1.Angle(dir_beam)/3.1415926*180. << std::endl;
       }
       //std::cout << Eshower/units::MeV << std::endl;
-    }else if (map_vertex_segments[vtx].size()==2 && Eshower < 100*units::MeV ){
+    }else if (map_vertex_segments[vtx].size()==2 && Eshower < 400*units::MeV ){ // 7020_249_12479 raise from 100 to 400 MeV
       TVector3 dir1 = sg->cal_dir_3vector(vtx_point, 5*units::cm);
       for (auto it = map_vertex_segments[vtx].begin(); it != map_vertex_segments[vtx].end(); it++){
 	if ((*it)==sg) continue;
@@ -884,7 +964,7 @@ bool WCPPID::NeutrinoID::low_energy_overlapping(WCPPID::WCShower* shower, bool f
       }
     }
 
-    //    std::cout << flag_overlap << " " << map_vertex_segments[vtx].size() << " " << shower->get_total_length(sg->get_cluster_id())/units::cm << " " <<  Eshower << std::endl;
+    //    std::cout << "kaka " << flag_overlap << " " << map_vertex_segments[vtx].size() << " " << shower->get_total_length(sg->get_cluster_id())/units::cm << " " <<  Eshower << std::endl;
     
     if (map_vertex_segments[vtx].size()==1 && shower->get_total_length(sg->get_cluster_id()) < 15*units::cm &&  Eshower > 30*units::MeV && Eshower < 250*units::MeV){
       TVector3 dir1 = sg->cal_dir_3vector(vtx_point, 15*units::cm);
@@ -903,7 +983,7 @@ bool WCPPID::NeutrinoID::low_energy_overlapping(WCPPID::WCShower* shower, bool f
 	  if (dir1.Angle(dir2)/3.1415926*180.>15) n_out ++;
 	}
       }
-      std::cout << n_out << " " << n_sum << std::endl;
+      //      std::cout << n_out << " " << n_sum << std::endl;
       if (n_out > n_sum/3) {
 	flag_overlap = true;
 	//s	std::cout << "C: " << std::endl;
@@ -1436,6 +1516,7 @@ bool WCPPID::NeutrinoID::bad_reconstruction(WCPPID::WCShower* shower, bool flag_
 		    TVector3 dir3 = sg2->cal_dir_3vector(pair_vertices_1.second->get_fit_pt(), 15*units::cm);
 		    angle1 = dir1.Angle(dir3)/3.1415926*180.;
 		  }
+		  //5564_90_4517
 		  if (angle1 > 170 && tmp_length2 > 0.75*std::min(dis1,dis2)){
 		    if (tmp_length + tmp_length2> tmp_length1){
 		      tmp_length1 = tmp_length +tmp_length2;

@@ -343,7 +343,7 @@ namespace WCPPID{
     bool bad_reconstruction_3(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower);
     
     bool low_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false);
-    
+    bool high_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false);
     
   protected:
     int neutrino_type;
