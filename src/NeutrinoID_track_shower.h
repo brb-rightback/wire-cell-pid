@@ -1050,8 +1050,10 @@ void WCPPID::NeutrinoID::examine_all_showers(WCPPID::PR3DCluster* temp_cluster){
 	double  angle = dir1.Angle(dir2)/3.1415926*180;
 	if (max_angle < angle) max_angle = angle;
       }
-      //      std::cout << max_angle << std::endl;
-      if (max_angle > 165) {
+
+      //      std::cout << max_angle << " " << length_good_tracks/units::cm << " " << length_showers/units::cm << std::endl;
+
+      if (max_angle > 165 || max_angle > 150 && length_good_tracks < 3.0*units::cm && length_good_tracks < 0.1 * length_showers ) {
 	n_good_tracks = 0;
 	length_tracks += length_good_tracks;
       }

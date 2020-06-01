@@ -178,7 +178,10 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
     if (it != map_vertex_to_shower.end()){
       for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
 	if (pi0_showers.find(*it1) != pi0_showers.end()) return;
-	if ((*it1)->get_start_vertex().second == 1) good_showers.insert(*it1);
+	if ((*it1)->get_start_vertex().second == 1) {
+	  //	  std::cout <<  (*it1)->get_kine_charge() << std::endl;
+	  good_showers.insert(*it1);
+	}
       }
     }
     if (good_showers.size()>1){
@@ -359,9 +362,10 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
     for (auto it = map_shower_pair_mass_point.begin(); it!= map_shower_pair_mass_point.end(); it++){
      
       if (fabs(it->second.first - 135*units::MeV + mass_offset) < mass_diff){ // hack pi0 mass to a slightly lower value ...
+	if (good_showers.find(it->first.first) == good_showers.end() && good_showers.find(it->first.second) == good_showers.end()) continue;
 	shower_1 = it->first.first;
 	shower_2 = it->first.second;
-	if (good_showers.find(shower_1) == good_showers.end() && good_showers.find(shower_2) == good_showers.end()) continue;
+
 	mass_diff = fabs(it->second.first - 135*units::MeV + mass_offset);// hack pi0 mass to a slightly lower value ...
 	mass_save = it->second.first;
 	vtx_point = it->second.second;
@@ -506,7 +510,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
 	  /* 	    << std::endl; */
 	  
 	   
-	  //std::cout << vtx->get_id() << " " << i << " " << j << " " << shower_1->get_kine_charge()/units::MeV << " " << shower_2->get_kine_charge()/units::MeV << " " << dir1.Mag() << " " << dir2.Mag() << " " << angle/3.1415926*180. << " " << sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2))/units::MeV<< std::endl;
+	  //	  std::cout << vtx->get_id() << " " << i << " " << j << " " << shower_1->get_kine_charge()/units::MeV << " " << shower_2->get_kine_charge()/units::MeV << " " << dir1.Mag() << " " << dir2.Mag() << " " << angle/3.1415926*180. << " " << sqrt(4*shower_1->get_kine_charge()* shower_2->get_kine_charge()*pow(sin(angle/2.),2))/units::MeV<< std::endl;
 	} // loop shower
       } // loop shower
     } // more than 1 shower
