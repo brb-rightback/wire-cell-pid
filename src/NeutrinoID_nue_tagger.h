@@ -1384,7 +1384,7 @@ bool WCPPID::NeutrinoID::bad_reconstruction(WCPPID::WCShower* shower, bool flag_
 	    double dis1 = sqrt(pow(pair_vertices.first->get_fit_pt().x - other_vtx->get_fit_pt().x,2)+ pow(pair_vertices.first->get_fit_pt().y - other_vtx->get_fit_pt().y,2)+ pow(pair_vertices.first->get_fit_pt().z - other_vtx->get_fit_pt().z,2));
 	    double dis2 = sqrt(pow(pair_vertices.second->get_fit_pt().x - other_vtx->get_fit_pt().x,2)+ pow(pair_vertices.second->get_fit_pt().y - other_vtx->get_fit_pt().y,2)+ pow(pair_vertices.second->get_fit_pt().z - other_vtx->get_fit_pt().z,2));
 
-	    // std::cout << dis1/units::cm << " " << dis2/units::cm << std::endl;
+	    //	    std::cout << dis1/units::cm << " " << dis2/units::cm << std::endl;
 	    
 	    if (dis1 < 5*units::cm){
 	      TVector3 dir2 = sg1->cal_dir_3vector(pair_vertices.first->get_fit_pt(), 15*units::cm);
@@ -1406,7 +1406,51 @@ bool WCPPID::NeutrinoID::bad_reconstruction(WCPPID::WCShower* shower, bool flag_
 		  tmp_n_connected = int(map_vertex_segments[pair_vertices.first].size())-1;
 		}
 	      }
+	    }else{
+	      TVector3 dir2;
+	      Point tmp_point;
+	      if (dis1 < dis2){
+		dir2 = sg1->cal_dir_3vector(pair_vertices.first->get_fit_pt(), 15*units::cm);
+		tmp_point = pair_vertices.first->get_fit_pt();
+	      }else{
+		dir2 = sg1->cal_dir_3vector(pair_vertices.second->get_fit_pt(), 15*units::cm);
+		tmp_point = pair_vertices.second->get_fit_pt();
+	      }
+	      double angle = dir1.Angle(dir2)/3.1415926*180.;
+	      if (angle > 165){
+		
+		for (auto it2 = map_seg_vtxs.begin(); it2 != map_seg_vtxs.end(); it2++){
+		  WCPPID::ProtoSegment *sg2 = it2->first;
+		  if (sg2 == sg || sg2 == sg1) continue;
+		  auto pair_vertices_1 = find_vertices(sg2);
+		  double tmp_length2 = sg2->get_length();
+		  if (tmp_length2 < 10*units::cm) continue;
+		  double dis3 = sqrt(pow(pair_vertices_1.first->get_fit_pt().x - other_vtx->get_fit_pt().x,2)+ pow(pair_vertices_1.first->get_fit_pt().y - other_vtx->get_fit_pt().y,2)+ pow(pair_vertices_1.first->get_fit_pt().z - other_vtx->get_fit_pt().z,2));
+		  double dis4 = sqrt(pow(pair_vertices_1.second->get_fit_pt().x - other_vtx->get_fit_pt().x,2)+ pow(pair_vertices_1.second->get_fit_pt().y - other_vtx->get_fit_pt().y,2)+ pow(pair_vertices_1.second->get_fit_pt().z - other_vtx->get_fit_pt().z,2));
+
+		  double angle1 = 0;
+		  if (dis3 < 6*units::cm){
+		    TVector3 dir3 = sg2->cal_dir_3vector(pair_vertices_1.first->get_fit_pt(), 15*units::cm);
+		    angle1 = dir1.Angle(dir3)/3.1415926*180.;
+		  }else if (dis4 < 6*units::cm){
+		    TVector3 dir3 = sg2->cal_dir_3vector(pair_vertices_1.second->get_fit_pt(), 15*units::cm);
+		    angle1 = dir1.Angle(dir3)/3.1415926*180.;
+		  }
+		  if (angle1 > 170 && tmp_length2 > 0.75*std::min(dis1,dis2)){
+		    if (tmp_length + tmp_length2> tmp_length1){
+		      tmp_length1 = tmp_length +tmp_length2;
+		      if (dis2 < dis1){
+			tmp_n_connected = int(map_vertex_segments[pair_vertices.first].size())-1;
+		      }else{
+			tmp_n_connected = int(map_vertex_segments[pair_vertices.second].size())-1;
+		      }
+		    }
+		  }
+		  //		  std::cout << angle1 << " " << dis3/units::cm << " " << dis4/units::cm << " " << sg2->get_length() << " " << std::min(dis1,dis2) << std::endl;
+		}
+	      }
 	    }
+	    
 	  } // loop over other segment
 
 	  if (tmp_length1 + main_length > max_length){
