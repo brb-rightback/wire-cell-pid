@@ -344,6 +344,8 @@ namespace WCPPID{
     
     bool low_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false);
     bool high_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false);
+
+    bool single_shower_pio_tagger(WCPPID::WCShower* shower, bool flag_print = false);
     
   protected:
     int neutrino_type;

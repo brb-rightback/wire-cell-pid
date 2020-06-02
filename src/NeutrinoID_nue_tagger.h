@@ -374,7 +374,10 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	  }
 	}
 
-
+	if (flag_single_shower && single_shower_pio_tagger(max_shower, true)){
+	  flag_nue = false;
+	  if (flag_print) std::cout << "Xin_I: " << max_energy << std::endl;
+	}
 	
 	
 	std::cout << "Xin: " << good_showers.size() << " " << flag_nue << " " << max_energy/units::MeV << " " << dir.Angle(dir_beam)/3.1415926*180. << std::endl;
@@ -382,9 +385,6 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
     } // has a shower ...
   } // main vertex
   
-
-
-
   
   if (flag_nue){
     neutrino_type |= 1UL << 5; //nue
@@ -392,6 +392,8 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 
   return flag_nue;
 }
+
+
 
 
 
@@ -1075,6 +1077,91 @@ bool WCPPID::NeutrinoID::pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID:
   return flag_pi0;
 }
 
+bool WCPPID::NeutrinoID::single_shower_pio_tagger(WCPPID::WCShower *shower, bool flag_print){
+  bool flag_bad = false;
+  TVector3 dir_beam(0,0,1);
+  double Eshower = 0;
+  if (shower->get_kine_best() != 0){ 
+    Eshower = shower->get_kine_best();
+  }else{
+    Eshower = shower->get_kine_charge();
+  }
+  Point vertex_point;
+  if (shower->get_start_segment()->get_wcpt_vec().front().index == shower->get_start_vertex().first->get_wcpt().index){
+    vertex_point = shower->get_start_segment()->get_point_vec().front();
+  }else{
+    vertex_point = shower->get_start_segment()->get_point_vec().back();
+  }
+  TVector3 dir = shower->cal_dir_3vector(vertex_point, 15*units::cm);
+  double shower_angle = dir.Angle(dir_beam)/3.1415926*180.;
+
+  WCPPID::ProtoSegment *sg = shower->get_start_segment();
+  auto pair_result = shower->get_start_vertex();
+  WCPPID::ProtoVertex *vtx = pair_result.first;
+
+  if (Eshower < 250*units::MeV){
+    for (auto it1 = map_vertex_to_shower[vtx].begin(); it1 != map_vertex_to_shower[vtx].end(); it1++){
+      WCPPID::WCShower *shower1 = *it1;
+      if (shower1->get_start_segment()->get_particle_type()==13) continue;
+      if (shower1 == shower) continue;
+      if (shower1->get_start_vertex().second >2) continue;
+      double Eshower1 = 0;
+      if (shower1->get_kine_best() != 0){ 
+	Eshower1 = shower1->get_kine_best();
+      }else{
+	Eshower1 = shower1->get_kine_charge();
+      }
+      if (Eshower1 > 60*units::MeV && shower1->get_start_vertex().second==2){
+	TVector3 dir1(shower1->get_start_point().x - vtx->get_fit_pt().x, shower1->get_start_point().y - vtx->get_fit_pt().y, shower1->get_start_point().z - vtx->get_fit_pt().z);
+	TVector3 dir2 = shower1->cal_dir_3vector(shower1->get_start_point(), 15*units::cm);
+	//	std::cout << Eshower << " " << Eshower1 << " " << dir1.Angle(dir2)/3.1415926*180. << std::endl;
+	if (dir1.Angle(dir2)/3.1415926*180. < 30) flag_bad = true;
+      }
+    }
+  }
+
+  if ((!flag_bad) && (Eshower < 250*units::MeV || Eshower < 500*units::MeV && shower_angle > 120 || Eshower >=500*units::MeV && shower_angle > 150)){
+    // find the vertex inside main cluster which is furthest away from current vertex
+    Map_Proto_Segment_Vertices& map_seg_vtxs = shower->get_map_seg_vtxs();
+    Map_Proto_Vertex_Segments& map_vtx_segs = shower->get_map_vtx_segs();
+
+    double max_dis = 0;
+    WCPPID::ProtoVertex *max_vtx = 0;
+    for (auto it = map_vtx_segs.begin(); it != map_vtx_segs.end(); it++){
+      WCPPID::ProtoVertex *tmp_vtx = it->first;
+      if (tmp_vtx->get_cluster_id() != vtx->get_cluster_id()) continue;
+      TVector3 dir1(tmp_vtx->get_fit_pt().x - vertex_point.x, tmp_vtx->get_fit_pt().y - vertex_point.y, tmp_vtx->get_fit_pt().z - vertex_point.z);
+      double dis = dir1.Dot(dir);
+      if (dis > max_dis){
+	max_dis = dis;
+	max_vtx = tmp_vtx;
+      }
+    }
+    double max_angle = 0;
+    WCPPID::ProtoSegment *max_sg = 0;
+    for (auto it = map_vtx_segs[max_vtx].begin(); it != map_vtx_segs[max_vtx].end(); it++){
+      WCPPID::ProtoSegment *sg1 = *it;
+      TVector3 dir1 = sg1->cal_dir_3vector(max_vtx->get_fit_pt(), 15*units::cm);
+      double angle = dir1.Angle(dir)/3.1415926*180.;
+      if (angle > max_angle){
+	max_angle = angle;
+	max_sg = sg1;
+      }
+    }
+    // check dQ/dx there ...
+    if (max_vtx!=0 && max_sg !=0){
+      double medium_dQ_dx = 0;
+      if (max_sg->get_wcpt_vec().front().index == max_vtx->get_wcpt().index){
+	medium_dQ_dx = max_sg->get_medium_dQ_dx(0,6)/(43e3/units::cm);
+      }else{
+	medium_dQ_dx = max_sg->get_medium_dQ_dx(int(max_sg->get_point_vec().size())-7, int(max_sg->get_point_vec().size())-1)/(43e3/units::cm);
+      }
+      if (medium_dQ_dx > 1.6) flag_bad = true;
+    }
+  }
+  
+  return flag_bad;
+}
 
 bool WCPPID::NeutrinoID::bad_reconstruction_3(WCPPID::ProtoVertex* vertex, WCPPID::WCShower *shower){
   bool flag_bad = false;
