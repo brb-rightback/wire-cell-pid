@@ -851,10 +851,21 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
       //std::cout << vec_dQ_dx.at(0) << std::endl;
     }
   }
+  // 7017_1631_81564
+  if (flag_single_shower && Eshower < 500*units::MeV && shower->get_total_length(vertex->get_cluster_id()) > shower->get_total_length() *0.95){
+    double min_dQ_dx = 1e9;
+    for (size_t i=0;i!=vec_dQ_dx.size();i++){
+      if (vec_dQ_dx.at(i) < min_dQ_dx) min_dQ_dx = vec_dQ_dx.at(i);
+      if (i>5) break;
+    }
+    if (n_first_non_mip_2 - n_first_mip<=2 && min_dQ_dx > 1.3){
+      mip_id = -1;
+      //      std::cout << min_dQ_dx << std::endl;
+    }
+    //  std::cout << shower->get_total_length(vertex->get_cluster_id()) << " " << shower->get_total_length() << std::endl;
+  }
   
-  
-  
-  //  std::cout << "kaka4: "<< mip_id<< " " << sg->get_id() << " " << n_end_reduction << " " << n_first_mip << " " << n_first_non_mip << " " << n_first_non_mip_1 << " " << n_first_non_mip_2 << " "  << Eshower/units::MeV << " " << n_showers << " " << n_tracks << " " << n_protons << " " << map_vertex_segments[vertex].size() << " " << flag_single_shower << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << std::max(vec_dQ_dx.at(0), vec_dQ_dx.at(1)) << std::endl;
+  // std::cout << "kaka4: "<< mip_id<< " " << sg->get_id() << " " << n_end_reduction << " " << n_first_mip << " " << n_first_non_mip << " " << n_first_non_mip_1 << " " << n_first_non_mip_2 << " "  << Eshower/units::MeV << " " << n_showers << " " << n_tracks << " " << n_protons << " " << map_vertex_segments[vertex].size() << " " << flag_single_shower << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << std::max(vec_dQ_dx.at(0), vec_dQ_dx.at(1)) << std::endl;
   
   
   
@@ -1362,6 +1373,7 @@ bool WCPPID::NeutrinoID::bad_reconstruction_2(WCPPID::ProtoVertex* vertex, WCPPI
       total_length += length;
       if (angle > 150 && dir1.Mag() > 10*units::cm) flag_bad = true;
       if (angle > 105 && sg1->get_length() > 15*units::cm) flag_bad = true;
+
       //      std::cout << dir.Angle(dir1)/3.1415926*180. << " " << dir1.Mag()/units::cm << " " << sg1->get_length() << std::endl;
     }
     if (acc_length > 0.33 * total_length) flag_bad = true;
@@ -1400,6 +1412,7 @@ bool WCPPID::NeutrinoID::bad_reconstruction_2(WCPPID::ProtoVertex* vertex, WCPPI
     
     if ((!flag_bad) &&  Eshower < 600*units::MeV){
       WCPPID::ProtoVertex *other_vertex = find_other_vertex(sg, vertex);
+      double min_angle = 180;
       for (auto it = map_vertex_segments[other_vertex].begin(); it != map_vertex_segments[other_vertex].end(); it++){
 	WCPPID::ProtoSegment *sg1 = *it;
 	if (sg1 == sg)  continue;
@@ -1407,14 +1420,36 @@ bool WCPPID::NeutrinoID::bad_reconstruction_2(WCPPID::ProtoVertex* vertex, WCPPI
 	TVector3 dir1(vtx_1->get_fit_pt().x - other_vertex->get_fit_pt().x,
 		      vtx_1->get_fit_pt().y - other_vertex->get_fit_pt().y,
 		      vtx_1->get_fit_pt().z - other_vertex->get_fit_pt().z);
-	
+	double angle = dir1.Angle(dir)/3.1415926*180.;
 	if (dir1.Angle(dir)/3.1415926*180. > 150 && sg1->get_length() > 7.5*units::cm && map_vertex_segments[other_vertex].size()<=4) flag_bad = true; 
+	if (angle < min_angle && sg1->get_length() > 6*units::cm) min_angle = angle;
 	//	std::cout << Eshower << " " << dir1.Angle(dir)/3.1415926*180. << " " << dir1.Mag()/units::cm << " " << sg1->get_length()/units::cm << std::endl;
-      }      
+      }
+      //      std::cout << sg->get_length()/units::cm << " " << shower->get_total_length(vertex->get_cluster_id())/units::cm << std::endl;
+      // 6952_132_6635 
+      if (Eshower < 200*units::MeV && min_angle > 60 && sg->get_length() < 0.2 * shower->get_total_length(vertex->get_cluster_id())) flag_bad = true;
     }
   }
 
 
+  if (!flag_bad && Eshower < 150*units::MeV && shower->get_num_main_segments() <=2 && shower->get_total_length(vertex->get_cluster_id()) > shower->get_total_length() * 0.8){
+    Map_Proto_Segment_Vertices& map_seg_vtxs = shower->get_map_seg_vtxs();
+    double max_dQ_dx = 0;
+    for (auto it = map_seg_vtxs.begin(); it!=map_seg_vtxs.end(); it++){
+      WCPPID::ProtoSegment *sg1 = it->first;
+      if (sg1->get_cluster_id() != vertex->get_cluster_id()) continue;
+      int ncount = int(sg1->get_point_vec().size())-5;
+      for (int i=0;i<ncount;i++){
+	double medium_dQ_dx = sg1->get_medium_dQ_dx(i, i+5)/(43e3/units::cm);
+	//	std::cout << i << " " << medium_dQ_dx << std::endl;
+	if (medium_dQ_dx > max_dQ_dx) max_dQ_dx = medium_dQ_dx;
+      }
+    }
+    if (max_dQ_dx > 1.85) flag_bad = true;
+    //    std::cout << max_dQ_dx << std::endl;
+  }
+
+  
 
   //  std::cout << "Xin_A: " << Eshower << " " << direct_length/length << " " << length/total_length << " " << total_main_length/total_length << " " << total_length/units::cm << " " << shower->get_num_main_segments()  << std::endl;
 
