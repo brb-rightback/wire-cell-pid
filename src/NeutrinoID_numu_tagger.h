@@ -6,6 +6,8 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
   TVector3 dir_vertical(0,1,0);
   
   bool flag_numu_cc = false;
+
+  bool flag_print = false;
   
   double dis_cut = 5*units::cm; // muon shorter than this is not useful ...
   // for electron, we cut on 60 MeV anyway ...
@@ -80,6 +82,9 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
     if (!sg->get_flag_shower()){
       acc_track_length += length;
     }
+    if (map_vertex_segments[main_vertex].find(sg) != map_vertex_segments[main_vertex].end()) continue;
+    
+    
     double direct_length = sg->get_direct_length();
     double medium_dQ_dx = sg->get_medium_dQ_dx();
     double dQ_dx_cut = 0.8866+0.9533 *pow(18*units::cm/length, 0.4234);
@@ -125,7 +130,7 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
       max_muon = tmp_max_muon;
       max_long_muon = 0;
     }
-    
+    if (flag_print) std::cout << "Xin_A: " << std::endl;
     flag_numu_cc = true;
   }
 
@@ -191,6 +196,7 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
       if (n_daughter_tracks >1 || n_daughter_all - n_daughter_tracks > 2
 	  || (max_length_all-max_muon_length > 100.*units::cm)){
 	flag_numu_cc = false;
+	if (flag_print) std::cout << "Xin_B: " << std::endl;
       }
     }
   }
