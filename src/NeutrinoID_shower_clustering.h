@@ -1265,6 +1265,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_in_main_cluster(){
   for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){ 
     // parent are all zero now ...
     WCPPID::ProtoVertex *other_vertex = find_other_vertex(*it, main_vertex);
+    // std::cout << *it << " " << other_vertex << std::endl;
     segments_to_be_examined.push_back(std::make_pair(*it, other_vertex)); 
   } 
   
@@ -1273,9 +1274,10 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_in_main_cluster(){
     for (auto it = segments_to_be_examined.begin(); it!= segments_to_be_examined.end(); it++){ 
       WCPPID::ProtoSegment *curr_sg = it->first;
       WCPPID::ProtoVertex *daughter_vtx = it->second;
+      if (used_segments.find(curr_sg) != used_segments.end()) continue;
       used_segments.insert(curr_sg);
 
-      //std::cout << curr_sg->get_id() << " " << curr_sg->get_particle_type() << " " << segments_in_long_muon.size() << std::endl;
+      //      std::cout << curr_sg->get_id() << " " << curr_sg->get_particle_type() << " " << segments_to_be_examined.size() << std::endl;
       
       if (curr_sg->get_flag_shower() || segments_in_long_muon.find(curr_sg) != segments_in_long_muon.end()){
 	WCPPID::ProtoVertex *parent_vtx = find_other_vertex(curr_sg, daughter_vtx);
@@ -1288,7 +1290,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_in_main_cluster(){
 	  shower->set_particle_type(curr_sg->get_particle_type());
 	  std::cout << "Main-cluster long muon " << showers.size() << " : " << curr_sg->get_cluster_id()*1000 + curr_sg->get_id() << " " << curr_sg->get_particle_type() << " " << tmp_flag << " " << curr_sg->get_flag_shower_topology() << std::endl;
 	}else{
-	  std::cout << "Main-cluster shower " << showers.size() << " : " << curr_sg->get_cluster_id()*1000 + curr_sg->get_id() << " " << curr_sg->get_particle_type() << " " << tmp_flag << " " << curr_sg->get_flag_shower_topology() << std::endl;
+	  std::cout << "Main-cluster shower " << showers.size() << " : " << curr_sg->get_cluster_id()*1000 + curr_sg->get_id() << " " << curr_sg->get_particle_type() << " " << tmp_flag << " " << curr_sg->get_flag_shower_topology() << " " << std::endl;
 	}
       }else{
 	// keep searching its daughter
