@@ -74,7 +74,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	  }
 
 	  auto pair_result = gap_identification(main_vertex, sg, flag_single_shower, num_valid_tracks, E_shower);
-	  //std::cout << pair_result.first << " " << pair_result.second << std::endl;
+	  //	  std::cout << pair_result.first << " " << pair_result.second << std::endl;
 	  
 	  if (!pair_result.first){ // gap id
 	    
@@ -302,11 +302,13 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	      }
 	    }
 	  }
-	  //	  std::cout << "kaka: " << E_muon << " " << max_energy << " " << max_shower->get_kine_dQdx() << " " << muon_length/units::cm << " " << max_shower->get_total_length()/units::cm << std::endl;
+	  //  std::cout << "kaka: " << E_muon << " " << max_energy << " " << max_shower->get_kine_dQdx() << " " << muon_length/units::cm << " " << max_shower->get_total_length()/units::cm << std::endl;
 
 	  double tmp_shower_total_length = max_shower->get_total_length();
 	  
-	  if (E_muon > max_energy && max_energy < 550*units::MeV || muon_length > tmp_shower_total_length && tmp_shower_total_length < 100*units::cm) {
+	  if (E_muon > max_energy && max_energy < 550*units::MeV || muon_length > tmp_shower_total_length && tmp_shower_total_length < 100*units::cm ||
+	      muon_length > 80*units::cm || muon_length > 0.6 * tmp_shower_total_length // round 2 debug
+	      ) {
 	    flag_nue = false;
 	    if (flag_print) std::cout << "Xin_E: " << max_energy << " " << E_muon <<  std::endl;
 	  }
@@ -579,8 +581,10 @@ std::pair<bool, int> WCPPID::NeutrinoID::gap_identification(WCPPID::ProtoVertex*
       if (flag_parallel){
 	if (n_bad > 4) flag_gap = true;
       }else{
-	if (n_bad > 2) flag_gap = true;
+	if (n_bad > 1) flag_gap = true;
       }
+    }else{
+      if (n_bad > 2) flag_gap = true;
     }
   }else{
     if (!flag_single_shower){ 
@@ -589,15 +593,17 @@ std::pair<bool, int> WCPPID::NeutrinoID::gap_identification(WCPPID::ProtoVertex*
       }else{ 
 	if (n_bad > 1) flag_gap = true;
       } 
+    }else{
+      if (n_bad > 2) flag_gap = true; 
     }
   }
   // 7021_521_26090 
   if (n_bad >=6 && E_shower < 1000*units::MeV) flag_gap = true;
-   
-      
+  if (E_shower <=900*units::MeV && n_bad >1) flag_gap = true;
   
-  //  std::cout << "kaka "<< sg->get_id() << " " << E_shower/units::MeV << " " << n_bad << " " << n_points << " " << " " << flag_start << " " << flag_parallel << " " << flag_single_shower << " " << num_valid_tracks << std::endl;
-    //  if (n_bad >0) flag_gap = true;
+  // std::cout << "kaka "<< sg->get_id() << " " << E_shower/units::MeV << " " << n_bad << " " << n_points << " " << " " << flag_start << " " << flag_parallel << " " << flag_single_shower << " " << num_valid_tracks << " " << flag_gap << std::endl;
+  // hack 
+  // if (n_bad >0) flag_gap = true;
     
     
   return std::make_pair(flag_gap, n_bad);
@@ -622,11 +628,15 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
   }
   
   
-  double dQ_dx_cut  = 1.6;
+  double dQ_dx_cut  = 1.45;
   if (Eshower > 1200*units::MeV) dQ_dx_cut = 1.85;
-  else if (Eshower > 800*units::MeV) dQ_dx_cut = 1.7;
-  else if (Eshower < 450*units::MeV) dQ_dx_cut = 1.5;
-  else if (Eshower < 300*units::MeV) dQ_dx_cut = 1.3;
+  else if (Eshower > 1000*units::MeV) dQ_dx_cut = 1.6;
+  else if (Eshower < 550*units::MeV) dQ_dx_cut = 1.3;
+  if (Eshower < 300*units::MeV) dQ_dx_cut = 1.3;
+  // hack 
+  //  dQ_dx_cut = 1.3;
+  //  std::cout << Eshower << " " << dQ_dx_cut << std::endl;
+  
   
   std::vector<double> vec_dQ_dx = shower->get_stem_dQ_dx(vertex, sg, 20);
   
@@ -865,7 +875,7 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
     //  std::cout << shower->get_total_length(vertex->get_cluster_id()) << " " << shower->get_total_length() << std::endl;
   }
   
-  // std::cout << "kaka4: "<< mip_id<< " " << sg->get_id() << " " << n_end_reduction << " " << n_first_mip << " " << n_first_non_mip << " " << n_first_non_mip_1 << " " << n_first_non_mip_2 << " "  << Eshower/units::MeV << " " << n_showers << " " << n_tracks << " " << n_protons << " " << map_vertex_segments[vertex].size() << " " << flag_single_shower << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << std::max(vec_dQ_dx.at(0), vec_dQ_dx.at(1)) << std::endl;
+  std::cout << "kaka4: "<< mip_id<< " " << sg->get_id() << " " << n_end_reduction << " " << n_first_mip << " " << n_first_non_mip << " " << n_first_non_mip_1 << " " << n_first_non_mip_2 << " "  << Eshower/units::MeV << " " << n_showers << " " << n_tracks << " " << n_protons << " " << map_vertex_segments[vertex].size() << " " << flag_single_shower << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << std::max(vec_dQ_dx.at(0), vec_dQ_dx.at(1)) << std::endl;
   
   
   
