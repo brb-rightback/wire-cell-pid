@@ -376,9 +376,17 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	  }
 	}
 
-	if (flag_single_shower && single_shower_pio_tagger(max_shower, true)){
+	if (flag_single_shower && single_shower_pio_tagger(max_shower)){
 	  flag_nue = false;
 	  if (flag_print) std::cout << "Xin_I: " << max_energy << std::endl;
+	}
+	if (flag_single_shower && single_shower_to_wall(max_shower, max_energy) ){
+	  flag_nue = false;
+	  if (flag_print) std::cout << "Xin_J: " << max_energy << std::endl;
+	}
+	if (broken_muon_id(max_shower,true)){
+	  flag_nue = false;
+	  if (flag_print) std::cout << "Xin_K: " << max_energy << std::endl;
 	}
 	
 	
@@ -393,6 +401,78 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
   }
 
   return flag_nue;
+}
+
+bool WCPPID::NeutrinoID::broken_muon_id(WCPPID::WCShower* shower, bool flag_print){
+  bool flag_bad = false;
+  double Eshower = 0;
+  if (shower->get_kine_best() != 0){ 
+    Eshower = shower->get_kine_best();
+  }else{
+    Eshower = shower->get_kine_charge();
+  }
+  
+  return flag_bad;
+}
+
+
+bool WCPPID::NeutrinoID::single_shower_to_wall(WCPPID::WCShower* shower, double shower_energy, bool flag_print){
+  //  7054_450_22517,  7049_603_30176,  7017_21_1087
+  bool flag_bad = false;
+  WCPPID::ProtoSegment *sg = shower->get_start_segment();
+  WCPPID::ProtoVertex *vertex = shower->get_start_vertex().first;
+  Point vertex_point;
+  if (vertex->get_wcpt().index == sg->get_wcpt_vec().front().index){
+    vertex_point = sg->get_point_vec().front();
+  }else{
+    vertex_point = sg->get_point_vec().back();
+  }
+  TVector3 dir = shower->cal_dir_3vector(vertex_point, 15*units::cm);
+  dir = (-1) * dir.Unit();
+  double step = 1*units::cm;
+
+  Point test_p;
+  test_p.x = vertex_point.x + step * dir.X();
+  test_p.y = vertex_point.y + step * dir.Y();
+  test_p.z = vertex_point.z + step * dir.Z();
+
+  std::vector<double> stm_tol_vec =     {-1.5*units::cm, -1.5*units::cm, -1.5*units::cm, -1.5*units::cm, -1.5*units::cm};
+  while (fid->inside_fiducial_volume(test_p, offset_x, &stm_tol_vec)){
+    test_p.x = test_p.x + step*dir.X();
+    test_p.y = test_p.y + step*dir.Y();
+    test_p.z = test_p.z + step*dir.Z();
+  }
+
+  double dis = sqrt(pow(test_p.x-vertex_point.x,2) + pow(test_p.y-vertex_point.y,2) + pow(test_p.z-vertex_point.z,2));
+  
+  if (shower_energy < 300*units::MeV && dis < 15*units::cm) flag_bad = true;
+
+   // 7018_885_44275
+  if ((!flag_bad) && shower_energy < 500*units::MeV){
+    for (auto it = map_vertex_to_shower[vertex].begin(); it != map_vertex_to_shower[vertex].end(); it++){
+      WCPPID::WCShower *shower1 = *it;
+      if (shower1 == shower) continue;
+      if (shower1->get_start_vertex().second > 2) continue;
+      TVector3 dir1 = shower1->cal_dir_3vector(shower1->get_start_point(), 15*units::cm);
+      dir1 = dir1.Unit();
+      if (dir1.Angle(dir)/3.1415926*180. < 30){
+	test_p = shower1->get_end_point();
+	while(fid->inside_fiducial_volume(test_p, offset_x, &stm_tol_vec)){
+	  test_p.x = test_p.x + step*dir1.X();
+	  test_p.y = test_p.y + step*dir1.Y();
+	  test_p.z = test_p.z + step*dir1.Z();
+	}
+	double dis1 = sqrt(pow(test_p.x - shower1->get_end_point().x,2) + pow(test_p.y - shower1->get_end_point().y,2) + pow(test_p.z - shower1->get_end_point().z,2));
+	//std::cout << dir1.Angle(dir)/3.1415926*180. << " " << shower1->get_kine_charge() << " " << shower1->get_start_vertex().second << " " << dis1/units::cm << std::endl;
+	if (dis1 < 3*units::cm) flag_bad = true;
+      }
+    }
+  }
+  
+  
+  if (flag_print) std::cout << shower_energy << " " << dis/units::cm << " " << flag_bad << std::endl;
+  
+  return flag_bad;
 }
 
 
@@ -822,6 +902,8 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
     //    std::cout << vec_dQ_dx.front() << " " << medium_dQ_dx << std::endl;
     if (Eshower < 180*units::MeV || n_first_mip>0 || vec_dQ_dx.front() > 1.15 && n_end_reduction >= n_first_mip && Eshower < 360*units::MeV)
       mip_id = 0;
+    // 6058_43_2166, 7003_1636_81828, 7054_364_18210
+    if (flag_single_shower && Eshower < 400*units::MeV && n_end_reduction > 0) mip_id = 0;
   }else if (mip_id==1 && map_vertex_segments[vertex].size() > 1 && Eshower < 300*units::MeV){
     if (vec_dQ_dx.size() >=3){ // 7017_482_24127, a dip?
       if (vec_dQ_dx.at(1) < 0.6 || vec_dQ_dx.at(2) < 0.6) mip_id = 0;
@@ -1075,9 +1157,10 @@ bool WCPPID::NeutrinoID::pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID:
     if (fabs(mass_pair.first - 135*units::MeV)<35*units::MeV && mass_pair.second == 1 || fabs(mass_pair.first - 135*units::MeV) < 60 * units::MeV && mass_pair.second == 2){
       double Eshower_1 = tmp_pi0_showers.front()->get_kine_charge();
       double Eshower_2 = tmp_pi0_showers.back()->get_kine_charge();
-      //      std::cout << tmp_pi0_showers.size() << " " << mass_pair.first << " " << mass_pair.second << " " << Eshower_1/units::MeV << " " << Eshower_2/units::MeV << std::endl;
-      if (std::min(Eshower_1, Eshower_2) > 15*units::MeV && fabs(Eshower_1 - Eshower_2)/(Eshower_1 + Eshower_2) < 0.87)
-	flag_pi0 = true;
+      // std::cout << tmp_pi0_showers.size() << " " << mass_pair.first << " " << mass_pair.second << " " << Eshower_1/units::MeV << " " << Eshower_2/units::MeV << std::endl;
+      if (std::min(Eshower_1, Eshower_2) > 15*units::MeV && fabs(Eshower_1 - Eshower_2)/(Eshower_1 + Eshower_2) < 0.87)	flag_pi0 = true;
+      // 6058_43_2166, 7017_364_18210
+      if (std::min(Eshower_1, Eshower_2) > 10*units::MeV && std::max(Eshower_1, Eshower_2) < 400*units::MeV) flag_pi0 = true;
     }
   }else{
     TVector3 dir1 = sg->cal_dir_3vector(vertex->get_fit_pt(), 12*units::cm);
