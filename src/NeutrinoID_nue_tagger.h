@@ -412,6 +412,140 @@ bool WCPPID::NeutrinoID::broken_muon_id(WCPPID::WCShower* shower, bool flag_prin
     Eshower = shower->get_kine_charge();
   }
   
+  WCPPID::ProtoVertex *vertex = shower->get_start_vertex().first;
+  WCPPID::ProtoSegment *sg = shower->get_start_segment();
+  Point vertex_point;
+  if (vertex->get_wcpt().index == sg->get_wcpt_vec().front().index){
+    vertex_point = sg->get_point_vec().front();
+  }else{
+    vertex_point = sg->get_point_vec().back();
+  }
+  
+  if (Eshower < 300*units::MeV){
+    TVector3 dir = shower->cal_dir_3vector(vertex_point, 15*units::cm);
+
+    Map_Proto_Segment_Vertices& map_seg_vtxs = shower->get_map_seg_vtxs();
+    Map_Proto_Vertex_Segments& map_vtx_segs = shower->get_map_vtx_segs();
+    
+    std::set<WCPPID::ProtoSegment* > muon_segments;
+    double add_length = 0;
+    ProtoSegment *curr_muon_segment = shower->get_start_segment();
+    ProtoVertex *curr_muon_vertex = find_other_vertex(curr_muon_segment, vertex);
+    bool flag_continue = true;
+    muon_segments.insert(curr_muon_segment);
+    while (flag_continue){
+      flag_continue = false;
+
+      TVector3 dir1 = curr_muon_segment->cal_dir_3vector(curr_muon_vertex->get_fit_pt(), 15*units::cm);
+      
+      // things connected to this vertex
+      for (auto it = map_vtx_segs[curr_muon_vertex].begin(); it != map_vtx_segs[curr_muon_vertex].end(); it++){
+	WCPPID::ProtoSegment *sg1 = *it;
+	if (muon_segments.find(sg1) != muon_segments.end()) continue;
+	TVector3 dir2 = sg1->cal_dir_3vector(curr_muon_vertex->get_fit_pt(), 15*units::cm);
+	//	std::cout << "A: " << dir1.Angle(dir2)/3.1415926*180. << std::endl;
+	if (180 - dir1.Angle(dir2)/3.1415926*180. < 15 && sg1->get_length() > 6*units::cm){
+	  flag_continue = true;
+	  curr_muon_segment = sg1;
+	  curr_muon_vertex = find_other_vertex(sg1, curr_muon_vertex);
+	  break;
+	}
+      }
+
+      double min_dis=1e9;
+      if (!flag_continue){
+	// things not connected to this vertex ...
+	WCPPID::ProtoSegment *min_seg = 0;
+	WCPPID::ProtoVertex *min_vtx = 0;
+	for (auto it = map_seg_vtxs.begin(); it != map_seg_vtxs.end(); it++){
+	  WCPPID::ProtoSegment *sg1 = it->first;
+	  bool flag_continue1 = false;
+	  for (auto it1 = muon_segments.begin(); it1 != muon_segments.end(); it1++){
+	    if (sg1->get_cluster_id() == (*it1)->get_cluster_id()) {
+	      flag_continue1 = true;
+	      break;
+	    }
+	  }
+	  if (flag_continue1) continue;
+	  
+	  TVector3 dir2, dir3;
+	  double dis1 = sqrt(pow(curr_muon_vertex->get_fit_pt().x - sg1->get_point_vec().front().x,2) + pow(curr_muon_vertex->get_fit_pt().y - sg1->get_point_vec().front().y,2) + pow(curr_muon_vertex->get_fit_pt().z - sg1->get_point_vec().front().z,2));
+	  double dis2 = sqrt(pow(curr_muon_vertex->get_fit_pt().x - sg1->get_point_vec().back().x,2) + pow(curr_muon_vertex->get_fit_pt().y - sg1->get_point_vec().back().y,2) + pow(curr_muon_vertex->get_fit_pt().z - sg1->get_point_vec().back().z,2));
+	  if (dis1 < dis2){
+	    dir2.SetXYZ(sg1->get_point_vec().front().x - curr_muon_vertex->get_fit_pt().x,
+			sg1->get_point_vec().front().y - curr_muon_vertex->get_fit_pt().y,
+			sg1->get_point_vec().front().z - curr_muon_vertex->get_fit_pt().z);
+	    dir3 = sg1->cal_dir_3vector(sg1->get_point_vec().front(), 15*units::cm);
+	  }else{
+	    dir2.SetXYZ(sg1->get_point_vec().back().x - curr_muon_vertex->get_fit_pt().x,
+			sg1->get_point_vec().back().y - curr_muon_vertex->get_fit_pt().y,
+			sg1->get_point_vec().back().z - curr_muon_vertex->get_fit_pt().z);
+	    dir3 = sg1->cal_dir_3vector(sg1->get_point_vec().back(), 15*units::cm);
+	  }
+	  double angle1 = 180 - dir1.Angle(dir2)/3.1415926*180.;
+	  double angle2 = dir2.Angle(dir3)/3.1415926*180.;
+	  double angle3 = 180 - dir1.Angle(dir3)/3.1415926*180. ;
+
+	  //	  std::cout << "angle: " << angle1 << " " << angle2 << " " << angle3 << " " << std::min(dis1, dis2)/units::cm << " " << sg1->get_length()/units::cm << std::endl;
+	  
+	  if ( (std::min(angle1, angle2) < 10 && angle1 + angle2 < 25 || angle3 < 15 && std::min(dis1, dis2) < 5*units::cm) && std::min(dis1,dis2) <  25*units::cm|| std::min(angle1, angle2) < 15 && angle3 < 30 && std::min(dis1,dis2) > 30*units::cm && sg1->get_length() > 25*units::cm && std::min(dis1,dis2) < 60*units::cm){
+	    if (std::min(dis1, dis2) < min_dis){
+	      min_dis = std::min(dis1, dis2);
+	      min_seg = sg1;
+	      auto pair_vertices = find_vertices(min_seg);
+	      double dis3 = sqrt(pow(pair_vertices.first->get_fit_pt().x - curr_muon_vertex->get_fit_pt().x, 2) + pow(pair_vertices.first->get_fit_pt().y - curr_muon_vertex->get_fit_pt().y, 2) + pow(pair_vertices.first->get_fit_pt().z - curr_muon_vertex->get_fit_pt().z, 2));
+	      double dis4 = sqrt(pow(pair_vertices.second->get_fit_pt().x - curr_muon_vertex->get_fit_pt().x, 2) + pow(pair_vertices.second->get_fit_pt().y - curr_muon_vertex->get_fit_pt().y, 2) + pow(pair_vertices.second->get_fit_pt().z - curr_muon_vertex->get_fit_pt().z, 2));
+	      if (dis4 > dis3){
+		min_vtx = pair_vertices.second;
+	      }else{
+		min_vtx = pair_vertices.first;
+	      }
+	    }
+	    
+	  } // if satisfy angular cut
+	} // loop over segment
+	//	std::cout << "min: " << min_dis/units::cm << " " << min_seg << " " << std::endl;
+	
+	if (min_seg != 0 ){
+	  flag_continue = true;
+	  curr_muon_segment = min_seg;
+	  curr_muon_vertex = min_vtx;
+	}
+      } // if ...
+      if (flag_continue){
+	if (min_dis < 100*units::cm) add_length += min_dis;
+	muon_segments.insert(curr_muon_segment);
+      }
+
+      
+      //      std::cout << curr_muon_segment << " " << curr_muon_vertex << " " << flag_continue << std::endl;
+    } // while loop
+
+    
+    double acc_length = 0;
+    double acc_direct_length = 0;
+    std::set<int> tmp_ids;
+    for (auto it = muon_segments.begin(); it!= muon_segments.end(); it++){
+      acc_length += (*it)->get_length();
+      acc_direct_length += (*it)->get_direct_length();
+      tmp_ids.insert((*it)->get_cluster_id());
+    }
+    TPCParams& mp = Singleton<TPCParams>::Instance();
+    TGraph *g_range = mp.get_muon_r2ke();
+    // check muon  ...
+    double Ep = g_range->Eval((acc_length)/units::cm) * units::MeV;
+    
+    std::cout << "qaqa: " << muon_segments.size() << " " << acc_length/units::cm << " " << add_length/units::cm << " " << shower->get_total_length()/units::cm << " " << Ep << " " << Eshower << " " << map_seg_vtxs.size() << " " << acc_direct_length/units::cm << " " << tmp_ids.size() << std::endl;
+
+    if (muon_segments.size()>1 && Ep > Eshower * 0.45 && tmp_ids.size()>1
+	&& (acc_direct_length > 0.94 * acc_length )
+	) flag_bad = true;
+    
+  } // energy cut
+
+
+
+  
   return flag_bad;
 }
 
