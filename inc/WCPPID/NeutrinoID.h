@@ -348,6 +348,8 @@ namespace WCPPID{
     bool single_shower_pio_tagger(WCPPID::WCShower* shower, bool flag_print = false);
     bool single_shower_to_wall(WCPPID::WCShower* shower, double shower_energy, bool flag_print = false);
     bool broken_muon_id(WCPPID::WCShower* shower, bool flag_print = false);
+
+    bool track_overclustering(WCPPID::WCShower* shower, bool flag_print = false);
     
   protected:
     int neutrino_type;
