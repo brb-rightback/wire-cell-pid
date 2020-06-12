@@ -460,7 +460,7 @@ bool WCPPID::NeutrinoID::other_showers(WCPPID::WCShower *shower, bool flag_print
   if (E_indirect_max_energy > Eshower + 350*units::MeV || E_direct_max_energy > Eshower) flag_bad = true;
   if (Eshower < 1000*units::MeV && n_direct_showers >0 && E_direct_max_energy > 0.33 * Eshower) flag_bad = true;
   if (Eshower >= 1000*units::MeV && n_direct_showers >0 && E_direct_max_energy > 0.33 * Eshower && E_direct_total_energy > 900*units::MeV) flag_bad = true;
-  std::cout << "qaqa: " << Eshower << " " << n_direct_showers << " " << E_direct_max_energy << " " << E_direct_total_energy << " " << n_indirect_showers << " " << E_indirect_max_energy << " " << E_indirect_total_energy << std::endl; 
+  //  std::cout << "qaqa: " << Eshower << " " << n_direct_showers << " " << E_direct_max_energy << " " << E_direct_total_energy << " " << n_indirect_showers << " " << E_indirect_max_energy << " " << E_indirect_total_energy << std::endl; 
   
   
   return flag_bad;
@@ -701,8 +701,74 @@ bool WCPPID::NeutrinoID::track_overclustering(WCPPID::WCShower *shower, bool fla
 
     if (stem_length > 120*units::cm) flag_bad = true;
     //    std::cout << "qaqa: " << Eshower/units::MeV << " " << stem_length/units::cm << " " << muon_segments.size() << std::endl;
+  }
+
+
+  if (!flag_bad){
+    Map_Proto_Segment_Vertices& map_seg_vtxs = shower->get_map_seg_vtxs();
+    Map_Proto_Vertex_Segments& map_vtx_segs = shower->get_map_vtx_segs();
+    TVector3 dir1 = sg->cal_dir_3vector(vertex_point, 15*units::cm);
+
+    for (auto it1 = map_vtx_segs.begin(); it1 != map_vtx_segs.end(); it1++){
+      WCPPID::ProtoVertex *vtx1 = it1->first;
+      if (vtx1->get_cluster_id()!=vertex->get_cluster_id()) continue;
+      if (it1->second.size()!=1) continue;
+      if (vtx1 == vertex) continue;
+      TVector3 dir2(vtx1->get_fit_pt().x - vertex_point.x, vtx1->get_fit_pt().y - vertex_point.y, vtx1->get_fit_pt().z - vertex_point.z);
+
+      // 7054_155_7797
+      if (dir2.Mag() < 10*units::cm && dir1.Angle(dir2)/3.1415926*180. > 15 && (*it1->second.begin())->get_length() > 5*units::cm && (*it1->second.begin())->get_medium_dQ_dx()/(43e3/units::cm) > 1.5 && std::min(fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. , fabs(3.1415926/2.-dir2.Angle(drift_dir))/3.1415926*180.) > 5)
+	flag_bad = true;
+
+      //      if (dir2.Mag() < sg->get_length())
+      //std::cout << "qaqa: " << Eshower << " " << dir2.Mag()/units::cm << " " << dir1.Angle(dir2)/3.1415926*180. << " " << sg->get_length()/units::cm << " " << sg->is_shower_trajectory() << " " << fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. << " " << fabs(3.1415926/2.-dir2.Angle(drift_dir))/3.1415926*180. << " " << (*it1->second.begin())->get_medium_dQ_dx()/(43e3/units::cm) << " " << (*it1->second.begin())->get_length()/units::cm << std::endl;
+    }
 
     
+    WCPPID::ProtoVertex *vtx1 = find_other_vertex(sg, vertex);
+    dir1 = sg->cal_dir_3vector(vtx1->get_fit_pt(), 15*units::cm);
+
+    if (map_vtx_segs[vtx1].size()>=2){
+      double min_angle = 180;
+      double min_length = 0;
+      int min_count = 0;
+      double min_angle1 = 0;
+      
+      double max_length = 0;
+      int max_count = 0;
+      double max_angle = 0;
+      double max_angle1 = 0;
+    
+      for (auto it1 = map_vtx_segs[vtx1].begin(); it1 != map_vtx_segs[vtx1].end(); it1++){
+	WCPPID::ProtoSegment *sg1 = *it1;
+	if (sg1 == sg) continue;
+	TVector3 dir2 = sg1->cal_dir_3vector(vtx1->get_fit_pt(), 6*units::cm);
+	auto pair_result = calculate_num_daughter_tracks(vtx1, sg1, true);
+	double angle = 180 - dir1.Angle(dir2)/3.1415926*180. ;
+	double angle1 = fabs(3.1415926/2.-dir2.Angle(drift_dir))/3.1415926*180.;
+	
+	if (angle < min_angle){
+	  min_angle = angle;
+	  min_length = pair_result.second;
+	  min_count = pair_result.first;
+	  min_angle1 = angle1;
+	}
+	
+	if (pair_result.second > max_length){
+	  max_length = pair_result.second;
+	  max_angle = angle;
+	  max_angle1 = angle1;
+	  max_count = pair_result.first;
+	}
+	
+	//      std::cout << "qaqa: " << Eshower << " " << dir1.Angle(dir2)/3.1415926*180. << " " << fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. << " " << fabs(3.1415926/2.-dir2.Angle(drift_dir))/3.1415926*180. << " " << pair_result.first << " " << pair_result.second/units::cm << std::endl;
+      }
+      if (max_angle > 25 && min_angle < max_angle && min_angle < 20 && fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. > 10 && map_vtx_segs[vtx1].size() == 3 && min_count ==1 && (Eshower >= 600*units::MeV && fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. < 40 || Eshower < 600*units::MeV && fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. < 25)){
+	flag_bad = true;
+      }
+      
+      std::cout << "qaqa: " << Eshower << " " << map_vtx_segs[vtx1].size() << " " << min_angle << " " << min_length/units::cm << " " << min_count << " " << min_angle1 << " " << max_angle << " " << max_length/units::cm << " " << max_count << " " << max_angle1 << " " << fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. << std::endl;
+    }
     
   }
 
