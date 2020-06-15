@@ -223,7 +223,8 @@ namespace WCPPID{
     bool eliminate_short_vertex_activities(WCPPID::PR3DCluster *temp_cluster, std::set<WCPPID::ProtoSegment*>& existing_segments);
 
     std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* >& get_map_cluster_vertex(){return map_cluster_main_vertices;};
-      
+    std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertexSelection>& get_map_cluster_candidate_vertices(){return map_cluster_main_candidate_vertices;};
+    
     // get direction 
     TVector3 get_dir(WCPPID::ProtoVertex *vtx, WCPPID::ProtoSegment *sg, double dis = 2*units::cm);
     TVector3 get_dir(WCPPID::ProtoVertex *vtx, double dis_cut = 5*units::cm);
@@ -364,7 +365,9 @@ namespace WCPPID{
 
     // global variable ...
     std::map<WCPPID::PR3DCluster*, double> map_cluster_length;
+
     std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* > map_cluster_main_vertices;
+    std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertexSelection> map_cluster_main_candidate_vertices;
     
     // input ...
     WCPPID::PR3DCluster *main_cluster;

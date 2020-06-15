@@ -1411,14 +1411,47 @@ int main(int argc, char* argv[])
   
   for (size_t i=0;i!=neutrino_vec.size();i++){
     std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* >& map_cluster_vertex = neutrino_vec.at(i)->get_map_cluster_vertex();
+    WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();
+    std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertexSelection>& map_cluster_candidate_vertices = neutrino_vec.at(i)->get_map_cluster_candidate_vertices();
+
+    std::map<WCPPID::ProtoVertex*, int> map_vertex_type;
+    for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
+      WCPPID::ProtoVertex *vtx = it->first;
+      int type = 0;
+      map_vertex_type[vtx] = type;
+    }
     for (auto it = map_cluster_vertex.begin(); it!= map_cluster_vertex.end(); it++){
       WCPPID::ProtoVertex *vtx = it->second;
-      x_vtx = vtx->get_fit_pt().x/units::cm;
-      y_vtx = vtx->get_fit_pt().y/units::cm;
-      z_vtx = vtx->get_fit_pt().z/units::cm;
+      if (map_vertex_type.find(vtx) == map_vertex_type.end()) map_vertex_type[vtx] = 0;
+      map_vertex_type[vtx] |= 1UL << 2;
+    }
+    for (auto it = map_cluster_candidate_vertices.begin(); it != map_cluster_candidate_vertices.end(); it++){
+      for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+	WCPPID::ProtoVertex *vtx = *it1;
+	if (map_vertex_type.find(vtx) == map_vertex_type.end()) map_vertex_type[vtx] = 0;
+	map_vertex_type[vtx] |= 1UL << 1;
+      }
+    }
 
-      type_vtx = 3;
-      flag_main_vtx = vtx->get_flag_neutrino_vertex();
+    for (auto it = map_vertex_type.begin();  it != map_vertex_type.end(); it++){
+      WCPPID::ProtoVertex *vtx = it->first;
+      WCPPID::ProtoSegment *sg = *map_vertex_segments[vtx].begin();
+      Point vertex_point;
+      if (vtx->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	vertex_point = sg->get_point_vec().front();
+      }else{
+	vertex_point = sg->get_point_vec().back();
+      }
+      x_vtx = vertex_point.x/units::cm;
+      y_vtx = vertex_point.y/units::cm;
+      z_vtx = vertex_point.z/units::cm;
+      
+      type_vtx = it->second;
+      if (vtx ==  neutrino_vec.at(i)->get_main_vertex())
+	flag_main_vtx = 1;
+      else
+	flag_main_vtx = 0;
+      
       cluster_id_vtx = vtx->get_cluster_id();
       sub_cluster_ids_vtx->clear();
       //     for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
@@ -1427,6 +1460,24 @@ int main(int argc, char* argv[])
       //     }
       T_vtx->Fill();
     }
+    
+    
+    // for (auto it = map_cluster_vertex.begin(); it!= map_cluster_vertex.end(); it++){
+    //   WCPPID::ProtoVertex *vtx = it->second;
+    //   x_vtx = vtx->get_fit_pt().x/units::cm;
+    //   y_vtx = vtx->get_fit_pt().y/units::cm;
+    //   z_vtx = vtx->get_fit_pt().z/units::cm;
+
+    //   type_vtx = 3;
+    //   flag_main_vtx = vtx->get_flag_neutrino_vertex();
+    //   cluster_id_vtx = vtx->get_cluster_id();
+    //   sub_cluster_ids_vtx->clear();
+    //   //     for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
+    //   //     	WCPPID::ProtoSegment *sg = *it1;
+    //   //     	sub_cluster_ids_vtx->push_back(cluster_id_vtx*1000 + sg->get_id());
+    //   //     }
+    //   T_vtx->Fill();
+    // }
   }
 
 

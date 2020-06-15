@@ -1296,6 +1296,7 @@ void WCPPID::NeutrinoID::determine_main_vertex(WCPPID::PR3DCluster* temp_cluster
   }
 
 
+  map_cluster_main_candidate_vertices[temp_cluster] = main_vertex_candidates;
 
   if (flag_save_only_showers){
     if (main_vertex_candidates.size()>0){
