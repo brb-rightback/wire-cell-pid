@@ -1045,10 +1045,13 @@ bool WCPPID::NeutrinoID::single_shower_to_wall(WCPPID::WCShower* shower, double 
   WCPPID::ProtoSegment *sg = shower->get_start_segment();
   WCPPID::ProtoVertex *vertex = shower->get_start_vertex().first;
   Point vertex_point;
+  double medium_dQ_dx = 0;
   if (vertex->get_wcpt().index == sg->get_wcpt_vec().front().index){
     vertex_point = sg->get_point_vec().front();
+    medium_dQ_dx = sg->get_medium_dQ_dx(0,6)/(43e3/units::cm);
   }else{
     vertex_point = sg->get_point_vec().back();
+    medium_dQ_dx = sg->get_medium_dQ_dx(int(sg->get_point_vec().size())-1-6, int(sg->get_point_vec().size())-1)/(43e3/units::cm);
   }
   TVector3 dir = shower->cal_dir_3vector(vertex_point, 15*units::cm);
   dir = (-1) * dir.Unit();
@@ -1091,11 +1094,63 @@ bool WCPPID::NeutrinoID::single_shower_to_wall(WCPPID::WCShower* shower, double 
       }
     }
   }
-  
-  
 
+  if ((!flag_bad) && dis < 5*units::cm){
+    int n_other_shower = 0;
+    for (auto it = map_vertex_to_shower[vertex].begin(); it != map_vertex_to_shower[vertex].end(); it++){
+      WCPPID::WCShower *shower1 = *it;
+      if (shower1 == shower) continue;
+      if (shower1->get_start_vertex().second > 2) continue;
+      if (shower1->get_particle_type()!=11) continue;
+      double E_shower = 0;
+      if (shower1->get_kine_best() != 0){ 
+	E_shower = shower1->get_kine_best();
+      }else{
+	E_shower = shower1->get_kine_charge();
+      }
+      if (E_shower > 60*units::MeV) n_other_shower ++;
+    }
+
+    flag_bad = true;
+    
+    //    std::cout << "kaka: " << shower_energy << " " << dis/units::cm << " " << medium_dQ_dx << " " << n_other_shower << std::endl;
+  }
+    
+  if (flag_print) std::cout << "kaka: " << shower_energy << " " << dis/units::cm << " " << flag_bad << std::endl;
+
+  if (!flag_bad){
+    TVector3 dir2 = shower->cal_dir_3vector(vertex_point, 6*units::cm);
+    dir2 = (-1) * dir2.Unit();
+    
+    for (auto it = showers.begin(); it != showers.end(); it++){
+      WCPPID::WCShower *shower1 = *it;
+      if (shower1 == shower) continue;
+      
+      if (shower1->get_particle_type()!=11){
+	TVector3 dir1(shower1->get_start_point().x - vertex_point.x, shower1->get_start_point().y - vertex_point.y, shower1->get_start_point().z - vertex_point.z);
+
+	if ((medium_dQ_dx > 1.3  || shower_energy < 300*units::MeV)&& std::min(dir1.Angle(dir)/3.1415926*180.,dir1.Angle(dir2)/3.1415926*180.)<15 && dir1.Mag() < 40*units::cm){
+	  //	std::cout << "qaqa: " << shower_energy << " " << shower1->get_particle_type() << " " << shower1->get_start_segment()->get_particle_type() << " " << dir1.Angle(dir)/3.1415926*180. << " " << dir1.Angle(dir2)/3.1415926*180. << " " << dir1.Mag()/units::cm << " " << medium_dQ_dx << std::endl;
+	  flag_bad = true;
+	}
+      }
+    }
+
+
+    
+    for (auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
+      WCPPID::ProtoVertex *vtx1 = it->first;
+      if (vtx1->get_cluster_id() == vertex->get_cluster_id() || it->second.size()==1) continue;
+      TVector3 dir1(vtx1->get_wcpt().x - vertex_point.x, vtx1->get_wcpt().y - vertex_point.y, vtx1->get_wcpt().z - vertex_point.z);
+      if (std::min(dir1.Angle(dir)/3.1415926*180. , dir1.Angle(dir2)/3.1415926*180.) <15)
+	if (dir1.Mag() < 40*units::cm && (shower_energy < 300*units::MeV || medium_dQ_dx > 1.3))
+	  flag_bad = true;
+	//std::cout << "kaka: " << shower_energy << " " << medium_dQ_dx << " " << it->second.size() << " " << dir1.Mag()/units::cm << " " << dir1.Angle(dir)/3.1415926*180. << " " << dir1.Angle(dir2)/3.1415926*180. << std::endl;
+    }
+    
+    
+  }
   
-  if (flag_print) std::cout << shower_energy << " " << dis/units::cm << " " << flag_bad << std::endl;
   
   return flag_bad;
 }
