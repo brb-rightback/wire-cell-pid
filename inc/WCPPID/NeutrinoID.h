@@ -351,6 +351,8 @@ namespace WCPPID{
 
     bool track_overclustering(WCPPID::WCShower* shower, bool flag_print = false);
     bool other_showers(WCPPID::WCShower* shower, bool flag_print = false);
+
+    bool vertex_inside_shower(WCPPID::WCShower*shower, bool flag_print = false);
     
   protected:
     int neutrino_type;
