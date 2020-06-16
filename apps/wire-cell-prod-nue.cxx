@@ -1435,12 +1435,19 @@ int main(int argc, char* argv[])
 
     for (auto it = map_vertex_type.begin();  it != map_vertex_type.end(); it++){
       WCPPID::ProtoVertex *vtx = it->first;
-      WCPPID::ProtoSegment *sg = *map_vertex_segments[vtx].begin();
+      auto it1 = map_vertex_segments.find(vtx);
       Point vertex_point;
-      if (vtx->get_wcpt().index == sg->get_wcpt_vec().front().index){
-	vertex_point = sg->get_point_vec().front();
+      
+      if (it1 != map_vertex_segments.end() && it1->second.size()>0){
+	WCPPID::ProtoSegment *sg = *map_vertex_segments[vtx].begin();
+	
+	if (vtx->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	  vertex_point = sg->get_point_vec().front();
+	}else{
+	  vertex_point = sg->get_point_vec().back();
+	}
       }else{
-	vertex_point = sg->get_point_vec().back();
+	continue;
       }
       x_vtx = vertex_point.x/units::cm;
       y_vtx = vertex_point.y/units::cm;
