@@ -495,7 +495,8 @@ bool WCPPID::NeutrinoID::angular_cut(WCPPID::WCShower* shower, double energy, do
     if (!fid->inside_fiducial_volume(vtx1->get_fit_pt(), offset_x, &stm_tol_vec)) flag_main_outside = true;
   }
 
-  if (angle > 90 && flag_main_outside) flag_bad = true;
+  if ((angle > 90 || energy < 300*units::MeV || angle > 60 && energy < 800*units::MeV) && flag_main_outside) flag_bad = true;
+
   //  std::cout << "kaka: " << energy << " " << angle << " " << flag_main_outside << std::endl;
   
   return flag_bad;
