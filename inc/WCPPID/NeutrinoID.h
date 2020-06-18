@@ -336,7 +336,7 @@ namespace WCPPID{
     bool pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower);
     bool bad_reconstruction(WCPPID::WCShower* shower, bool flag_print = false);
     
-    bool bad_reconstruction_1(WCPPID::WCShower* shower);
+    bool bad_reconstruction_1(WCPPID::WCShower* shower, bool flag_single_shower, int num_valid_tracks);
     
     bool bad_reconstruction_2(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower);
 
@@ -347,14 +347,16 @@ namespace WCPPID{
     bool high_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false);
 
     bool single_shower_pio_tagger(WCPPID::WCShower* shower, bool flag_print = false);
-    bool single_shower_to_wall(WCPPID::WCShower* shower, double shower_energy, bool flag_print = false);
+    bool shower_to_wall(WCPPID::WCShower* shower, double shower_energy, bool flag_single_shower, bool flag_print = false);
+   
     bool broken_muon_id(WCPPID::WCShower* shower, bool flag_print = false);
     bool track_overclustering(WCPPID::WCShower* shower, bool flag_print = false);
     bool other_showers(WCPPID::WCShower* shower, bool flag_print = false);
     bool vertex_inside_shower(WCPPID::WCShower* shower, bool flag_print = false);
     bool angular_cut(WCPPID::WCShower* shower, double energy, double angle, bool flag_print = false);
-    bool single_shower(WCPPID::WCShower* shower, bool flag_print = false);
-    
+    bool single_shower(WCPPID::WCShower* shower, bool flag_single_shower, bool flag_print = false);
+
+    bool low_energy_michel(WCPPID::WCShower*shower, bool flag_print = false);
     
   protected:
     int neutrino_type;
