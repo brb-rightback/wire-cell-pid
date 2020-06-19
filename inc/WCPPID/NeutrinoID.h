@@ -332,16 +332,16 @@ namespace WCPPID{
     bool nue_tagger(double muon_kine_energy = 0);
     void examine_showers();
     std::pair<bool, int> gap_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment* sg, bool flag_single_shower = false, int valid_tracks = 0, double Eshower = 0);
-    int mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, bool flag_single_shower, bool flag_strong_check = false);
+    int mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, bool flag_single_shower, bool flag_strong_check = false, bool flag_print = false);
     bool pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower);
     bool bad_reconstruction(WCPPID::WCShower* shower, bool flag_print = false);
     
     bool bad_reconstruction_1(WCPPID::WCShower* shower, bool flag_single_shower, int num_valid_tracks);
     
-    bool bad_reconstruction_2(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower);
+    bool bad_reconstruction_2(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower, bool flag_print = false);
 
     // main shower stem separated from the other parts
-    bool bad_reconstruction_3(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower);
+    bool bad_reconstruction_3(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower, bool flag_print = false);
     
     bool low_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false);
     bool high_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false);
