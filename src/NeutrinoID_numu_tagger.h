@@ -103,16 +103,19 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
 	
 	// calculate the length of muon 
 	if (length > 50*units::cm){
-	  auto pair_vertices = find_vertices(sg);
 	  double tmp_length = length;
-	  auto results1 = find_cont_muon_segment(sg, pair_vertices.first);
-	  if (results1.first != 0){
-	    tmp_length += results1.first->get_length();
+	  if (!sg->get_flag_shower_topology()){
+	    auto pair_vertices = find_vertices(sg);
+	    auto results1 = find_cont_muon_segment(sg, pair_vertices.first);
+	    if (results1.first != 0){
+	      tmp_length += results1.first->get_length();
+	    }
+	    auto results2 = find_cont_muon_segment(sg, pair_vertices.second);
+	    if (results2.first != 0){
+	      tmp_length += results2.first->get_length();
+	    }
 	  }
-	  auto results2 = find_cont_muon_segment(sg, pair_vertices.second);
-	  if (results2.first != 0){
-	    tmp_length += results2.first->get_length();
-	  }
+	  
 	  if (tmp_length > max_muon_length) {
 	    max_muon_length = tmp_length;
 	    max_muon = sg;

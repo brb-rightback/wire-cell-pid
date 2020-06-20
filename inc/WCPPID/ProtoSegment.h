@@ -92,7 +92,9 @@ namespace WCPPID{
     bool get_flag_shower_trajectory(){return flag_shower_trajectory;};
     bool get_flag_shower_topology(){return flag_shower_topology;};
     bool get_flag_shower_dQdx();
-
+    bool get_flag_avoid_muon_check(){return flag_avoid_muon_check;};
+    void set_flag_avoid_muon_check(bool val){flag_avoid_muon_check = val;};
+    
     bool is_dir_weak();
     void set_dir_weak(bool val){dir_weak = val;};
     int get_flag_dir(){return flag_dir;};
@@ -160,6 +162,7 @@ namespace WCPPID{
 
     bool flag_shower_trajectory;
     bool flag_shower_topology;
+    bool flag_avoid_muon_check;
     bool flag_fit;
     
     

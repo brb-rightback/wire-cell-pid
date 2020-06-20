@@ -23,6 +23,7 @@ WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::
   , pcloud_associated_steiner(0)
   , flag_shower_trajectory(false)
   , flag_shower_topology(false)
+  , flag_avoid_muon_check(false)
   , flag_dir(0)
   , dir_weak(false)
   , particle_type(0)

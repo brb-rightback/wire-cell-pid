@@ -1286,6 +1286,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_in_main_cluster(){
 	shower->set_start_segment(curr_sg);
 	bool tmp_flag = parent_vtx == main_vertex;
 	showers.push_back(shower);
+
 	if (fabs(curr_sg->get_particle_type()==13)){
 	  shower->set_particle_type(curr_sg->get_particle_type());
 	  std::cout << "Main-cluster long muon " << showers.size() << " : " << curr_sg->get_cluster_id()*1000 + curr_sg->get_id() << " " << curr_sg->get_particle_type() << " " << tmp_flag << " " << curr_sg->get_flag_shower_topology() << std::endl;
@@ -1309,6 +1310,63 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_in_main_cluster(){
   for (size_t i=0;i!=showers.size();i++){
     showers.at(i)->complete_structure_with_start_segment(map_vertex_segments, map_segment_vertices, used_segments); 
   }
+
+  // check if a certain long muon shower should be converted to an EM shower ...
+  std::set<WCPPID::ProtoSegment* > tmp_segments;
+  std::set<WCPPID::ProtoVertex* > tmp_vertices;
+  for (size_t i=0;i!=showers.size();i++){
+    if (showers.at(i)->get_start_segment()->get_particle_type()!=13) continue;
+    Map_Proto_Segment_Vertices& map_seg_vtxs = showers.at(i)->get_map_seg_vtxs();
+    double n_muons = 0;
+    double length_muons = 0;
+    double n_others = 0;
+    double length_others = 0;
+    double max_muon_length = 0;
+    WCPPID::ProtoSegment *max_sg = 0;
+    for (auto it1 = map_seg_vtxs.begin(); it1 != map_seg_vtxs.end(); it1++){
+      WCPPID::ProtoSegment *sg1 = it1->first;
+      double length = sg1->get_length();
+      if (segments_in_long_muon.find(sg1) != segments_in_long_muon.end()){
+	n_muons ++;
+	length_muons += length;
+	if (length > max_muon_length) {
+	  max_muon_length = length;
+	  max_sg = sg1;
+	}
+      }else{
+	n_others ++;
+	length_others += length;
+      }
+    }
+    
+    if (n_others >= 2 * n_muons && length_others > 0.33 * length_muons && n_muons >0 && max_muon_length < 60*units::cm){
+      std::cout << "Long muon converted to EM shower " << std::endl;
+      for (auto it1 = map_seg_vtxs.begin(); it1 != map_seg_vtxs.end(); it1++){
+	WCPPID::ProtoSegment *sg1 = it1->first;
+	//	std::cout << sg1->get_length()/units::cm << " " << sg1->get_flag_shower_topology() << " " << sg1->get_flag_shower_trajectory() << " " << std::endl;
+	if (sg1 == max_sg) max_sg->set_flag_avoid_muon_check(true);
+	sg1->set_particle_type(11);
+	TPCParams& mp = Singleton<TPCParams>::Instance();
+	sg1->set_particle_mass(mp.get_mass_electron());
+	tmp_segments.insert(sg1);
+	auto pair_vertices = find_vertices(sg1);
+	tmp_vertices.insert(pair_vertices.first);
+	tmp_vertices.insert(pair_vertices.second);
+      }
+    }
+  }
+  // need to update the long muon containers ...
+  // clean up long muons ...
+ 
+ 
+  for (auto it = tmp_segments.begin(); it!=tmp_segments.end();it++){
+    segments_in_long_muon.erase(*it);
+  }
+  for (auto it = tmp_vertices.begin(); it!=tmp_vertices.end(); it++){
+    vertices_in_long_muon.erase(*it);
+  }
+  
+  
 
   update_shower_maps();  
   //std::cout << showers.size() << " " << used_segments.size() << std::endl;
