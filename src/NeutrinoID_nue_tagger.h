@@ -68,11 +68,11 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	    
 	   
 	    
-	    if (shower->get_total_length(main_vertex->get_cluster_id()) < muon_length * 0.5 &&
-		E_shower < E_muon && E_shower < 250*units::MeV ) {
-	      if (flag_print) std::cout << "Qian_A: " << E_shower/units::MeV << " " << shower->get_total_length(main_vertex->get_cluster_id())/units::cm << " " << muon_length/units::cm << " " << E_muon/units::MeV << std::endl;
-	      continue;
-	    }
+	    /* if (shower->get_total_length(main_vertex->get_cluster_id()) < muon_length * 0.5 && */
+	    /* 	E_shower < E_muon && E_shower < 250*units::MeV ) { */
+	    /*   if (flag_print) std::cout << "Qian_A: " << E_shower/units::MeV << " " << shower->get_total_length(main_vertex->get_cluster_id())/units::cm << " " << muon_length/units::cm << " " << E_muon/units::MeV << std::endl; */
+	    /*   continue; */
+	    /* } */
 	  }
 
 	  auto pair_result = gap_identification(main_vertex, sg, flag_single_shower, num_valid_tracks, E_shower);
@@ -747,6 +747,13 @@ bool WCPPID::NeutrinoID::track_overclustering(WCPPID::WCShower *shower, bool fla
 	  // distance cut to avoid close overclustering to save efficiency
 	  if (std::min(dis1, dis2) > 10*units::cm && (sg1->get_length() > 0.03 * total_length_main || sg1->get_length() > 3.6*units::cm)) flag_bad = true;
 	  //std::cout << "qaqa: " << Eshower/units::MeV << " " << sg1->get_length()/units::cm << " " << sg1->get_particle_type() << " " << sg1->is_dir_weak() << " " << total_length/units::cm << " " << total_length_main/units::cm << " " << std::min(dis1,dis2)/units::cm << std::endl;
+	}
+	double tmp_length = sg1->get_length();
+	// 7055_677_33891
+	if (tmp_length > 12*units::cm && (!sg1->get_flag_shower_topology())){
+	  double dQ_dx_cut = 0.8866+0.9533 *pow(18*units::cm/tmp_length, 0.4234);
+	  if (sg1->get_medium_dQ_dx()/(43e3/units::cm) > dQ_dx_cut * 1.1) flag_bad = true;
+	  //std::cout << sg1->get_particle_type() << " " << tmp_length/units::cm << " " << sg1->get_medium_dQ_dx()/(43e3/units::cm) << " " << dQ_dx_cut << std::endl;
 	}
       }
     }
@@ -1656,7 +1663,7 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
   int n_below_threshold = 0;
   int n_below_zero = 0;
   for (size_t i=n_first_mip; i < n_first_non_mip_2; i++){
-    if (vec_dQ_dx.at(i) < lowest_dQ_dx) {
+    if (vec_dQ_dx.at(i) < lowest_dQ_dx && i <= 12) {
       lowest_dQ_dx = vec_dQ_dx.at(i);
       n_lowest = i;
     }
