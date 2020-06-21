@@ -307,6 +307,7 @@ namespace WCPPID{
     void shower_determing_in_main_cluster(WCPPID::PR3DCluster *temp_cluster);
     void shower_clustering_with_nv();
     void shower_clustering_with_nv_in_main_cluster();
+    void shower_clustering_connecting_to_main_vertex();
     void shower_clustering_with_nv_from_main_cluster();
     void shower_clustering_with_nv_from_vertices();
     void examine_merge_showers();

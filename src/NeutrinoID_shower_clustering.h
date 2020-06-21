@@ -82,11 +82,101 @@ void WCPPID::NeutrinoID::shower_determing_in_main_cluster(WCPPID::PR3DCluster *t
   
 }
 
+void WCPPID::NeutrinoID::shower_clustering_connecting_to_main_vertex(){
+  std::set<WCPPID::ProtoSegment*>  used_segments;
+  for (auto it = showers.begin(); it != showers.end(); it++){
+    WCPPID::WCShower *shower = *it;
+    if (shower->get_start_vertex().first == main_vertex){
+      Map_Proto_Segment_Vertices& map_seg_vtxs = shower->get_map_seg_vtxs();
+      for (auto it1 = map_seg_vtxs.begin(); it1 != map_seg_vtxs.end(); it1++){
+	used_segments.insert(it1->first);
+      }
+    }
+  }
+
+  if (used_segments.size()==0){
+    std::set<WCPPID::WCShower* > del_showers;
+    for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
+      WCPPID::ProtoSegment *sg = *it;
+      if (map_segment_in_shower.find(sg) != map_segment_in_shower.end()) continue;
+      if (sg->get_particle_type()==11) continue;
+      //    std::pair<int, double> pair_result = calculate_num_daughter_tracks(main_vertex, sg, true);
+      WCPPID::WCShower *shower = new WCPPID::WCShower();
+      shower->set_start_vertex(main_vertex, 1);
+      shower->set_start_segment(sg);
+      shower->complete_structure_with_start_segment(map_vertex_segments, map_segment_vertices, used_segments);
+      Map_Proto_Segment_Vertices& map_seg_vtxs = shower->get_map_seg_vtxs();
+      Map_Proto_Vertex_Segments& map_vtx_segs = shower->get_map_vtx_segs();
+      double max_length = 0;
+      WCPPID::ProtoSegment *max_sg = 0;
+      int n_tracks = 0;
+      int n_showers = 0;
+      double total_length = 0;
+      bool flag_good_track = false;
+      for (auto it1 = map_seg_vtxs.begin(); it1 != map_seg_vtxs.end(); it1++){
+	WCPPID::ProtoSegment *sg1 = it1->first;
+	double length = sg1->get_length();
+	double medium_dQ_dx = sg1->get_medium_dQ_dx()/(43e3/units::cm);
+	if (!sg1->is_dir_weak()) flag_good_track = true;
+	if (sg1->get_flag_shower()) n_showers ++;
+	n_tracks ++;
+	total_length += length;
+	if (max_length < length) {
+	  max_length = length;
+	  max_sg = sg1;
+	}
+	//      std::cout << sg1->get_length()/units::cm << " " << sg1->get_medium_dQ_dx()/(43e3/units::cm) << " " << sg1->is_dir_weak() << " " << sg1->get_flag_shower() << std::endl;
+      }
+      int n_multi_vtx = 0;
+      int n_two_vtx  = 0;
+      for (auto it1 = map_vtx_segs.begin(); it1 != map_vtx_segs.end(); it1++){
+	WCPPID::ProtoVertex *vtx = it1->first;
+	if (it1->second.size()==2) n_two_vtx ++;
+	else if (it1->second.size() >2) n_multi_vtx ++;
+      }
+      
+      
+      //std::cout << "kaka: " << flag_good_track << " " << n_tracks << " " << n_showers << " " << total_length/units::cm << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << " " << n_multi_vtx << " " << n_two_vtx << std::endl;
+      if ((!flag_good_track) && n_multi_vtx >0 && max_length < 65*units::cm && total_length < n_tracks * 25*units::cm && total_length < 75*units::cm && n_two_vtx < 3){
+	shower->get_start_segment()->set_particle_type(11);
+	showers.push_back(shower);
+	max_sg->set_flag_avoid_muon_check(true);
+	Map_Proto_Vertex_Segments& map_vtx_segs = shower->get_map_vtx_segs();
+	for (auto it1 = showers.begin(); it1!=showers.end(); it1++){
+	  WCPPID::WCShower *shower1 = *it1;
+	  if (shower == shower1) continue;
+	  if (shower1->get_start_vertex().second==1){
+	    if (map_vtx_segs.find(shower1->get_start_vertex().first) != map_vtx_segs.end()){
+	      del_showers.insert(shower1);
+	    }
+	  }
+	}
+	
+      }else{
+	delete shower;
+      }
+    }
+    
+    for (auto it1 = del_showers.begin(); it1!=del_showers.end(); it1 ++){
+      WCPPID::WCShower *shower1 = *it1;
+      if (shower1->get_start_vertex().first != main_vertex){
+	showers.erase(find(showers.begin(), showers.end(), shower1));
+	delete shower1;
+      }
+    }
+    update_shower_maps();  
+  }
+  
+}
 
 void WCPPID::NeutrinoID::shower_clustering_with_nv(){
 
   // connect to the main cluster ...
   shower_clustering_with_nv_in_main_cluster();
+
+  // examine things connecting to the main vertex
+  shower_clustering_connecting_to_main_vertex();
+  
   //std::cout << showers.size() << std::endl;
   shower_clustering_with_nv_from_main_cluster();
   //  std::cout << showers.size() << std::endl;
@@ -1284,7 +1374,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_in_main_cluster(){
 	WCPPID::WCShower *shower = new WCPPID::WCShower();
 	shower->set_start_vertex(parent_vtx, 1);
 	shower->set_start_segment(curr_sg);
-	bool tmp_flag = parent_vtx == main_vertex;
+	bool tmp_flag = (parent_vtx == main_vertex);
 	showers.push_back(shower);
 
 	if (fabs(curr_sg->get_particle_type()==13)){
