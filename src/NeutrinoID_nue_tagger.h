@@ -106,6 +106,8 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	} // 80 MeV, and connected
       } // loop over showers
 
+      //      std::cout << max_shower << " " << good_showers.size() << " " << *good_showers.begin() << std::endl;
+      
       if (good_showers.find(max_shower)!=good_showers.end() && max_shower !=0){
 	Point test_p;
 	WCPPID::ProtoSegment *sg = max_shower->get_start_segment();
@@ -750,10 +752,10 @@ bool WCPPID::NeutrinoID::track_overclustering(WCPPID::WCShower *shower, bool fla
 	}
 	double tmp_length = sg1->get_length();
 	// 7055_677_33891
-	if (tmp_length > 12*units::cm && (!sg1->get_flag_shower_topology())){
+	if (tmp_length > 12*units::cm && (!sg1->get_flag_shower_topology()) && tmp_length > 0.3 * shower->get_total_length(sg->get_cluster_id())){
 	  double dQ_dx_cut = 0.8866+0.9533 *pow(18*units::cm/tmp_length, 0.4234);
 	  if (sg1->get_medium_dQ_dx()/(43e3/units::cm) > dQ_dx_cut * 1.1) flag_bad = true;
-	  //std::cout << sg1->get_particle_type() << " " << tmp_length/units::cm << " " << sg1->get_medium_dQ_dx()/(43e3/units::cm) << " " << dQ_dx_cut << std::endl;
+	  std::cout << sg1->get_particle_type() << " " << tmp_length/units::cm << " " << sg1->get_medium_dQ_dx()/(43e3/units::cm) << " " << dQ_dx_cut << " " << shower->get_total_length(sg->get_cluster_id())/units::cm << std::endl;
 	}
       }
     }
@@ -984,7 +986,7 @@ bool WCPPID::NeutrinoID::track_overclustering(WCPPID::WCShower *shower, bool fla
 	flag_bad = true;
       
       //if (dir2.Mag() < sg->get_length())
-      //std::cout << "qaqa: " << Eshower << " " << dir2.Mag()/units::cm << " " << dir1.Angle(dir2)/3.1415926*180. << " " << sg->get_length()/units::cm << " " << sg->is_shower_trajectory() << " " << fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. << " " << fabs(3.1415926/2.-dir2.Angle(drift_dir))/3.1415926*180. << " " << (*it1->second.begin())->get_medium_dQ_dx()/(43e3/units::cm) << " " << (*it1->second.begin())->get_length()/units::cm << std::endl;
+      //std::cout << "qaqa1: " << Eshower << " " << dir2.Mag()/units::cm << " " << dir1.Angle(dir2)/3.1415926*180. << " " << sg->get_length()/units::cm << " " << sg->is_shower_trajectory() << " " << fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. << " " << fabs(3.1415926/2.-dir2.Angle(drift_dir))/3.1415926*180. << " " << (*it1->second.begin())->get_medium_dQ_dx()/(43e3/units::cm) << " " << (*it1->second.begin())->get_length()/units::cm << " " << flag_bad << std::endl;
     }
 
     
@@ -1030,7 +1032,7 @@ bool WCPPID::NeutrinoID::track_overclustering(WCPPID::WCShower *shower, bool fla
 	flag_bad = true;
       }
       
-      //      std::cout << "qaqa: " << Eshower << " " << map_vtx_segs[vtx1].size() << " " << min_angle << " " << min_length/units::cm << " " << min_count << " " << min_angle1 << " " << max_angle << " " << max_length/units::cm << " " << max_count << " " << max_angle1 << " " << fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. << std::endl;
+      //std::cout << "qaqa: " << Eshower << " " << map_vtx_segs[vtx1].size() << " " << min_angle << " " << min_length/units::cm << " " << min_count << " " << min_angle1 << " " << max_angle << " " << max_length/units::cm << " " << max_count << " " << max_angle1 << " " << fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. << " " << flag_bad << std::endl;
     }
     
   }
@@ -3287,7 +3289,7 @@ void WCPPID::NeutrinoID::examine_showers(){
     for (auto it1 = showers.begin(); it1!=showers.end(); it1++){
       WCPPID::WCShower *shower1 = *it1;
       if (shower == shower1) continue;
-      if (shower1->get_start_vertex().second==1){
+      if (shower1->get_start_vertex().second==1 && shower1->get_start_vertex().first != main_vertex){
 	if (map_vtx_segs.find(shower1->get_start_vertex().first) != map_vtx_segs.end()){
 	  shower->add_shower(shower1);
 	  del_showers.insert(shower1);

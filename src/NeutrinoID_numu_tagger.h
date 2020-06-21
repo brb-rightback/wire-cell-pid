@@ -90,7 +90,8 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
     double dQ_dx_cut = 0.8866+0.9533 *pow(18*units::cm/length, 0.4234);
     
     //    std::cout << sg->get_id() << " " << sg->get_flag_shower() << " " << sg->get_flag_shower_topology() << " " << medium_dQ_dx/(43e3/units::cm) << " " << dQ_dx_cut << " " << length/units::cm << " " << direct_length/units::cm << std::endl;
-    
+
+    if (sg->get_flag_avoid_muon_check()) continue;
     if (sg->get_flag_shower() && (!sg->get_flag_shower_topology()) || (!sg->get_flag_shower()) || length > 50*units::cm){
       
       if (medium_dQ_dx < dQ_dx_cut * 1.05 * 43e3/units::cm  && medium_dQ_dx > 0.75 * 43e3/units::cm && (direct_length > 0.925*length || length > 50*units::cm)){
@@ -115,6 +116,7 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
 	      tmp_length += results2.first->get_length();
 	    }
 	  }
+	  //std::cout << sg->get_particle_type() << " " << sg->get_flag_shower_topology() << " " << sg->get_id() << " " << sg->get_length()/units::cm << std::endl;
 	  
 	  if (tmp_length > max_muon_length) {
 	    max_muon_length = tmp_length;
