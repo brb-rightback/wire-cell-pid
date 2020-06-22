@@ -117,7 +117,36 @@ void WCPPID::NeutrinoID::shower_clustering_connecting_to_main_vertex(){
 	WCPPID::ProtoSegment *sg1 = it1->first;
 	double length = sg1->get_length();
 	double medium_dQ_dx = sg1->get_medium_dQ_dx()/(43e3/units::cm);
-	if (!sg1->is_dir_weak()) flag_good_track = true;
+	if (!sg1->is_dir_weak()) {
+	  auto pair_vertices = find_vertices(sg1);
+	  WCPPID::ProtoVertex *end_vertex = 0;
+	  if (sg1->get_flag_dir()==1){
+	    if (sg1->get_wcpt_vec().back().index == pair_vertices.first->get_wcpt().index){
+	      end_vertex = pair_vertices.first;
+	    }else{
+	      end_vertex = pair_vertices.second;
+	    }
+	  }else{
+	    if (sg1->get_wcpt_vec().front().index == pair_vertices.first->get_wcpt().index){
+	      end_vertex = pair_vertices.first;
+	    }else{
+	      end_vertex = pair_vertices.second;
+	    }
+	  }
+	  if (map_vertex_segments[end_vertex].size()>1){
+	    bool flag_non_ele = false;
+	    for (auto it2 = map_vertex_segments[end_vertex].begin(); it2 != map_vertex_segments[end_vertex].end(); it2++){
+	      WCPPID::ProtoSegment *sg2 = *it2;
+	      if(sg2 == sg1) continue;
+	      if (!sg2->get_flag_shower()) flag_non_ele = true;
+	    }
+	    if ((!flag_non_ele) && map_vertex_segments[end_vertex].size()<=3) flag_good_track == true;
+	    //	    std::cout << map_vertex_segments[end_vertex].size() << std::endl;
+	  }else{
+	    flag_good_track = true;
+	  }
+	}
+	
 	if (sg1->get_flag_shower()) n_showers ++;
 	n_tracks ++;
 	total_length += length;
@@ -125,7 +154,7 @@ void WCPPID::NeutrinoID::shower_clustering_connecting_to_main_vertex(){
 	  max_length = length;
 	  max_sg = sg1;
 	}
-	//      std::cout << sg1->get_length()/units::cm << " " << sg1->get_medium_dQ_dx()/(43e3/units::cm) << " " << sg1->is_dir_weak() << " " << sg1->get_flag_shower() << std::endl;
+	//	std::cout << sg1->get_length()/units::cm << " " << sg1->get_medium_dQ_dx()/(43e3/units::cm) << " " << sg1->is_dir_weak() << " " << sg1->get_flag_shower() << std::endl;
       }
       int n_multi_vtx = 0;
       int n_two_vtx  = 0;
@@ -136,8 +165,8 @@ void WCPPID::NeutrinoID::shower_clustering_connecting_to_main_vertex(){
       }
       
       
-      //std::cout << "kaka: " << flag_good_track << " " << n_tracks << " " << n_showers << " " << total_length/units::cm << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << " " << n_multi_vtx << " " << n_two_vtx << std::endl;
-      if ((!flag_good_track) && n_multi_vtx >0 && max_length < 65*units::cm && total_length < n_tracks * 25*units::cm && total_length < 75*units::cm && n_two_vtx < 3){
+      //      std::cout << "kaka: " << flag_good_track << " " << n_tracks << " " << n_showers << " " << total_length/units::cm << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << " " << n_multi_vtx << " " << n_two_vtx << std::endl;
+      if ((!flag_good_track) && n_multi_vtx >0 && max_length < 65*units::cm && (total_length < n_tracks * 25*units::cm && total_length < 75*units::cm || total_length < n_tracks * 18*units::cm && total_length < 95*units::cm )&& n_two_vtx < 3){
 	shower->get_start_segment()->set_particle_type(11);
 	showers.push_back(shower);
 	max_sg->set_flag_avoid_muon_check(true);

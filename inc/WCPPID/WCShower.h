@@ -67,7 +67,7 @@ namespace WCPPID{
     void build_point_clouds();
     WCP::ToyPointCloud* get_fit_pcloud(){return pcloud_fit;};
     WCP::ToyPointCloud* get_associated_pcloud(){return pcloud_associated;};
-
+    
     //
     std::pair<std::set<WCPPID::ProtoSegment*>, std::set<WCPPID::ProtoVertex*> > get_connected_pieces(WCPPID::ProtoSegment* seg);
     
