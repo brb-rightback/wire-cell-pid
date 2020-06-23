@@ -1084,13 +1084,16 @@ bool WCPPID::NeutrinoID::broken_muon_id(WCPPID::WCShower* shower, bool flag_prin
       flag_continue = false;
 
       TVector3 dir1 = curr_muon_segment->cal_dir_3vector(curr_muon_vertex->get_fit_pt(), 15*units::cm);
-      
+
       // things connected to this vertex
       for (auto it = map_vtx_segs[curr_muon_vertex].begin(); it != map_vtx_segs[curr_muon_vertex].end(); it++){
 	WCPPID::ProtoSegment *sg1 = *it;
 	if (muon_segments.find(sg1) != muon_segments.end()) continue;
 	TVector3 dir2 = sg1->cal_dir_3vector(curr_muon_vertex->get_fit_pt(), 15*units::cm);
-	//	std::cout << "A: " << dir1.Angle(dir2)/3.1415926*180. << std::endl;
+
+
+	//std::cout << "A: " << dir1.Angle(dir2)/3.1415926*180. << " "  << " " << sg1->get_length()/units::cm << std::endl;
+
 	if (180 - dir1.Angle(dir2)/3.1415926*180. < 15 && sg1->get_length() > 6*units::cm){
 	  flag_continue = true;
 	  curr_muon_segment = sg1;
@@ -1133,7 +1136,7 @@ bool WCPPID::NeutrinoID::broken_muon_id(WCPPID::WCShower* shower, bool flag_prin
 	  double angle2 = dir2.Angle(dir3)/3.1415926*180.;
 	  double angle3 = 180 - dir1.Angle(dir3)/3.1415926*180. ;
 
-	  //	  std::cout << "angle: " << angle1 << " " << angle2 << " " << angle3 << " " << std::min(dis1, dis2)/units::cm << " " << sg1->get_length()/units::cm << std::endl;
+	  //std::cout << "angle: " << angle1 << " " << angle2 << " " << angle3 << " " << std::min(dis1, dis2)/units::cm << " " << sg1->get_length()/units::cm << std::endl;
 	  
 	  if ( (std::min(angle1, angle2) < 10 && angle1 + angle2 < 25 || angle3 < 15 && std::min(dis1, dis2) < 5*units::cm) && std::min(dis1,dis2) <  25*units::cm || std::min(angle1, angle2) < 15 && angle3 < 30 && std::min(dis1,dis2) > 30*units::cm && sg1->get_length() > 25*units::cm && std::min(dis1,dis2) < 60*units::cm ||
 	       (std::min(angle1, angle2) < 5 && angle1 + angle2 < 15 || angle3 < 10 && std::min(dis1, dis2) < 5*units::cm) && std::min(dis1,dis2) <  30*units::cm
@@ -1193,12 +1196,29 @@ bool WCPPID::NeutrinoID::broken_muon_id(WCPPID::WCShower* shower, bool flag_prin
       //      std::cout << tmp_length/units::cm << " " << sg1->get_flag_shower_topology() << " " << sg1->get_flag_shower_trajectory() << std::endl;
       if (tmp_ids.find(sg1->get_cluster_id()) != tmp_ids.end() ) connected_length += tmp_length;
     }
+    
+    {
+      // 7022_42_2123
+      TVector3 dir = sg->cal_dir_3vector(vertex_point, 15*units::cm);
+      for (auto it = map_seg_vtxs.begin(); it != map_seg_vtxs.end(); it++){
+	WCPPID::ProtoSegment *sg1 = it->first;
+	if (muon_segments.find(sg1)==muon_segments.end() && sg1->get_cluster_id() == sg->get_cluster_id()){
+	  auto pair_vertices = find_vertices(sg1);
+	  TVector3 dir1 = sg1->cal_dir_3vector(pair_vertices.first->get_fit_pt(),15*units::cm);
+	  TVector3 dir2 = sg1->cal_dir_3vector(pair_vertices.second->get_fit_pt(),15*units::cm);
+	  double angle1 = std::min(dir1.Angle(dir)/3.1415926*180.,180-dir1.Angle(dir)/3.1415926*180.);
+	  double angle2 = std::min(dir2.Angle(dir)/3.1415926*180.,180-dir2.Angle(dir)/3.1415926*180.);
+	  if (std::min(angle1, angle2) < 10) muon_segments.insert(sg1);
+	}
+      }
+    }
     int num_muon_main = 0;
     for (auto it = muon_segments.begin(); it != muon_segments.end(); it++){
       if ((*it)->get_cluster_id() == sg->get_cluster_id()) num_muon_main ++;
     }
     
-    if (flag_print) std::cout << "Xin_K0: " << muon_segments.size() << " " << acc_length/units::cm << " " << add_length/units::cm << " " << connected_length/units::cm << " " << shower->get_total_length()/units::cm << " " << Ep << " " << Eshower << " " << map_seg_vtxs.size() << " " << acc_direct_length/units::cm << " " << tmp_ids.size() << " " << shower->get_num_main_segments() << " " << num_muon_main << std::endl;
+    
+    if (flag_print) std::cout << "Xin_K0: " << muon_segments.size() << " " << acc_length/units::cm << " " << add_length/units::cm << " " << connected_length/units::cm << " " << shower->get_total_length()/units::cm << " " << Ep << " " << Eshower << " " << map_seg_vtxs.size() << " " << acc_direct_length/units::cm << " " << tmp_ids.size() << " " << shower->get_num_main_segments() << " " << num_muon_main << " " << std::endl;
     
     
     if (muon_segments.size()>1 && (Ep > Eshower * 0.55 || acc_length > 0.65 * shower->get_total_length() || connected_length > 0.95 * shower->get_total_length()) && tmp_ids.size()>1
@@ -1939,6 +1959,33 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
 
   // 7023_28_1419
   if (mip_id==0 && Eshower < 250*units::MeV && sg->get_flag_shower_trajectory() && sg->get_length() < 5*units::cm) mip_id = -1;
+
+  if (mip_id == 1){
+    
+    Map_Proto_Segment_Vertices& map_seg_vtxs = shower->get_map_seg_vtxs();
+    Map_Proto_Vertex_Segments& map_vtx_segs = shower->get_map_vtx_segs();
+
+    double length1 = shower->get_total_length(sg->get_cluster_id());
+    double length2 = shower->get_total_length();
+    double min_dis = 1e9;
+    for (auto it = map_seg_vtxs.begin(); it != map_seg_vtxs.end(); it++){
+      WCPPID::ProtoSegment *sg1 = it->first;
+      if (sg1->get_cluster_id() == sg->get_cluster_id() || sg1->get_length() < 3*units::cm) continue;
+
+      for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+	WCPPID::ProtoVertex *vtx1 = *it1;
+	for (auto it2 = map_vtx_segs.begin(); it2 != map_vtx_segs.end(); it2++){
+	  WCPPID::ProtoVertex *vtx2 = it2->first;
+	  if (vtx2->get_cluster_id() != sg->get_cluster_id()) continue;
+	  double dis = sqrt(pow(vtx1->get_fit_pt().x - vtx2->get_fit_pt().x,2) + pow(vtx1->get_fit_pt().y - vtx2->get_fit_pt().y,2) + pow(vtx1->get_fit_pt().z - vtx2->get_fit_pt().z,2));
+	  if (dis < min_dis) min_dis = dis;
+	}
+      }
+    }
+    // 7012_1646_82342
+    if (length1 < 0.1 * length2 && length1 < 10*units::cm && min_dis > 8*units::cm) mip_id = 0;
+    //    std::cout << length1 << " " << length2 << " " << min_dis << std::endl;
+  }
   
   
   if (flag_print) std::cout << "Qian_B0: " << n_lowest << " " << lowest_dQ_dx << " " << n_highest << " " << highest_dQ_dx << " " << n_below_threshold << " " << n_below_zero << " " << fabs(3.1415926/2. - dir_shower.Angle(dir_drift))/3.1415926*180. << " " << mip_id << " " << Eshower << " " << flag_single_shower << " " << sg->get_length()/units::cm << std::endl;

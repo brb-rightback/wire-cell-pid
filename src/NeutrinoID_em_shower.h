@@ -377,8 +377,8 @@ void WCPPID::NeutrinoID::examine_shower_1(){
 	TVector3 dir2(shower_point.x - main_vertex->get_fit_pt().x,
 		      shower_point.y - main_vertex->get_fit_pt().y,
 		      shower_point.z - main_vertex->get_fit_pt().z);
-	
-	//	std::cout << "kaka1: " << energy << " " << dir1.Angle(dir2)/3.1415926*180. << " " << min_dis/units::cm << std::endl;
+
+
 	double angle = dir1.Angle(dir2)/3.1415926*180.;
 	if (angle < 15 && min_dis < 36*units::cm || angle < 7.5){
 	// consider the WCShower associated to this (also angle)
@@ -462,10 +462,20 @@ void WCPPID::NeutrinoID::examine_shower_1(){
 	}
 	//	std::cout << sg1->get_length()/units::cm << " " << sg1->get_medium_dQ_dx()/(43e3/units::cm) << " " << sg1->is_dir_weak() << " " << sg1->get_flag_shower() << std::endl;
       }
+
+      bool flag_skip = false;
+      for (auto it1 = showers.begin(); it1 != showers.end(); it1++){
+	WCPPID::WCShower *shower1 = *it1;
+	if (shower1->get_start_vertex().second==1 && associated_showers.find(shower1) == associated_showers.end()){
+	  //5774_74_3718
+	  if (map_vtx_segs.find(shower1->get_start_vertex().first)!=map_vtx_segs.end() && shower1->get_start_vertex().first != main_vertex && shower1->get_kine_charge() > 60*units::MeV)
+	    flag_skip = true;
+	}
+      }
       
 
-      std::cout << "kaka2: " << num_showers << " " << max_energy << " " << total_energy << " " << shower1->get_total_length()/units::cm << " " << shower1->get_num_segments() << " " << flag_good_track << " " << n_tracks << " " << n_showers << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << std::endl;
-      if ( total_length< 60*units::cm && (n_tracks == 1 || total_length < n_tracks * 30*units::cm) && (total_energy > 50*units::MeV || total_energy/units::MeV > total_length/units::cm * 0.8)){
+      //  std::cout << "kaka2: " << num_showers << " " << max_energy << " " << total_energy << " " << shower1->get_total_length()/units::cm << " " << shower1->get_num_segments() << " " << flag_good_track << " " << n_tracks << " " << n_showers << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << " " << flag_skip << std::endl;
+      if ( total_length< 60*units::cm && (n_tracks == 1 || total_length < n_tracks * 30*units::cm) && (total_energy > 50*units::MeV || total_energy/units::MeV > total_length/units::cm * 0.8) && (!flag_skip)){
 	// for the new shower,
 	shower1->get_start_segment()->set_particle_type(11);
 	shower1->get_start_segment()->set_flag_avoid_muon_check(true);
