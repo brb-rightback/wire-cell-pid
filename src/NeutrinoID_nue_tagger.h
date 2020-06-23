@@ -21,7 +21,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	WCPPID::ProtoSegment *sg = shower->get_start_segment();
 	if (sg->get_particle_type()!=11) continue;
 
-	//if (flag_print) std::cout << "Qian_I: " << sg->get_id() << " " << sg->get_particle_type() << " " << shower->get_kine_charge()/units::MeV << " " << shower->get_kine_best()/units::MeV << std::endl;
+	//	if (flag_print) std::cout << "Qian_I: " << sg->get_id() << " " << sg->get_particle_type() << " " << shower->get_kine_charge()/units::MeV << " " << shower->get_kine_best()/units::MeV << std::endl;
 	
 	// higher than 70 MeV, and connect to the vertex ...
 	if (map_vertex_segments[main_vertex].find(sg) != map_vertex_segments[main_vertex].end() && (shower->get_kine_charge() > 80*units::MeV && shower->get_kine_best()==0 || shower->get_kine_best() > 80*units::MeV)){
@@ -419,7 +419,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	  flag_nue = false;
 	  if (flag_print) std::cout << "Xin_O: " << max_energy << std::endl;
 	}
-	if (single_shower(max_shower, flag_single_shower) && flag_nue){
+	if (single_shower(max_shower, flag_single_shower, flag_print_detail) && flag_nue){
 	  flag_nue = false;
 	  if (flag_print) std::cout << "Xin_P: " << max_energy << std::endl;
 	}
@@ -502,7 +502,8 @@ bool WCPPID::NeutrinoID::single_shower(WCPPID::WCShower*shower, bool flag_single
   double angle_beam = dir_shower.Angle(dir_beam)/3.1415926*180.;
   double angle_vertical = dir_vertical.Angle(dir_shower)/3.1415926*180.;
   double angle_drift = fabs(3.1415926/2.-dir_shower.Angle(dir_drift))/3.1415926*180.;
-
+  if (flag_print) std::cout << "Xin_P_1:" << Eshower << " " << angle_beam << " " << angle_vertical << " " << angle_drift << " " << flag_single_shower << std::endl;
+  
   if (flag_single_shower){
     // 6572_18_948
     if (Eshower < 600*units::MeV && shower->get_total_length(sg->get_cluster_id()) < 0.1 *  shower->get_total_length()) flag_bad = true;
@@ -513,7 +514,7 @@ bool WCPPID::NeutrinoID::single_shower(WCPPID::WCShower*shower, bool flag_single
     for (auto it2 = map_vertex_segments[vertex].begin(); it2 != map_vertex_segments[vertex].end(); it2++){
       WCPPID::ProtoSegment *sg1 = *it2;
       if (sg1 == shower->get_start_segment()) continue;
-      if ((!sg1->get_flag_shower()) && ((!sg1->is_dir_weak()) || sg1->is_dir_weak() && sg1->get_length() > 5*units::cm)) num_valid_tracks ++;
+      if ((!sg1->get_flag_shower()) && ((!sg1->is_dir_weak()) || sg1->is_dir_weak() && sg1->get_length() > 4.2*units::cm)) num_valid_tracks ++;
     }
     if (num_valid_tracks == 0 && angle_beam > 60) flag_bad = true;
     //    std::cout << "kaka1: " << Eshower << " " << num_valid_tracks << " " << angle_beam << " " << angle_drift << " " << angle_vertical << std::endl;
@@ -660,6 +661,8 @@ bool WCPPID::NeutrinoID::other_showers(WCPPID::WCShower *shower, bool flag_print
   for (auto it1 = showers.begin(); it1 != showers.end() ;it1++){
     WCPPID::WCShower *shower1 = *it1;
     WCPPID::ProtoSegment *sg = shower1->get_start_segment();
+
+       
     if (sg->get_particle_type()!=11) continue;
     if (shower1 == shower) continue; 
     auto pair_result = shower1->get_start_vertex();
@@ -672,7 +675,7 @@ bool WCPPID::NeutrinoID::other_showers(WCPPID::WCShower *shower, bool flag_print
 
     if (pair_result.second == 1){
       E_direct_total_energy += E_shower1;
-      if (E_shower1 > E_direct_max_energy) {
+      if (E_shower1 > E_direct_max_energy && shower1->get_start_vertex().first == main_vertex) {
 	E_direct_max_energy = E_shower1;
 	if (map_shower_pio_id.find(shower1) != map_shower_pio_id.end()) flag_direct_max_pi0 = true;
 	else flag_direct_max_pi0 = false;
@@ -758,7 +761,7 @@ bool WCPPID::NeutrinoID::track_overclustering(WCPPID::WCShower *shower, bool fla
 	if (tmp_length > 12*units::cm && (!sg1->get_flag_shower_topology()) && tmp_length > 0.3 * shower->get_total_length(sg->get_cluster_id())){
 	  double dQ_dx_cut = 0.8866+0.9533 *pow(18*units::cm/tmp_length, 0.4234);
 	  if (sg1->get_medium_dQ_dx()/(43e3/units::cm) > dQ_dx_cut * 1.1) flag_bad = true;
-	  std::cout << sg1->get_particle_type() << " " << tmp_length/units::cm << " " << sg1->get_medium_dQ_dx()/(43e3/units::cm) << " " << dQ_dx_cut << " " << shower->get_total_length(sg->get_cluster_id())/units::cm << std::endl;
+	  //std::cout << sg1->get_particle_type() << " " << tmp_length/units::cm << " " << sg1->get_medium_dQ_dx()/(43e3/units::cm) << " " << dQ_dx_cut << " " << shower->get_total_length(sg->get_cluster_id())/units::cm << std::endl;
 	}
       }
     }
@@ -1174,6 +1177,7 @@ bool WCPPID::NeutrinoID::broken_muon_id(WCPPID::WCShower* shower, bool flag_prin
     for (auto it = muon_segments.begin(); it!= muon_segments.end(); it++){
       acc_length += (*it)->get_length();
       acc_direct_length += (*it)->get_direct_length();
+      //      std::cout << (*it)->get_direct_length()/(*it)->get_length() << " " << (*it)->get_length() << std::endl;
       tmp_ids.insert((*it)->get_cluster_id());
     }
     TPCParams& mp = Singleton<TPCParams>::Instance();
@@ -2407,8 +2411,10 @@ bool WCPPID::NeutrinoID::bad_reconstruction_3(WCPPID::ProtoVertex* vertex, WCPPI
       if(length1 > 3*units::cm) min_dis1 = dis;
     }
   }
-  //  std::cout << acc_close_length/units::cm << " " << min_dis1 << std::endl;
-  if (acc_close_length > 15*units::cm ) min_dis = min_dis1;
+  //std::cout << acc_close_length/units::cm << " " << min_dis1 << std::endl;
+  //7006_489_24469
+  if (acc_close_length > 10*units::cm  || shower->get_start_segment()->get_flag_avoid_muon_check()) min_dis = min_dis1;
+
   
   if (min_dis < 1e7){
     if (main_length < 0.4*total_length && min_dis > 40*units::cm) flag_bad = true;
@@ -3091,324 +3097,3 @@ bool WCPPID::NeutrinoID::bad_reconstruction_1(WCPPID::WCShower* shower, bool fla
 
 
 
-void WCPPID::NeutrinoID::examine_showers(){
-
-  std::map<WCPPID::ProtoSegment *, WCPPID::WCShower*> map_merge_seg_shower;
-
-  TVector3 drift_dir(1,0,0);
-  std::set<WCPPID::WCShower*> del_showers;
-  for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
-    WCPPID::ProtoSegment *sg = *it;
-
-    if (map_segment_in_shower.find(sg) != map_segment_in_shower.end() && sg->get_particle_type() !=13) continue;
-    
-    // 7004_340_17018
-    if (sg->get_length() > 45*units::cm && (!sg->is_dir_weak()) || sg->get_length() > 55*units::cm) continue;
-    //    std::cout << sg->get_id() << " " << sg->get_length()/units::cm << " " << sg->get_direct_length()/units::cm << std::endl;
-    WCPPID::ProtoVertex *vtx = find_other_vertex(sg, main_vertex);
-
-    double daughter_length = calculate_num_daughter_tracks(main_vertex, sg, false).second;
-    
-    bool flag_checked = false;
-
-    /* { */
-    /*   auto tmp_results = calculate_num_daughter_tracks(main_vertex, sg, false,  3*units::cm); */
-    /*   std::cout << tmp_results.first << " " << tmp_results.second/units::cm << std::endl; */
-    /* } */
-    
-    /* for (auto it1 = map_vertex_segments[vtx].begin(); it1 != map_vertex_segments[vtx].end(); it1++){ */
-    /*   WCPPID::ProtoSegment *sg1 = *it1; */
-    /*   if (sg1 == sg) continue; */
-    /*   std::cout << sg1->get_length()/units::cm << " " << sg1->get_particle_type() << " " << sg1->is_dir_weak() << std::endl; */
-    /* } */
-    
-    // case I ...
-    if (map_vertex_to_shower.find(vtx) != map_vertex_to_shower.end()){
-      TVector3 dir1 = sg->cal_dir_3vector(vtx->get_fit_pt(), 15*units::cm);
-      TVector3 dir1_1 = sg->cal_dir_3vector(main_vertex->get_fit_pt(), 15*units::cm);
-      bool flag_tmp_connected = false;
-      
-      for (auto it1 = map_vertex_to_shower[vtx].begin(); it1 != map_vertex_to_shower[vtx].end(); it1++){
-	WCPPID::WCShower *shower = *it1;
-	if (shower->get_start_segment()->get_particle_type()!=11) continue;
-	auto pair_result = shower->get_start_vertex();
-	double Eshower = 0;
-	if (shower->get_kine_best() != 0){ 
-	  Eshower = shower->get_kine_best();
-	}else{
-	  Eshower = shower->get_kine_charge();
-	}
-	//	std::cout << Eshower << std::endl;
-	if (pair_result.second == 1 && Eshower > 60*units::MeV) flag_tmp_connected = true;
-      }
-
-      for (auto it1 = map_vertex_to_shower[vtx].begin(); it1 != map_vertex_to_shower[vtx].end(); it1++){
-	WCPPID::WCShower *shower = *it1;
-	if (shower->get_start_segment()->get_particle_type()!=11) continue;
-	auto pair_result = shower->get_start_vertex();
-	
-	TVector3 dir2 = shower->cal_dir_3vector(shower->get_start_point(), 100*units::cm);
-	
-	double Eshower = 0;
-	if (shower->get_kine_best() != 0){ 
-	  Eshower = shower->get_kine_best();
-	}else{
-	  Eshower = shower->get_kine_charge();
-	}
-	
-	// std::cout << Eshower/units::MeV << " " << dir1.Angle(dir2)/3.1415926*180. << " " << pair_result.second << " " << dir1.Angle(drift_dir)/3.1415926*180. << " " << dir2.Angle(drift_dir)/3.1415926*180. << " " << sg->get_length()/units::cm << std::endl;
-
-	// check shower ..
-	Map_Proto_Segment_Vertices& map_seg_vtxs = shower->get_map_seg_vtxs();
-	double tmp_total_length = 0;
-	double tmp_track_length = 0;
-	for (auto it2 = map_seg_vtxs.begin(); it2 != map_seg_vtxs.end(); it2++){
-	  WCPPID::ProtoSegment *sg1 = it2->first;
-	  if (sg1->get_cluster_id() != shower->get_start_segment()->get_cluster_id()) continue;
-	  //	  std::cout << shower->get_start_segment()->get_cluster_id() << " " << sg1->get_particle_type() << " "<< sg1->get_length()/units::cm << " " << sg1->is_dir_weak() << std::endl;
-	  tmp_total_length += sg1->get_length();
-	  if (!sg1->is_dir_weak()) tmp_track_length += sg1->get_length();
-	}
-	if (tmp_track_length > 3*units::cm && tmp_track_length > 0.25 * tmp_total_length) continue;
-	
-	
-	if (pair_result.second == 1 && Eshower > 100*units::MeV ) flag_checked = true;
-
-	
-
-	double tmp_angle = std::min(180 - dir1.Angle(dir2)/3.1415926*180., dir1_1.Angle(dir2)/3.1415926*180. );
-
-	std::cout << Eshower << " " << pair_result.second << " " << sg->get_particle_type() << " " << sg->is_dir_weak() << " " << " " << sg->get_length()/units::cm << " " << sg->get_closest_point(shower->get_start_point()).first/units::cm << " " << 180 - dir1.Angle(dir2)/3.1415926*180. << " " << dir1_1.Angle(dir2)/3.1415926*180. << " " << daughter_length/units::cm << " " << tmp_angle << std::endl;
-	
-	if (pair_result.second==2){
-	  // 5498_13_700  +  5774_74_3718  
-	  if ((!sg->is_dir_weak()) && sg->get_length() > 3*units::cm || flag_tmp_connected) {
-	    if (!(sg->get_closest_point(shower->get_start_point()).first < 8*units::cm && Eshower > 150*units::MeV && tmp_angle < 5))
-	      continue;
-	  }
-	  // 7049_1213_60664 
-	  if ( sg->get_closest_point(shower->get_start_point()).first > 18*units::cm && Eshower < 150*units::MeV) continue;
-	}
-
-
-	
-	if (Eshower > 800*units::MeV && tmp_angle < 30
-	    || Eshower > 150*units::MeV && tmp_angle < 10
-	    || Eshower > 150*units::MeV && tmp_angle < 18 && pair_result.second == 1 && sg->is_dir_weak() // 7004_990_49528
-	    || Eshower > 100*units::MeV && tmp_angle < 10 && sg->get_length() < 25*units::cm
-	    || Eshower > 250*units::MeV && tmp_angle < 15
-	    || Eshower > 360*units::MeV && tmp_angle < 25 
-	    || Eshower > 100*units::MeV && Eshower <= 150*units::MeV && tmp_angle < 15 && sg->get_length() < 25*units::cm && flag_checked
-	    || Eshower > 60*units::MeV &&  pair_result.second == 2 && sg->is_dir_weak() && tmp_angle < 15 && sg->get_closest_point(shower->get_start_point()).first < 5 * units::cm  && sg->get_length() < 15*units::cm
-	    ){
-	  //std::cout << shower->get_kine_charge()/units::MeV << " " << dir1.Angle(dir2)/3.1415926*180. << " " << pair_result.second << " " << dir1.Angle(drift_dir)/3.1415926*180. << " " << dir2.Angle(drift_dir)/3.1415926*180. << std::endl;
-	  map_merge_seg_shower[sg] = shower;
-	  continue;
-	}
-      }
-    }
-   
-    
-    if (map_merge_seg_shower.find(sg) != map_merge_seg_shower.end()) continue;
-    
-    if (flag_checked) continue;
-    if ( (!sg->is_dir_weak()) && sg->get_length()>6*units::cm) continue;
-
-    // case II?
-    if (map_vertex_to_shower.find(main_vertex) != map_vertex_to_shower.end()){
-      TVector3 dir1 = sg->cal_dir_3vector(main_vertex->get_fit_pt(), 15*units::cm);
-      for (auto it1 = map_vertex_to_shower[main_vertex].begin(); it1 != map_vertex_to_shower[main_vertex].end(); it1++){
-	WCPPID::WCShower *shower = *it1;
-	if (shower->get_start_segment()->get_particle_type()!=11) continue;
-	auto pair_result = shower->get_start_vertex();
-	if (pair_result.second == 1 ) continue; //direct connected ...
-	TVector3 dir2(shower->get_start_point().x - main_vertex->get_fit_pt().x,
-		      shower->get_start_point().y - main_vertex->get_fit_pt().y,
-		      shower->get_start_point().z - main_vertex->get_fit_pt().z);
-	TVector3 dir3 = shower->cal_dir_3vector(shower->get_start_point(), 100*units::cm);
-	double min_dis = sg->get_closest_point(shower->get_start_point()).first;
-	  
-	//	std::cout << "kaka: " << sg->get_id() << " " << sg->get_particle_type() << " " << shower->get_kine_charge() << " " << dir1.Angle(dir2)/3.1415926*180. << " "<< dir1.Angle(dir3)/3.1415926*180. << " " << fabs(90 - dir1.Angle(drift_dir)/3.1415926*180.) << " " << fabs(90 - dir3.Angle(drift_dir)/3.1415926*180.) << " " << sg->get_length()/units::cm << " " << min_dis/units::cm << std::endl;
-	
-	if ((shower->get_kine_charge() > 80*units::MeV && dir1.Angle(dir2)/3.1415926*180. < 10
-	     || shower->get_kine_charge() > 50*units::MeV && dir1.Angle(dir2)/3.1415926*180. < 3
-	     || shower->get_kine_charge() > 80*units::MeV && dir1.Angle(dir3)/3.1415926*180. < 6 && dir1.Angle(dir2)/3.1415926*180. < 17.5
-	     || shower->get_kine_charge() > 80*units::MeV && dir1.Angle(dir3)/3.1415926*180. < 6 && fabs(90 - dir1.Angle(drift_dir)/3.1415926*180.) < 10 && fabs(90 - dir3.Angle(drift_dir)/3.1415926*180.) < 10 && dir1.Angle(dir2)/3.1415926*180. < 30)
-	    && (sg->get_length() > 5*units::cm || sg->get_length() > 3*units::cm && min_dis < 2.0*units::cm)){
-	  map_merge_seg_shower[sg] = shower;
-
-
-		
-	  continue;
-	}
-      }
-    } // find shower ...
-
-
-    // case III
-    TVector3 dir1 = sg->cal_dir_3vector(main_vertex->get_fit_pt(), 15*units::cm);
-    for (auto it1 = showers.begin(); it1 != showers.end(); it1++){
-      WCPPID::WCShower *shower = *it1;
-      if (shower->get_start_vertex().first == vtx || shower->get_start_vertex().first == main_vertex) continue;
-      if (shower->get_start_segment()->get_particle_type()!=11) continue;
-      if (shower->get_start_vertex().second <=2) {
-	TVector3 dir2(shower->get_start_point().x - main_vertex->get_fit_pt().x,
-		      shower->get_start_point().y - main_vertex->get_fit_pt().y,
-		      shower->get_start_point().z - main_vertex->get_fit_pt().z);
-	TVector3 dir3 = shower->cal_dir_3vector(shower->get_start_point(), 100*units::cm);
-	//std::cout << dir1.Angle(dir2)/3.1415926*180. << " " << dir2.Angle(dir3)/3.1415926*180. << " " << sg->get_length() << std::endl;
-	//	std::cout << sg->get_id() << " " << sg->get_particle_type() << " " << shower->get_kine_charge() << " " << dir1.Angle(dir2)/3.1415926*180. << " " << dir2.Angle(dir3)/3.1415926*180. << " "<< sg->get_length()/units::cm << std::endl;
-	if ((shower->get_kine_charge() > 80*units::MeV &&  dir1.Angle(dir2)/3.1415926*180. < 15 &&  dir2.Angle(dir3)/3.1415926*180. < 15 && (dir1.Angle(dir2)/3.1415926*180. + dir2.Angle(dir3)/3.1415926*180.) < 25)&& sg->get_length() > 5*units::cm ){
-	  map_merge_seg_shower[sg] = shower;
-	  continue;
-	}
-      //      std::cout << shower->get_kine_charge() << std::endl;
-      }
-    }
-    
-  } // loop over segment
-
-  
-  // for the long muons ...
-  for (auto it1 = showers.begin(); it1 != showers.end(); it1++){
-    WCPPID::ProtoSegment *sg1 = (*it1)->get_start_segment();
-    if (map_merge_seg_shower.find(sg1)!=map_merge_seg_shower.end()){
-      sg1->set_flag_avoid_muon_check(true);
-      del_showers.insert(*it1);
-    }
-  }
-  if (del_showers.size() !=0){
-    for (auto it1 = del_showers.begin(); it1!=del_showers.end(); it1 ++){
-      WCPPID::WCShower *shower1 = *it1;
-      showers.erase(find(showers.begin(), showers.end(), shower1));
-      delete shower1;
-    }
-    del_showers.clear();
-    update_shower_maps();
-  }
- 
-  
-  // merge ...
-  //  std::cout << "Xin: " << map_merge_seg_shower.size() << std::endl;
-  std::set<WCPPID::WCShower* > updated_showers;
-  for (auto it = map_merge_seg_shower.begin(); it != map_merge_seg_shower.end(); it++){
-    WCPPID::ProtoSegment *sg = it->first;
-    WCPPID::WCShower *shower = it->second;
-
-    std::cout << "EM shower modification: " << shower->get_start_segment()->get_id() << " -> " << sg->get_id() << std::endl;
-    updated_showers.insert(shower);
-    
-    auto pair_result = shower->get_start_vertex();
-    
-    /* for (auto it1 = map_vertex_to_shower[pair_result.first].begin(); it1!= map_vertex_to_shower[pair_result.first].end(); it1++){ */
-    /*   WCPPID::WCShower *shower1 = *it1; */
-    /*   if (shower == shower1) continue; */
-    /*   if (shower1->get_start_vertex().second==1){ */
-    /* 	del_showers.insert(shower1); */
-    /*   } */
-    /* } */
-    
-    if (pair_result.second != 1){
-      shower->add_segment(sg, map_segment_vertices);
-      shower->set_start_vertex(main_vertex, 1);
-      shower->set_start_segment(sg);
-      shower->set_start_point(main_vertex->get_fit_pt());
-      std::set<WCPPID::ProtoSegment* > tmp_used_segments;
-      shower->complete_structure_with_start_segment(map_vertex_segments, map_segment_vertices, tmp_used_segments);
-      if (sg->get_length()>45*units::cm) sg->set_flag_avoid_muon_check(true);
-    }else{
-      shower->add_segment(sg, map_segment_vertices);
-      shower->set_start_vertex(main_vertex, 1);
-      shower->set_start_segment(sg);
-      shower->set_start_point(main_vertex->get_fit_pt());
-      std::set<WCPPID::ProtoSegment* > tmp_used_segments;
-      shower->complete_structure_with_start_segment(map_vertex_segments, map_segment_vertices, tmp_used_segments);
-      //std::cout << kine_charge/units::MeV << std::endl;
-    }
-    // add the rest of showers;
-    Map_Proto_Vertex_Segments& map_vtx_segs = shower->get_map_vtx_segs();
-    for (auto it1 = showers.begin(); it1!=showers.end(); it1++){
-      WCPPID::WCShower *shower1 = *it1;
-      if (shower == shower1) continue;
-      if (shower1->get_start_vertex().second==1 && shower1->get_start_vertex().first != main_vertex){
-	if (map_vtx_segs.find(shower1->get_start_vertex().first) != map_vtx_segs.end()){
-	  shower->add_shower(shower1);
-	  del_showers.insert(shower1);
-	}
-      }
-    }
-    
-    
-    sg->set_particle_type(11);
-    shower->update_particle_type();
-    shower->calculate_kinematics();
-    double kine_charge = cal_kine_charge(shower);
-    shower->set_kine_charge(kine_charge);
-    shower->set_flag_kinematics(true);
-  }
-
- 
-
-  
-  
-  //std::cout << del_showers.size() << std::endl;
-  for (auto it1 = del_showers.begin(); it1!=del_showers.end(); it1 ++){
-    WCPPID::WCShower *shower1 = *it1;
-    if (shower1->get_start_vertex().first != main_vertex){
-      showers.erase(find(showers.begin(), showers.end(), shower1));
-      delete shower1;
-    }
-  }
-  del_showers.clear();
-  // check other showers ...
-  for (auto it = updated_showers.begin(); it != updated_showers.end(); it++){
-    WCPPID::WCShower *shower = *it;
-    
-    TVector3 dir1 = shower->cal_dir_3vector(shower->get_start_point(), 25*units::cm);
-    TVector3 dir11 = shower->cal_dir_3vector(shower->get_start_point(), 6*units::cm);
-	
-    for (auto it1 = showers.begin(); it1 != showers.end(); it1++){
-      WCPPID::WCShower *shower1 = *it1;
-      if (updated_showers.find(shower1) != updated_showers.end()) continue;
-      if (shower1->get_start_segment()->get_particle_type()!=11) continue;
-      if (shower1->get_start_vertex().second==2) {
-	if (del_showers.find(shower1) != del_showers.end()) continue;
-	TVector3 dir2(shower1->get_start_point().x - shower->get_start_vertex().first->get_fit_pt().x,
-		      shower1->get_start_point().y - shower->get_start_vertex().first->get_fit_pt().y,
-		      shower1->get_start_point().z - shower->get_start_vertex().first->get_fit_pt().z);
-	TVector3 dir3 = shower1->cal_dir_3vector(shower1->get_start_point(), 25*units::cm);
-	
-	//
-	
-	if (dir1.Angle(dir2)/3.1415926*180. < 10 && dir1.Angle(dir3)/3.1415926*180. < 20){
-	  //	std::cout << shower1->get_kine_charge() << " " << dir1.Angle(dir2)/3.1415926*180. << " " << dir1.Angle(dir3)/3.1415926*180. << " " << 	dir11.Angle(dir2)/3.1415926*180. << " " << dir11.Angle(dir2)/3.1415926*180. << std::endl;
-	  shower->add_shower(shower1);
-	  shower->calculate_kinematics();
-	  double kine_charge = cal_kine_charge(shower);
-	  shower->set_kine_charge(kine_charge);
-	  shower->set_flag_kinematics(true);
-	  del_showers.insert(shower1);
-	}
-      }
-    }
-  }
-
-
-  
-  for (auto it1 = del_showers.begin(); it1!=del_showers.end(); it1 ++){
-    WCPPID::WCShower *shower1 = *it1;
-    showers.erase(find(showers.begin(), showers.end(), shower1));
-    delete shower1;
-  }
-
-  /* for (auto it1 = showers.begin(); it1 != showers.end(); it1++){ */
-  /*     WCPPID::WCShower *shower1 = *it1; */
-  /*     if (shower1->get_start_segment()->get_particle_type()!=11) continue; */
-  /*     if (shower1->get_start_vertex().second>2) continue; */
-  /*     std::cout << shower1->get_kine_charge() << " " << shower1->get_start_segment()->get_id() << " " << shower1->get_start_vertex().second << std::endl; */
-  /* } */
-
-  
-  if (map_merge_seg_shower.size()>0)
-    update_shower_maps();
-}

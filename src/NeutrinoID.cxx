@@ -22,6 +22,7 @@ using namespace WCP;
 #include "NeutrinoID_track_shower.h"
 #include "NeutrinoID_energy_reco.h"
 #include "NeutrinoID_shower_clustering.h"
+#include "NeutrinoID_em_shower.h"
 
 #include "NeutrinoID_cosmic_tagger.h"
 #include "NeutrinoID_numu_tagger.h"
