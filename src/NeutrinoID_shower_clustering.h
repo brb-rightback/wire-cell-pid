@@ -106,10 +106,14 @@ void WCPPID::NeutrinoID::shower_clustering_connecting_to_main_vertex(){
     
     for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
       WCPPID::ProtoSegment *sg = *it;
-      //std::cout << sg->get_id() << " " << sg->get_particle_type()<< " " << sg->get_medium_dQ_dx()/(43e3/units::cm) << std::endl;
+
+      
+      std::pair<int, double> pair_result = calculate_num_daughter_tracks(main_vertex, sg, true);
+      //std::cout << sg->get_id() << " " << sg->get_particle_type()<< " " << sg->get_medium_dQ_dx()/(43e3/units::cm) << " " << pair_result.first << std::endl;
       if (map_segment_in_shower.find(sg) != map_segment_in_shower.end()) continue;
-      if (sg->get_particle_type()==11 ||sg->get_particle_type()==2212 && sg->get_medium_dQ_dx()/(43e3/units::cm)>1.35) continue;
-      //    std::pair<int, double> pair_result = calculate_num_daughter_tracks(main_vertex, sg, true);
+      // 6583_144_7201
+      if (sg->get_particle_type()==11 ||sg->get_particle_type()==2212 && (sg->get_medium_dQ_dx()/(43e3/units::cm)>1.45 && pair_result.first <=3 || sg->get_medium_dQ_dx()/(43e3/units::cm)>1.45 > 2.0)) continue;
+      
       WCPPID::WCShower *shower = new WCPPID::WCShower();
       shower->set_start_vertex(main_vertex, 1);
       shower->set_start_segment(sg);
@@ -178,7 +182,7 @@ void WCPPID::NeutrinoID::shower_clustering_connecting_to_main_vertex(){
       }
       
       
-      //std::cout << "kaka: " << flag_good_track << " " << n_tracks << " " << n_showers << " " << total_length/units::cm << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << " " << n_multi_vtx << " " << n_two_vtx << std::endl;
+      //      std::cout << "kaka: " << flag_good_track << " " << n_tracks << " " << n_showers << " " << total_length/units::cm << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << " " << n_multi_vtx << " " << n_two_vtx << std::endl;
 
       //7003_550_27509	
       if ((!flag_good_track) && n_multi_vtx >0 && max_length < 65*units::cm && (total_length < n_tracks * 27*units::cm && total_length < 85*units::cm || total_length < n_tracks * 18*units::cm && total_length < 95*units::cm )&& n_two_vtx < 3){

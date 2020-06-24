@@ -1315,7 +1315,14 @@ double WCPPID::ProtoSegment::cal_kine_dQdx(std::vector<double>& vec_dQ, std::vec
   for (size_t i=0;i!=vec_dQ.size();i++){
     Double_t dQdx = vec_dQ.at(i)/(vec_dx.at(i) + 1e-9) * units::cm;
     if (dQdx/43e3 > 1000) dQdx = 0;
+
+    //std::cout << id << " " << i << " " << dQdx/43e3 << std::endl;
+    
     Double_t dEdx = (exp(dQdx * 23.6e-6*beta/1.38/0.273) - alpha)/(beta/1.38/0.273) * units::MeV/units::cm;
+
+    if (dEdx < 0) dEdx = 0;
+    if (dEdx > 50*units::MeV/units::cm ) dEdx = 50*units::MeV/units::cm;
+    
     kine_energy += dEdx * vec_dx.at(i);
   }
   
@@ -1329,7 +1336,16 @@ double WCPPID::ProtoSegment::cal_kine_dQdx(){
   for (size_t i=0;i!=fit_pt_vec.size();i++){
     Double_t dQdx = dQ_vec.at(i)/(dx_vec.at(i) + 1e-9) * units::cm;
     if (dQdx/43e3 > 1000) dQdx = 0;
+
+
+    
     Double_t dEdx = (exp(dQdx * 23.6e-6*beta/1.38/0.273) - alpha)/(beta/1.38/0.273) * units::MeV/units::cm;
+
+    if (dEdx < 0) dEdx = 0;
+    if (dEdx > 50*units::MeV/units::cm ) dEdx = 50*units::MeV/units::cm;
+    
+    //  std::cout << id << " " << i << " " << dQdx/(43e3) << " " << dEdx/(units::MeV/units::cm) << " " << dx_vec.at(i)/units::cm << " " << kine_energy << std::endl;
+    
     if (i==0){
       double dis = sqrt(pow(fit_pt_vec.at(1).x - fit_pt_vec.at(0).x,2) + pow(fit_pt_vec.at(1).y - fit_pt_vec.at(0).y,2) + pow(fit_pt_vec.at(1).z - fit_pt_vec.at(0).z,2));
       if (dx_vec.at(i) > dis*1.5){
@@ -1393,7 +1409,7 @@ void WCPPID::ProtoSegment::cal_4mom(){
     kine_energy = cal_kine_range();
   }
 
-
+  //  std::cout << id << " " << cal_kine_dQdx() << " " << cal_kine_range() << " " << particle_mass << " " << particle_type << std::endl;
   
   //std::cout << kine_energy << std::endl;
   particle_4mom[3]= kine_energy + particle_mass;
