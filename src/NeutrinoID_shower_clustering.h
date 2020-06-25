@@ -130,7 +130,8 @@ void WCPPID::NeutrinoID::shower_clustering_connecting_to_main_vertex(){
 	WCPPID::ProtoSegment *sg1 = it1->first;
 	double length = sg1->get_length();
 	double medium_dQ_dx = sg1->get_medium_dQ_dx()/(43e3/units::cm);
-	if ((!sg1->is_dir_weak()) && sg1->get_length() > 3.6*units::cm) {
+	// 7054_1409_70465
+	if ((!sg1->is_dir_weak()) && (sg1->get_length() > 3.6*units::cm || sg1->get_length() > 2.4*units::cm && medium_dQ_dx > 2.5)) {
 	  auto pair_vertices = find_vertices(sg1);
 	  WCPPID::ProtoVertex *end_vertex = 0;
 	  if (sg1->get_flag_dir()==1){
