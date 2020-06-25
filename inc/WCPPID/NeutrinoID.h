@@ -344,7 +344,9 @@ namespace WCPPID{
 
     // main shower stem separated from the other parts
     bool bad_reconstruction_3(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower, bool flag_print = false);
-    
+    bool stem_direction(WCPPID::WCShower *shower, double energy, bool flag_print = false);
+    bool stem_length(WCPPID::WCShower *shower, double energy, bool flag_print = false);
+    bool compare_muon_energy(WCPPID::WCShower *shower, double energy, double muon_length, bool flag_print = false);
     bool low_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false);
     bool high_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false);
 
@@ -353,7 +355,11 @@ namespace WCPPID{
    
     bool broken_muon_id(WCPPID::WCShower* shower, bool flag_print = false);
     bool track_overclustering(WCPPID::WCShower* shower, bool flag_print = false);
-    bool other_showers(WCPPID::WCShower* shower, bool flag_print = false);
+
+    bool multiple_showers(WCPPID::WCShower *shower, double max_energy, bool flag_print = false);
+      
+    
+    bool other_showers(WCPPID::WCShower* shower, bool flag_single_shower, bool flag_print = false);
     bool vertex_inside_shower(WCPPID::WCShower* shower, bool flag_print = false);
     bool angular_cut(WCPPID::WCShower* shower, double energy, double angle, bool flag_print = false);
     bool single_shower(WCPPID::WCShower* shower, bool flag_single_shower, bool flag_print = false);
