@@ -183,7 +183,7 @@ void WCPPID::NeutrinoID::shower_clustering_connecting_to_main_vertex(){
       }
       
       
-      //      std::cout << "kaka: " << flag_good_track << " " << n_tracks << " " << n_showers << " " << total_length/units::cm << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << " " << n_multi_vtx << " " << n_two_vtx << std::endl;
+      //std::cout << "kaka: " << flag_good_track << " " << n_tracks << " " << n_showers << " " << total_length/units::cm << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << " " << n_multi_vtx << " " << n_two_vtx << std::endl;
 
       //7003_550_27509	
       if ((!flag_good_track) && n_multi_vtx >0 && max_length < 65*units::cm && (total_length < n_tracks * 27*units::cm && total_length < 85*units::cm || total_length < n_tracks * 18*units::cm && total_length < 95*units::cm )&& n_two_vtx < 3){

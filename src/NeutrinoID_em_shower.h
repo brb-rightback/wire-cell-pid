@@ -373,10 +373,14 @@ void WCPPID::NeutrinoID::examine_shower_1(){
 	WCPPID::WCShower *shower = *it1;
 	double energy = shower->get_kine_charge();
 	double min_dis = shower->get_closest_dis(sg);
-	
+
+
 	
 	if (shower->get_start_vertex().second > 2 && min_dis > 3*units::cm || shower->get_start_segment()->get_particle_type() != 11) continue;
 	if (shower->get_start_vertex().first == main_vertex && shower->get_start_vertex().second ==1) continue;
+
+	
+
 	Map_Proto_Vertex_Segments& map_vtx_segs = shower1->get_map_vtx_segs();
 	if (shower->get_start_vertex().second==1 && energy > 80*units::MeV){
 	  if (map_vtx_segs.find(shower->get_start_vertex().first) == map_vtx_segs.end()) continue;
@@ -385,6 +389,30 @@ void WCPPID::NeutrinoID::examine_shower_1(){
 	    if (dir3.Angle(dir1)/3.1415926*180. > 30 ) continue;
 	    //	    std::cout << dir3.Angle(dir1)/3.1415926*180. << std::endl;
 	  }
+	}else{
+	  // 7016_223_11196 + 7020_570_28531 ...
+	  TVector3 dir3 = shower->cal_dir_3vector(shower->get_start_point(), 15*units::cm);
+
+	  Point min_point;
+	  double min_dis = 1e9;
+	  for (auto it3 = map_vtx_segs.begin(); it3 != map_vtx_segs.end(); it3++){
+	    WCPPID::ProtoVertex *vtx3 = it3->first;
+	    double dis = sqrt(pow(vtx3->get_fit_pt().x - shower->get_start_point().x,2) +
+			      pow(vtx3->get_fit_pt().y - shower->get_start_point().y,2) +
+			      pow(vtx3->get_fit_pt().z - shower->get_start_point().z,2)
+			      );
+	    if (dis < min_dis){
+	      min_dis = dis;
+	      min_point = vtx3->get_fit_pt();
+	    }
+	  }
+	  TVector3 dir4(shower->get_start_point().x - min_point.x,
+			shower->get_start_point().y - min_point.y,
+			shower->get_start_point().z - min_point.z);
+	  // 6769_90_4541,  6429_63_3168
+	  double tmp_angle = std::min(dir3.Angle(dir1)/3.1415926*180. , dir4.Angle(dir1)/3.1415926*180. );
+	  //	  std::cout << dir3.Angle(dir1)/3.1415926*180. << " " << dir4.Angle(dir1)/3.1415926*180. << " " << energy << " " << min_dis/units::cm << " " << shower->get_total_length(shower->get_start_segment()->get_cluster_id())/units::cm << std::endl;
+	  if (energy > 25*units::MeV && tmp_angle > 40) continue;
 	}
 
 	
@@ -401,6 +429,7 @@ void WCPPID::NeutrinoID::examine_shower_1(){
 	if (angle < 15 && min_dis < 36*units::cm || angle < 10 && min_dis <46*units::cm || angle < 7.5){
 	// consider the WCShower associated to this (also angle)
 	// consider WCShower nearby (not necessarily associated)
+	  //	  std::cout << "haha: " << std::endl;
 	  map_segment_showers[sg].insert(shower);
 	  used_showers.insert(shower);
 	}
@@ -492,7 +521,7 @@ void WCPPID::NeutrinoID::examine_shower_1(){
       }
       
 
-      //      std::cout << "kaka2: " << num_showers << " " << max_energy << " " << total_energy << " " << shower1->get_total_length()/units::cm << " " << shower1->get_num_segments() << " " << flag_good_track << " " << n_tracks << " " << n_showers << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << " " << flag_skip << std::endl;
+      //std::cout << "kaka2: " << num_showers << " " << max_energy << " " << total_energy << " " << shower1->get_total_length()/units::cm << " " << shower1->get_num_segments() << " " << flag_good_track << " " << n_tracks << " " << n_showers << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << " " << flag_skip << std::endl;
       
       if ( total_length< 70*units::cm && (n_tracks == 1 && total_length< 60*units::cm ||
 					  n_tracks == 1 && total_length < 65*units::cm && num_showers > 3 && total_energy > 150*units::MeV || total_length < n_tracks * 36*units::cm) && (total_energy > 50*units::MeV || total_energy/units::MeV > total_length/units::cm * 0.75) && (!flag_skip)){
