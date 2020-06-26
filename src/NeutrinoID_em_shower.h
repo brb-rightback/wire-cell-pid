@@ -492,7 +492,7 @@ void WCPPID::NeutrinoID::examine_shower_1(){
       }
       
 
-      std::cout << "kaka2: " << num_showers << " " << max_energy << " " << total_energy << " " << shower1->get_total_length()/units::cm << " " << shower1->get_num_segments() << " " << flag_good_track << " " << n_tracks << " " << n_showers << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << " " << flag_skip << std::endl;
+      //      std::cout << "kaka2: " << num_showers << " " << max_energy << " " << total_energy << " " << shower1->get_total_length()/units::cm << " " << shower1->get_num_segments() << " " << flag_good_track << " " << n_tracks << " " << n_showers << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << " " << flag_skip << std::endl;
       
       if ( total_length< 70*units::cm && (n_tracks == 1 && total_length< 60*units::cm ||
 					  n_tracks == 1 && total_length < 65*units::cm && num_showers > 3 && total_energy > 150*units::MeV || total_length < n_tracks * 36*units::cm) && (total_energy > 50*units::MeV || total_energy/units::MeV > total_length/units::cm * 0.75) && (!flag_skip)){

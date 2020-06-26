@@ -192,6 +192,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	  if (flag_print) std::cout << "Xin_J: " << max_energy << std::endl;
 	}
 	// angular cut ...
+	
 	if (angular_cut(max_shower, max_energy, dir.Angle(dir_beam)/3.1415926*180.) && flag_nue){
 	  //	    max_energy < 650*units::MeV && dir.Angle(dir_beam)/3.1415926*180. > 135 ||
 	  //  max_energy>= 650*units::MeV && dir.Angle(dir_beam)/3.1415926*180. > 90){
@@ -358,10 +359,64 @@ bool WCPPID::NeutrinoID::single_shower(WCPPID::WCShower*shower, bool flag_single
 bool WCPPID::NeutrinoID::angular_cut(WCPPID::WCShower* shower, double energy, double angle, bool flag_print){
   bool flag_bad = false;
 
-  if (energy < 650*units::MeV && angle > 135
-      || energy>= 650*units::MeV && angle > 90){
+  WCPPID::ProtoVertex *vertex = shower->get_start_vertex().first;
+  double acc_forward_length = 0;
+  double acc_backward_length = 0;
+  WCPPID::ProtoSegment *sg = shower->get_start_segment();
+  Point vertex_point;
+  if (vertex->get_wcpt().index == sg->get_wcpt_vec().front().index){
+    vertex_point = sg->get_point_vec().front();
+  }else{
+    vertex_point = sg->get_point_vec().back();
+  }
+  TVector3 dir_beam(0,0,1);
+
+  TVector3 dir_shower  = shower->cal_dir_3vector(vertex_point, 30*units::cm);
+  double max_angle = 0;
+  double max_length = 0;
+  
+  for (auto it = map_vertex_segments[vertex].begin(); it != map_vertex_segments[vertex].end(); it++){
+    WCPPID::ProtoSegment *sg1 = *it;
+    TVector3 dir1 = sg1->cal_dir_3vector(vertex_point, 15*units::cm);
+    double angle = dir1.Angle(dir_beam)/3.1415926*180.;
+    
+    auto pair_result = calculate_num_daughter_tracks(vertex, sg1, true);
+    
+    if (angle >90){
+      acc_backward_length += pair_result.second;
+    }else{
+      acc_forward_length += pair_result.second;
+    }
+
+    
+    double angle1 = dir1.Angle(dir_shower)/3.1415926*180.;
+    if (angle1 > max_angle) {
+      max_angle = angle1;
+      max_length = pair_result.second;
+    }
+    
+  }
+
+  //std::cout << "qaqa: " << energy << " " << angle << " " << acc_forward_length/units::cm << " " << acc_backward_length/units::cm << " " << max_angle << " " << max_length/units::cm << std::endl;
+  /* 7019_194_9724 577.291 170.663 96.7857 130.036 145.594 10.3261 */
+/* 5508_69_3463 255.781 144.239 4.52824 83.3248 135.595 4.52824 */
+/* 7001_952_47602 432.217 151.1 0 41.7747 6.46575 41.7747 */
+/* 7010_1468_73409 133.766 138.688 1.78977 31.7006 167.432 1.78977 */
+/* 7014_390_19528 220.937 154.107 49.0435 89.8684 153.851 20.6747 */
+/* 7026_446_22327 240.436 141.147 29.2358 86.4908 163.239 8.54359 */
+/* 7049_1351_67556 217.105 151.947 19.4925 42.8508 176.869 15.2018 */
+/* 7021_461_23078 354.798 139.929 46.9243 16.9505 171.139 46.9243 */
+  
+  if (energy < 650*units::MeV && angle > 160 || // no matter what ...
+      energy < 650*units::MeV && angle > 135 && max_angle > 170 && max_length > 12*units::cm || 
+      energy < 650*units::MeV && angle > 135 && acc_forward_length < 0.8 * acc_backward_length ||
+      energy>= 650*units::MeV && angle > 90){
     flag_bad = true;
   }
+
+
+  
+  
   // touch boundary the main one
   bool flag_main_outside = false;
   std::vector<double> stm_tol_vec =     {-1.5*units::cm, -1.5*units::cm, -1.5*units::cm, -1.5*units::cm, -1.5*units::cm};
@@ -1692,7 +1747,13 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
     if (length1 < 0.1 * length2 && length1 < 10*units::cm && min_dis > 8*units::cm) mip_id = 0;
     //    std::cout << length1 << " " << length2 << " " << min_dis << std::endl;
   }
-  
+
+  {
+    WCPPID::ProtoVertex *other_vertex = find_other_vertex(sg, main_vertex);
+    // 7017_969_48489
+    if (map_vertex_segments[other_vertex].size()>2 && sg->get_point_vec().size() <= n_first_mip + 1 && n_first_mip > 2) mip_id = -1;
+    //    std::cout << sg->get_point_vec().size() << " " << n_first_mip << " " << map_vertex_segments[other_vertex].size() << std::endl;
+  }
   
   if (flag_print) std::cout << "Qian_B0: " << n_lowest << " " << lowest_dQ_dx << " " << n_highest << " " << highest_dQ_dx << " " << n_below_threshold << " " << n_below_zero << " " << fabs(3.1415926/2. - dir_shower.Angle(dir_drift))/3.1415926*180. << " " << mip_id << " " << Eshower << " " << flag_single_shower << " " << sg->get_length()/units::cm << " " << max_dQ_dx_sample << std::endl;
   if (flag_print) std::cout << "Qian_B1: "<< mip_id<< " " << sg->get_id() << " " << n_end_reduction << " " << n_first_mip << " " << n_first_non_mip << " " << n_first_non_mip_1 << " " << n_first_non_mip_2 << " "  << Eshower/units::MeV << " " << n_showers << " " << n_tracks << " " << n_protons << " " << map_vertex_segments[vertex].size() << " " << flag_single_shower << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << std::max(vec_dQ_dx.at(0), vec_dQ_dx.at(1)) << std::endl;
@@ -2133,7 +2194,7 @@ bool WCPPID::NeutrinoID::single_shower_pio_tagger(WCPPID::WCShower *shower, bool
       if (Eshower < 800*units::cm)
 	if (medium_dQ_dx > 2.0 && shower_angle > 60 || medium_dQ_dx > 2.0 && start_dQ_dx < 2.5) flag_bad = true;
 
-      std::cout << "kaka: " << Eshower << " " << medium_dQ_dx << " " << start_dQ_dx << " " << shower_angle << " " << start_dQ_dx << std::endl;
+      //std::cout << "kaka: " << Eshower << " " << medium_dQ_dx << " " << start_dQ_dx << " " << shower_angle << " " << start_dQ_dx << std::endl;
     }
   }
   

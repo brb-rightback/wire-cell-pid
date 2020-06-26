@@ -418,6 +418,26 @@ bool WCPPID::NeutrinoID::vertex_inside_shower(WCPPID::WCShower *shower, bool fla
 
 bool WCPPID::NeutrinoID::compare_muon_energy(WCPPID::WCShower *max_shower, double max_energy, double muon_length, bool flag_print ){
   bool flag_bad = false;
+
+  TVector3 dir_drift(1,0,0);
+  WCPPID::ProtoVertex *vertex = max_shower->get_start_vertex().first;
+  WCPPID::ProtoSegment *sg = max_shower->get_start_segment();
+  Point vertex_point;
+  if (vertex->get_wcpt().index == sg->get_wcpt_vec().front().index){
+    vertex_point = sg->get_point_vec().front();
+  }else{
+    vertex_point = sg->get_point_vec().back();
+  }
+  TVector3 dir_shower;
+  if (max_shower->get_start_segment()->get_length() > 12*units::cm){
+    dir_shower = max_shower->get_start_segment()->cal_dir_3vector(vertex_point,15*units::cm);
+  }else{
+    dir_shower = max_shower->cal_dir_3vector(vertex_point,15*units::cm);
+  }
+  if (fabs(dir_shower.Angle(dir_drift)/3.1415926*180.-90)<10 || max_energy > 800*units::MeV) dir_shower = max_shower->cal_dir_3vector(vertex_point,25*units::cm);
+  dir_shower = dir_shower.Unit();
+
+  TVector3 dir_beam(0,0,1);
   
   TPCParams& mp = Singleton<TPCParams>::Instance();
   TGraph *g_range = mp.get_muon_r2ke();
@@ -441,6 +461,8 @@ bool WCPPID::NeutrinoID::compare_muon_energy(WCPPID::WCShower *max_shower, doubl
   //	  std::cout << "kaka: " << E_muon << " " << max_energy << " " << max_shower->get_kine_dQdx() << " " << muon_length/units::cm << " " << max_shower->get_total_length()/units::cm << std::endl;
 
   double tmp_shower_total_length = max_shower->get_total_length();
+
+  bool flag_numuCC = (neutrino_type >> 2) & 1U;
   
   if (E_muon > max_energy && max_energy < 550*units::MeV ||
       muon_length > tmp_shower_total_length ||
@@ -448,7 +470,7 @@ bool WCPPID::NeutrinoID::compare_muon_energy(WCPPID::WCShower *max_shower, doubl
       muon_length > 0.6 * tmp_shower_total_length && max_energy < 500*units::MeV // round 2 debug
       ) {
     flag_bad = true;
-    if (flag_print) std::cout << "Xin_E_1: " << max_energy << " " << E_muon <<  " " << muon_length/units::cm << " " << tmp_shower_total_length/units::cm << std::endl;
+    if (flag_print) std::cout << "Xin_E_1: " << max_energy << " " << E_muon <<  " " << muon_length/units::cm << " " << tmp_shower_total_length/units::cm << " " << dir_beam.Angle(dir_shower)/3.1415926*180. << " " << flag_numuCC << std::endl;
   }
   //	  std::cout << "Xin_A: " << max_energy << " " << E_muon << " " << muon_length/units::cm << std::endl;
   
