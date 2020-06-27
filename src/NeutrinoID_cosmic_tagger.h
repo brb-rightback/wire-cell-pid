@@ -645,6 +645,60 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
     if (num_cosmic == 1 && acc_cosmic_length > 100*units::cm){
       flag_cosmic = false;
     }
+
+    if (flag_cosmic){
+      // try to see nueCC events ...
+      int n_solid_tracks = 0;
+      int n_direct_showers = 0;
+      double energy_direct_showers = 0;
+      int n_main_showers = 0;
+      double energy_main_showers = 0;
+      int n_indirect_showers = 0;
+      double energy_indirect_showers = 0;
+      for (auto it2 = map_vertex_segments[main_vertex].begin(); it2 != map_vertex_segments[main_vertex].end(); it2++){
+	WCPPID::ProtoSegment *sg1 = *it2;
+	if (sg1->get_flag_shower()) continue;
+	double length = sg1->get_length();
+	if (sg1->is_dir_weak() && length > 10*units::cm || (!sg1->is_dir_weak())) n_solid_tracks ++;
+      }
+
+      for (auto it2 = showers.begin(); it2 != showers.end(); it2++){
+	WCPPID::WCShower *shower = *it2;
+	if (shower->get_start_segment()->get_particle_type()!=11) continue;
+	double Eshower = 0;
+	if (shower->get_kine_best() != 0){ 
+	  Eshower = shower->get_kine_best();
+	}else{
+	  Eshower = shower->get_kine_charge();
+	}
+	if (Eshower > 60*units::MeV){
+	  if (shower->get_start_vertex().first == main_vertex && shower->get_start_vertex().second==1) {
+	    n_main_showers ++;
+	    energy_main_showers += Eshower;
+	  
+	  }
+
+	  if (shower->get_start_vertex().first->get_cluster_id() == main_vertex->get_cluster_id() && shower->get_start_vertex().second==1){
+	    n_direct_showers ++;
+	    energy_direct_showers += Eshower;
+	  }
+
+	  if (shower->get_start_vertex().second>1){
+	    n_indirect_showers ++;
+	    energy_indirect_showers += Eshower;
+	  }
+	}
+	
+      }
+
+      if ((n_solid_tracks >0 && energy_main_showers > 80 || energy_main_showers > 200) && (energy_indirect_showers < energy_main_showers * 0.6 || n_solid_tracks > 0 && energy_indirect_showers < energy_main_showers)){
+	flag_cosmic = false;
+	//	std::cout << "kaka: " << n_solid_tracks << " " <<  n_direct_showers << " " << energy_direct_showers << " " << n_main_showers  << " " <<  energy_main_showers << " " << n_indirect_showers << " " <<  energy_indirect_showers  << std::endl;
+      }
+      
+    }
+
+    
     
     
     if (flag_cosmic){
