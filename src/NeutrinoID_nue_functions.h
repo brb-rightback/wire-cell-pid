@@ -73,6 +73,11 @@ bool WCPPID::NeutrinoID::multiple_showers(WCPPID::WCShower *max_shower, double m
     }else{
       E_shower = shower->get_kine_charge();
     }
+    bool flag_pi0 = pi0_identification(shower->get_start_vertex().first, shower->get_start_segment(), shower, 15*units::MeV);
+    if (flag_pi0) continue;
+    if (shower->get_total_length(shower->get_start_segment()->get_cluster_id()) < shower->get_total_length()*0.1 && shower->get_total_length(shower->get_start_segment()->get_cluster_id()) < 10*units::cm) continue; 
+    //    if (mip_identification(shower->get_start_vertex().first, shower->get_start_segment(), shower, false, false)==-1 || track_overclustering(shower) || bad_reconstruction_3(shower->get_start_vertex().first, shower) || bad_reconstruction_2(shower->get_start_vertex().first, shower) || gap_identification(shower->get_start_vertex().first, shower->get_start_segment(), false, 1, E_shower).first ) continue;
+    
     if ((E_shower > 0.6 * max_energy || E_shower > 0.45 * max_energy && max_energy - E_shower < 150*units::MeV) ){
       flag_bad = true;
       if (flag_print) std::cout << "Xin_D_4: " << max_energy << " " << E_shower << std::endl;
@@ -160,6 +165,12 @@ bool WCPPID::NeutrinoID::other_showers(WCPPID::WCShower *shower, bool flag_singl
   }else{
     Eshower = shower->get_kine_charge();
   }
+  Point vertex_point;
+  if (shower->get_start_vertex().first->get_wcpt().index == shower->get_start_segment()->get_wcpt_vec().front().index){
+    vertex_point = shower->get_start_segment()->get_point_vec().front();
+  }else{
+    vertex_point = shower->get_start_segment()->get_point_vec().back();
+  }
 
   double total_other_energy=0;
   double max_energy = 0;
@@ -234,8 +245,16 @@ bool WCPPID::NeutrinoID::other_showers(WCPPID::WCShower *shower, bool flag_singl
 	  }
 	}
       }
+
+      //      std::cout << shower1->get_total_length(shower1->get_start_segment()->get_cluster_id())/units::cm << " " << shower1->get_total_length()/units::cm << std::endl;
       
       if (pair_result.second == 1){
+	// 7006_387_19382
+	if (shower1->get_total_length(shower1->get_start_segment()->get_cluster_id()) < shower1->get_total_length()*0.1 && shower1->get_total_length(shower1->get_start_segment()->get_cluster_id()) < 10*units::cm) continue; 
+	// 7021_282_14130 
+	//	if (mip_identification(shower1->get_start_vertex().first, shower1->get_start_segment(), shower1, false, false)==-1 || track_overclustering(shower1) || bad_reconstruction_3(shower1->get_start_vertex().first, shower1) || bad_reconstruction_2(shower1->get_start_vertex().first, shower1) ) continue;
+	if (flag_pi0) continue;
+	
 	E_direct_total_energy += E_shower1;
 	if (E_shower1 > E_direct_max_energy && shower1->get_start_vertex().first == main_vertex) {
 	  E_direct_max_energy = E_shower1;
@@ -244,11 +263,16 @@ bool WCPPID::NeutrinoID::other_showers(WCPPID::WCShower *shower, bool flag_singl
 	}
 	if (E_shower1 > 80*units::MeV) n_direct_showers ++;
       }else if (pair_result.second == 2){
+	
 	if (shower1->get_num_segments()<=2){
 	  if ( (!shower1->get_start_segment()->get_flag_shower_trajectory()) && (!shower1->get_start_segment()->get_flag_shower_topology()) && shower1->get_start_segment()->get_length() > 45*units::cm && shower1->get_start_segment()->get_length() > 0.95 * shower1->get_total_length()) continue;
 	  //	std::cout << shower1->get_start_segment()->get_length()/units::cm << " " << shower1->get_start_segment()->get_flag_shower_trajectory() << " " << shower1->get_start_segment()->get_flag_shower_topology() << std::endl;
 	}
+	double dis = sqrt(pow(vertex_point.x - shower1->get_start_point().x,2) + pow(vertex_point.y - shower1->get_start_point().y,2) + pow(vertex_point.z - shower1->get_start_point().z,2) );
+	//std::cout << dis/units::cm << std::endl;
 
+	if (dis > 100*units::cm) continue;
+	
 	//std::cout <<  E_shower1 << " " << flag_pi0 << std::endl;
 	if (!flag_pi0){
 	  E_indirect_total_energy += E_shower1;
