@@ -1702,6 +1702,11 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
   if (lowest_dQ_dx < 0 && Eshower < 800*units::MeV && n_below_zero > 2) mip_id = -1;
   // 7025_380_19030
   if (lowest_dQ_dx < 0 && Eshower < 800*units::MeV && n_below_zero <=2 && highest_dQ_dx > 1.3) mip_id = -1;
+  // 7054_1985_99267
+  if (lowest_dQ_dx < 0 && n_lowest <=1 && n_highest < n_lowest && highest_dQ_dx < 0.9) mip_id = -1;
+  // 7049_1033_51667
+  if (lowest_dQ_dx <0.6 && highest_dQ_dx < 0.8 && n_lowest <=1 && n_highest <=1 && n_first_non_mip_2 - n_first_mip <=2 && max_dQ_dx_sample > 1.8) mip_id = -1;
+  
   // 7017_1508_75440, 
   if (lowest_dQ_dx < 0.6 && highest_dQ_dx > 1.3 && n_highest >1 && n_highest < 4 && Eshower < 1000*units::MeV &&fabs(n_lowest - n_highest)>1 ) mip_id = -1;
   //7003_1754_87734 + anti 7026_54_2747

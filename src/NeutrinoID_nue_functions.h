@@ -253,7 +253,7 @@ bool WCPPID::NeutrinoID::other_showers(WCPPID::WCShower *shower, bool flag_singl
 	if (shower1->get_total_length(shower1->get_start_segment()->get_cluster_id()) < shower1->get_total_length()*0.1 && shower1->get_total_length(shower1->get_start_segment()->get_cluster_id()) < 10*units::cm) continue; 
 	// 7021_282_14130 
 	//	if (mip_identification(shower1->get_start_vertex().first, shower1->get_start_segment(), shower1, false, false)==-1 || track_overclustering(shower1) || bad_reconstruction_3(shower1->get_start_vertex().first, shower1) || bad_reconstruction_2(shower1->get_start_vertex().first, shower1) ) continue;
-	if (flag_pi0) continue;
+	//	if (flag_pi0) continue;
 	
 	E_direct_total_energy += E_shower1;
 	if (E_shower1 > E_direct_max_energy && shower1->get_start_vertex().first == main_vertex) {
