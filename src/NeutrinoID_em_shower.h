@@ -227,7 +227,7 @@ void WCPPID::NeutrinoID::examine_showers(){
       shower->set_start_point(main_vertex->get_fit_pt());
       std::set<WCPPID::ProtoSegment* > tmp_used_segments;
       shower->complete_structure_with_start_segment(map_vertex_segments, map_segment_vertices, tmp_used_segments);
-      if (sg->get_length()>45*units::cm || sg->is_dir_weak()) sg->set_flag_avoid_muon_check(true);
+      if (sg->get_length()>44*units::cm || sg->is_dir_weak()) sg->set_flag_avoid_muon_check(true);
     }else{
       shower->add_segment(sg, map_segment_vertices);
       shower->set_start_vertex(main_vertex, 1);
@@ -235,8 +235,13 @@ void WCPPID::NeutrinoID::examine_showers(){
       shower->set_start_point(main_vertex->get_fit_pt());
       std::set<WCPPID::ProtoSegment* > tmp_used_segments;
       shower->complete_structure_with_start_segment(map_vertex_segments, map_segment_vertices, tmp_used_segments);
+      // 6689_121_6073
+      if (shower->get_num_main_segments()>=3) sg->set_flag_avoid_muon_check(true);
       //std::cout << kine_charge/units::MeV << std::endl;
     }
+
+    //    std::cout << pair_result.second << " " << sg->get_flag_avoid_muon_check() << " " << sg->is_dir_weak() << " " << sg->get_id() << " " << shower->get_num_main_segments() << std::endl;
+    
     // add the rest of showers;
     Map_Proto_Vertex_Segments& map_vtx_segs = shower->get_map_vtx_segs();
     for (auto it1 = showers.begin(); it1!=showers.end(); it1++){
