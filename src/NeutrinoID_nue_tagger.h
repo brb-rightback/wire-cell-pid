@@ -802,8 +802,8 @@ bool WCPPID::NeutrinoID::track_overclustering(WCPPID::WCShower *shower, bool fla
       }
       double dis1 = sqrt(pow(vtx1->get_fit_pt().x - vertex_point.x,2) + pow(vtx1->get_fit_pt().y - vertex_point.y,2) + pow(vtx1->get_fit_pt().z - vertex_point.z,2));
       
-      // 7006_293_14699 + 7051_14_732 (dis1)
-      if (max_angle > 25 && min_angle < max_angle && max_length > 10*units::cm && min_angle < 20 && fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. > 10 && map_vtx_segs[vtx1].size() == 3 && min_count ==1 && (Eshower >= 600*units::MeV && fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. < 40 || Eshower < 600*units::MeV && fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. < 25) && dis1 < 25*units::cm){
+      // 7006_293_14699 
+      if (max_angle > 25 && min_angle < max_angle && max_length > 10*units::cm && min_angle < 20 && fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. > 10 && map_vtx_segs[vtx1].size() == 3 && min_count ==1 && (Eshower >= 600*units::MeV && fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. < 40 || Eshower < 600*units::MeV && fabs(3.1415926/2.-dir1.Angle(drift_dir))/3.1415926*180. < 25) ){
 	flag_bad = true;
       }
       
@@ -2470,9 +2470,9 @@ bool WCPPID::NeutrinoID::bad_reconstruction_3(WCPPID::ProtoVertex* vertex, WCPPI
     if (ncount_45 < 0.7*ncount || ncount_25 < 0.6*ncount || ncount_25 < 0.8*ncount && ncount_15 < 0.3*ncount
 	|| ncount_15 < 0.35*ncount && ncount_25 > 0.9*ncount && Eshower < 1000*units::MeV ) flag_bad = true;
     
-    if (ncount1_15 < 0.35 * ncount1 && fabs(dir.Angle(drift_dir)/3.1415926*180.-90) > 15 && ncount1_25 < 0.95 *ncount1 || // 7014_1661_83096
+    if (ncount1_15 < 0.35 * ncount1 && fabs(dir.Angle(drift_dir)/3.1415926*180.-90) > 15 && (ncount1_25 < 0.95 *ncount1 && Eshower < 1000*units::MeV || Eshower >=1000*units::MeV) || // 7014_1661_83096
 	ncount1_15 < 0.2*ncount1 && ncount1_25 < 0.45*ncount1 && Eshower < 600*units::MeV ||
-	dir_sg.Angle(dir)/3.1415926*180. > 25 && std::max(fabs(dir.Angle(drift_dir)/3.1415926*180.-90),fabs(dir_sg.Angle(drift_dir)/3.1415926*180.-90)) > 8 && ncount1_15 < 0.8 * ncount1 || // 7001_100_5015
+	dir_sg.Angle(dir)/3.1415926*180. > 25 && std::max(fabs(dir.Angle(drift_dir)/3.1415926*180.-90),fabs(dir_sg.Angle(drift_dir)/3.1415926*180.-90)) > 8 && (ncount1_15 < 0.8 * ncount1 && Eshower < 1000*units::MeV || Eshower >= 1000*units::MeV) || // 7001_100_5015
 	dir_sg.Angle(dir)/3.1415926*180. > 20 && std::max(fabs(dir.Angle(drift_dir)/3.1415926*180.-90),fabs(dir_sg.Angle(drift_dir)/3.1415926*180.-90)) > 5 && ncount1_15 < 0.5 * ncount1
 	) flag_bad = true;
 
@@ -2648,7 +2648,7 @@ bool WCPPID::NeutrinoID::bad_reconstruction_2(WCPPID::ProtoVertex* vertex, WCPPI
 	if ( (angle > 150 && angle1 > 10 && (!sg1->get_flag_shower_trajectory())) && sg1->get_length() > 7.5*units::cm && map_vertex_segments[other_vertex].size()<=4) flag_bad = true; 
 	if (angle < min_angle && sg1->get_length() > 6*units::cm) min_angle = angle;
 
-	std::cout << Eshower << " " << dir1.Angle(dir)/3.1415926*180. << " " << dir1.Mag()/units::cm << " " << sg1->get_length()/units::cm << " " << sg1->get_flag_shower_trajectory() << std::endl;
+	//	std::cout << Eshower << " " << dir1.Angle(dir)/3.1415926*180. << " " << dir1.Mag()/units::cm << " " << sg1->get_length()/units::cm << " " << sg1->get_flag_shower_trajectory() << std::endl;
       }
       //
       // 6952_132_6635 
