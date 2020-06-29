@@ -75,7 +75,9 @@ bool WCPPID::NeutrinoID::multiple_showers(WCPPID::WCShower *max_shower, double m
     }
     bool flag_pi0 = pi0_identification(shower->get_start_vertex().first, shower->get_start_segment(), shower, 15*units::MeV);
     if (flag_pi0) continue;
-    if (shower->get_total_length(shower->get_start_segment()->get_cluster_id()) < shower->get_total_length()*0.1 && shower->get_total_length(shower->get_start_segment()->get_cluster_id()) < 10*units::cm) continue; 
+    if (shower->get_total_length(shower->get_start_segment()->get_cluster_id()) < shower->get_total_length()*0.1 && shower->get_total_length(shower->get_start_segment()->get_cluster_id()) < 10*units::cm) continue;
+    // 7010_532_26643
+    if (shower->get_start_segment()->get_length() > 80*units::cm) continue;
     //    if (mip_identification(shower->get_start_vertex().first, shower->get_start_segment(), shower, false, false)==-1 || track_overclustering(shower) || bad_reconstruction_3(shower->get_start_vertex().first, shower) || bad_reconstruction_2(shower->get_start_vertex().first, shower) || gap_identification(shower->get_start_vertex().first, shower->get_start_segment(), false, 1, E_shower).first ) continue;
     
     if ((E_shower > 0.6 * max_energy || E_shower > 0.45 * max_energy && max_energy - E_shower < 150*units::MeV) ){
@@ -254,6 +256,11 @@ bool WCPPID::NeutrinoID::other_showers(WCPPID::WCShower *shower, bool flag_singl
 	// 7021_282_14130 
 	//	if (mip_identification(shower1->get_start_vertex().first, shower1->get_start_segment(), shower1, false, false)==-1 || track_overclustering(shower1) || bad_reconstruction_3(shower1->get_start_vertex().first, shower1) || bad_reconstruction_2(shower1->get_start_vertex().first, shower1) ) continue;
 	//	if (flag_pi0) continue;
+	if (shower1->get_start_segment()->get_length() > 80*units::cm) continue;
+	// 6090_89_4498
+	if (flag_pi0 && shower1->get_total_length(shower1->get_start_segment()->get_cluster_id()) < 0.12 * shower1->get_total_length()) continue;
+
+	//	std::cout << flag_pi0 << " " << shower1->get_total_length(shower1->get_start_segment()->get_cluster_id()) << " " <<  shower1->get_total_length() << std::endl;
 	
 	E_direct_total_energy += E_shower1;
 	if (E_shower1 > E_direct_max_energy && shower1->get_start_vertex().first == main_vertex) {
@@ -269,15 +276,18 @@ bool WCPPID::NeutrinoID::other_showers(WCPPID::WCShower *shower, bool flag_singl
 	  //	std::cout << shower1->get_start_segment()->get_length()/units::cm << " " << shower1->get_start_segment()->get_flag_shower_trajectory() << " " << shower1->get_start_segment()->get_flag_shower_topology() << std::endl;
 	}
 	double dis = sqrt(pow(vertex_point.x - shower1->get_start_point().x,2) + pow(vertex_point.y - shower1->get_start_point().y,2) + pow(vertex_point.z - shower1->get_start_point().z,2) );
-	//std::cout << dis/units::cm << std::endl;
 
-	if (dis > 100*units::cm) continue;
+	//	std::cout << dis/units::cm << std::endl;
+	double factor = 1;
+	// 6090_89_4498
+	if (dis > 72*units::cm) continue;
+	else if (dis > 48*units::cm) factor = 0.75;
 	
 	//std::cout <<  E_shower1 << " " << flag_pi0 << std::endl;
 	if (!flag_pi0){
 	  E_indirect_total_energy += E_shower1;
-	  if (E_shower1 > E_indirect_max_energy) {
-	    E_indirect_max_energy = E_shower1;
+	  if (E_shower1 * factor > E_indirect_max_energy) {
+	    E_indirect_max_energy = E_shower1 * factor;
 	    if (map_shower_pio_id.find(shower1) != map_shower_pio_id.end()) flag_indirect_max_pi0 = true;
 	    else flag_indirect_max_pi0 = false;
 	  }

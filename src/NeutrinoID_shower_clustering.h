@@ -690,14 +690,16 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
 	}
 
 	//	std::cout << (*it1).first << " " << it->first.first->get_start_vertex().second << " " << it->first.second->get_start_vertex().second << std::endl;
-	
-	if (fabs((*it1).first - 135*units::MeV + mass_offset) - tmp_mass_penalty  < fabs(mass_diff) - mass_penalty){ // hack pi0 mass to a slightly lower value ...
-	  mass_diff = (*it1).first - 135*units::MeV + mass_offset;// hack pi0 mass to a slightly lower value ...
-	  mass_penalty = tmp_mass_penalty;
-	  mass_save = (*it1).first;
-	  shower_1 = it->first.first;
-	  shower_2 = it->first.second;
-	  vtx = (*it1).second;
+
+	if ((*it1).first - 135*units::MeV + mass_offset < 35*units::MeV && (*it1).first - 135*units::MeV + mass_offset > -25*units::MeV){
+	  if (fabs((*it1).first - 135*units::MeV + mass_offset) - tmp_mass_penalty  < fabs(mass_diff) - mass_penalty){ // hack pi0 mass to a slightly lower value ...
+	    mass_diff = (*it1).first - 135*units::MeV + mass_offset;// hack pi0 mass to a slightly lower value ...
+	    mass_penalty = tmp_mass_penalty;
+	    mass_save = (*it1).first;
+	    shower_1 = it->first.first;
+	    shower_2 = it->first.second;
+	    vtx = (*it1).second;
+	  }
 	}
       }
     }
