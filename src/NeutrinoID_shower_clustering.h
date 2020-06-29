@@ -678,11 +678,22 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
     WCPPID::WCShower *shower_2 = 0;
     double mass_offset = 10*units::MeV;
     WCPPID::ProtoVertex* vtx;
+    double mass_penalty = 0;
+    double tmp_mass_penalty = 0;
     for (auto it = map_shower_pair_mass_vertex.begin(); it!= map_shower_pair_mass_vertex.end(); it++){
       for (auto it1 = it->second.begin(); it1!= it->second.end(); it1++){
+	// 7004_365_18260
+	if (it->first.first->get_start_vertex().second == 2 && it->first.second->get_start_vertex().second == 2){
+	  tmp_mass_penalty = 6*units::MeV;
+	} else{
+	  tmp_mass_penalty = 0;
+	}
+
+	//	std::cout << (*it1).first << " " << it->first.first->get_start_vertex().second << " " << it->first.second->get_start_vertex().second << std::endl;
 	
-	if (fabs((*it1).first - 135*units::MeV + mass_offset) < fabs(mass_diff)){ // hack pi0 mass to a slightly lower value ...
+	if (fabs((*it1).first - 135*units::MeV + mass_offset) - tmp_mass_penalty  < fabs(mass_diff) - mass_penalty){ // hack pi0 mass to a slightly lower value ...
 	  mass_diff = (*it1).first - 135*units::MeV + mass_offset;// hack pi0 mass to a slightly lower value ...
+	  mass_penalty = tmp_mass_penalty;
 	  mass_save = (*it1).first;
 	  shower_1 = it->first.first;
 	  shower_2 = it->first.second;
@@ -690,6 +701,7 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
 	}
       }
     }
+    
     if (mass_diff < 35*units::MeV && mass_diff > -25*units::MeV){
       pi0_showers.insert(shower_1);
       pi0_showers.insert(shower_2);
