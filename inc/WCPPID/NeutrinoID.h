@@ -61,6 +61,23 @@ namespace WCPPID{
     std::vector<std::vector<int> > *mc_daughters;
   };
 
+  //
+  struct TaggerInfo
+  {
+    // cosmic tagger ones, one case of cosmics ...
+    int cosmic_flag;
+    int cosmic_n_solid_tracks;
+    double cosmic_energy_main_showers;
+    double cosmic_energy_indirect_showers;
+    int cosmic_n_direct_showers;
+    int cosmic_n_indirect_showers;
+    int cosmic_n_main_showers;
+    int cosmic_filled;
+    
+    
+  };
+
+  
   
   //  class MyFCN : public ROOT::Minuit2::FCNBase {
   class MyFCN {
@@ -365,6 +382,10 @@ namespace WCPPID{
     bool single_shower(WCPPID::WCShower* shower, bool flag_single_shower, bool flag_print = false);
 
     bool low_energy_michel(WCPPID::WCShower*shower, bool flag_print = false);
+
+    void init_tagger_info();
+    TaggerInfo tagger_info; 
+
     
   protected:
     int neutrino_type;

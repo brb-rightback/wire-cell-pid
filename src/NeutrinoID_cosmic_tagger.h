@@ -691,14 +691,20 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	
       }
 
-      if ((n_solid_tracks >0 && energy_main_showers > 80 || energy_main_showers > 200) && (energy_indirect_showers < energy_main_showers * 0.6 || n_solid_tracks > 0 && energy_indirect_showers < energy_main_showers)){
-	flag_cosmic = false;
-	//	std::cout << "kaka: " << n_solid_tracks << " " <<  n_direct_showers << " " << energy_direct_showers << " " << n_main_showers  << " " <<  energy_main_showers << " " << n_indirect_showers << " " <<  energy_indirect_showers  << std::endl;
-      }
+      tagger_info.cosmic_n_solid_tracks = n_solid_tracks;
+      tagger_info.cosmic_energy_main_showers = energy_main_showers;
+      tagger_info.cosmic_energy_indirect_showers = energy_indirect_showers;
+      tagger_info.cosmic_n_direct_showers = n_direct_showers;
+      tagger_info.cosmic_n_indirect_showers = n_indirect_showers;
+      tagger_info.cosmic_n_main_showers = n_main_showers;
+      tagger_info.cosmic_filled = 1;
       
+      if ((n_solid_tracks >0 && energy_main_showers > 80*units::MeV || energy_main_showers > 200*units::MeV) && (energy_indirect_showers < energy_main_showers * 0.6 || n_solid_tracks > 0 && energy_indirect_showers < energy_main_showers)){
+	flag_cosmic = false;
+	std::cout << "kaka: " << n_solid_tracks << " " <<  n_direct_showers << " " << energy_direct_showers << " " << n_main_showers  << " " <<  energy_main_showers << " " << n_indirect_showers << " " <<  energy_indirect_showers  << " " << tagger_info.cosmic_filled << std::endl;
+	tagger_info.cosmic_flag = true;
+      }
     }
-
-    
     
     
     if (flag_cosmic){

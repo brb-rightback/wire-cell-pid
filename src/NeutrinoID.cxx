@@ -50,6 +50,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   bool flag_other_clusters = true;
   bool flag_main_cluster = true;
   bool flag_tagger = true;
+
+  init_tagger_info();
   // hack the main cluster
   // for (auto it = other_clusters.begin(); it != other_clusters.end(); it++){
   //   WCPPID::PR3DCluster *cluster = *it;    
@@ -208,18 +210,14 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
 
   if (flag_tagger){
     bool flag_cosmic = cosmic_tagger();
-    if (!flag_cosmic){
-      auto results = numu_tagger();
-      bool flag_long_muon = results.first;
-      // if (!flag_long_muon) {
-      //	TPCParams& mp = Singleton<TPCParams>::Instance();
-      //	TGraph *g_range = mp.get_muon_r2ke();
-      //double muon_kine_energy = g_range->Eval(results.second/units::cm) * units::MeV;
-      nue_tagger(results.second);
-      //      }else{
-      //	std::cout << "Long muon " << " " << results.second/units::cm << std::endl;
-      // }
-    }
+
+    if (flag_cosmic) tagger_info.cosmic_flag = false;
+    
+    auto results = numu_tagger();
+    bool flag_long_muon = results.first;
+    
+    nue_tagger(results.second);
+    
   }
 
   
@@ -1931,3 +1929,17 @@ void WCPPID::NeutrinoID::fill_point_info(int mother_cluster_id, WCPPID::WCPointT
   }
 }
     
+
+
+void WCPPID::NeutrinoID::init_tagger_info(){
+  // initialize cosmic one
+  tagger_info.cosmic_flag = true ;
+  tagger_info.cosmic_n_solid_tracks = 0;
+  tagger_info.cosmic_energy_main_showers = 0;
+  tagger_info.cosmic_energy_indirect_showers = 0;
+  tagger_info.cosmic_n_direct_showers = 0;
+  tagger_info.cosmic_n_indirect_showers = 0;
+  tagger_info.cosmic_n_main_showers = 0;
+  tagger_info.cosmic_filled = 0;
+  
+}

@@ -1467,6 +1467,47 @@ int main(int argc, char* argv[])
       //     }
       T_vtx->Fill();
     }
+
+    WCPPID::TaggerInfo tagger_info;
+    TTree *T_tagger = new TTree("T_tagger","T_tagger");
+    T_tagger->SetDirectory(file1);
+    T_tagger->Branch("nu_x",&x_vtx,"nu_x/D");
+    T_tagger->Branch("nu_y",&y_vtx,"nu_y/D");
+    T_tagger->Branch("nu_z",&z_vtx,"nu_z/D");
+    // cosmic tagger
+    T_tagger->Branch("cosmic_flag", &tagger_info.cosmic_flag, "cosmic_flag/I");
+    T_tagger->Branch("cosmic_n_solid_tracks",&tagger_info.cosmic_n_solid_tracks,"cosmic_n_solid_tracks/I");
+    T_tagger->Branch("cosmic_energy_main_showers",&tagger_info.cosmic_energy_main_showers,"cosmic_energy_main_showers/D");
+    T_tagger->Branch("cosmic_energy_indirect_showers",&tagger_info.cosmic_energy_indirect_showers,"cosmic_energy_indirect_showers/D");
+    T_tagger->Branch("cosmic_n_direct_showers",&tagger_info.cosmic_n_direct_showers,"cosmic_n_direct_showers/I");
+    T_tagger->Branch("cosmic_n_indirect_showers",&tagger_info.cosmic_n_indirect_showers,"cosmic_n_indirect_showers/I");
+    T_tagger->Branch("cosmic_n_main_showers",&tagger_info.cosmic_n_main_showers,"cosmic_n_main_showers/I");
+    T_tagger->Branch("cosmic_filled",&tagger_info.cosmic_filled,"cosmic_filled/I");
+    
+    for (size_t i=0;i!=neutrino_vec.size();i++){
+      WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();
+      WCPPID::ProtoVertex *nu_vtx =  neutrino_vec.at(i)->get_main_vertex();
+      
+      auto it1 = map_vertex_segments.find(nu_vtx);
+      Point vertex_point;
+      
+      if (it1 != map_vertex_segments.end() && it1->second.size()>0){
+	WCPPID::ProtoSegment *sg = *map_vertex_segments[nu_vtx].begin();
+	if (nu_vtx->get_wcpt().index == sg->get_wcpt_vec().front().index){
+	  vertex_point = sg->get_point_vec().front();
+	}else{
+	  vertex_point = sg->get_point_vec().back();
+	}
+      }else{
+	continue;
+      }
+      x_vtx = vertex_point.x/units::cm;
+      y_vtx = vertex_point.y/units::cm;
+      z_vtx = vertex_point.z/units::cm;
+      tagger_info = neutrino_vec.at(i)->tagger_info;
+      
+      T_tagger->Fill();
+    }
     
     
     // for (auto it = map_cluster_vertex.begin(); it!= map_cluster_vertex.end(); it++){
