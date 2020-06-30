@@ -7,15 +7,26 @@ bool WCPPID::NeutrinoID::stem_direction(WCPPID::WCShower *max_shower, double max
   max_shower->fill_point_vec(tmp_pts, true);
   main_cluster->Calc_PCA(tmp_pts);
   TVector3 dir1(main_cluster->get_PCA_axis(0).x,main_cluster->get_PCA_axis(0).y,main_cluster->get_PCA_axis(0).z);
+
+  Point vertex_point;
+  if (max_shower->get_start_vertex().first->get_wcpt().index == max_shower->get_start_segment()->get_wcpt_vec().front().index){
+    vertex_point = max_shower->get_start_segment()->get_point_vec().front();
+  }else{
+    vertex_point = max_shower->get_start_segment()->get_point_vec().back();
+  }
+  TVector3 dir_shower = max_shower->cal_dir_3vector(vertex_point, 100*units::cm);
+  
   
   double angle = 0;
   double angle1 = 0;
   double ratio = 0;
   double angle2 = fabs(dir1.Angle(dir_drift)/3.1415926*180.-90);
+  double angle3 = 0;
   if (main_vertex->get_wcpt().index == sg->get_wcpt_vec().front().index){
     TVector3 dir2 = sg->cal_dir_3vector(sg->get_point_vec().front(), 5*units::cm);
     TVector3 dir3 = max_shower->cal_dir_3vector(sg->get_point_vec().front(),30*units::cm);
     angle = dir1.Angle(dir2)/3.1415926*180.;
+    angle3 = dir2.Angle(dir_shower)/3.1415926*180.;
     if (angle > 90) angle = 180-angle;
     angle1 = fabs(dir3.Angle(dir_drift)/3.1415926*180. - 90);
     ratio = sg->get_direct_length(0,10)/ sg->get_length(0,10);
@@ -25,6 +36,7 @@ bool WCPPID::NeutrinoID::stem_direction(WCPPID::WCShower *max_shower, double max
     TVector3 dir3 = max_shower->cal_dir_3vector(sg->get_point_vec().back(),30*units::cm);
     int num = int(sg->get_point_vec().size())-1;
     angle = dir1.Angle(dir2)/3.1415926*180.;
+    angle3 = dir2.Angle(dir_shower)/3.1415926*180.;
     if (angle > 90) angle = 180-angle;
     angle1 = fabs(dir3.Angle(dir_drift)/3.1415926*180. - 90);
     ratio = sg->get_direct_length(num-10, num)/sg->get_length(num-10,num);
@@ -38,16 +50,16 @@ bool WCPPID::NeutrinoID::stem_direction(WCPPID::WCShower *max_shower, double max
     }else if (max_energy > 500*units::MeV){ // high energy
       if ((angle1 >12.5 || angle2 > 12.5) && angle > 25
 	  || (angle1 > 10 || angle2 > 10) && angle > 32){
-	flag_bad = true;
-	if (flag_print) std::cout << "Xin_B: " << max_energy << " " << angle1 << " " << angle2 << " " << angle << " " << ratio << std::endl;
+	if (angle3 > 3) flag_bad = true; // 7006_293_14696
+	if (flag_print) std::cout << "Xin_B: " << max_energy << " " << angle1 << " " << angle2 << " " << angle << " " << angle3 << " " << ratio << std::endl;
       }
     }else{
       if (angle > 25 && (angle1 > 7.5 || angle2 > 7.5)){
 	flag_bad = true;
-	if (flag_print) std::cout << "Xin_B1: " << max_energy << " " << angle1 << " " << angle2 << " " << angle << " " << ratio << std::endl;
+	if (flag_print) std::cout << "Xin_B1: " << max_energy << " " << angle1 << " " << angle2 << " " << angle << " " << angle3 << " " << ratio << std::endl;
       }else if ((angle1 > 7.5 || angle2 > 7.5) && ratio<0.97){
 	flag_bad = true;
-	if (flag_print) std::cout << "Xin_B2: " << max_energy << " " << angle1 << " " << angle2 << " " << angle << " " << ratio << std::endl;
+	if (flag_print) std::cout << "Xin_B2: " << max_energy << " " << angle1 << " " << angle2 << " " << angle << " " << angle3 << " " << ratio << std::endl;
       }
     }
   }
@@ -317,9 +329,14 @@ bool WCPPID::NeutrinoID::other_showers(WCPPID::WCShower *shower, bool flag_singl
 bool WCPPID::NeutrinoID::stem_length(WCPPID::WCShower *max_shower, double max_energy, bool flag_print){
   bool flag_bad = false;
   WCPPID::ProtoSegment *sg = max_shower->get_start_segment();
+  auto pair_result = calculate_num_daughter_tracks(max_shower->get_start_vertex().first, sg, true);
+  
   if (max_energy < 500*units::MeV && sg->get_length() > 50*units::cm && (!sg->get_flag_avoid_muon_check())){
     flag_bad = true;
-    if (flag_print) std::cout << "Xin_F_0: " << max_energy << " " << sg->get_length()/units::cm << std::endl;
+
+    if (pair_result.first > 6 && sg->get_length() < 55*units::cm) flag_bad = false;
+    
+    if (flag_print) std::cout << "Xin_F_0: " << max_energy << " " << sg->get_length()/units::cm << " " << pair_result.first << std::endl;
   }
   return flag_bad;
 }
