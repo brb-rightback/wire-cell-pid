@@ -1941,5 +1941,24 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.cosmic_n_indirect_showers = 0;
   tagger_info.cosmic_n_main_showers = 0;
   tagger_info.cosmic_filled = 0;
+
+  // shower gap identification
+  tagger_info.gap_flag = true;
+  tagger_info.gap_flag_prolong_u = false;
+  tagger_info.gap_flag_prolong_v = false;
+  tagger_info.gap_flag_prolong_w = false;
+  tagger_info.gap_flag_parallel = false;
+  tagger_info.gap_n_points = 0;
+  tagger_info.gap_n_bad = 0;
+  tagger_info.gap_energy = 0;
+  tagger_info.gap_num_valid_tracks = 0;
+  tagger_info.gap_flag_single_shower = false;
+  tagger_info.gap_filled = 0;
+
+  // shower MIP identification
+
+  
+  // shower pi0 identification
+
   
 }

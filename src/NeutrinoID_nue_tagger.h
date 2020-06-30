@@ -87,7 +87,7 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	  //	    std::cout << sg1->get_length()/units::cm << " " << sg1->is_dir_weak() << std::endl;
 	}
 	
-	if (flag_nue){
+	{
 	  WCPPID::ProtoSegment *sg = max_shower->get_start_segment();
 	  
 	  auto pair_result = gap_identification(main_vertex, sg, flag_single_shower, num_valid_tracks, max_energy);
@@ -1384,9 +1384,23 @@ std::pair<bool, int> WCPPID::NeutrinoID::gap_identification(WCPPID::ProtoVertex*
       if (n_bad > 2) flag_gap = true; 
     }
   }
+
+  
   // 7021_521_26090 
   if (n_bad >=6 && E_shower < 1000*units::MeV) flag_gap = true;
   if (E_shower <=900*units::MeV && n_bad >1) flag_gap = true;
+
+  tagger_info.gap_flag = !flag_gap;
+  tagger_info.gap_flag_prolong_u = flag_prolong_u;
+  tagger_info.gap_flag_prolong_v = flag_prolong_v;
+  tagger_info.gap_flag_prolong_w = flag_prolong_w;
+  tagger_info.gap_flag_parallel = flag_parallel;
+  tagger_info.gap_n_points = n_points;
+  tagger_info.gap_n_bad = n_bad;
+  tagger_info.gap_energy = E_shower/units::MeV;
+  tagger_info.gap_num_valid_tracks = num_valid_tracks;
+  tagger_info.gap_flag_single_shower = flag_single_shower;
+  tagger_info.gap_filled = 1;
   
   //  std::cout << "kaka "<< sg->get_id() << " " << E_shower/units::MeV << " " << n_bad << " " << n_points << " " << " " << flag_start << " " << flag_parallel << " " << flag_single_shower << " " << num_valid_tracks << " " << flag_gap << std::endl;
   // hack 

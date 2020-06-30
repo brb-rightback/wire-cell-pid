@@ -1483,6 +1483,19 @@ int main(int argc, char* argv[])
     T_tagger->Branch("cosmic_n_indirect_showers",&tagger_info.cosmic_n_indirect_showers,"cosmic_n_indirect_showers/I");
     T_tagger->Branch("cosmic_n_main_showers",&tagger_info.cosmic_n_main_showers,"cosmic_n_main_showers/I");
     T_tagger->Branch("cosmic_filled",&tagger_info.cosmic_filled,"cosmic_filled/I");
+    // gap tagger
+    T_tagger->Branch("gap_flag",&tagger_info.gap_flag,"gap_flag/I");
+    T_tagger->Branch("gap_flag_prolong_u",&tagger_info.gap_flag_prolong_u,"gap_flag_prolong_u/I");
+    T_tagger->Branch("gap_flag_prolong_v",&tagger_info.gap_flag_prolong_v,"gap_flag_prolong_v/I");
+    T_tagger->Branch("gap_flag_prolong_w",&tagger_info.gap_flag_prolong_w,"gap_flag_prolong_w/I");
+    T_tagger->Branch("gap_flag_parallel",&tagger_info.gap_flag_parallel,"gap_flag_parallel/I");
+    T_tagger->Branch("gap_n_points",&tagger_info.gap_n_points,"gap_n_points/I");
+    T_tagger->Branch("gap_n_bad",&tagger_info.gap_n_bad,"gap_n_bad/I");
+    T_tagger->Branch("gap_gap_energy",&tagger_info.gap_energy,"gap_energy/D");
+    T_tagger->Branch("gap_energy",&tagger_info.gap_energy,"gap_energy/I");
+    T_tagger->Branch("gap_flag_single_shower",&tagger_info.gap_flag_single_shower,"gap_flag_single_shower/I");
+    T_tagger->Branch("gap_filled",&tagger_info.gap_filled,"gap_filledI");
+    
     
     for (size_t i=0;i!=neutrino_vec.size();i++){
       WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();

@@ -73,6 +73,24 @@ namespace WCPPID{
     int cosmic_n_indirect_showers;
     int cosmic_n_main_showers;
     int cosmic_filled;
+
+    // shower gap identification
+    int gap_flag;
+    int gap_flag_prolong_u;
+    int gap_flag_prolong_v;
+    int gap_flag_prolong_w;
+    int gap_flag_parallel;
+    int gap_n_points;
+    int gap_n_bad;
+    double gap_energy;
+    int gap_num_valid_tracks;
+    int gap_flag_single_shower;
+    int gap_filled;
+
+    // shower MIP identification
+
+  
+    // shower pi0 identification
     
     
   };
