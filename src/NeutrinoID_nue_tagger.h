@@ -592,7 +592,7 @@ bool WCPPID::NeutrinoID::track_overclustering(WCPPID::WCShower *shower, bool fla
 	  double dQ_dx = (*it2)->get_medium_dQ_dx()/(43e3/units::cm);
 	  if (dQ_dx > max_dQ_dx) max_dQ_dx = dQ_dx;
 	}
-	if (max_dQ_dx < 0.35) continue;
+	//	if (max_dQ_dx < 0.35) continue;
 	
 	
 	if (dir3.Angle(dir2)/3.1415926*180. < 30){
@@ -2871,7 +2871,7 @@ bool WCPPID::NeutrinoID::bad_reconstruction(WCPPID::WCShower* shower, bool flag_
       if (n_connected + n_connected1 > 4 && max_length <= 72*units::cm)
 	flag_bad_shower = false;
       // 7004_509_25493
-      if (max_length < 45*units::cm && shower->get_num_segments() > 10) flag_bad_shower = false;
+      //      if (max_length < 45*units::cm && shower->get_num_segments() > 10) flag_bad_shower = false;
     }else if (Eshower < 600*units::MeV){
       if (n_connected <= 1 && max_length > 45*units::cm){
 	flag_bad_shower = true;
