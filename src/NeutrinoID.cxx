@@ -1970,6 +1970,57 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.mip_quality_flag_proton = false;
   tagger_info.mip_quality_filled = 0;
 
+  // mip identification
+  tagger_info.mip_flag = true;
+  tagger_info.mip_n_first_non_mip_2 = 19;
+  tagger_info.mip_n_first_mip = 0;
+  tagger_info.mip_n_end_reduction = 0;
+  tagger_info.mip_n_first_non_mip_1 = 19;
+  tagger_info.mip_n_first_non_mip = 19;
+  tagger_info.mip_energy = 0;
+  tagger_info.mip_max_dQ_dx_sample = 1;
+  tagger_info.mip_vec_dQ_dx_0 = 1;
+  tagger_info.mip_vec_dQ_dx_1 = 1;
+  tagger_info.mip_n_below_threshold = 19;
+  tagger_info.mip_n_good_tracks = 0;
+  tagger_info.mip_n_vertex = 1;
+  tagger_info.mip_angle_beam = 0;
+  tagger_info.mip_flag_all_above = false;
+  tagger_info.mip_length_main = 1;
+  tagger_info.mip_length_total = 1;
+  tagger_info.mip_min_dQ_dx_5 = 1;
+  tagger_info.mip_lowest_dQ_dx = 1;
+  tagger_info.mip_iso_angle = 0;
+  tagger_info.mip_n_below_zero = 0;
+  tagger_info.mip_highest_dQ_dx = 1;
+  tagger_info.mip_n_lowest = 1;
+  tagger_info.mip_n_highest = 1;
+  tagger_info.mip_stem_length = 1;
+  tagger_info.mip_E_indirect_max_energy = 0;
+  tagger_info.mip_flag_stem_trajectory = 0;
+  tagger_info.mip_min_dis = 0;
+  tagger_info.mip_n_other_vertex = 2;
+  tagger_info.mip_n_stem_size = 20;
+  tagger_info.mip_medium_dQ_dx = 1;
+  tagger_info.mip_filled = 0;
+  
+  tagger_info.mip_vec_dQ_dx_3 = 0;
+  tagger_info.mip_vec_dQ_dx_4 = 0;
+  tagger_info.mip_vec_dQ_dx_5 = 0;
+  tagger_info.mip_vec_dQ_dx_6 = 0; 
+  tagger_info.mip_vec_dQ_dx_7 = 0; 
+  tagger_info.mip_vec_dQ_dx_8 = 0; 
+  tagger_info.mip_vec_dQ_dx_9 = 0; 
+  tagger_info.mip_vec_dQ_dx_10 = 0; 
+  tagger_info.mip_vec_dQ_dx_11 = 0; 
+  tagger_info.mip_vec_dQ_dx_12 = 0; 
+  tagger_info.mip_vec_dQ_dx_13 = 0; 
+  tagger_info.mip_vec_dQ_dx_14 = 0; 
+  tagger_info.mip_vec_dQ_dx_15 = 0; 
+  tagger_info.mip_vec_dQ_dx_16 = 0; 
+  tagger_info.mip_vec_dQ_dx_17 = 0; 
+  tagger_info.mip_vec_dQ_dx_18 = 0; 
+  tagger_info.mip_vec_dQ_dx_19 = 0; 
   
   // shower pi0 identification
 

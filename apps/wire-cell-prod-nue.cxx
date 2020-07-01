@@ -1509,6 +1509,66 @@ int main(int argc, char* argv[])
     T_tagger->Branch("mip_quality_shortest_angle",&tagger_info.mip_quality_shortest_angle,"mip_quality_shortest_angle/D");
     T_tagger->Branch("mip_quality_flag_proton",&tagger_info.mip_quality_flag_proton,"mip_quality_flag_proton/I");
     T_tagger->Branch("mip_quality_filled",&tagger_info.mip_quality_flag,"mip_quality_filled/I");
+
+    // mip
+    T_tagger->Branch("mip_flag",&tagger_info.mip_flag,"mip_flag/I");
+    T_tagger->Branch("mip_energy",&tagger_info.mip_energy,"mip_energy/D");
+    T_tagger->Branch("mip_n_end_reduction",&tagger_info.mip_n_end_reduction,"mip_n_end_reduction/I");
+    T_tagger->Branch("mip_n_first_mip",&tagger_info.mip_n_first_mip,"mip_n_first_mip/I");
+    T_tagger->Branch("mip_n_first_non_mip",&tagger_info.mip_n_first_non_mip,"mip_n_first_non_mip/I");
+    T_tagger->Branch("mip_n_first_non_mip_1",&tagger_info.mip_n_first_non_mip_1,"mip_n_first_non_mip_1/I");
+    T_tagger->Branch("mip_n_first_non_mip_2",&tagger_info.mip_n_first_non_mip_2,"mip_n_first_non_mip_2/I");
+
+    T_tagger->Branch("mip_vec_dQ_dx_0",&tagger_info.mip_vec_dQ_dx_0,"mip_vec_dQ_dx_0/D");
+    T_tagger->Branch("mip_vec_dQ_dx_1",&tagger_info.mip_vec_dQ_dx_1,"mip_vec_dQ_dx_1/D");
+    T_tagger->Branch("mip_vec_dQ_dx_2",&tagger_info.mip_vec_dQ_dx_2,"mip_vec_dQ_dx_2/D");
+    T_tagger->Branch("mip_vec_dQ_dx_3",&tagger_info.mip_vec_dQ_dx_3,"mip_vec_dQ_dx_3/D");
+    T_tagger->Branch("mip_vec_dQ_dx_4",&tagger_info.mip_vec_dQ_dx_4,"mip_vec_dQ_dx_4/D");
+    T_tagger->Branch("mip_vec_dQ_dx_5",&tagger_info.mip_vec_dQ_dx_5,"mip_vec_dQ_dx_5/D");
+    T_tagger->Branch("mip_vec_dQ_dx_6",&tagger_info.mip_vec_dQ_dx_6,"mip_vec_dQ_dx_6/D");
+    T_tagger->Branch("mip_vec_dQ_dx_7",&tagger_info.mip_vec_dQ_dx_7,"mip_vec_dQ_dx_7/D");
+    T_tagger->Branch("mip_vec_dQ_dx_8",&tagger_info.mip_vec_dQ_dx_8,"mip_vec_dQ_dx_8/D");
+    T_tagger->Branch("mip_vec_dQ_dx_9",&tagger_info.mip_vec_dQ_dx_9,"mip_vec_dQ_dx_9/D");
+    T_tagger->Branch("mip_vec_dQ_dx_10",&tagger_info.mip_vec_dQ_dx_10,"mip_vec_dQ_dx_10/D");
+    T_tagger->Branch("mip_vec_dQ_dx_11",&tagger_info.mip_vec_dQ_dx_11,"mip_vec_dQ_dx_11/D");
+    T_tagger->Branch("mip_vec_dQ_dx_12",&tagger_info.mip_vec_dQ_dx_12,"mip_vec_dQ_dx_12/D");
+    T_tagger->Branch("mip_vec_dQ_dx_13",&tagger_info.mip_vec_dQ_dx_13,"mip_vec_dQ_dx_13/D");
+    T_tagger->Branch("mip_vec_dQ_dx_14",&tagger_info.mip_vec_dQ_dx_14,"mip_vec_dQ_dx_14/D");
+    T_tagger->Branch("mip_vec_dQ_dx_15",&tagger_info.mip_vec_dQ_dx_15,"mip_vec_dQ_dx_15/D");
+    T_tagger->Branch("mip_vec_dQ_dx_16",&tagger_info.mip_vec_dQ_dx_16,"mip_vec_dQ_dx_16/D");
+    T_tagger->Branch("mip_vec_dQ_dx_17",&tagger_info.mip_vec_dQ_dx_17,"mip_vec_dQ_dx_17/D");
+    T_tagger->Branch("mip_vec_dQ_dx_18",&tagger_info.mip_vec_dQ_dx_18,"mip_vec_dQ_dx_18/D");
+    T_tagger->Branch("mip_vec_dQ_dx_19",&tagger_info.mip_vec_dQ_dx_19,"mip_vec_dQ_dx_19/D");
+
+    T_tagger->Branch("mip_max_dQ_dx_sample",&tagger_info.mip_max_dQ_dx_sample,"mip_max_dQ_dx_sample/D");
+    T_tagger->Branch("mip_n_below_threshold",&tagger_info.mip_n_below_threshold,"mip_n_below_threshold/I");
+    T_tagger->Branch("mip_n_below_zero",&tagger_info.mip_n_below_zero,"mip_n_below_zero/I");
+    T_tagger->Branch("mip_n_lowest",&tagger_info.mip_n_lowest,"mip_n_lowest/I");
+    T_tagger->Branch("mip_n_highest",&tagger_info.mip_n_highest,"mip_n_highest/I");
+
+    T_tagger->Branch("mip_lowest_dQ_dx",&tagger_info.mip_lowest_dQ_dx,"mip_lowest_dQ_dx/D");
+    T_tagger->Branch("mip_highest_dQ_dx",&tagger_info.mip_highest_dQ_dx,"mip_highest_dQ_dx/D");
+    T_tagger->Branch("mip_medium_dQ_dx",&tagger_info.mip_medium_dQ_dx,"mip_medium_dQ_dx/D");
+    T_tagger->Branch("mip_stem_length",&tagger_info.mip_stem_length,"mip_stem_length/D");
+    T_tagger->Branch("mip_length_main",&tagger_info.mip_length_main,"mip_length_main/D");
+    T_tagger->Branch("mip_length_total",&tagger_info.mip_length_total,"mip_length_total/D");
+    T_tagger->Branch("mip_angle_beam",&tagger_info.mip_angle_beam,"mip_angle_beam/D");
+    T_tagger->Branch("mip_iso_angle",&tagger_info.mip_iso_angle,"mip_iso_angle/D");
+
+    T_tagger->Branch("mip_n_vertex",&tagger_info.mip_n_vertex,"mip_n_vertex/I");
+    T_tagger->Branch("mip_n_good_tracks",&tagger_info.mip_n_good_tracks,"mip_n_good_tracks/I");
+    T_tagger->Branch("mip_E_indirect_max_energy",&tagger_info.mip_E_indirect_max_energy,"mip_E_indirect_max_energy/D");
+    T_tagger->Branch("mip_flag_all_above",&tagger_info.mip_flag_all_above,"mip_flag_all_above/I");
+    T_tagger->Branch("mip_min_dQ_dx_5",&tagger_info.mip_min_dQ_dx_5,"mip_min_dQ_dx_5/D");
+    T_tagger->Branch("mip_n_other_vertex",&tagger_info.mip_n_other_vertex,"mip_n_other_vertex/I");
+    T_tagger->Branch("mip_n_stem_size",&tagger_info.mip_n_stem_size,"mip_n_stem_size/I");
+    T_tagger->Branch("mip_flag_stem_trajectory",&tagger_info.mip_flag_stem_trajectory,"mip_flag_stem_trajectory/I");
+    T_tagger->Branch("mip_min_dis",&tagger_info.mip_min_dis,"mip_min_dis/D");
+    T_tagger->Branch("mip_filled",&tagger_info.mip_filled,"mip_filled/I");
+    
+    
+
+    
     
     for (size_t i=0;i!=neutrino_vec.size();i++){
       WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();

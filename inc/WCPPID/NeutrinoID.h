@@ -101,6 +101,60 @@ namespace WCPPID{
     double mip_quality_shortest_angle;
     int mip_quality_flag_proton;
     int mip_quality_filled;
+
+    // mip identification
+    int mip_flag;
+    double mip_energy;
+    int mip_n_end_reduction;    
+    int mip_n_first_mip;
+    int mip_n_first_non_mip;
+    int mip_n_first_non_mip_1;
+    int mip_n_first_non_mip_2;
+    double mip_vec_dQ_dx_0;
+    double mip_vec_dQ_dx_1;
+    double mip_max_dQ_dx_sample;
+    int mip_n_below_threshold;
+    int mip_n_below_zero;
+    int mip_n_lowest;
+    int mip_n_highest;
+    double mip_lowest_dQ_dx;
+    double mip_highest_dQ_dx;
+    double mip_medium_dQ_dx;
+    double mip_stem_length;
+    double mip_length_main;
+    double mip_length_total;
+    double mip_angle_beam;
+    double mip_iso_angle;
+    int mip_n_vertex;
+    int mip_n_good_tracks;
+    double mip_E_indirect_max_energy;
+    int mip_flag_all_above;
+    double mip_min_dQ_dx_5;
+    int mip_n_other_vertex; 
+    int mip_n_stem_size;
+    int mip_flag_stem_trajectory;
+    double mip_min_dis;
+    int mip_filled;
+
+    // extra
+    double mip_vec_dQ_dx_2;
+    double mip_vec_dQ_dx_3;
+    double mip_vec_dQ_dx_4;
+    double mip_vec_dQ_dx_5;
+    double mip_vec_dQ_dx_6;
+    double mip_vec_dQ_dx_7;
+    double mip_vec_dQ_dx_8;
+    double mip_vec_dQ_dx_9;
+    double mip_vec_dQ_dx_10;
+    double mip_vec_dQ_dx_11;
+    double mip_vec_dQ_dx_12;
+    double mip_vec_dQ_dx_13;
+    double mip_vec_dQ_dx_14;
+    double mip_vec_dQ_dx_15;
+    double mip_vec_dQ_dx_16;
+    double mip_vec_dQ_dx_17;
+    double mip_vec_dQ_dx_18;
+    double mip_vec_dQ_dx_19;
     
     // shower pi0 identification
     
