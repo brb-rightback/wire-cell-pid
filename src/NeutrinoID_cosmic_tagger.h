@@ -692,8 +692,9 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
       }
 
       tagger_info.cosmic_n_solid_tracks = n_solid_tracks;
-      tagger_info.cosmic_energy_main_showers = energy_main_showers;
-      tagger_info.cosmic_energy_indirect_showers = energy_indirect_showers;
+      tagger_info.cosmic_energy_main_showers = energy_main_showers/units::MeV;
+      tagger_info.cosmic_energy_direct_showers = energy_direct_showers/units::MeV;
+      tagger_info.cosmic_energy_indirect_showers = energy_indirect_showers/units::MeV;
       tagger_info.cosmic_n_direct_showers = n_direct_showers;
       tagger_info.cosmic_n_indirect_showers = n_indirect_showers;
       tagger_info.cosmic_n_main_showers = n_main_showers;

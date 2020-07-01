@@ -1478,6 +1478,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("cosmic_flag", &tagger_info.cosmic_flag, "cosmic_flag/I");
     T_tagger->Branch("cosmic_n_solid_tracks",&tagger_info.cosmic_n_solid_tracks,"cosmic_n_solid_tracks/I");
     T_tagger->Branch("cosmic_energy_main_showers",&tagger_info.cosmic_energy_main_showers,"cosmic_energy_main_showers/D");
+    T_tagger->Branch("cosmic_energy_direct_showers",&tagger_info.cosmic_energy_direct_showers,"cosmic_energy_direct_showers/D");
     T_tagger->Branch("cosmic_energy_indirect_showers",&tagger_info.cosmic_energy_indirect_showers,"cosmic_energy_indirect_showers/D");
     T_tagger->Branch("cosmic_n_direct_showers",&tagger_info.cosmic_n_direct_showers,"cosmic_n_direct_showers/I");
     T_tagger->Branch("cosmic_n_indirect_showers",&tagger_info.cosmic_n_indirect_showers,"cosmic_n_indirect_showers/I");
@@ -1491,11 +1492,23 @@ int main(int argc, char* argv[])
     T_tagger->Branch("gap_flag_parallel",&tagger_info.gap_flag_parallel,"gap_flag_parallel/I");
     T_tagger->Branch("gap_n_points",&tagger_info.gap_n_points,"gap_n_points/I");
     T_tagger->Branch("gap_n_bad",&tagger_info.gap_n_bad,"gap_n_bad/I");
-    T_tagger->Branch("gap_gap_energy",&tagger_info.gap_energy,"gap_energy/D");
-    T_tagger->Branch("gap_energy",&tagger_info.gap_energy,"gap_energy/I");
+    T_tagger->Branch("gap_energy",&tagger_info.gap_energy,"gap_energy/D");
+    T_tagger->Branch("gap_num_valid_tracks",&tagger_info.gap_num_valid_tracks,"gap_num_valid_tracks/I");
     T_tagger->Branch("gap_flag_single_shower",&tagger_info.gap_flag_single_shower,"gap_flag_single_shower/I");
-    T_tagger->Branch("gap_filled",&tagger_info.gap_filled,"gap_filledI");
-    
+    T_tagger->Branch("gap_filled",&tagger_info.gap_filled,"gap_filled/I");
+    // mip quality
+    T_tagger->Branch("mip_quality_flag",&tagger_info.mip_quality_flag,"mip_quality_flag/I");
+    T_tagger->Branch("mip_quality_energy",&tagger_info.mip_quality_energy,"mip_quality_energy/D");
+    T_tagger->Branch("mip_quality_overlap",&tagger_info.mip_quality_overlap,"mip_quality_overlap/I");
+    T_tagger->Branch("mip_quality_n_showers",&tagger_info.mip_quality_n_showers,"mip_quality_n_showers/I");
+    T_tagger->Branch("mip_quality_n_tracks",&tagger_info.mip_quality_n_tracks,"mip_quality_n_tracks/I");
+    T_tagger->Branch("mip_quality_flag_inside_pi0",&tagger_info.mip_quality_flag_inside_pi0,"mip_quality_flag_inside_pi0/I");
+    T_tagger->Branch("mip_quality_n_pi0_showers",&tagger_info.mip_quality_n_pi0_showers,"mip_quality_n_pi0_showers/I");
+    T_tagger->Branch("mip_quality_shortest_length",&tagger_info.mip_quality_shortest_length,"mip_quality_shortest_length/D");
+    T_tagger->Branch("mip_quality_acc_length",&tagger_info.mip_quality_acc_length,"mip_quality_acc_length/D");
+    T_tagger->Branch("mip_quality_shortest_angle",&tagger_info.mip_quality_shortest_angle,"mip_quality_shortest_angle/D");
+    T_tagger->Branch("mip_quality_flag_proton",&tagger_info.mip_quality_flag_proton,"mip_quality_flag_proton/I");
+    T_tagger->Branch("mip_quality_filled",&tagger_info.mip_quality_flag,"mip_quality_filled/I");
     
     for (size_t i=0;i!=neutrino_vec.size();i++){
       WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();

@@ -1936,6 +1936,7 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.cosmic_flag = true ;
   tagger_info.cosmic_n_solid_tracks = 0;
   tagger_info.cosmic_energy_main_showers = 0;
+  tagger_info.cosmic_energy_direct_showers = 0;
   tagger_info.cosmic_energy_indirect_showers = 0;
   tagger_info.cosmic_n_direct_showers = 0;
   tagger_info.cosmic_n_indirect_showers = 0;
@@ -1955,7 +1956,19 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.gap_flag_single_shower = false;
   tagger_info.gap_filled = 0;
 
-  // shower MIP identification
+  // shower MIP quality
+  tagger_info.mip_quality_flag = true;
+  tagger_info.mip_quality_energy = 0;
+  tagger_info.mip_quality_overlap = false;
+  tagger_info.mip_quality_n_showers = 0;
+  tagger_info.mip_quality_n_tracks = 0;
+  tagger_info.mip_quality_flag_inside_pi0 = false;
+  tagger_info.mip_quality_n_pi0_showers = 0;
+  tagger_info.mip_quality_shortest_length = 0;
+  tagger_info.mip_quality_acc_length = 0;
+  tagger_info.mip_quality_shortest_angle = 0;
+  tagger_info.mip_quality_flag_proton = false;
+  tagger_info.mip_quality_filled = 0;
 
   
   // shower pi0 identification

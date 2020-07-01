@@ -67,6 +67,7 @@ namespace WCPPID{
     // cosmic tagger ones, one case of cosmics ...
     int cosmic_flag;
     int cosmic_n_solid_tracks;
+    double cosmic_energy_direct_showers;
     double cosmic_energy_main_showers;
     double cosmic_energy_indirect_showers;
     int cosmic_n_direct_showers;
@@ -87,9 +88,20 @@ namespace WCPPID{
     int gap_flag_single_shower;
     int gap_filled;
 
-    // shower MIP identification
-
-  
+    // mip_quality
+    int mip_quality_flag;
+    double mip_quality_energy;
+    int mip_quality_overlap;
+    int mip_quality_n_showers;
+    int mip_quality_n_tracks;
+    int mip_quality_flag_inside_pi0;
+    int mip_quality_n_pi0_showers;
+    double mip_quality_shortest_length;
+    double mip_quality_acc_length;
+    double mip_quality_shortest_angle;
+    int mip_quality_flag_proton;
+    int mip_quality_filled;
+    
     // shower pi0 identification
     
     
@@ -369,6 +381,7 @@ namespace WCPPID{
     void examine_showers();
     void examine_shower_1();
     std::pair<bool, int> gap_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment* sg, bool flag_single_shower = false, int valid_tracks = 0, double Eshower = 0);
+    bool mip_quality(WCPPID::ProtoVertex *vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, bool flag_print = false);
     int mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, bool flag_single_shower, bool flag_strong_check = false, bool flag_print = false);
     bool pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, double threshild  = 0);
     bool bad_reconstruction(WCPPID::WCShower* shower, bool flag_print = false);
