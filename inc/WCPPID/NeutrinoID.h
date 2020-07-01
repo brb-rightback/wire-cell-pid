@@ -181,6 +181,78 @@ namespace WCPPID{
     double stem_dir_angle2;
     double stem_dir_angle3;
     double stem_dir_ratio;
+
+    int br_filled;
+    //bad reconstruction 1_1
+    int br1_1_flag;
+    int br1_1_shower_type;
+    int br1_1_vtx_n_segs;
+    double br1_1_energy;
+    int br1_1_n_segs;
+    int br1_1_flag_sg_topology;
+    int br1_1_flag_sg_trajectory;
+    double br1_1_sg_length;
+
+    // bad reconstruction 1_2
+    int br1_2_flag;
+    double br1_2_energy;
+    int br1_2_n_connected;
+    double br1_2_max_length;
+    int br1_2_n_connected_1;
+    int br1_2_vtx_n_segs;
+    int br1_2_n_shower_segs;
+    double br1_2_max_length_ratio;
+    double br1_2_shower_length;
+    
+    // bad_reconstruction 1_3
+    int br1_3_flag;
+    double br1_3_energy;
+    int br1_3_n_connected_p;
+    double br1_3_max_length_p;
+    int br1_3_n_shower_segs;
+    int br1_3_flag_sg_topology;
+    int br1_3_flag_sg_trajectory;
+    int br1_3_n_shower_main_segs;
+    double br1_3_sg_length;
+
+
+    // bad reconstruction 2
+    int br2_flag;
+    int br2_flag_single_shower;
+    int br2_num_valid_tracks;
+    double br2_energy;
+    double br2_angle1;
+    double br2_angle2;
+    double br2_angle;
+    double br2_angle3;
+    int br2_n_shower_main_segs;
+    double br2_max_angle;
+    double br2_sg_length;
+    int br2_flag_sg_trajectory;
+
+    // low-energy overlap ...
+    int lol_flag;
+    double lol_energy;
+    int lol_vtx_n_segs;
+    int lol_nseg;
+    std::vector<double> lol_1_v_angle;
+    std::vector<int> lol_1_v_flag;
+    double lol_shower_main_length;
+    std::vector<double> lol_2_v_length;
+    std::vector<double> lol_2_v_angle;
+    std::vector<int> lol_2_v_type;
+    std::vector<int> lol_2_v_flag;
+    double lol_beam_angle;
+    int lol_n_valid_tracks;
+    double lol_min_angle;
+    std::vector<int> lol_3_v_flag;
+    std::vector<int> lol_4_v_flag_dir_weak;
+    std::vector<double> lol_4_v_length;
+    std::vector<double> lol_4_v_angle;
+    std::vector<int> lol_4_v_flag;
+    int lol_n_sum;
+    int lol_n_out;
+    std::vector<int> lol_5_v_flag;
   };
 
   
@@ -460,18 +532,19 @@ namespace WCPPID{
     bool mip_quality(WCPPID::ProtoVertex *vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, bool flag_print = false);
     int mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, bool flag_single_shower, bool flag_strong_check = false, bool flag_print = false);
     bool pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, double threshild  = 0);
-    bool bad_reconstruction(WCPPID::WCShower* shower, bool flag_print = false);
+    bool stem_direction(WCPPID::WCShower *shower, double energy, bool flag_print = false);
+    bool bad_reconstruction(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
+    bool bad_reconstruction_1(WCPPID::WCShower* shower, bool flag_single_shower, int num_valid_tracks, bool flag_fill = false);
+    bool low_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill =false);
     
-    bool bad_reconstruction_1(WCPPID::WCShower* shower, bool flag_single_shower, int num_valid_tracks);
     
     bool bad_reconstruction_2(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower, bool flag_print = false);
-
     // main shower stem separated from the other parts
     bool bad_reconstruction_3(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower, bool flag_print = false);
-    bool stem_direction(WCPPID::WCShower *shower, double energy, bool flag_print = false);
+
     bool stem_length(WCPPID::WCShower *shower, double energy, bool flag_print = false);
     bool compare_muon_energy(WCPPID::WCShower *shower, double energy, double muon_length, bool flag_print = false);
-    bool low_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false);
+    
     bool high_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false);
 
     bool single_shower_pio_tagger(WCPPID::WCShower* shower, bool flag_print = false);

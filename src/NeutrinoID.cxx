@@ -2044,4 +2044,51 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.stem_dir_angle2 = 0;
   tagger_info.stem_dir_angle3 = 0;
   tagger_info.stem_dir_ratio = 1;
+
+  // bad reconstruction
+  tagger_info.br_filled = 0;
+
+  // br1_1
+  tagger_info.br1_1_flag = true;
+  tagger_info.br1_1_shower_type = 0;
+  tagger_info.br1_1_vtx_n_segs = 0;
+  tagger_info.br1_1_energy = 0;
+  tagger_info.br1_1_n_segs = 0;
+  tagger_info.br1_1_flag_sg_topology = 0;
+  tagger_info.br1_1_flag_sg_trajectory = 0;
+  tagger_info.br1_1_sg_length = 0;
+
+  //br1_2
+  tagger_info.br1_2_flag = true;
+  tagger_info.br1_2_energy = 0;
+  tagger_info.br1_2_n_connected = 0;
+  tagger_info.br1_2_max_length = 0;
+  tagger_info.br1_2_n_connected_1 = 0;
+  tagger_info.br1_2_vtx_n_segs = 0;
+  tagger_info.br1_2_n_shower_segs = 0;
+  tagger_info.br1_2_max_length_ratio = 1;
+  tagger_info.br1_2_shower_length = 0;
+
+  //br1_3
+  tagger_info.br1_3_flag = true;
+  tagger_info.br1_3_energy = 0;
+  tagger_info.br1_3_n_connected_p = 0;
+  tagger_info.br1_3_max_length_p = 0;
+  tagger_info.br1_3_n_shower_segs = 0;
+  tagger_info.br1_3_flag_sg_topology = 0;
+  tagger_info.br1_3_flag_sg_trajectory = 0;
+  tagger_info.br1_3_n_shower_main_segs = 0;
+  tagger_info.br1_3_sg_length = 0;
+
+  // low-energy overlap
+  tagger_info.lol_flag = true;
+  tagger_info.lol_energy = 0;
+  tagger_info.lol_vtx_n_segs = 0;
+  tagger_info.lol_nseg = 0;
+  tagger_info.lol_shower_main_length = 0;
+  tagger_info.lol_beam_angle = 0;
+  tagger_info.lol_n_valid_tracks = 0;
+  tagger_info.lol_min_angle = 0;
+  tagger_info.lol_n_sum = 0;
+  tagger_info.lol_n_out = 0;
 }
