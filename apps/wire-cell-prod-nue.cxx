@@ -1566,9 +1566,29 @@ int main(int argc, char* argv[])
     T_tagger->Branch("mip_min_dis",&tagger_info.mip_min_dis,"mip_min_dis/D");
     T_tagger->Branch("mip_filled",&tagger_info.mip_filled,"mip_filled/I");
     
-    
+    T_tagger->Branch("pio_flag",&tagger_info.pio_flag,"pio_flag/I");
+    T_tagger->Branch("pio_mip_id",&tagger_info.pio_mip_id,"pio_mip_id/I");
+    T_tagger->Branch("pio_filled",&tagger_info.pio_filled,"pio_filled/I");
+    T_tagger->Branch("pio_flag_pio",&tagger_info.pio_flag_pio,"pio_flag_pio/I");
+    T_tagger->Branch("pio_mass",&tagger_info.pio_mass,"pio_mass/D");
+    T_tagger->Branch("pio_pio_type",&tagger_info.pio_pio_type,"pio_pio_type/I");
+    T_tagger->Branch("pio_energy_1",&tagger_info.pio_energy_1,"pio_energy_1/D");
+    T_tagger->Branch("pio_energy_2",&tagger_info.pio_energy_2,"pio_energy_2/D");
+    T_tagger->Branch("pio_dis_1",&tagger_info.pio_dis_1,"pio_dis_1/D");
+    T_tagger->Branch("pio_dis_2",&tagger_info.pio_dis_2,"pio_dis_2/D");
+    T_tagger->Branch("pio_v_dis2",&tagger_info.pio_v_dis2);
+    T_tagger->Branch("pio_v_angle2",&tagger_info.pio_v_angle2);
+    T_tagger->Branch("pio_v_acc_length",&tagger_info.pio_v_acc_length);
 
-    
+    T_tagger->Branch("stem_dir_flag",&tagger_info.stem_dir_flag,"stem_dir_flag/I");
+    T_tagger->Branch("stem_dir_flag_single_shower",&tagger_info.stem_dir_flag_single_shower,"stem_dir_flag_single_shower/I");
+    T_tagger->Branch("stem_dir_filled",&tagger_info.stem_dir_filled,"stem_dir_filled/I");
+    T_tagger->Branch("stem_dir_angle",&tagger_info.stem_dir_angle,"stem_dir_angle/D");
+    T_tagger->Branch("stem_dir_energy",&tagger_info.stem_dir_energy,"stem_dir_energy/D");
+    T_tagger->Branch("stem_dir_angle1",&tagger_info.stem_dir_angle1,"stem_dir_angle1/D");
+    T_tagger->Branch("stem_dir_angle2",&tagger_info.stem_dir_angle2,"stem_dir_angle2/D");
+    T_tagger->Branch("stem_dir_angle3",&tagger_info.stem_dir_angle3,"stem_dir_angle3/D");
+    T_tagger->Branch("stem_dir_ratio",&tagger_info.stem_dir_ratio,"stem_dir_ratio/D");
     
     for (size_t i=0;i!=neutrino_vec.size();i++){
       WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();

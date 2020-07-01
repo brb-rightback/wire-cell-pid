@@ -64,6 +64,13 @@ bool WCPPID::NeutrinoID::stem_direction(WCPPID::WCShower *max_shower, double max
     }
   }
 
+  tagger_info.stem_dir_angle = angle;
+  tagger_info.stem_dir_energy = max_energy;
+  tagger_info.stem_dir_angle1 = angle1;
+  tagger_info.stem_dir_angle2 = angle2;
+  tagger_info.stem_dir_angle3 = angle3;
+  tagger_info.stem_dir_ratio = ratio;
+  
   return flag_bad;
 }
 

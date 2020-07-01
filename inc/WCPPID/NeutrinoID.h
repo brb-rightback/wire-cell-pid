@@ -157,8 +157,30 @@ namespace WCPPID{
     double mip_vec_dQ_dx_19;
     
     // shower pi0 identification
-    
-    
+    int pio_flag;
+    int pio_mip_id;
+    int pio_filled;
+    int pio_flag_pio;
+    double pio_mass;
+    int pio_pio_type;
+    double pio_energy_1;
+    double pio_energy_2;
+    double pio_dis_1;
+    double pio_dis_2;
+    std::vector<double> pio_v_dis2;
+    std::vector<double> pio_v_angle2;
+    std::vector<double> pio_v_acc_length;
+
+    // stem direction
+    int stem_dir_flag;
+    int stem_dir_flag_single_shower;
+    int stem_dir_filled;
+    double stem_dir_angle;
+    double stem_dir_energy;
+    double stem_dir_angle1;
+    double stem_dir_angle2;
+    double stem_dir_angle3;
+    double stem_dir_ratio;
   };
 
   

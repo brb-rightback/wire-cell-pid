@@ -107,27 +107,40 @@ bool WCPPID::NeutrinoID::nue_tagger(double muon_length){
 	    if (mip_quality(main_vertex, sg, max_shower)) flag_nue = false;
 	    
 	    if (flag_print) std::cout << "Qian_B: " << max_energy/units::MeV << " " << flag_single_shower << " " << mip_id << std::endl;
+
 	    if (mip_id == -1){
 	      flag_nue = false;
-	    } else if (mip_id == 0){
-	      if (!pi0_identification(main_vertex, sg, max_shower)){ // pi0 identification ...
-	      }else{
-		flag_nue = false;
-		std::cout << "Qian_D: pi0 found " << max_energy/units::MeV << std::endl;
-	      }
 	    }
+	    // pi0 identification ...
+	    bool flag_pi0 = pi0_identification(main_vertex, sg, max_shower);
+
+	    tagger_info.pio_flag = (!flag_pi0);
+	    tagger_info.pio_mip_id = mip_id;
+	    tagger_info.pio_filled = 1;
+	    
+	    if (flag_pi0 && mip_id==0){
+	      flag_nue = false;
+	      std::cout << "Qian_D: pi0 found " << max_energy/units::MeV << std::endl;
+	    }
+	    
 	  }else{ // gap id
 	    flag_nue = false;
 	    if (flag_print) std::cout << "Qian_C: gap founded " << max_energy/units::MeV << " " << pair_result.second << std::endl; 
 	  }
 	}
 
+	bool flag_stem_direction = stem_direction(max_shower, max_energy, flag_print_detail);
+	tagger_info.stem_dir_flag = (!flag_stem_direction);
+	tagger_info.stem_dir_flag_single_shower = flag_single_shower;
+	tagger_info.stem_dir_filled = 1;
+	
 	// bad reconstruction
-	if (flag_nue && flag_single_shower && stem_direction(max_shower, max_energy, flag_print_detail)){ // single shower ...
+	if (flag_single_shower && flag_stem_direction){ // single shower ...
 	  flag_nue = false;
 	  if (flag_print) std::cout << "QXin_B: " << max_energy << std::endl;
 	} // single shower ...
 
+	
 	if (flag_nue){
 	  
 	  bool flag1 = bad_reconstruction(max_shower) ;	// bad reconstruction (mis ided track as shower)
@@ -2322,19 +2335,33 @@ bool WCPPID::NeutrinoID::pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID:
 
   
   auto it = map_shower_pio_id.find(shower);
+
+  tagger_info.pio_flag_pio = (it != map_shower_pio_id.end());
   if (it != map_shower_pio_id.end()){
     std::vector<WCShower*> tmp_pi0_showers = map_pio_id_showers[it->second];
     auto mass_pair = map_pio_id_mass[it->second];
 
-    if (fabs(mass_pair.first - 135*units::MeV)<35*units::MeV && mass_pair.second == 1 || fabs(mass_pair.first - 135*units::MeV) < 60 * units::MeV && mass_pair.second == 2){
-      double Eshower_1 = tmp_pi0_showers.front()->get_kine_charge();
-      double Eshower_2 = tmp_pi0_showers.back()->get_kine_charge();
-      //      std::cout << tmp_pi0_showers.size() << " " << mass_pair.first << " " << mass_pair.second << " " << Eshower_1/units::MeV << " " << Eshower_2/units::MeV << std::endl;
-      double dis1 = sqrt(pow(tmp_pi0_showers.front()->get_start_point().x - vertex_point.x,2) + pow(tmp_pi0_showers.front()->get_start_point().y - vertex_point.y,2) + pow(tmp_pi0_showers.front()->get_start_point().z - vertex_point.z,2));
-      double dis2 = sqrt(pow(tmp_pi0_showers.back()->get_start_point().x - vertex_point.x,2) + pow(tmp_pi0_showers.back()->get_start_point().y - vertex_point.y,2) + pow(tmp_pi0_showers.back()->get_start_point().z - vertex_point.z,2));
 
-      //std::cout << Eshower_1 << " " << Eshower_2 << " " << dis1/units::cm << " " << dis2/units::cm << " " << vertex_point << std::endl;
+
+    double Eshower_1 = tmp_pi0_showers.front()->get_kine_charge();
+    double Eshower_2 = tmp_pi0_showers.back()->get_kine_charge();
+    //      std::cout << tmp_pi0_showers.size() << " " << mass_pair.first << " " << mass_pair.second << " " << Eshower_1/units::MeV << " " << Eshower_2/units::MeV << std::endl;
+    double dis1 = sqrt(pow(tmp_pi0_showers.front()->get_start_point().x - vertex_point.x,2) + pow(tmp_pi0_showers.front()->get_start_point().y - vertex_point.y,2) + pow(tmp_pi0_showers.front()->get_start_point().z - vertex_point.z,2));
+    double dis2 = sqrt(pow(tmp_pi0_showers.back()->get_start_point().x - vertex_point.x,2) + pow(tmp_pi0_showers.back()->get_start_point().y - vertex_point.y,2) + pow(tmp_pi0_showers.back()->get_start_point().z - vertex_point.z,2));
+
+
+    tagger_info.pio_mass = mass_pair.first/units::MeV;
+    tagger_info.pio_pio_type = mass_pair.second;
+    tagger_info.pio_energy_1 = Eshower_1/units::MeV;
+    tagger_info.pio_energy_2 = Eshower_2/units::MeV;
+    tagger_info.pio_dis_1 = dis1/units::cm;
+    tagger_info.pio_dis_2 = dis2/units::cm;
+
+    
+    if (fabs(mass_pair.first - 135*units::MeV)<35*units::MeV && mass_pair.second == 1 || fabs(mass_pair.first - 135*units::MeV) < 60 * units::MeV && mass_pair.second == 2){
       
+      //std::cout << Eshower_1 << " " << Eshower_2 << " " << dis1/units::cm << " " << dis2/units::cm << " " << vertex_point << std::endl;
+          
       if (std::min(Eshower_1, Eshower_2) > 15*units::MeV && fabs(Eshower_1 - Eshower_2)/(Eshower_1 + Eshower_2) < 0.87)	flag_pi0 = true;
       // 6058_43_2166, 7017_364_18210
       if (std::min(Eshower_1, Eshower_2) > std::max(10*units::MeV, threshold) && std::max(Eshower_1, Eshower_2) < 400*units::MeV) flag_pi0 = true;
@@ -2345,6 +2372,7 @@ bool WCPPID::NeutrinoID::pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID:
 
     }
   }else{
+
     TVector3 dir1 = sg->cal_dir_3vector(vertex->get_fit_pt(), 12*units::cm);
     if (dir1.Mag() >0){
       for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){
@@ -2361,6 +2389,13 @@ bool WCPPID::NeutrinoID::pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID:
 	
 	TVector3 dir2(vtx1->get_fit_pt().x - vertex->get_fit_pt().x,vtx1->get_fit_pt().y - vertex->get_fit_pt().y, vtx1->get_fit_pt().z - vertex->get_fit_pt().z);
 	if (dir2.Mag()>0){
+
+	  if (180 - dir1.Angle(dir2)/3.1415926*180. < 45 && acc_length > 0){
+	    tagger_info.pio_v_dis2.push_back(dir2.Mag()/units::cm);
+	    tagger_info.pio_v_angle2.push_back(180 - dir1.Angle(dir2)/3.1415926*180.);
+	    tagger_info.pio_v_acc_length.push_back(acc_length/units::cm);
+	  }
+	  
 	  if (dir2.Mag() < 36*units::cm && 180 - dir1.Angle(dir2)/3.1415926*180. < 7.5 && acc_length > 0) {
 	    
 	    flag_pi0 = true;

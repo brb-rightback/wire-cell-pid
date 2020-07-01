@@ -2023,6 +2023,25 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.mip_vec_dQ_dx_19 = 0; 
   
   // shower pi0 identification
+  tagger_info.pio_flag = true;
+  tagger_info.pio_mip_id = 0;
+  tagger_info.pio_filled = 0;
+  tagger_info.pio_flag_pio = 0;
+  tagger_info.pio_mass = 0;
+  tagger_info.pio_pio_type = 0;
+  tagger_info.pio_energy_1 = 0;
+  tagger_info.pio_energy_2 = 0;
+  tagger_info.pio_dis_1 = 0;
+  tagger_info.pio_dis_2 = 0;
 
-  
+  // stem direction
+  tagger_info.stem_dir_flag = true;
+  tagger_info.stem_dir_flag_single_shower = 0;
+  tagger_info.stem_dir_filled = 0;
+  tagger_info.stem_dir_angle = 0;
+  tagger_info.stem_dir_energy = 0;
+  tagger_info.stem_dir_angle1 = 0;
+  tagger_info.stem_dir_angle2 = 0;
+  tagger_info.stem_dir_angle3 = 0;
+  tagger_info.stem_dir_ratio = 1;
 }
