@@ -253,6 +253,74 @@ namespace WCPPID{
     int lol_n_sum;
     int lol_n_out;
     std::vector<int> lol_5_v_flag;
+
+    //bad reconstruction 3
+    double br3_1_energy;
+    int br3_1_n_shower_segments;
+    int br3_1_sg_flag_trajectory;
+    double br3_1_sg_direct_length;
+    double br3_1_sg_length;
+    double br3_1_total_main_length;
+    double br3_1_total_length;
+    double br3_1_iso_angle;
+    int br3_1_sg_flag_topology;
+    int br3_1_flag;
+
+    int br3_2_n_ele;
+    int br3_2_n_other;
+    double br3_2_energy;
+    double br3_2_total_main_length;
+    double br3_2_total_length;
+    int br3_2_other_fid;
+    int br3_2_flag;
+
+    std::vector<double> br3_3_v_energy;
+    std::vector<double> br3_3_v_angle;
+    std::vector<double> br3_3_v_dir_length;
+    std::vector<double> br3_3_v_length;
+    std::vector<int> br3_3_v_flag;
+
+    double br3_4_acc_length;
+    double br3_4_total_length;
+    double br3_4_energy;
+    int br3_4_flag;
+
+    std::vector<double> br3_5_dir_length;
+    std::vector<double> br3_5_total_length;
+    std::vector<int> br3_5_flag_avoid_muon_check;
+    std::vector<int> br3_5_n_seg;
+    std::vector<double> br3_5_angle;
+    std::vector<double> br3_5_sg_length;
+    std::vector<double> br3_5_energy;
+    std::vector<int> br3_5_n_main_segs;
+    std::vector<int> br3_5_n_segs;
+    std::vector<double> br3_5_shower_main_length;
+    std::vector<double> br3_5_shower_total_length;
+    std::vector<int> br3_5_flag;
+
+    std::vector<double> br3_6_angle;
+    std::vector<double> br3_6_angle1;
+    std::vector<int> br3_6_flag_shower_trajectory;
+    std::vector<double> br3_6_direct_length;
+    std::vector<double> br3_6_length;
+    std::vector<int> br3_6_n_other_vtx_segs;
+    std::vector<double> br3_6_energy;
+    std::vector<int> br3_6_flag;
+
+    double br3_7_energy;
+    double br3_7_min_angle;
+    double br3_7_sg_length;
+    double br3_7_shower_main_length;
+    int br3_7_flag;
+
+    double br3_8_max_dQ_dx;
+    double br3_8_energy;
+    int br3_8_n_main_segs;
+    double br3_8_shower_main_length;
+    double br3_8_shower_length;
+    int br3_8_flag;
+    
+    int br3_flag;
   };
 
   
@@ -537,10 +605,9 @@ namespace WCPPID{
     bool bad_reconstruction_1(WCPPID::WCShower* shower, bool flag_single_shower, int num_valid_tracks, bool flag_fill = false);
     bool low_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill =false);
     
-    
-    bool bad_reconstruction_2(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower, bool flag_print = false);
+    bool bad_reconstruction_2(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
     // main shower stem separated from the other parts
-    bool bad_reconstruction_3(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower, bool flag_print = false);
+    bool bad_reconstruction_3(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
 
     bool stem_length(WCPPID::WCShower *shower, double energy, bool flag_print = false);
     bool compare_muon_energy(WCPPID::WCShower *shower, double energy, double muon_length, bool flag_print = false);

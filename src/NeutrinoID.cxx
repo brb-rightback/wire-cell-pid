@@ -2091,4 +2091,46 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.lol_min_angle = 0;
   tagger_info.lol_n_sum = 0;
   tagger_info.lol_n_out = 0;
+
+
+  // br3
+  tagger_info.br3_1_energy = 0;
+  tagger_info.br3_1_n_shower_segments = 0;
+  tagger_info.br3_1_sg_flag_trajectory = 0;
+  tagger_info.br3_1_sg_direct_length = 0;
+  tagger_info.br3_1_sg_length = 0;
+  tagger_info.br3_1_total_main_length = 0;
+  tagger_info.br3_1_total_length = 0;
+  tagger_info.br3_1_iso_angle = 0;
+  tagger_info.br3_1_sg_flag_topology = 0;
+  tagger_info.br3_1_flag = true;
+  
+  tagger_info.br3_2_n_ele = 0;
+  tagger_info.br3_2_n_other = 0;
+  tagger_info.br3_2_energy = 0;
+  tagger_info.br3_2_total_main_length = 0;
+  tagger_info.br3_2_total_length = 0;
+  tagger_info.br3_2_other_fid = 0;
+  tagger_info.br3_2_flag = true;
+  
+  tagger_info.br3_4_acc_length = 0;
+  tagger_info.br3_4_total_length = 0;
+  tagger_info.br3_4_energy = 0;
+  tagger_info.br3_4_flag = true;
+  
+  tagger_info.br3_7_energy = 0;
+  tagger_info.br3_7_min_angle = 0;
+  tagger_info.br3_7_sg_length = 0;
+  tagger_info.br3_7_shower_main_length = 0;
+  tagger_info.br3_7_flag = true;
+  
+  tagger_info.br3_8_max_dQ_dx = 0;
+  tagger_info.br3_8_energy = 0;
+  tagger_info.br3_8_n_main_segs = 0;
+  tagger_info.br3_8_shower_main_length = 0;
+  tagger_info.br3_8_shower_length = 0;
+  tagger_info.br3_8_flag = true;
+  
+  tagger_info.br3_flag = true;
+  
 }

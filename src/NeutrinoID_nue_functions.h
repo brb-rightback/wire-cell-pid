@@ -327,8 +327,8 @@ bool WCPPID::NeutrinoID::other_showers(WCPPID::WCShower *shower, bool flag_singl
       if (Eshower < 800*units::MeV && E_indirect_total_energy > Eshower *0.6 && E_indirect_max_energy > 0.5 * Eshower) flag_bad = true;
     }    
   }
-  //  if (flag_print && flag_bad)
-  std::cout << "Xin_N0: " << Eshower << " " << n_direct_showers << " " << E_direct_max_energy << " " << flag_direct_max_pi0 << " " << E_direct_total_energy << " " << n_indirect_showers << " " << E_indirect_max_energy << " " << flag_indirect_max_pi0 << " " << E_indirect_total_energy << std::endl; 
+  if (flag_print && flag_bad)
+    std::cout << "Xin_N0: " << Eshower << " " << n_direct_showers << " " << E_direct_max_energy << " " << flag_direct_max_pi0 << " " << E_direct_total_energy << " " << n_indirect_showers << " " << E_indirect_max_energy << " " << flag_indirect_max_pi0 << " " << E_indirect_total_energy << std::endl; 
   
   return flag_bad;
 }
@@ -488,7 +488,7 @@ bool WCPPID::NeutrinoID::vertex_inside_shower(WCPPID::WCShower *shower, bool fla
       if (map_vertex_segments[vertex].size()==3 && (min_angle < 5 && min_medium_dQ_dx < 2.1 )&& min_length < 10*units::cm && max_angle > 90 && max_weak_track ==1) flag_bad = true;
       if (map_vertex_segments[vertex].size()==3 && min_angle < 35 && min_angle1 < 10 && fabs(3.1415926/2. - drift_dir.Angle(dir_shower))/3.1415926*180. < 10 && (fabs(3.1415926/2. - drift_dir.Angle(dir_shower))/3.1415926*180. + min_angle1) < 15 && (min_medium_dQ_dx < 2.1 )&& min_weak_track == 1 && max_angle > 120) flag_bad = true;
       
-      //if (flag_print && flag_bad)
+      if (flag_print && flag_bad)
 	std::cout << "Xin_O_1: " << Eshower << " " <<  map_vertex_segments[vertex].size() << " " << max_angle << " " << max_angle1 << " " << max_weak_track << " " << max_length/units::cm << " " << max_medium_dQ_dx << " " << min_angle << " " << min_angle1 << " " << min_weak_track << " " << min_length/units::cm << " " << min_medium_dQ_dx << " " << fabs(3.1415926/2. - drift_dir.Angle(dir_shower))/3.1415926*180. << " " << beam_dir.Angle(dir_shower)/3.1415926*180. << std::endl;
     }
   }

@@ -704,6 +704,8 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	flag_cosmic = false;
 	//	std::cout << "kaka: " << n_solid_tracks << " " <<  n_direct_showers << " " << energy_direct_showers << " " << n_main_showers  << " " <<  energy_main_showers << " " << n_indirect_showers << " " <<  energy_indirect_showers  << " " << tagger_info.cosmic_filled << std::endl;
 	tagger_info.cosmic_flag = true;
+      }else{
+	tagger_info.cosmic_flag = false;
       }
     }
     
