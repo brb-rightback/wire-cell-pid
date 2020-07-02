@@ -321,6 +321,49 @@ namespace WCPPID{
     int br3_8_flag;
     
     int br3_flag;
+
+
+    // BR 4
+    double br4_1_shower_main_length;
+    double br4_1_shower_total_length;
+    double br4_1_min_dis;
+    double br4_1_energy;
+    int br4_1_flag_avoid_muon_check;
+    int br4_1_n_vtx_segs;
+    int br4_1_n_main_segs;
+    int br4_1_flag;
+
+    double br4_2_ratio_45;
+    double br4_2_ratio_35;
+    double br4_2_ratio_25;
+    double br4_2_ratio_15;
+    double br4_2_energy;
+    double br4_2_ratio1_45;
+    double br4_2_ratio1_35;
+    double br4_2_ratio1_25;
+    double br4_2_ratio1_15;
+    double br4_2_iso_angle;
+    double br4_2_iso_angle1;
+    double br4_2_angle;
+    int br4_2_flag;
+
+    int br4_flag;
+
+    int hol_1_n_valid_tracks;
+    double hol_1_min_angle;
+    double hol_1_energy;
+    int hol_1_flag_all_shower;
+    double hol_1_min_length;
+    int hol_1_flag;
+
+    double hol_2_min_angle;
+    double hol_2_medium_dQ_dx;
+    int hol_2_ncount;
+    double hol_2_energy;
+    int hol_2_flag;
+
+    int hol_flag;
+    
   };
 
   
@@ -612,7 +655,7 @@ namespace WCPPID{
     bool stem_length(WCPPID::WCShower *shower, double energy, bool flag_print = false);
     bool compare_muon_energy(WCPPID::WCShower *shower, double energy, double muon_length, bool flag_print = false);
     
-    bool high_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false);
+    bool high_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
 
     bool single_shower_pio_tagger(WCPPID::WCShower* shower, bool flag_print = false);
     bool shower_to_wall(WCPPID::WCShower* shower, double shower_energy, bool flag_single_shower, bool flag_print = false);

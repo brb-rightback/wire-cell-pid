@@ -1725,6 +1725,49 @@ int main(int argc, char* argv[])
     T_tagger->Branch("br3_8_flag",&tagger_info.br3_8_flag,"br3_8_flag/I");
 
     T_tagger->Branch("br3_flag",&tagger_info.br3_flag,"br3_flag/I");
+
+
+    T_tagger->Branch("br4_1_shower_main_length", &tagger_info.br4_1_shower_main_length, "br4_1_shower_main_length/D");
+    T_tagger->Branch("br4_1_shower_total_length", &tagger_info.br4_1_shower_total_length, "br4_1_shower_total_length/D");
+    T_tagger->Branch("br4_1_min_dis", &tagger_info.br4_1_min_dis, "br4_1_min_dis/D");
+    T_tagger->Branch("br4_1_energy", &tagger_info.br4_1_energy, "br4_1_energy/D");
+    T_tagger->Branch("br4_1_flag_avoid_muon_check", &tagger_info.br4_1_flag_avoid_muon_check, "br4_1_flag_avoid_muon_check/I");
+    T_tagger->Branch("br4_1_n_vtx_segs", &tagger_info.br4_1_n_vtx_segs, "br4_1_n_vtx_segs/I");
+    T_tagger->Branch("br4_1_br4_1_n_main_segs", &tagger_info.br4_1_n_main_segs, "br4_1_n_main_segs/I");
+    T_tagger->Branch("br4_1_flag", &tagger_info.br4_1_flag, "br4_1_flag/I");
+
+    T_tagger->Branch("br4_2_ratio_45", &tagger_info.br4_2_ratio_45, "br4_2_ratio_45/D");
+    T_tagger->Branch("br4_2_ratio_35", &tagger_info.br4_2_ratio_35, "br4_2_ratio_35/D");
+    T_tagger->Branch("br4_2_ratio_25", &tagger_info.br4_2_ratio_25, "br4_2_ratio_25/D");
+    T_tagger->Branch("br4_2_ratio_15", &tagger_info.br4_2_ratio_15, "br4_2_ratio_15/D");
+    T_tagger->Branch("br4_2_energy",   &tagger_info.br4_2_energy, "br4_2_energy/D");
+    T_tagger->Branch("br4_2_ratio_45", &tagger_info.br4_2_ratio1_45, "br4_2_ratio1_45/D");
+    T_tagger->Branch("br4_2_ratio_35", &tagger_info.br4_2_ratio1_35, "br4_2_ratio1_35/D");
+    T_tagger->Branch("br4_2_ratio_25", &tagger_info.br4_2_ratio1_25, "br4_2_ratio1_25/D");
+    T_tagger->Branch("br4_2_ratio_15", &tagger_info.br4_2_ratio1_15, "br4_2_ratio1_15/D");
+    T_tagger->Branch("br4_2_iso_angle", &tagger_info.br4_2_iso_angle, "br4_2_iso_angle/D");
+    T_tagger->Branch("br4_2_iso_angle1", &tagger_info.br4_2_iso_angle1, "br4_2_iso_angle1/D");
+    T_tagger->Branch("br4_2_angle", &tagger_info.br4_2_angle, "br4_2_angle/D");
+    T_tagger->Branch("br4_2_flag", &tagger_info.br4_2_flag, "br4_2_flag/I");
+
+    T_tagger->Branch("br4_flag", &tagger_info.br4_flag, "br4_flag/I");
+    
+
+    T_tagger->Branch("hol_1_n_valid_tracks", &tagger_info.hol_1_n_valid_tracks,"hol_1_n_valid_tracks/I");
+    T_tagger->Branch("hol_1_min_angle", &tagger_info.hol_1_min_angle,"hol_1_min_angle/D");
+    T_tagger->Branch("hol_1_energy", &tagger_info.hol_1_energy,"hol_1_energy/D");
+    T_tagger->Branch("hol_1_all_shower", &tagger_info.hol_1_flag_all_shower,"hol_1_flag_all_shower/I");
+    T_tagger->Branch("hol_1_min_length", &tagger_info.hol_1_min_length,"hol_1_min_length/D");
+    T_tagger->Branch("hol_1_flag", &tagger_info.hol_1_flag,"hol_1_flag/I");
+
+    T_tagger->Branch("hol_2_min_angle", &tagger_info.hol_2_min_angle,"hol_2_min_angle/D");
+    T_tagger->Branch("hol_2_medium_dQ_dx", &tagger_info.hol_2_medium_dQ_dx,"hol_2_medium_dQ_dx/D");
+    T_tagger->Branch("hol_2_ncount", &tagger_info.hol_2_ncount,"hol_2_ncount/I");
+    T_tagger->Branch("hol_2_energy", &tagger_info.hol_2_energy,"hol_2_energy/D");
+    T_tagger->Branch("hol_2_flag", &tagger_info.hol_2_flag,"hol_2_flag/I");
+
+    T_tagger->Branch("hol_flag", &tagger_info.hol_flag,"hol_flag/I");
+    
     
     for (size_t i=0;i!=neutrino_vec.size();i++){
       WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();

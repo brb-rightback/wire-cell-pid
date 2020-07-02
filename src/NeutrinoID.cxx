@@ -2132,5 +2132,47 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.br3_8_flag = true;
   
   tagger_info.br3_flag = true;
+
+
+  tagger_info.br4_1_shower_main_length = 0;
+  tagger_info.br4_1_shower_total_length = 0;
+  tagger_info.br4_1_min_dis = 0;
+  tagger_info.br4_1_energy = 0;
+  tagger_info.br4_1_flag_avoid_muon_check = 0;
+  tagger_info.br4_1_n_vtx_segs = 0;
+  tagger_info.br4_1_n_main_segs = 0;
+  tagger_info.br4_1_flag = true;
+  
+  tagger_info.br4_2_ratio_45 = 1;
+  tagger_info.br4_2_ratio_35 = 1;
+  tagger_info.br4_2_ratio_25 = 1;
+  tagger_info.br4_2_ratio_15 = 1;
+  tagger_info.br4_2_energy = 0;
+  tagger_info.br4_2_ratio1_45 = 1;
+  tagger_info.br4_2_ratio1_35 = 1;
+  tagger_info.br4_2_ratio1_25 = 1;
+  tagger_info.br4_2_ratio1_15 = 1;
+  tagger_info.br4_2_iso_angle = 0;
+  tagger_info.br4_2_iso_angle1 = 0;
+  tagger_info.br4_2_angle = 0;
+  tagger_info.br4_2_flag = true;
+  
+  tagger_info.br4_flag = true;
+
+
+  tagger_info.hol_1_n_valid_tracks = 0;
+  tagger_info.hol_1_min_angle = 0;
+  tagger_info.hol_1_energy = 0;
+  tagger_info.hol_1_flag_all_shower = 0;
+  tagger_info.hol_1_min_length = 0;
+  tagger_info.hol_1_flag = true;
+  
+  tagger_info.hol_2_min_angle = 0;
+  tagger_info.hol_2_medium_dQ_dx = 1;
+  tagger_info.hol_2_ncount = 0;
+  tagger_info.hol_2_energy = 0;
+  tagger_info.hol_2_flag = true;
+  
+  tagger_info.hol_flag = true;
   
 }
