@@ -1768,6 +1768,72 @@ int main(int argc, char* argv[])
 
     T_tagger->Branch("hol_flag", &tagger_info.hol_flag,"hol_flag/I");
     
+
+    T_tagger->Branch("vis_1_filled",&tagger_info.vis_1_filled,"vis_1_filled/I");
+    T_tagger->Branch("vis_1_n_vtx_segs",&tagger_info.vis_1_n_vtx_segs,"vis_1_n_vtx_segs/I");
+    T_tagger->Branch("vis_1_energy",&tagger_info.vis_1_energy,"vis_1_energy/D");
+    T_tagger->Branch("vis_1_num_good_tracks",&tagger_info.vis_1_num_good_tracks,"vis_1_num_good_tracks/I");
+    T_tagger->Branch("vis_1_max_angle",&tagger_info.vis_1_max_angle,"vis_1_max_angle/D");
+    T_tagger->Branch("vis_1_tmp_length1",&tagger_info.vis_1_tmp_length1,"vis_1_tmp_length1/D");
+    T_tagger->Branch("vis_1_tmp_length2",&tagger_info.vis_1_tmp_length2,"vis_1_tmp_length2/D");
+    T_tagger->Branch("vis_1_particle_type",&tagger_info.vis_1_particle_type,"vis_1_particle_type/D");
+    T_tagger->Branch("vis_1_flag",&tagger_info.vis_1_flag,"vis_1_flag/I");
+
+    T_tagger->Branch("vis_2_filled",&tagger_info.vis_2_filled,"vis_2_filled/I");
+    T_tagger->Branch("vis_2_n_vtx_segs",&tagger_info.vis_2_n_vtx_segs,"vis_2_n_vtx_segs/I");
+    T_tagger->Branch("vis_2_min_angle",&tagger_info.vis_2_min_angle,"vis_2_min_angle/D");
+    T_tagger->Branch("vis_2_min_weak_track",&tagger_info.vis_2_min_weak_track,"vis_2_min_weak_track/I");
+    T_tagger->Branch("vis_2_angle_beam",&tagger_info.vis_2_angle_beam,"vis_2_angle_beam/D");
+    T_tagger->Branch("vis_2_min_angle1",&tagger_info.vis_2_min_angle1,"vis_2_min_angle1/D");
+    T_tagger->Branch("vis_2_iso_angle1",&tagger_info.vis_2_iso_angle1,"vis_2_iso_angle1/D");
+    T_tagger->Branch("vis_2_min_medium_dQ_dx",&tagger_info.vis_2_min_medium_dQ_dx,"vis_2_min_medium_dQ_dx/D");
+    T_tagger->Branch("vis_2_min_length",&tagger_info.vis_2_min_length,"vis_2_min_length/D");
+    T_tagger->Branch("vis_2_sg_length",&tagger_info.vis_2_sg_length,"vis_2_sg_length/D");
+    T_tagger->Branch("vis_2_max_angle",&tagger_info.vis_2_max_angle,"vis_2_max_angle/D");
+    T_tagger->Branch("vis_2_max_weak_track",&tagger_info.vis_2_max_weak_track,"vis_2_max_weak_track/I");
+    T_tagger->Branch("vis_2_flab",&tagger_info.vis_2_flag,"vis_2_flag/I");
+
+    T_tagger->Branch("vis_flag",&tagger_info.vis_flag,"vis_flag/I");
+    
+
+    T_tagger->Branch("stem_len_energy", &tagger_info.stem_len_energy, "stem_len_energy/D");
+    T_tagger->Branch("stem_len_length", &tagger_info.stem_len_length, "stem_len_length/D");
+    T_tagger->Branch("stem_len_flag_avoid_muon_check", &tagger_info.stem_len_flag_avoid_muon_check, "stem_len_flag_avoid_muon_check/I");
+    T_tagger->Branch("stem_len_num_daughters", &tagger_info.stem_len_num_daughters, "stem_len_num_daughters/I");
+    T_tagger->Branch("stem_len_daughter_length", &tagger_info.stem_len_daughter_length, "stem_len_daughter_length/D");
+    T_tagger->Branch("stem_len_flag", &tagger_info.stem_len_flag, "stem_len_flag/I");
+
+    T_tagger->Branch("brm_n_mu_segs",&tagger_info.brm_n_mu_segs,"brm_n_mu_segs/I");
+    T_tagger->Branch("brm_Ep",&tagger_info.brm_Ep,"brm_Ep/D");
+    T_tagger->Branch("brm_energy",&tagger_info.brm_energy,"brm_energy/D");
+    T_tagger->Branch("brm_acc_length",&tagger_info.brm_acc_length,"brm_acc_length/D");
+    T_tagger->Branch("brm_shower_total_length",&tagger_info.brm_shower_total_length,"brm_shower_total_length/D");
+    T_tagger->Branch("brm_connected_length",&tagger_info.brm_connected_length,"brm_connected_length/D");
+    T_tagger->Branch("brm_n_size",&tagger_info.brm_n_size,"brm_n_size/I");
+    T_tagger->Branch("brm_nacc_direct_length",&tagger_info.brm_acc_direct_length,"brm_acc_direct_length/D");
+    T_tagger->Branch("brm_n_shower_main_segs",&tagger_info.brm_n_shower_main_segs,"brm_n_shower_main_segs/I");
+    T_tagger->Branch("brm_n_mu_main",&tagger_info.brm_n_mu_main,"brm_n_mu_main/I");
+    T_tagger->Branch("brm_n_flag",&tagger_info.brm_flag,"brm_flag/I");
+
+    T_tagger->Branch("cme_mu_energy",&tagger_info.cme_mu_energy,"cme_mu_energy/D");
+    T_tagger->Branch("cme_energy",&tagger_info.cme_energy,"cme_energy/D");
+    T_tagger->Branch("cme_mu_length",&tagger_info.cme_mu_length,"cme_mu_length/D");
+    T_tagger->Branch("cme_length",&tagger_info.cme_length,"cme_length/D");
+    T_tagger->Branch("cme_angle_beam",&tagger_info.cme_angle_beam,"cme_angle_beam/D");
+    T_tagger->Branch("cme_flag",&tagger_info.cme_flag,"cme_flag/I");
+
+    T_tagger->Branch("anc_energy",&tagger_info.anc_energy,"anc_energy/D");
+    T_tagger->Branch("anc_angle",&tagger_info.anc_angle,"anc_angle/D");
+    T_tagger->Branch("anc_max_angle",&tagger_info.anc_max_angle,"anc_max_angle/D");
+    T_tagger->Branch("anc_max_length",&tagger_info.anc_max_length,"anc_max_length/D");
+    T_tagger->Branch("anc_acc_forward_length",&tagger_info.anc_acc_forward_length,"anc_acc_forward_length/D");
+    T_tagger->Branch("anc_acc_backward_length",&tagger_info.anc_acc_backward_length,"anc_acc_backward_length/D");
+    T_tagger->Branch("anc_acc_forward_length1",&tagger_info.anc_acc_forward_length1,"anc_acc_forward_length1/D");
+    T_tagger->Branch("anc_shower_main_length",&tagger_info.anc_shower_main_length,"anc_shower_main_length/D");
+    T_tagger->Branch("anc_shower_total_length",&tagger_info.anc_shower_total_length,"anc_shower_total_length/D");
+    T_tagger->Branch("anc_flag_main_outside",&tagger_info.anc_flag_main_outside,"anc_flag_main_outside/I");
+    T_tagger->Branch("anc_flag",&tagger_info.anc_flag,"anc_flag/I");
+    
     
     for (size_t i=0;i!=neutrino_vec.size();i++){
       WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();

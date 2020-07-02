@@ -2174,5 +2174,72 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.hol_2_flag = true;
   
   tagger_info.hol_flag = true;
+
+
+  // vertex inside shower
+  tagger_info.vis_1_filled = false;
+  tagger_info.vis_1_n_vtx_segs = 0;
+  tagger_info.vis_1_energy = 0;
+  tagger_info.vis_1_num_good_tracks = 0;
+  tagger_info.vis_1_max_angle = 0;
+  tagger_info.vis_1_tmp_length1 = 0;
+  tagger_info.vis_1_tmp_length2 = 0;
+  tagger_info.vis_1_particle_type = 0;
+  tagger_info.vis_1_flag = true;
+  
+  tagger_info.vis_2_filled = false;
+  tagger_info.vis_2_n_vtx_segs = 0;
+  tagger_info.vis_2_min_angle = 0;
+  tagger_info.vis_2_min_weak_track = 0;
+  tagger_info.vis_2_angle_beam = 0;
+  tagger_info.vis_2_min_angle1 = 0;
+  tagger_info.vis_2_iso_angle1 = 0;
+  tagger_info.vis_2_min_medium_dQ_dx= 0;
+  tagger_info.vis_2_min_length = 0;
+  tagger_info.vis_2_sg_length = 0;
+  tagger_info.vis_2_max_angle = 0;
+  tagger_info.vis_2_max_weak_track = 0;
+  tagger_info.vis_2_flag = true;
+  
+  tagger_info.vis_flag = true;
+
+  
+  tagger_info.stem_len_energy = 0;
+  tagger_info.stem_len_length = 0;
+  tagger_info.stem_len_flag_avoid_muon_check = 0;
+  tagger_info.stem_len_num_daughters = 0;
+  tagger_info.stem_len_daughter_length = 0;
+  tagger_info.stem_len_flag = true;
+
+  tagger_info.brm_n_mu_segs = 0;
+  tagger_info.brm_Ep = 0;
+  tagger_info.brm_energy = 0;
+  tagger_info.brm_acc_length = 0;
+  tagger_info.brm_shower_total_length = 0;
+  tagger_info.brm_connected_length = 0;
+  tagger_info.brm_n_size = 0;
+  tagger_info.brm_acc_direct_length = 0;
+  tagger_info.brm_n_shower_main_segs = 0;
+  tagger_info.brm_n_mu_main = 0;
+  tagger_info.brm_flag = true;
+
+  tagger_info.cme_mu_energy = 0;
+  tagger_info.cme_energy = 0;
+  tagger_info.cme_mu_length = 0;
+  tagger_info.cme_length = 0;
+  tagger_info.cme_angle_beam = 0;
+  tagger_info.cme_flag = true;
+
+  tagger_info.anc_energy = 0;
+  tagger_info.anc_angle = 0;
+  tagger_info.anc_max_angle = 0;
+  tagger_info.anc_max_length = 0;
+  tagger_info.anc_acc_forward_length = 0;
+  tagger_info.anc_acc_backward_length = 0;
+  tagger_info.anc_acc_forward_length1 = 0;
+  tagger_info.anc_shower_main_length = 0;
+  tagger_info.anc_shower_total_length = 0;
+  tagger_info.anc_flag_main_outside = 0;
+  tagger_info.anc_flag = true;
   
 }

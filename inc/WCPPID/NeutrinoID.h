@@ -349,6 +349,8 @@ namespace WCPPID{
 
     int br4_flag;
 
+
+    // high energy overlap 
     int hol_1_n_valid_tracks;
     double hol_1_min_angle;
     double hol_1_energy;
@@ -363,7 +365,78 @@ namespace WCPPID{
     int hol_2_flag;
 
     int hol_flag;
-    
+
+    // vertex inside shower
+    int vis_1_filled;
+    int vis_1_n_vtx_segs;
+    double vis_1_energy;
+    int vis_1_num_good_tracks;
+    double vis_1_max_angle;
+    double vis_1_tmp_length1;
+    double vis_1_tmp_length2;
+    double vis_1_particle_type;
+    int vis_1_flag;
+
+    int vis_2_filled;
+    int vis_2_n_vtx_segs;
+    double vis_2_min_angle;
+    int vis_2_min_weak_track;
+    double vis_2_angle_beam;
+    double vis_2_min_angle1;
+    double vis_2_iso_angle1;
+    double vis_2_min_medium_dQ_dx;
+    double vis_2_min_length;
+    double vis_2_sg_length;
+    double vis_2_max_angle;
+    int vis_2_max_weak_track;
+    int vis_2_flag;
+
+    int vis_flag;
+
+
+    // stem length ...
+    double stem_len_energy;
+    double stem_len_length;
+    int stem_len_flag_avoid_muon_check;
+    int stem_len_num_daughters;
+    double stem_len_daughter_length;
+    int stem_len_flag;
+
+    // broken muon ...
+    int brm_n_mu_segs;
+    double brm_Ep;
+    double brm_energy;
+    double brm_acc_length;
+    double brm_shower_total_length;
+    double brm_connected_length;
+    int brm_n_size;
+    double brm_acc_direct_length;
+    int brm_n_shower_main_segs;
+    int brm_n_mu_main;
+    int brm_flag;
+
+
+    // compare with muon
+    double cme_mu_energy;
+    double cme_energy;
+    double cme_mu_length;
+    double cme_length;
+    double cme_angle_beam;
+    int cme_flag;
+
+
+    // angular cut ...
+    double anc_energy;
+    double anc_angle;
+    double anc_max_angle;
+    double anc_max_length;
+    double anc_acc_forward_length;
+    double anc_acc_backward_length;
+    double anc_acc_forward_length1;
+    double anc_shower_main_length;
+    double anc_shower_total_length;
+    int anc_flag_main_outside;
+    int anc_flag;
   };
 
   
@@ -652,23 +725,23 @@ namespace WCPPID{
     // main shower stem separated from the other parts
     bool bad_reconstruction_3(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
 
-    bool stem_length(WCPPID::WCShower *shower, double energy, bool flag_print = false);
-    bool compare_muon_energy(WCPPID::WCShower *shower, double energy, double muon_length, bool flag_print = false);
+    bool stem_length(WCPPID::WCShower *shower, double energy, bool flag_print = false, bool flag_fill = false);
+    bool compare_muon_energy(WCPPID::WCShower *shower, double energy, double muon_length, bool flag_print = false, bool flag_fill = false);
     
     bool high_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
 
     bool single_shower_pio_tagger(WCPPID::WCShower* shower, bool flag_print = false);
     bool shower_to_wall(WCPPID::WCShower* shower, double shower_energy, bool flag_single_shower, bool flag_print = false);
    
-    bool broken_muon_id(WCPPID::WCShower* shower, bool flag_print = false);
-    bool track_overclustering(WCPPID::WCShower* shower, bool flag_print = false);
+    bool broken_muon_id(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
+    bool track_overclustering(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
 
     bool multiple_showers(WCPPID::WCShower *shower, double max_energy, bool flag_print = false);
       
     
     bool other_showers(WCPPID::WCShower* shower, bool flag_single_shower, bool flag_print = false);
-    bool vertex_inside_shower(WCPPID::WCShower* shower, bool flag_print = false);
-    bool angular_cut(WCPPID::WCShower* shower, double energy, double angle, bool flag_print = false);
+    bool vertex_inside_shower(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
+    bool angular_cut(WCPPID::WCShower* shower, double energy, double angle, bool flag_print = false, bool flag_fill =false);
     bool single_shower(WCPPID::WCShower* shower, bool flag_single_shower, bool flag_print = false);
 
     bool low_energy_michel(WCPPID::WCShower*shower, bool flag_print = false);
