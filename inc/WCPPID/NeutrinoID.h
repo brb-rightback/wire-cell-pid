@@ -552,7 +552,43 @@ namespace WCPPID{
     std::vector<double> tro_1_v_dQ_dx_cut;
     std::vector<int> tro_1_v_flag_shower_topology;
     std::vector<int> tro_1_v_flag;
-    
+
+    std::vector<double> tro_2_v_energy;
+    std::vector<double> tro_2_v_stem_length;
+    std::vector<double> tro_2_v_iso_angle;
+    std::vector<double> tro_2_v_max_length;
+    std::vector<double> tro_2_v_angle;
+    std::vector<int> tro_2_v_flag;
+
+    double tro_3_stem_length;
+    int tro_3_n_muon_segs;
+    double tro_3_energy;
+    int tro_3_flag;
+
+    std::vector<double> tro_4_v_dir2_mag;
+    std::vector<double> tro_4_v_angle;
+    std::vector<double> tro_4_v_angle1;
+    std::vector<double> tro_4_v_angle2;
+    std::vector<double> tro_4_v_length;
+    std::vector<double> tro_4_v_length1;
+    std::vector<double> tro_4_v_medium_dQ_dx;
+    std::vector<double> tro_4_v_end_dQ_dx;
+    std::vector<double> tro_4_v_energy;
+    std::vector<double> tro_4_v_shower_main_length;
+    std::vector<int> tro_4_v_flag_shower_trajectory;
+    std::vector<int> tro_4_v_flag;
+
+    std::vector<double> tro_5_v_max_angle;
+    std::vector<double> tro_5_v_min_angle;
+    std::vector<double> tro_5_v_max_length;
+    std::vector<double> tro_5_v_iso_angle;
+    std::vector<int> tro_5_v_n_vtx_segs;
+    std::vector<int> tro_5_v_min_count;
+    std::vector<int> tro_5_v_max_count;
+    std::vector<double> tro_5_v_energy;
+    std::vector<int> tro_5_v_flag;
+
+    int tro_flag;
   };
 
   

@@ -1927,9 +1927,56 @@ int main(int argc, char* argv[])
     T_tagger->Branch("sig_2_v_start_dQ_dx",&tagger_info.sig_2_v_start_dQ_dx);
     T_tagger->Branch("sig_2_v_flag",&tagger_info.sig_2_v_flag);
 
-
     T_tagger->Branch("sig_flag",&tagger_info.sig_flag, "sig_flag/I");
-    
+
+    T_tagger->Branch("tro_1_v_particle_type",&tagger_info.tro_1_v_particle_type);
+    T_tagger->Branch("tro_1_v_flag_dir_weak",&tagger_info.tro_1_v_flag_dir_weak);
+    T_tagger->Branch("tro_1_v_min_dis",&tagger_info.tro_1_v_min_dis);
+    T_tagger->Branch("tro_1_v_sg1_length",&tagger_info.tro_1_v_sg1_length);
+    T_tagger->Branch("tro_1_v_shower_main_length",&tagger_info.tro_1_v_shower_main_length);
+    T_tagger->Branch("tro_1_v_max_n_vtx_segs",&tagger_info.tro_1_v_max_n_vtx_segs);
+    T_tagger->Branch("tro_1_v_tmp_length",&tagger_info.tro_1_v_tmp_length);
+    T_tagger->Branch("tro_1_v_medium_dQ_dx",&tagger_info.tro_1_v_medium_dQ_dx);
+    T_tagger->Branch("tro_1_v_dQ_dx_cut",&tagger_info.tro_1_v_dQ_dx_cut);
+    T_tagger->Branch("tro_1_v_flag_shower_topology",&tagger_info.tro_1_v_flag_shower_topology);
+    T_tagger->Branch("tro_1_v_flag",&tagger_info.tro_1_v_flag);
+
+    T_tagger->Branch("tro_2_v_enregy",&tagger_info.tro_2_v_energy);
+    T_tagger->Branch("tro_2_v_stem_length",&tagger_info.tro_2_v_stem_length);
+    T_tagger->Branch("tro_2_v_iso_angle",&tagger_info.tro_2_v_iso_angle);
+    T_tagger->Branch("tro_2_v_max_length",&tagger_info.tro_2_v_max_length);
+    T_tagger->Branch("tro_2_v_angle",&tagger_info.tro_2_v_angle);
+    T_tagger->Branch("tro_2_v_flag",&tagger_info.tro_2_v_flag);
+
+    T_tagger->Branch("tro_3_stem_length",&tagger_info.tro_3_stem_length,"tro_3_stem_length/D");
+    T_tagger->Branch("tro_3_n_muon_segs",&tagger_info.tro_3_n_muon_segs,"tro_3_n_muon_segs/D");
+    T_tagger->Branch("tro_3_energy",&tagger_info.tro_3_energy,"tro_3_energy/D");
+    T_tagger->Branch("tro_3_flag",&tagger_info.tro_3_flag,"tro_3_flag/D");
+
+    T_tagger->Branch("tro_4_v_dir2_mag",&tagger_info.tro_4_v_dir2_mag);
+    T_tagger->Branch("tro_4_v_angle",&tagger_info.tro_4_v_angle);
+    T_tagger->Branch("tro_4_v_angle1",&tagger_info.tro_4_v_angle1);
+    T_tagger->Branch("tro_4_v_angle2",&tagger_info.tro_4_v_angle2);
+    T_tagger->Branch("tro_4_v_length",&tagger_info.tro_4_v_length);
+    T_tagger->Branch("tro_4_v_length1",&tagger_info.tro_4_v_length1);
+    T_tagger->Branch("tro_4_v_medium_dQ_dx",&tagger_info.tro_4_v_medium_dQ_dx);
+    T_tagger->Branch("tro_4_v_end_dQ_dx",&tagger_info.tro_4_v_end_dQ_dx);
+    T_tagger->Branch("tro_4_v_energy",&tagger_info.tro_4_v_energy);
+    T_tagger->Branch("tro_4_v_shower_main_length",&tagger_info.tro_4_v_shower_main_length);
+    T_tagger->Branch("tro_4_v_flag_shower_trajectory",&tagger_info.tro_4_v_flag_shower_trajectory);
+    T_tagger->Branch("tro_4_v_flag",&tagger_info.tro_4_v_flag);
+
+    T_tagger->Branch("tro_5_v_max_angle",&tagger_info.tro_5_v_max_angle);
+    T_tagger->Branch("tro_5_v_min_angle",&tagger_info.tro_5_v_min_angle);
+    T_tagger->Branch("tro_5_v_max_length",&tagger_info.tro_5_v_max_length);
+    T_tagger->Branch("tro_5_v_iso_angle",&tagger_info.tro_5_v_iso_angle);
+    T_tagger->Branch("tro_5_v_n_vtx_segs",&tagger_info.tro_5_v_n_vtx_segs);
+    T_tagger->Branch("tro_5_v_min_count",&tagger_info.tro_5_v_min_count);
+    T_tagger->Branch("tro_5_v_max_count",&tagger_info.tro_5_v_max_count);
+    T_tagger->Branch("tro_5_v_energy",&tagger_info.tro_5_v_energy);
+    T_tagger->Branch("tro_5_v_flag",&tagger_info.tro_5_v_flag);
+
+    T_tagger->Branch("tro_flag",&tagger_info.tro_flag,"tro_flag/I");
     
     for (size_t i=0;i!=neutrino_vec.size();i++){
       WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();

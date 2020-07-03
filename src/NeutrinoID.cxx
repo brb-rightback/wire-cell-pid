@@ -2302,4 +2302,11 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.mgt_flag = true;
 
   tagger_info.sig_flag = true;
+
+
+  tagger_info.tro_3_stem_length = 0;
+  tagger_info.tro_3_n_muon_segs = 0;
+  tagger_info.tro_3_energy = 0;
+  tagger_info.tro_3_flag = true;
+  tagger_info.tro_flag = true;
 }
