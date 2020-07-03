@@ -160,17 +160,21 @@ namespace WCPPID{
     int pio_flag;
     int pio_mip_id;
     int pio_filled;
-    int pio_flag_pio;
-    double pio_mass;
-    int pio_pio_type;
-    double pio_energy_1;
-    double pio_energy_2;
-    double pio_dis_1;
-    double pio_dis_2;
-    std::vector<double> pio_v_dis2;
-    std::vector<double> pio_v_angle2;
-    std::vector<double> pio_v_acc_length;
+    
+    int pio_1_flag;
+    int pio_1_flag_pio;
+    double pio_1_mass;
+    int pio_1_pio_type;
+    double pio_1_energy_1;
+    double pio_1_energy_2;
+    double pio_1_dis_1;
+    double pio_1_dis_2;
 
+    std::vector<double> pio_2_v_dis2;
+    std::vector<double> pio_2_v_angle2;
+    std::vector<double> pio_2_v_acc_length;
+    std::vector<int> pio_2_v_flag;
+    
     // stem direction
     int stem_dir_flag;
     int stem_dir_flag_single_shower;
@@ -285,27 +289,27 @@ namespace WCPPID{
     double br3_4_energy;
     int br3_4_flag;
 
-    std::vector<double> br3_5_dir_length;
-    std::vector<double> br3_5_total_length;
-    std::vector<int> br3_5_flag_avoid_muon_check;
-    std::vector<int> br3_5_n_seg;
-    std::vector<double> br3_5_angle;
-    std::vector<double> br3_5_sg_length;
-    std::vector<double> br3_5_energy;
-    std::vector<int> br3_5_n_main_segs;
-    std::vector<int> br3_5_n_segs;
-    std::vector<double> br3_5_shower_main_length;
-    std::vector<double> br3_5_shower_total_length;
-    std::vector<int> br3_5_flag;
+    std::vector<double> br3_5_v_dir_length;
+    std::vector<double> br3_5_v_total_length;
+    std::vector<int> br3_5_v_flag_avoid_muon_check;
+    std::vector<int> br3_5_v_n_seg;
+    std::vector<double> br3_5_v_angle;
+    std::vector<double> br3_5_v_sg_length;
+    std::vector<double> br3_5_v_energy;
+    std::vector<int> br3_5_v_n_main_segs;
+    std::vector<int> br3_5_v_n_segs;
+    std::vector<double> br3_5_v_shower_main_length;
+    std::vector<double> br3_5_v_shower_total_length;
+    std::vector<int> br3_5_v_flag;
 
-    std::vector<double> br3_6_angle;
-    std::vector<double> br3_6_angle1;
-    std::vector<int> br3_6_flag_shower_trajectory;
-    std::vector<double> br3_6_direct_length;
-    std::vector<double> br3_6_length;
-    std::vector<int> br3_6_n_other_vtx_segs;
-    std::vector<double> br3_6_energy;
-    std::vector<int> br3_6_flag;
+    std::vector<double> br3_6_v_angle;
+    std::vector<double> br3_6_v_angle1;
+    std::vector<int> br3_6_v_flag_shower_trajectory;
+    std::vector<double> br3_6_v_direct_length;
+    std::vector<double> br3_6_v_length;
+    std::vector<int> br3_6_v_n_other_vtx_segs;
+    std::vector<double> br3_6_v_energy;
+    std::vector<int> br3_6_v_flag;
 
     double br3_7_energy;
     double br3_7_min_angle;
@@ -437,6 +441,118 @@ namespace WCPPID{
     double anc_shower_total_length;
     int anc_flag_main_outside;
     int anc_flag;
+
+    // low-energy michel
+    double lem_shower_total_length;
+    double lem_shower_main_length;
+    int lem_n_3seg;
+    double lem_e_charge;
+    double lem_e_dQdx;
+    int lem_shower_num_segs;
+    int lem_shower_num_main_segs;
+    int lem_flag;
+
+    // shower to wall
+    double stw_1_energy;
+    double stw_1_dis;
+    double stw_1_dQ_dx;
+    int stw_1_flag_single_shower;
+    int stw_1_n_pi0;
+    int stw_1_num_valid_tracks;
+    int stw_1_flag;
+
+    std::vector<double> stw_2_v_medium_dQ_dx;
+    std::vector<double> stw_2_v_energy;
+    std::vector<double> stw_2_v_angle;
+    std::vector<double> stw_2_v_dir_length;
+    std::vector<double> stw_2_v_max_dQ_dx;
+    std::vector<int> stw_2_v_flag;
+
+    std::vector<double> stw_3_v_angle;
+    std::vector<double> stw_3_v_dir_length;
+    std::vector<double> stw_3_v_energy;
+    std::vector<double> stw_3_v_medium_dQ_dx;
+    std::vector<int> stw_3_v_flag;
+
+    std::vector<double> stw_4_v_angle;
+    std::vector<double> stw_4_v_dis;
+    std::vector<double> stw_4_v_energy;
+    std::vector<int> stw_4_v_flag;
+
+    int stw_flag;
+
+    // single photon  cases ...
+    int spt_flag_single_shower;
+    double spt_energy;
+    double spt_shower_main_length;
+    double spt_shower_total_length;
+    double spt_angle_beam;
+    double spt_angle_vertical;
+    double spt_max_dQ_dx;
+    double spt_angle_beam_1;
+    double spt_angle_drift;
+    double spt_angle_drift_1;
+    int spt_num_valid_tracks;
+    double spt_n_vtx_segs;
+    double spt_max_length;
+    int spt_flag;
+
+
+    // multiple gamma I
+    double mgo_energy;
+    double mgo_max_energy;
+    double mgo_total_energy;
+    int mgo_n_showers;
+    double mgo_max_energy_1;
+    double mgo_max_energy_2;
+    double mgo_total_other_energy;
+    int mgo_n_total_showers;
+    double mgo_total_other_energy_1;
+    int mgo_flag;
+    
+    // multiple gamma II
+    int mgt_flag_single_shower;
+    double mgt_max_energy;
+    double mgt_energy;
+    double mgt_total_other_energy;
+    double mgt_max_energy_1;
+    double mgt_e_indirect_max_energy;
+    double mgt_e_direct_max_energy;
+    int mgt_n_direct_showers;
+    double mgt_e_direct_total_energy;
+    int mgt_flag_indirect_max_pio;
+    double mgt_e_indirect_total_energy;
+    int mgt_flag;
+
+    //single shower pi0 case ...
+    std::vector<double> sig_1_v_angle;
+    std::vector<int> sig_1_v_flag_single_shower;
+    std::vector<double> sig_1_v_energy;
+    std::vector<double> sig_1_v_energy_1;
+    std::vector<int> sig_1_v_flag;
+
+    std::vector<double> sig_2_v_energy;
+    std::vector<double> sig_2_v_shower_angle;
+    std::vector<int> sig_2_v_flag_single_shower;
+    std::vector<double> sig_2_v_medium_dQ_dx;
+    std::vector<double> sig_2_v_start_dQ_dx;
+    std::vector<int> sig_2_v_flag;
+
+    int sig_flag;
+
+    // track overclustering ..
+    std::vector<int> tro_1_v_particle_type;
+    std::vector<int> tro_1_v_flag_dir_weak;
+    std::vector<double> tro_1_v_min_dis;
+    std::vector<double> tro_1_v_sg1_length;
+    std::vector<double> tro_1_v_shower_main_length;
+    std::vector<int> tro_1_v_max_n_vtx_segs;
+    std::vector<double> tro_1_v_tmp_length;
+    std::vector<double> tro_1_v_medium_dQ_dx;
+    std::vector<double> tro_1_v_dQ_dx_cut;
+    std::vector<int> tro_1_v_flag_shower_topology;
+    std::vector<int> tro_1_v_flag;
+    
   };
 
   
@@ -730,21 +846,21 @@ namespace WCPPID{
     
     bool high_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
 
-    bool single_shower_pio_tagger(WCPPID::WCShower* shower, bool flag_print = false);
-    bool shower_to_wall(WCPPID::WCShower* shower, double shower_energy, bool flag_single_shower, bool flag_print = false);
+    bool single_shower_pio_tagger(WCPPID::WCShower* shower, bool flag_single_shower, bool flag_print = false, bool flag_fill = false);
+    bool shower_to_wall(WCPPID::WCShower* shower, double shower_energy, bool flag_single_shower, bool flag_print = false, bool flag_fill = false);
    
     bool broken_muon_id(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
     bool track_overclustering(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
 
-    bool multiple_showers(WCPPID::WCShower *shower, double max_energy, bool flag_print = false);
+    bool multiple_showers(WCPPID::WCShower *shower, double max_energy, bool flag_print = false, bool flag_fill = false);
       
     
-    bool other_showers(WCPPID::WCShower* shower, bool flag_single_shower, bool flag_print = false);
+    bool other_showers(WCPPID::WCShower* shower, bool flag_single_shower, bool flag_print = false, bool flag_fill = false);
     bool vertex_inside_shower(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
     bool angular_cut(WCPPID::WCShower* shower, double energy, double angle, bool flag_print = false, bool flag_fill =false);
-    bool single_shower(WCPPID::WCShower* shower, bool flag_single_shower, bool flag_print = false);
+    bool single_shower(WCPPID::WCShower* shower, bool flag_single_shower, bool flag_print = false, bool flag_fill = false);
 
-    bool low_energy_michel(WCPPID::WCShower*shower, bool flag_print = false);
+    bool low_energy_michel(WCPPID::WCShower*shower, bool flag_print = false, bool flag_fill = false);
 
     void init_tagger_info();
     TaggerInfo tagger_info; 

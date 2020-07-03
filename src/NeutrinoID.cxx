@@ -2026,13 +2026,15 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.pio_flag = true;
   tagger_info.pio_mip_id = 0;
   tagger_info.pio_filled = 0;
-  tagger_info.pio_flag_pio = 0;
-  tagger_info.pio_mass = 0;
-  tagger_info.pio_pio_type = 0;
-  tagger_info.pio_energy_1 = 0;
-  tagger_info.pio_energy_2 = 0;
-  tagger_info.pio_dis_1 = 0;
-  tagger_info.pio_dis_2 = 0;
+  
+  tagger_info.pio_1_flag = true;
+  tagger_info.pio_1_flag_pio = 0;
+  tagger_info.pio_1_mass = 0;
+  tagger_info.pio_1_pio_type = 0;
+  tagger_info.pio_1_energy_1 = 0;
+  tagger_info.pio_1_energy_2 = 0;
+  tagger_info.pio_1_dis_1 = 0;
+  tagger_info.pio_1_dis_2 = 0;
 
   // stem direction
   tagger_info.stem_dir_flag = true;
@@ -2241,5 +2243,63 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.anc_shower_total_length = 0;
   tagger_info.anc_flag_main_outside = 0;
   tagger_info.anc_flag = true;
-  
+
+  tagger_info.lem_shower_total_length = 0;
+  tagger_info.lem_shower_main_length = 0;
+  tagger_info.lem_n_3seg = 0;
+  tagger_info.lem_e_charge = 0;
+  tagger_info.lem_e_dQdx = 0;
+  tagger_info.lem_shower_num_segs = 0;
+  tagger_info.lem_shower_num_main_segs = 0;
+  tagger_info.lem_flag = true;
+
+  tagger_info.stw_1_energy = 0;
+  tagger_info.stw_1_dis = 0;
+  tagger_info.stw_1_dQ_dx = 1;
+  tagger_info.stw_1_flag_single_shower = 0;
+  tagger_info.stw_1_n_pi0 = 0;
+  tagger_info.stw_1_num_valid_tracks = 0;
+  tagger_info.stw_1_flag = true;
+  tagger_info.stw_flag = true;
+
+  tagger_info.spt_flag_single_shower = 0;
+  tagger_info.spt_energy = 0;
+  tagger_info.spt_shower_main_length = 0;
+  tagger_info.spt_shower_total_length = 0;
+  tagger_info.spt_angle_beam = 0;
+  tagger_info.spt_angle_vertical = 0;
+  tagger_info.spt_max_dQ_dx = 1;
+  tagger_info.spt_angle_beam_1 = 0;
+  tagger_info.spt_angle_drift = 0;
+  tagger_info.spt_angle_drift_1 = 0;
+  tagger_info.spt_num_valid_tracks = 0;
+  tagger_info.spt_n_vtx_segs = 0;
+  tagger_info.spt_max_length = 0;
+  tagger_info.spt_flag = true;
+
+  tagger_info.mgo_energy = 0;
+  tagger_info.mgo_max_energy = 0;
+  tagger_info.mgo_total_energy = 0;
+  tagger_info.mgo_n_showers = 0;
+  tagger_info.mgo_max_energy_1 = 0;
+  tagger_info.mgo_max_energy_2 = 0;
+  tagger_info.mgo_total_other_energy = 0;
+  tagger_info.mgo_n_total_showers = 0;
+  tagger_info.mgo_total_other_energy_1 = 0;
+  tagger_info.mgo_flag = true;
+
+  tagger_info.mgt_flag_single_shower = 0;
+  tagger_info.mgt_max_energy = 0;
+  tagger_info.mgt_energy = 0;
+  tagger_info.mgt_total_other_energy = 0;
+  tagger_info.mgt_max_energy_1 = 0;
+  tagger_info.mgt_e_indirect_max_energy = 0;
+  tagger_info.mgt_e_direct_max_energy = 0;
+  tagger_info.mgt_n_direct_showers = 0;
+  tagger_info.mgt_e_direct_total_energy = 0;
+  tagger_info.mgt_e_indirect_total_energy = 0;
+  tagger_info.mgt_flag_indirect_max_pio = 0;
+  tagger_info.mgt_flag = true;
+
+  tagger_info.sig_flag = true;
 }
