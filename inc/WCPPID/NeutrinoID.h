@@ -65,31 +65,39 @@ namespace WCPPID{
   struct TaggerInfo
   {
     // cosmic tagger ones, one case of cosmics ...
-    int cosmic_flag;
-    int cosmic_n_solid_tracks;
-    double cosmic_energy_direct_showers;
-    double cosmic_energy_main_showers;
-    double cosmic_energy_indirect_showers;
+    int cosmic_flag; // default is true ...
+    int cosmic_filled;   // if things are filled
+    // variable ...
+    int cosmic_n_solid_tracks;    // used
+    double cosmic_energy_main_showers; // used
+    double cosmic_energy_indirect_showers; // used
+    // not used ...
+    double cosmic_energy_direct_showers;  
     int cosmic_n_direct_showers;
     int cosmic_n_indirect_showers;
     int cosmic_n_main_showers;
-    int cosmic_filled;
+
 
     // shower gap identification
     int gap_flag;
+    int gap_filled;
+    // main variables:
+    int gap_n_bad;
+    int gap_n_points;
+    double gap_energy;
+    int gap_flag_single_shower;
+    int gap_flag_parallel;
+    // not directly used
     int gap_flag_prolong_u;
     int gap_flag_prolong_v;
     int gap_flag_prolong_w;
-    int gap_flag_parallel;
-    int gap_n_points;
-    int gap_n_bad;
-    double gap_energy;
     int gap_num_valid_tracks;
-    int gap_flag_single_shower;
-    int gap_filled;
 
+    
     // mip_quality
     int mip_quality_flag;
+    int mip_quality_filled;
+    // variables
     double mip_quality_energy;
     int mip_quality_overlap;
     int mip_quality_n_showers;
@@ -100,41 +108,43 @@ namespace WCPPID{
     double mip_quality_acc_length;
     double mip_quality_shortest_angle;
     int mip_quality_flag_proton;
-    int mip_quality_filled;
+    
 
     // mip identification
     int mip_flag;
-    double mip_energy;
-    int mip_n_end_reduction;    
-    int mip_n_first_mip;
-    int mip_n_first_non_mip;
-    int mip_n_first_non_mip_1;
-    int mip_n_first_non_mip_2;
-    double mip_vec_dQ_dx_0;
-    double mip_vec_dQ_dx_1;
-    double mip_max_dQ_dx_sample;
-    int mip_n_below_threshold;
-    int mip_n_below_zero;
-    int mip_n_lowest;
-    int mip_n_highest;
-    double mip_lowest_dQ_dx;
-    double mip_highest_dQ_dx;
-    double mip_medium_dQ_dx;
-    double mip_stem_length;
-    double mip_length_main;
-    double mip_length_total;
-    double mip_angle_beam;
-    double mip_iso_angle;
-    int mip_n_vertex;
-    int mip_n_good_tracks;
-    double mip_E_indirect_max_energy;
-    int mip_flag_all_above;
-    double mip_min_dQ_dx_5;
-    int mip_n_other_vertex; 
-    int mip_n_stem_size;
-    int mip_flag_stem_trajectory;
-    double mip_min_dis;
     int mip_filled;
+    // variables
+    double mip_energy; // checked
+    int mip_n_end_reduction;     // checked
+    int mip_n_first_mip; // checked
+    int mip_n_first_non_mip; // checked
+    int mip_n_first_non_mip_1; // checked
+    int mip_n_first_non_mip_2; // checked
+    double mip_vec_dQ_dx_0; // checked
+    double mip_vec_dQ_dx_1; // checked
+    double mip_max_dQ_dx_sample; // checked
+    int mip_n_below_threshold; // checked
+    int mip_n_below_zero;  // checked
+    int mip_n_lowest;  // checked
+    int mip_n_highest;  // checked
+    double mip_lowest_dQ_dx;  // checked
+    double mip_highest_dQ_dx;  // checked
+    double mip_medium_dQ_dx;  // checked
+    double mip_stem_length;  // checked
+    double mip_length_main;   // checked
+    double mip_length_total; // checked
+    double mip_angle_beam;  // checked
+    double mip_iso_angle;  // checked
+    int mip_n_vertex;   // checked
+    int mip_n_good_tracks;  // checked
+    double mip_E_indirect_max_energy;  // checked
+    int mip_flag_all_above;     // checked
+    double mip_min_dQ_dx_5;  // checked
+    int mip_n_other_vertex;   // checked
+    int mip_n_stem_size;  // checked
+    int mip_flag_stem_trajectory;  // checked
+    double mip_min_dis;   // checked
+
 
     // extra
     double mip_vec_dQ_dx_2;
@@ -158,23 +168,166 @@ namespace WCPPID{
     
     // shower pi0 identification
     int pio_flag;
-    int pio_mip_id;
+    int pio_mip_id;    // pre-condition to run this tagger
     int pio_filled;
-    
+    int pio_flag_pio;  // only when this is true, we run the first part of tagger ...
+    // first part of tagger ...
     int pio_1_flag;
-    int pio_1_flag_pio;
     double pio_1_mass;
     int pio_1_pio_type;
     double pio_1_energy_1;
     double pio_1_energy_2;
     double pio_1_dis_1;
     double pio_1_dis_2;
-
+    // second part of tagger
     std::vector<double> pio_2_v_dis2;
     std::vector<double> pio_2_v_angle2;
     std::vector<double> pio_2_v_acc_length;
     std::vector<int> pio_2_v_flag;
+
     
+    //single shower pi0 case ...
+    std::vector<double> sig_1_v_angle;
+    std::vector<int> sig_1_v_flag_single_shower;
+    std::vector<double> sig_1_v_energy;
+    std::vector<double> sig_1_v_energy_1;
+    std::vector<int> sig_1_v_flag;
+
+    std::vector<double> sig_2_v_energy;
+    std::vector<double> sig_2_v_shower_angle;
+    std::vector<int> sig_2_v_flag_single_shower;
+    std::vector<double> sig_2_v_medium_dQ_dx;
+    std::vector<double> sig_2_v_start_dQ_dx;
+    std::vector<int> sig_2_v_flag;
+
+    int sig_flag;
+
+     // multiple gamma I
+    double mgo_energy;
+    double mgo_max_energy;
+    double mgo_total_energy;
+    int mgo_n_showers;
+    double mgo_max_energy_1;
+    double mgo_max_energy_2;
+    double mgo_total_other_energy;
+    int mgo_n_total_showers;
+    double mgo_total_other_energy_1;
+    int mgo_flag;
+    
+    // multiple gamma II
+    int mgt_flag_single_shower;
+    double mgt_max_energy;
+    double mgt_energy;
+    double mgt_total_other_energy;
+    double mgt_max_energy_1;
+    double mgt_e_indirect_max_energy;
+    double mgt_e_direct_max_energy;
+    int mgt_n_direct_showers;
+    double mgt_e_direct_total_energy;
+    int mgt_flag_indirect_max_pio;
+    double mgt_e_indirect_total_energy;
+    int mgt_flag;
+
+    // shower to wall
+    double stw_1_energy;
+    double stw_1_dis;
+    double stw_1_dQ_dx;
+    int stw_1_flag_single_shower;
+    int stw_1_n_pi0;
+    int stw_1_num_valid_tracks;
+    int stw_1_flag;
+
+    std::vector<double> stw_2_v_medium_dQ_dx;
+    std::vector<double> stw_2_v_energy;
+    std::vector<double> stw_2_v_angle;
+    std::vector<double> stw_2_v_dir_length;
+    std::vector<double> stw_2_v_max_dQ_dx;
+    std::vector<int> stw_2_v_flag;
+
+    std::vector<double> stw_3_v_angle;
+    std::vector<double> stw_3_v_dir_length;
+    std::vector<double> stw_3_v_energy;
+    std::vector<double> stw_3_v_medium_dQ_dx;
+    std::vector<int> stw_3_v_flag;
+
+    std::vector<double> stw_4_v_angle;
+    std::vector<double> stw_4_v_dis;
+    std::vector<double> stw_4_v_energy;
+    std::vector<int> stw_4_v_flag;
+
+    int stw_flag;
+
+    // single photon  cases ...
+    int spt_flag_single_shower;
+    double spt_energy;
+    double spt_shower_main_length;
+    double spt_shower_total_length;
+    double spt_angle_beam;
+    double spt_angle_vertical;
+    double spt_max_dQ_dx;
+    double spt_angle_beam_1;
+    double spt_angle_drift;
+    double spt_angle_drift_1;
+    int spt_num_valid_tracks;
+    double spt_n_vtx_segs;
+    double spt_max_length;
+    int spt_flag;
+
+    // stem length ...
+    double stem_len_energy;
+    double stem_len_length;
+    int stem_len_flag_avoid_muon_check;
+    int stem_len_num_daughters;
+    double stem_len_daughter_length;
+    int stem_len_flag;
+
+    // low-energy michel
+    double lem_shower_total_length;
+    double lem_shower_main_length;
+    int lem_n_3seg;
+    double lem_e_charge;
+    double lem_e_dQdx;
+    int lem_shower_num_segs;
+    int lem_shower_num_main_segs;
+    int lem_flag;
+
+     // broken muon ...
+    int brm_n_mu_segs;
+    double brm_Ep;
+    double brm_energy;
+    double brm_acc_length;
+    double brm_shower_total_length;
+    double brm_connected_length;
+    int brm_n_size;
+    double brm_acc_direct_length;
+    int brm_n_shower_main_segs;
+    int brm_n_mu_main;
+    int brm_flag;
+
+
+    // compare with muon
+    double cme_mu_energy;
+    double cme_energy;
+    double cme_mu_length;
+    double cme_length;
+    double cme_angle_beam;
+    int cme_flag;
+
+
+    // angular cut ...
+    double anc_energy;
+    double anc_angle;
+    double anc_max_angle;
+    double anc_max_length;
+    double anc_acc_forward_length;
+    double anc_acc_backward_length;
+    double anc_acc_forward_length1;
+    double anc_shower_main_length;
+    double anc_shower_total_length;
+    int anc_flag_main_outside;
+    int anc_flag;
+
+        
     // stem direction
     int stem_dir_flag;
     int stem_dir_flag_single_shower;
@@ -186,6 +339,36 @@ namespace WCPPID{
     double stem_dir_angle3;
     double stem_dir_ratio;
 
+     // vertex inside shower
+    int vis_1_filled;
+    int vis_1_n_vtx_segs;
+    double vis_1_energy;
+    int vis_1_num_good_tracks;
+    double vis_1_max_angle;
+    double vis_1_tmp_length1;
+    double vis_1_tmp_length2;
+    double vis_1_particle_type;
+    int vis_1_flag;
+
+    int vis_2_filled;
+    int vis_2_n_vtx_segs;
+    double vis_2_min_angle;
+    int vis_2_min_weak_track;
+    double vis_2_angle_beam;
+    double vis_2_min_angle1;
+    double vis_2_iso_angle1;
+    double vis_2_min_medium_dQ_dx;
+    double vis_2_min_length;
+    double vis_2_sg_length;
+    double vis_2_max_angle;
+    int vis_2_max_weak_track;
+    int vis_2_flag;
+
+    int vis_flag;
+
+
+    // bad reconstruction_1
+    
     int br_filled;
     //bad reconstruction 1_1
     int br1_1_flag;
@@ -234,31 +417,8 @@ namespace WCPPID{
     double br2_sg_length;
     int br2_flag_sg_trajectory;
 
-    // low-energy overlap ...
-    int lol_flag;
-    double lol_energy;
-    int lol_vtx_n_segs;
-    int lol_nseg;
-    std::vector<double> lol_1_v_angle;
-    std::vector<int> lol_1_v_flag;
-    double lol_shower_main_length;
-    std::vector<double> lol_2_v_length;
-    std::vector<double> lol_2_v_angle;
-    std::vector<int> lol_2_v_type;
-    std::vector<int> lol_2_v_flag;
-    double lol_beam_angle;
-    int lol_n_valid_tracks;
-    double lol_min_angle;
-    std::vector<int> lol_3_v_flag;
-    std::vector<int> lol_4_v_flag_dir_weak;
-    std::vector<double> lol_4_v_length;
-    std::vector<double> lol_4_v_angle;
-    std::vector<int> lol_4_v_flag;
-    int lol_n_sum;
-    int lol_n_out;
-    std::vector<int> lol_5_v_flag;
 
-    //bad reconstruction 3
+     //bad reconstruction 3
     double br3_1_energy;
     int br3_1_n_shower_segments;
     int br3_1_sg_flag_trajectory;
@@ -325,8 +485,7 @@ namespace WCPPID{
     int br3_8_flag;
     
     int br3_flag;
-
-
+    
     // BR 4
     double br4_1_shower_main_length;
     double br4_1_shower_total_length;
@@ -353,194 +512,7 @@ namespace WCPPID{
 
     int br4_flag;
 
-
-    // high energy overlap 
-    int hol_1_n_valid_tracks;
-    double hol_1_min_angle;
-    double hol_1_energy;
-    int hol_1_flag_all_shower;
-    double hol_1_min_length;
-    int hol_1_flag;
-
-    double hol_2_min_angle;
-    double hol_2_medium_dQ_dx;
-    int hol_2_ncount;
-    double hol_2_energy;
-    int hol_2_flag;
-
-    int hol_flag;
-
-    // vertex inside shower
-    int vis_1_filled;
-    int vis_1_n_vtx_segs;
-    double vis_1_energy;
-    int vis_1_num_good_tracks;
-    double vis_1_max_angle;
-    double vis_1_tmp_length1;
-    double vis_1_tmp_length2;
-    double vis_1_particle_type;
-    int vis_1_flag;
-
-    int vis_2_filled;
-    int vis_2_n_vtx_segs;
-    double vis_2_min_angle;
-    int vis_2_min_weak_track;
-    double vis_2_angle_beam;
-    double vis_2_min_angle1;
-    double vis_2_iso_angle1;
-    double vis_2_min_medium_dQ_dx;
-    double vis_2_min_length;
-    double vis_2_sg_length;
-    double vis_2_max_angle;
-    int vis_2_max_weak_track;
-    int vis_2_flag;
-
-    int vis_flag;
-
-
-    // stem length ...
-    double stem_len_energy;
-    double stem_len_length;
-    int stem_len_flag_avoid_muon_check;
-    int stem_len_num_daughters;
-    double stem_len_daughter_length;
-    int stem_len_flag;
-
-    // broken muon ...
-    int brm_n_mu_segs;
-    double brm_Ep;
-    double brm_energy;
-    double brm_acc_length;
-    double brm_shower_total_length;
-    double brm_connected_length;
-    int brm_n_size;
-    double brm_acc_direct_length;
-    int brm_n_shower_main_segs;
-    int brm_n_mu_main;
-    int brm_flag;
-
-
-    // compare with muon
-    double cme_mu_energy;
-    double cme_energy;
-    double cme_mu_length;
-    double cme_length;
-    double cme_angle_beam;
-    int cme_flag;
-
-
-    // angular cut ...
-    double anc_energy;
-    double anc_angle;
-    double anc_max_angle;
-    double anc_max_length;
-    double anc_acc_forward_length;
-    double anc_acc_backward_length;
-    double anc_acc_forward_length1;
-    double anc_shower_main_length;
-    double anc_shower_total_length;
-    int anc_flag_main_outside;
-    int anc_flag;
-
-    // low-energy michel
-    double lem_shower_total_length;
-    double lem_shower_main_length;
-    int lem_n_3seg;
-    double lem_e_charge;
-    double lem_e_dQdx;
-    int lem_shower_num_segs;
-    int lem_shower_num_main_segs;
-    int lem_flag;
-
-    // shower to wall
-    double stw_1_energy;
-    double stw_1_dis;
-    double stw_1_dQ_dx;
-    int stw_1_flag_single_shower;
-    int stw_1_n_pi0;
-    int stw_1_num_valid_tracks;
-    int stw_1_flag;
-
-    std::vector<double> stw_2_v_medium_dQ_dx;
-    std::vector<double> stw_2_v_energy;
-    std::vector<double> stw_2_v_angle;
-    std::vector<double> stw_2_v_dir_length;
-    std::vector<double> stw_2_v_max_dQ_dx;
-    std::vector<int> stw_2_v_flag;
-
-    std::vector<double> stw_3_v_angle;
-    std::vector<double> stw_3_v_dir_length;
-    std::vector<double> stw_3_v_energy;
-    std::vector<double> stw_3_v_medium_dQ_dx;
-    std::vector<int> stw_3_v_flag;
-
-    std::vector<double> stw_4_v_angle;
-    std::vector<double> stw_4_v_dis;
-    std::vector<double> stw_4_v_energy;
-    std::vector<int> stw_4_v_flag;
-
-    int stw_flag;
-
-    // single photon  cases ...
-    int spt_flag_single_shower;
-    double spt_energy;
-    double spt_shower_main_length;
-    double spt_shower_total_length;
-    double spt_angle_beam;
-    double spt_angle_vertical;
-    double spt_max_dQ_dx;
-    double spt_angle_beam_1;
-    double spt_angle_drift;
-    double spt_angle_drift_1;
-    int spt_num_valid_tracks;
-    double spt_n_vtx_segs;
-    double spt_max_length;
-    int spt_flag;
-
-
-    // multiple gamma I
-    double mgo_energy;
-    double mgo_max_energy;
-    double mgo_total_energy;
-    int mgo_n_showers;
-    double mgo_max_energy_1;
-    double mgo_max_energy_2;
-    double mgo_total_other_energy;
-    int mgo_n_total_showers;
-    double mgo_total_other_energy_1;
-    int mgo_flag;
-    
-    // multiple gamma II
-    int mgt_flag_single_shower;
-    double mgt_max_energy;
-    double mgt_energy;
-    double mgt_total_other_energy;
-    double mgt_max_energy_1;
-    double mgt_e_indirect_max_energy;
-    double mgt_e_direct_max_energy;
-    int mgt_n_direct_showers;
-    double mgt_e_direct_total_energy;
-    int mgt_flag_indirect_max_pio;
-    double mgt_e_indirect_total_energy;
-    int mgt_flag;
-
-    //single shower pi0 case ...
-    std::vector<double> sig_1_v_angle;
-    std::vector<int> sig_1_v_flag_single_shower;
-    std::vector<double> sig_1_v_energy;
-    std::vector<double> sig_1_v_energy_1;
-    std::vector<int> sig_1_v_flag;
-
-    std::vector<double> sig_2_v_energy;
-    std::vector<double> sig_2_v_shower_angle;
-    std::vector<int> sig_2_v_flag_single_shower;
-    std::vector<double> sig_2_v_medium_dQ_dx;
-    std::vector<double> sig_2_v_start_dQ_dx;
-    std::vector<int> sig_2_v_flag;
-
-    int sig_flag;
-
-    // track overclustering ..
+     // track overclustering ..
     std::vector<int> tro_1_v_particle_type;
     std::vector<int> tro_1_v_flag_dir_weak;
     std::vector<double> tro_1_v_min_dis;
@@ -589,6 +561,52 @@ namespace WCPPID{
     std::vector<int> tro_5_v_flag;
 
     int tro_flag;
+
+    // high energy overlap 
+    int hol_1_n_valid_tracks;
+    double hol_1_min_angle;
+    double hol_1_energy;
+    int hol_1_flag_all_shower;
+    double hol_1_min_length;
+    int hol_1_flag;
+
+    double hol_2_min_angle;
+    double hol_2_medium_dQ_dx;
+    int hol_2_ncount;
+    double hol_2_energy;
+    int hol_2_flag;
+
+    int hol_flag;
+    
+    // low-energy overlap ...
+    int lol_flag;
+
+    std::vector<double> lol_1_v_energy;
+    std::vector<int> lol_1_v_vtx_n_segs;
+    std::vector<int> lol_1_v_nseg;
+    std::vector<double> lol_1_v_angle;
+    std::vector<int> lol_1_v_flag;
+
+    std::vector<double> lol_2_v_length;
+    std::vector<double> lol_2_v_angle;
+    std::vector<int> lol_2_v_type;
+    std::vector<int> lol_2_v_vtx_n_segs;
+    std::vector<double> lol_2_v_energy;
+    std::vector<double> lol_2_v_shower_main_length;
+    std::vector<int> lol_2_v_flag_dir_weak;
+    std::vector<int> lol_2_v_flag;
+
+    double lol_3_angle_beam;
+    int lol_3_n_valid_tracks;
+    double lol_3_min_angle;
+    int lol_3_vtx_n_segs;
+    double lol_3_energy;
+    double lol_3_shower_main_length;
+    int lol_3_n_out;
+    int lol_3_n_sum;    
+    int lol_3_flag;
+    
+    
   };
 
   
@@ -864,11 +882,11 @@ namespace WCPPID{
     bool nue_tagger(double muon_kine_energy = 0);
     void examine_showers();
     void examine_shower_1();
-    std::pair<bool, int> gap_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment* sg, bool flag_single_shower = false, int valid_tracks = 0, double Eshower = 0);
-    bool mip_quality(WCPPID::ProtoVertex *vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, bool flag_print = false);
-    int mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, bool flag_single_shower, bool flag_strong_check = false, bool flag_print = false);
-    bool pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, double threshild  = 0);
-    bool stem_direction(WCPPID::WCShower *shower, double energy, bool flag_print = false);
+    std::pair<bool, int> gap_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment* sg, bool flag_single_shower = false, int valid_tracks = 0, double Eshower = 0, bool flag_fill = false);
+    bool mip_quality(WCPPID::ProtoVertex *vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, bool flag_print = false, bool flag_fill = false);
+    int mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, bool flag_single_shower, bool flag_strong_check = false, bool flag_print = false, bool flag_fill = false);
+    bool pi0_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, double threshild  = 0, bool flag_fill = false);
+    bool stem_direction(WCPPID::WCShower *shower, double energy, bool flag_print = false, bool flag_fill = false);
     bool bad_reconstruction(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
     bool bad_reconstruction_1(WCPPID::WCShower* shower, bool flag_single_shower, int num_valid_tracks, bool flag_fill = false);
     bool low_energy_overlapping(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill =false);

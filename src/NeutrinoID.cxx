@@ -52,6 +52,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   bool flag_tagger = true;
 
   init_tagger_info();
+  
   // hack the main cluster
   // for (auto it = other_clusters.begin(); it != other_clusters.end(); it++){
   //   WCPPID::PR3DCluster *cluster = *it;    
@@ -211,7 +212,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   if (flag_tagger){
     bool flag_cosmic = cosmic_tagger();
 
-    if (flag_cosmic) tagger_info.cosmic_flag = false;
+    // set the cosmic flag anyway ...
+    // if (flag_cosmic) tagger_info.cosmic_flag = false;
     
     auto results = numu_tagger();
     bool flag_long_muon = results.first;
@@ -1943,6 +1945,8 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.cosmic_n_main_showers = 0;
   tagger_info.cosmic_filled = 0;
 
+  // std::cout << "haha: " << tagger_info.cosmic_flag << std::endl;
+  
   // shower gap identification
   tagger_info.gap_flag = true;
   tagger_info.gap_flag_prolong_u = false;
@@ -2003,7 +2007,8 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.mip_n_stem_size = 20;
   tagger_info.mip_medium_dQ_dx = 1;
   tagger_info.mip_filled = 0;
-  
+
+  tagger_info.mip_vec_dQ_dx_2 = 0;
   tagger_info.mip_vec_dQ_dx_3 = 0;
   tagger_info.mip_vec_dQ_dx_4 = 0;
   tagger_info.mip_vec_dQ_dx_5 = 0;
@@ -2026,9 +2031,9 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.pio_flag = true;
   tagger_info.pio_mip_id = 0;
   tagger_info.pio_filled = 0;
-  
+  tagger_info.pio_flag_pio = 0;
+
   tagger_info.pio_1_flag = true;
-  tagger_info.pio_1_flag_pio = 0;
   tagger_info.pio_1_mass = 0;
   tagger_info.pio_1_pio_type = 0;
   tagger_info.pio_1_energy_1 = 0;
@@ -2082,17 +2087,31 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.br1_3_n_shower_main_segs = 0;
   tagger_info.br1_3_sg_length = 0;
 
+  // br2
+  tagger_info.br2_flag = true;
+  tagger_info.br2_flag_single_shower = 0;
+  tagger_info.br2_num_valid_tracks = 0;
+  tagger_info.br2_energy = 0;
+  tagger_info.br2_angle1 = 0;
+  tagger_info.br2_angle2 = 0;
+  tagger_info.br2_angle = 0;
+  tagger_info.br2_angle3 = 0;
+  tagger_info.br2_n_shower_main_segs = 0;
+  tagger_info.br2_max_angle = 0;
+  tagger_info.br2_sg_length = 0;
+  tagger_info.br2_flag_sg_trajectory = 0;
+  
   // low-energy overlap
   tagger_info.lol_flag = true;
-  tagger_info.lol_energy = 0;
-  tagger_info.lol_vtx_n_segs = 0;
-  tagger_info.lol_nseg = 0;
-  tagger_info.lol_shower_main_length = 0;
-  tagger_info.lol_beam_angle = 0;
-  tagger_info.lol_n_valid_tracks = 0;
-  tagger_info.lol_min_angle = 0;
-  tagger_info.lol_n_sum = 0;
-  tagger_info.lol_n_out = 0;
+  tagger_info.lol_3_flag = true;
+  tagger_info.lol_3_angle_beam = 0;
+  tagger_info.lol_3_min_angle = 0;
+  tagger_info.lol_3_n_valid_tracks = 0;
+  tagger_info.lol_3_vtx_n_segs = 0;
+  tagger_info.lol_3_energy = 0;
+  tagger_info.lol_3_shower_main_length = 0;
+  tagger_info.lol_3_n_sum = 0;
+  tagger_info.lol_3_n_out = 0;
 
 
   // br3

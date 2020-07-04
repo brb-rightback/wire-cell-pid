@@ -1484,6 +1484,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("cosmic_n_indirect_showers",&tagger_info.cosmic_n_indirect_showers,"cosmic_n_indirect_showers/I");
     T_tagger->Branch("cosmic_n_main_showers",&tagger_info.cosmic_n_main_showers,"cosmic_n_main_showers/I");
     T_tagger->Branch("cosmic_filled",&tagger_info.cosmic_filled,"cosmic_filled/I");
+    
     // gap tagger
     T_tagger->Branch("gap_flag",&tagger_info.gap_flag,"gap_flag/I");
     T_tagger->Branch("gap_flag_prolong_u",&tagger_info.gap_flag_prolong_u,"gap_flag_prolong_u/I");
@@ -1496,6 +1497,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("gap_num_valid_tracks",&tagger_info.gap_num_valid_tracks,"gap_num_valid_tracks/I");
     T_tagger->Branch("gap_flag_single_shower",&tagger_info.gap_flag_single_shower,"gap_flag_single_shower/I");
     T_tagger->Branch("gap_filled",&tagger_info.gap_filled,"gap_filled/I");
+
     // mip quality
     T_tagger->Branch("mip_quality_flag",&tagger_info.mip_quality_flag,"mip_quality_flag/I");
     T_tagger->Branch("mip_quality_energy",&tagger_info.mip_quality_energy,"mip_quality_energy/D");
@@ -1565,13 +1567,14 @@ int main(int argc, char* argv[])
     T_tagger->Branch("mip_flag_stem_trajectory",&tagger_info.mip_flag_stem_trajectory,"mip_flag_stem_trajectory/I");
     T_tagger->Branch("mip_min_dis",&tagger_info.mip_min_dis,"mip_min_dis/D");
     T_tagger->Branch("mip_filled",&tagger_info.mip_filled,"mip_filled/I");
-    
+
+    // pio ...
     T_tagger->Branch("pio_flag",&tagger_info.pio_flag,"pio_flag/I");
     T_tagger->Branch("pio_mip_id",&tagger_info.pio_mip_id,"pio_mip_id/I");
     T_tagger->Branch("pio_filled",&tagger_info.pio_filled,"pio_filled/I");
-
+    T_tagger->Branch("pio_flag_pio",&tagger_info.pio_flag_pio,"pio_flag_pio/I");
+    
     T_tagger->Branch("pio_1_flag",&tagger_info.pio_1_flag,"pio_1_flag/I");
-    T_tagger->Branch("pio_1_flag_pio",&tagger_info.pio_1_flag_pio,"pio_1_flag_pio/I");
     T_tagger->Branch("pio_1_mass",&tagger_info.pio_1_mass,"pio_1_mass/D");
     T_tagger->Branch("pio_1_pio_type",&tagger_info.pio_1_pio_type,"pio_1_pio_type/I");
     T_tagger->Branch("pio_1_energy_1",&tagger_info.pio_1_energy_1,"pio_1_energy_1/D");
@@ -1583,7 +1586,11 @@ int main(int argc, char* argv[])
     T_tagger->Branch("pio_2_v_angle2",&tagger_info.pio_2_v_angle2);
     T_tagger->Branch("pio_2_v_acc_length",&tagger_info.pio_2_v_acc_length);
     T_tagger->Branch("pio_2_v_flag",&tagger_info.pio_2_v_flag);
+
     
+    
+    
+    // bad reconstruction ...
     T_tagger->Branch("stem_dir_flag",&tagger_info.stem_dir_flag,"stem_dir_flag/I");
     T_tagger->Branch("stem_dir_flag_single_shower",&tagger_info.stem_dir_flag_single_shower,"stem_dir_flag_single_shower/I");
     T_tagger->Branch("stem_dir_filled",&tagger_info.stem_dir_filled,"stem_dir_filled/I");
@@ -1640,28 +1647,31 @@ int main(int argc, char* argv[])
 
 
     T_tagger->Branch("lol_flag",&tagger_info.lol_flag,"lol_flag/I");
-    T_tagger->Branch("lol_energy",&tagger_info.lol_energy,"lol_energy/D");
-    T_tagger->Branch("lol_vtx_n_segs",&tagger_info.lol_vtx_n_segs,"lol_vtx_n_segs/I");
-    T_tagger->Branch("lol_nseg",&tagger_info.lol_nseg,"lol_nseg/I");
-    T_tagger->Branch("lol_shower_main_length",&tagger_info.lol_shower_main_length,"lol_shower_main_length/D");
-    T_tagger->Branch("lol_beam_angle",&tagger_info.lol_beam_angle,"lol_beam_angle/D");
-    T_tagger->Branch("lol_n_valid_tracks",&tagger_info.lol_n_valid_tracks,"lol_n_valid_tracks/I");
-    T_tagger->Branch("lol_min_angle",&tagger_info.lol_min_angle,"lol_min_angle/I");
-    T_tagger->Branch("lol_n_sum",&tagger_info.lol_n_sum,"lol_n_sum/I");
-    T_tagger->Branch("lol_n_out",&tagger_info.lol_n_out,"lol_n_out/I");
+
+    T_tagger->Branch("lol_1_v_energy",&tagger_info.lol_1_v_energy);
+    T_tagger->Branch("lol_1_v_vtx_n_segs",&tagger_info.lol_1_v_vtx_n_segs);
+    T_tagger->Branch("lol_1_v_nseg",&tagger_info.lol_1_v_nseg);
     T_tagger->Branch("lol_1_v_angle",&tagger_info.lol_1_v_angle);
     T_tagger->Branch("lol_1_v_flag",&tagger_info.lol_1_v_flag);
+
     T_tagger->Branch("lol_2_v_length",&tagger_info.lol_2_v_length);
     T_tagger->Branch("lol_2_v_angle",&tagger_info.lol_2_v_angle);
     T_tagger->Branch("lol_2_v_type",&tagger_info.lol_2_v_type);
+    T_tagger->Branch("lol_2_v_vtx_n_segs",&tagger_info.lol_2_v_vtx_n_segs);
+    T_tagger->Branch("lol_2_v_energy",&tagger_info.lol_2_v_energy);
+    T_tagger->Branch("lol_2_v_shower_main_length",&tagger_info.lol_2_v_shower_main_length);
+    T_tagger->Branch("lol_2_v_flag_dir_weak",&tagger_info.lol_2_v_flag_dir_weak);
     T_tagger->Branch("lol_2_v_flag",&tagger_info.lol_2_v_flag);
-    T_tagger->Branch("lol_3_v_flag",&tagger_info.lol_3_v_flag);
-    T_tagger->Branch("lol_4_v_flag_dir_weak",&tagger_info.lol_4_v_flag_dir_weak);
-    T_tagger->Branch("lol_4_v_length",&tagger_info.lol_4_v_length);
-    T_tagger->Branch("lol_4_v_angle",&tagger_info.lol_4_v_angle);
-    T_tagger->Branch("lol_4_v_flag",&tagger_info.lol_4_v_flag);
-    T_tagger->Branch("lol_5_v_flag",&tagger_info.lol_5_v_flag);
 
+    T_tagger->Branch("lol_3_angle_beam",&tagger_info.lol_3_angle_beam,"lol_3_angle_beam/D");
+    T_tagger->Branch("lol_3_n_valid_tracks",&tagger_info.lol_3_n_valid_tracks,"lol_3_n_valid_tracks/I");
+    T_tagger->Branch("lol_3_min_angle",&tagger_info.lol_3_min_angle,"lol_3_min_angle/D");
+    T_tagger->Branch("lol_3_vtx_n_segs",&tagger_info.lol_3_vtx_n_segs,"lol_3_vtx_n_segs/I");
+    T_tagger->Branch("lol_3_energy",&tagger_info.lol_3_energy,"lol_3_energy/D");
+    T_tagger->Branch("lol_3_shower_main_length",&tagger_info.lol_3_shower_main_length,"lol_3_shower_main_length/D");
+    T_tagger->Branch("lol_3_n_out",&tagger_info.lol_3_n_out,"lol_3_n_out/I");
+    T_tagger->Branch("lol_3_n_sum",&tagger_info.lol_3_n_sum,"lol_3_n_sum/I");
+    T_tagger->Branch("lol_3_flag",&tagger_info.lol_3_flag,"lol_3_flag/I");
     
     T_tagger->Branch("br3_1_energy",&tagger_info.br3_1_energy,"br3_1_energy/D");
     T_tagger->Branch("br3_1_n_shower_segments",&tagger_info.br3_1_n_shower_segments,"br3_1_n_shower_segments/I");
@@ -1941,7 +1951,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("tro_1_v_flag_shower_topology",&tagger_info.tro_1_v_flag_shower_topology);
     T_tagger->Branch("tro_1_v_flag",&tagger_info.tro_1_v_flag);
 
-    T_tagger->Branch("tro_2_v_enregy",&tagger_info.tro_2_v_energy);
+    T_tagger->Branch("tro_2_v_energy",&tagger_info.tro_2_v_energy);
     T_tagger->Branch("tro_2_v_stem_length",&tagger_info.tro_2_v_stem_length);
     T_tagger->Branch("tro_2_v_iso_angle",&tagger_info.tro_2_v_iso_angle);
     T_tagger->Branch("tro_2_v_max_length",&tagger_info.tro_2_v_max_length);
@@ -1949,9 +1959,9 @@ int main(int argc, char* argv[])
     T_tagger->Branch("tro_2_v_flag",&tagger_info.tro_2_v_flag);
 
     T_tagger->Branch("tro_3_stem_length",&tagger_info.tro_3_stem_length,"tro_3_stem_length/D");
-    T_tagger->Branch("tro_3_n_muon_segs",&tagger_info.tro_3_n_muon_segs,"tro_3_n_muon_segs/D");
+    T_tagger->Branch("tro_3_n_muon_segs",&tagger_info.tro_3_n_muon_segs,"tro_3_n_muon_segs/I");
     T_tagger->Branch("tro_3_energy",&tagger_info.tro_3_energy,"tro_3_energy/D");
-    T_tagger->Branch("tro_3_flag",&tagger_info.tro_3_flag,"tro_3_flag/D");
+    T_tagger->Branch("tro_3_flag",&tagger_info.tro_3_flag,"tro_3_flag/I");
 
     T_tagger->Branch("tro_4_v_dir2_mag",&tagger_info.tro_4_v_dir2_mag);
     T_tagger->Branch("tro_4_v_angle",&tagger_info.tro_4_v_angle);
@@ -1999,6 +2009,8 @@ int main(int argc, char* argv[])
       y_vtx = vertex_point.y/units::cm;
       z_vtx = vertex_point.z/units::cm;
       tagger_info = neutrino_vec.at(i)->tagger_info;
+
+      //      std::cout << tagger_info.cosmic_flag << " " << neutrino_vec.at(i)->tagger_info.cosmic_flag << std::endl;
       
       T_tagger->Fill();
     }
