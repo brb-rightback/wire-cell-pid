@@ -2055,6 +2055,7 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   // bad reconstruction
   tagger_info.br_filled = 0;
 
+  tagger_info.br1_flag = true;
   // br1_1
   tagger_info.br1_1_flag = true;
   tagger_info.br1_1_shower_type = 0;

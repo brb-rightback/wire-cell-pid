@@ -1602,7 +1602,9 @@ int main(int argc, char* argv[])
     T_tagger->Branch("stem_dir_ratio",&tagger_info.stem_dir_ratio,"stem_dir_ratio/D");
 
     T_tagger->Branch("br_filled",&tagger_info.br_filled,"br_filled/I");
-
+    
+    T_tagger->Branch("br1_flag",&tagger_info.br1_flag,"br1_flag/I");
+    
     T_tagger->Branch("br1_1_flag",&tagger_info.br1_1_flag,"br1_1_flag/I");
     T_tagger->Branch("br1_1_shower_type",&tagger_info.br1_1_shower_type,"br1_1_shower_type/I");
     T_tagger->Branch("br1_1_vtx_n_segs",&tagger_info.br1_1_vtx_n_segs,"br1_1_vtx_n_segs/I");
@@ -1630,7 +1632,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("br1_3_flag_sg_topology",&tagger_info.br1_3_flag_sg_topology,"br1_3_flag_sg_topology/I");
     T_tagger->Branch("br1_3_sg_trajectory",&tagger_info.br1_3_flag_sg_trajectory,"br1_3_flag_sg_trajectory/I");
     T_tagger->Branch("br1_3_n_shower_main_segs",&tagger_info.br1_3_n_shower_main_segs,"br1_3_n_shower_main_segs/I");
-    T_tagger->Branch("br1_3_sg_length",&tagger_info.br1_3_flag,"br1_3_sg_length/D");
+    T_tagger->Branch("br1_3_sg_length",&tagger_info.br1_3_sg_length,"br1_3_sg_length/D");
     
     T_tagger->Branch("br2_flag",&tagger_info.br2_flag,"br2_flag/I");
     T_tagger->Branch("br2_flag_single_shower",&tagger_info.br2_flag_single_shower,"br2_flag_single_shower/I");
@@ -1755,10 +1757,10 @@ int main(int argc, char* argv[])
     T_tagger->Branch("br4_2_ratio_25", &tagger_info.br4_2_ratio_25, "br4_2_ratio_25/D");
     T_tagger->Branch("br4_2_ratio_15", &tagger_info.br4_2_ratio_15, "br4_2_ratio_15/D");
     T_tagger->Branch("br4_2_energy",   &tagger_info.br4_2_energy, "br4_2_energy/D");
-    T_tagger->Branch("br4_2_ratio_45", &tagger_info.br4_2_ratio1_45, "br4_2_ratio1_45/D");
-    T_tagger->Branch("br4_2_ratio_35", &tagger_info.br4_2_ratio1_35, "br4_2_ratio1_35/D");
-    T_tagger->Branch("br4_2_ratio_25", &tagger_info.br4_2_ratio1_25, "br4_2_ratio1_25/D");
-    T_tagger->Branch("br4_2_ratio_15", &tagger_info.br4_2_ratio1_15, "br4_2_ratio1_15/D");
+    T_tagger->Branch("br4_2_ratio1_45", &tagger_info.br4_2_ratio1_45, "br4_2_ratio1_45/D");
+    T_tagger->Branch("br4_2_ratio1_35", &tagger_info.br4_2_ratio1_35, "br4_2_ratio1_35/D");
+    T_tagger->Branch("br4_2_ratio1_25", &tagger_info.br4_2_ratio1_25, "br4_2_ratio1_25/D");
+    T_tagger->Branch("br4_2_ratio1_15", &tagger_info.br4_2_ratio1_15, "br4_2_ratio1_15/D");
     T_tagger->Branch("br4_2_iso_angle", &tagger_info.br4_2_iso_angle, "br4_2_iso_angle/D");
     T_tagger->Branch("br4_2_iso_angle1", &tagger_info.br4_2_iso_angle1, "br4_2_iso_angle1/D");
     T_tagger->Branch("br4_2_angle", &tagger_info.br4_2_angle, "br4_2_angle/D");
@@ -1908,7 +1910,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("mgo_max_energy_2",&tagger_info.mgo_max_energy_2,"mgo_max_energy_2/D");
     T_tagger->Branch("mgo_total_other_energy",&tagger_info.mgo_total_other_energy,"mgo_total_other_energy/D");
     T_tagger->Branch("mgo_n_total_showers",&tagger_info.mgo_n_total_showers,"mgo_n_total_showers/I");
-    T_tagger->Branch("mgo_total_other_energy",&tagger_info.mgo_total_other_energy,"mgo_total_other_energy_1/D");
+    T_tagger->Branch("mgo_total_other_energy_1",&tagger_info.mgo_total_other_energy_1,"mgo_total_other_energy_1/D");
     T_tagger->Branch("mgo_flag",&tagger_info.mgo_flag,"mgo_flag/I");
     
     T_tagger->Branch("mgt_flag_single_shower",&tagger_info.mgt_flag_single_shower,"mgt_flag_single_shower/I");

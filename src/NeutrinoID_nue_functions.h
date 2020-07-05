@@ -66,12 +66,14 @@ bool WCPPID::NeutrinoID::stem_direction(WCPPID::WCShower *max_shower, double max
 
   if (flag_fill){
     tagger_info.stem_dir_angle = angle;
-    tagger_info.stem_dir_energy = max_energy;
+    tagger_info.stem_dir_energy = max_energy/units::MeV;
     tagger_info.stem_dir_angle1 = angle1;
     tagger_info.stem_dir_angle2 = angle2;
     tagger_info.stem_dir_angle3 = angle3;
     tagger_info.stem_dir_ratio = ratio;
   }
+
+  //std::cout << "stem_dir: " << !flag_bad << " " << (map_vertex_segments[main_vertex].size()==1) << " " << 1 << " " << angle << " " << max_energy/units::MeV << " " << angle1 << " " << angle2 << " " << angle3 << " " << ratio << std::endl;
   
   return flag_bad;
 }
@@ -197,6 +199,8 @@ bool WCPPID::NeutrinoID::multiple_showers(WCPPID::WCShower *max_shower, double m
     tagger_info.mgo_n_total_showers = total_num_showers;
     tagger_info.mgo_total_other_energy_1 = total_other_energy_1/units::MeV;
     tagger_info.mgo_flag = !flag_bad;
+
+    //std::cout << "mgo: " << max_energy/units::MeV << " " << E_max_energy/units::MeV << " " << E_total/units::MeV << " " << nshowers << " " << E_max_energy_1/units::MeV << " " << E_max_energy_2/units::MeV << " " << total_other_energy/units::MeV << " " << total_num_showers << " " << total_other_energy_1/units::MeV << " " << !flag_bad << std::endl;
   }
   
   return flag_bad;
@@ -361,6 +365,8 @@ bool WCPPID::NeutrinoID::other_showers(WCPPID::WCShower *shower, bool flag_singl
     tagger_info.mgt_e_indirect_total_energy = E_indirect_total_energy/units::MeV;
     tagger_info.mgt_flag_indirect_max_pio = flag_indirect_max_pi0;
     tagger_info.mgt_flag = !flag_bad;
+
+    // std::cout << "mgt: " << flag_single_shower << " " << max_energy/units::MeV << " " << Eshower/units::MeV << " " << total_other_energy/units::MeV << " " << max_energy_1/units::MeV << " " << E_indirect_max_energy/units::MeV << " " << E_direct_max_energy/units::MeV << " " << n_direct_showers << " " << E_direct_total_energy/units::MeV << " " << flag_indirect_max_pi0 << " " << E_indirect_total_energy/units::MeV << " " << !flag_bad << std::endl;
   }
   
   
@@ -390,6 +396,8 @@ bool WCPPID::NeutrinoID::stem_length(WCPPID::WCShower *max_shower, double max_en
     tagger_info.stem_len_num_daughters = pair_result.first;
     tagger_info.stem_len_daughter_length = pair_result.second/units::cm;
     tagger_info.stem_len_flag = !flag_bad;
+
+    // std::cout << "stem_len: " << max_energy/units::MeV << " " << sg->get_length()/units::cm << " " << sg->get_flag_avoid_muon_check() << " " << pair_result.first << " " << pair_result.second/units::cm << " " << !flag_bad << std::endl;
   }
   
   return flag_bad;
@@ -475,6 +483,8 @@ bool WCPPID::NeutrinoID::vertex_inside_shower(WCPPID::WCShower *shower, bool fla
 	tagger_info.vis_1_tmp_length2 = tmp_length2/units::cm;
 	tagger_info.vis_1_particle_type = max_sg->get_particle_type();
 	tagger_info.vis_1_flag = !flag_bad1;
+
+	//	std::cout << "vis_1: " << 1 << " " << map_vertex_segments[vertex].size() << " " << Eshower/units::MeV << " " << num_good_tracks << " " << max_angle << " " << tmp_length1/units::cm << " " << tmp_length2/units::cm << " " << max_sg->get_particle_type() << " " << !flag_bad1 << std::endl;
       }
       
     }
@@ -566,6 +576,8 @@ bool WCPPID::NeutrinoID::vertex_inside_shower(WCPPID::WCShower *shower, bool fla
 	tagger_info.vis_2_max_angle = max_angle;
 	tagger_info.vis_2_max_weak_track = max_weak_track;
 	tagger_info.vis_2_flag = !flag_bad2;
+
+	//	std::cout << "vis_2: " << 1 << " " << map_vertex_segments[vertex].size() << " " << min_angle << " " << min_weak_track << " " << beam_dir.Angle(dir_shower)/3.1415926*180. << " " << min_angle1 << " " << fabs(3.1415926/2. - drift_dir.Angle(dir_shower))/3.1415926*180. << " " << min_medium_dQ_dx << " " << min_length/units::cm << " " << sg->get_length()/units::cm << " " << max_angle << " " << max_weak_track << " " << !flag_bad2 << std::endl;
       }
 
 
@@ -649,6 +661,8 @@ bool WCPPID::NeutrinoID::compare_muon_energy(WCPPID::WCShower *max_shower, doubl
     tagger_info.cme_length = tmp_shower_total_length/units::cm;
     tagger_info.cme_angle_beam = dir_beam.Angle(dir_shower)/3.1415926*180.;
     tagger_info.cme_flag = !flag_bad;
+
+    //  std::cout << "cme: " << E_muon/units::MeV << " " << max_energy/units::MeV << " " << muon_length/units::cm << " " << tmp_shower_total_length/units::cm << " " << dir_beam.Angle(dir_shower)/3.1415926*180. << " " << !flag_bad << std::endl;
   }
   //	  std::cout << "Xin_A: " << max_energy << " " << E_muon << " " << muon_length/units::cm << std::endl;
   

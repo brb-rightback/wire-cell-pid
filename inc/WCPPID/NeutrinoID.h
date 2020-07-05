@@ -368,8 +368,9 @@ namespace WCPPID{
 
 
     // bad reconstruction_1
-    
     int br_filled;
+    int br1_flag;
+    
     //bad reconstruction 1_1
     int br1_1_flag;
     int br1_1_shower_type;
