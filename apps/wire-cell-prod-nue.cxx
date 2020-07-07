@@ -1790,6 +1790,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("vis_1_energy",&tagger_info.vis_1_energy,"vis_1_energy/D");
     T_tagger->Branch("vis_1_num_good_tracks",&tagger_info.vis_1_num_good_tracks,"vis_1_num_good_tracks/I");
     T_tagger->Branch("vis_1_max_angle",&tagger_info.vis_1_max_angle,"vis_1_max_angle/D");
+    T_tagger->Branch("vis_1_max_shower_angle",&tagger_info.vis_1_max_shower_angle,"vis_1_max_shower_angle/D");
     T_tagger->Branch("vis_1_tmp_length1",&tagger_info.vis_1_tmp_length1,"vis_1_tmp_length1/D");
     T_tagger->Branch("vis_1_tmp_length2",&tagger_info.vis_1_tmp_length2,"vis_1_tmp_length2/D");
     T_tagger->Branch("vis_1_particle_type",&tagger_info.vis_1_particle_type,"vis_1_particle_type/D");

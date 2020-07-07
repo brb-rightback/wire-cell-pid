@@ -345,6 +345,7 @@ namespace WCPPID{
     double vis_1_energy;
     int vis_1_num_good_tracks;
     double vis_1_max_angle;
+    double vis_1_max_shower_angle;
     double vis_1_tmp_length1;
     double vis_1_tmp_length2;
     double vis_1_particle_type;

@@ -618,6 +618,7 @@ void print_valid(TString run_info = "7019_5_264"){
   double vis_1_energy;
   int vis_1_num_good_tracks;
   double vis_1_max_angle;
+  double vis_1_max_shower_angle;
   double vis_1_tmp_length1;
   double vis_1_tmp_length2;
   double vis_1_particle_type;
@@ -644,6 +645,7 @@ void print_valid(TString run_info = "7019_5_264"){
   T->SetBranchAddress("vis_1_energy",&vis_1_energy);
   T->SetBranchAddress("vis_1_num_good_tracks",&vis_1_num_good_tracks);
   T->SetBranchAddress("vis_1_max_angle",&vis_1_max_angle);
+  T->SetBranchAddress("vis_1_max_shower_angle",&vis_1_max_shower_angle);
   T->SetBranchAddress("vis_1_tmp_length1",&vis_1_tmp_length1);
   T->SetBranchAddress("vis_1_tmp_length2",&vis_1_tmp_length2);
   T->SetBranchAddress("vis_1_particle_type",&vis_1_particle_type);
@@ -1240,7 +1242,7 @@ void print_valid(TString run_info = "7019_5_264"){
   }
 
   if (vis_print){
-    std::cout << "vis_1: " << vis_1_filled << " " << vis_1_n_vtx_segs << " " << vis_1_energy << " " << vis_1_num_good_tracks << " " << vis_1_max_angle << " " << vis_1_tmp_length1 << " " << vis_1_tmp_length2 << " " << vis_1_particle_type << " " << vis_1_flag << std::endl;
+    std::cout << "vis_1: " << vis_1_filled << " " << vis_1_n_vtx_segs << " " << vis_1_energy << " " << vis_1_num_good_tracks << " " << vis_1_max_angle << " " << vis_1_max_shower_angle << " " << vis_1_tmp_length1 << " " << vis_1_tmp_length2 << " " << vis_1_particle_type << " " << vis_1_flag << std::endl;
     std::cout << "vis_2: " << vis_2_filled << " " << vis_2_n_vtx_segs << " " << vis_2_min_angle << " " << vis_2_min_weak_track << " " << vis_2_angle_beam << " " << vis_2_min_angle1 << " " << vis_2_iso_angle1 << " " << vis_2_min_medium_dQ_dx << " " << vis_2_min_length << " " << vis_2_sg_length << " " << vis_2_max_angle << " " << vis_2_max_weak_track << " " << vis_2_flag << std::endl;
   }
 

@@ -2204,6 +2204,7 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.vis_1_energy = 0;
   tagger_info.vis_1_num_good_tracks = 0;
   tagger_info.vis_1_max_angle = 0;
+  tagger_info.vis_1_max_shower_angle = 0;
   tagger_info.vis_1_tmp_length1 = 0;
   tagger_info.vis_1_tmp_length2 = 0;
   tagger_info.vis_1_particle_type = 0;

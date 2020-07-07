@@ -904,6 +904,7 @@ void plot_valid(){
   double vis_1_energy;
   int vis_1_num_good_tracks;
   double vis_1_max_angle;
+  double vis_1_max_shower_angle;
   double vis_1_tmp_length1;
   double vis_1_tmp_length2;
   double vis_1_particle_type;
@@ -930,6 +931,7 @@ void plot_valid(){
   T->SetBranchAddress("vis_1_energy",&vis_1_energy);
   T->SetBranchAddress("vis_1_num_good_tracks",&vis_1_num_good_tracks);
   T->SetBranchAddress("vis_1_max_angle",&vis_1_max_angle);
+  T->SetBranchAddress("vis_1_max_shower_angle",&vis_1_max_shower_angle);
   T->SetBranchAddress("vis_1_tmp_length1",&vis_1_tmp_length1);
   T->SetBranchAddress("vis_1_tmp_length2",&vis_1_tmp_length2);
   T->SetBranchAddress("vis_1_particle_type",&vis_1_particle_type);

@@ -457,13 +457,37 @@ bool WCPPID::NeutrinoID::vertex_inside_shower(WCPPID::WCShower *shower, bool fla
       }
     }
 
+    double max_shower_angle = 0;
+    dir1 = shower->cal_dir_3vector(vertex_point, 100*units::cm);
+    for (auto it = showers.begin(); it != showers.end(); it++){
+      WCPPID::WCShower *shower1 = *it;
+      if (shower1 == shower) continue;
+      if (shower1->get_start_vertex().second>2) continue;
+      double energy = 0;
+      if (shower1->get_kine_best() != 0){ 
+	energy = shower1->get_kine_best();
+      }else{
+	energy = shower1->get_kine_charge();
+      }
+      
+      TVector3 dir2(shower1->get_start_point().x - vertex_point.x, shower1->get_start_point().y - vertex_point.y, shower1->get_start_point().z - vertex_point.z);
+      TVector3 dir3 = shower1->cal_dir_3vector(shower1->get_start_point(), 100*units::cm);
+      
+      if (energy > 30*units::MeV && energy > 0.2 * Eshower && dir2.Angle(dir3)/3.1415926*180. < 20){
+        double angle1 = dir1.Angle(dir3)/3.1415926*180.;
+	if (max_shower_angle < angle1) max_shower_angle = angle1;
+	//std::cout << Eshower/units::MeV << " " << energy/units::MeV << " " << dir1.Angle(dir3)/3.1415926*180. << " " << dir2.Angle(dir3)/3.1415926*180. << std::endl;
+      }
+    }
+
     
     if (max_sg !=0){
       double tmp_length1 = max_sg->get_length();
       double tmp_length2 = shower->get_start_segment()->get_length();
       if (map_vertex_segments[vertex].size()>=3 && Eshower < 500*units::MeV && num_good_tracks == 0
 	  && (max_angle > 150  && (tmp_length1 < 15*units::cm || tmp_length2 < 15*units::cm) && std::max(tmp_length1, tmp_length2) < 25*units::cm
-	      || max_angle > 170  && (tmp_length1 < 25*units::cm || tmp_length2 < 25*units::cm) && std::max(tmp_length1, tmp_length2) < 35*units::cm)){
+	      || (max_angle > 170 || max_shower_angle > 170 && max_angle > 120) && (tmp_length1 < 25*units::cm || tmp_length2 < 25*units::cm) && std::max(tmp_length1, tmp_length2) < 35*units::cm
+	      )){
 	flag_bad1 = true;
 	if (flag_print) std::cout << "Xin_O_3: " << Eshower << " " << map_vertex_segments[vertex].size() << " " << num_good_tracks << " " << max_angle << " " << max_sg->get_length()/units::cm << " " << shower->get_start_segment()->get_length()/units::cm << std::endl;
       }else if (map_vertex_segments[vertex].size()==2 && Eshower < 500*units::MeV && num_good_tracks == 0 && max_angle > 150 && max_sg->get_particle_type()==13 && (tmp_length1 < 35*units::cm || tmp_length2 < 35*units::cm)){
@@ -471,7 +495,7 @@ bool WCPPID::NeutrinoID::vertex_inside_shower(WCPPID::WCShower *shower, bool fla
 	if (flag_print) std::cout << "Xin_O_2: " << Eshower << " " << map_vertex_segments[vertex].size() << " " << num_good_tracks << " " << max_angle << " " << max_sg->get_length()/units::cm << " " << shower->get_start_segment()->get_length()/units::cm << std::endl;
       }
       
-      //	    std::cout << "kaka: " << max_energy << " " << max_angle << " " << map_vertex_segments[main_vertex].size() << " " << max_sg->get_particle_type()  << " " << max_sg->is_dir_weak() << " " << max_sg->get_medium_dQ_dx()/(43e3/units::cm) << " " << num_good_tracks << " " << max_sg->get_length()/units::cm << " " << max_shower->get_start_segment()->get_length()/units::cm << " " << std::endl;
+      //      std::cout << "kaka: " << Eshower/units::MeV << " " << max_angle << " " << max_shower_angle << " " << map_vertex_segments[main_vertex].size() << " " << max_sg->get_particle_type()  << " " << max_sg->is_dir_weak() << " " << max_sg->get_medium_dQ_dx()/(43e3/units::cm) << " " << num_good_tracks << " " << tmp_length1/units::cm << " " << tmp_length2/units::cm << " " << std::endl;
 
       if (flag_fill){
 	tagger_info.vis_1_filled = true;
@@ -479,6 +503,7 @@ bool WCPPID::NeutrinoID::vertex_inside_shower(WCPPID::WCShower *shower, bool fla
 	tagger_info.vis_1_energy = Eshower/units::MeV;
 	tagger_info.vis_1_num_good_tracks = num_good_tracks;
 	tagger_info.vis_1_max_angle = max_angle;
+	tagger_info.vis_1_max_shower_angle = max_shower_angle;
 	tagger_info.vis_1_tmp_length1 = tmp_length1/units::cm;
 	tagger_info.vis_1_tmp_length2 = tmp_length2/units::cm;
 	tagger_info.vis_1_particle_type = max_sg->get_particle_type();
