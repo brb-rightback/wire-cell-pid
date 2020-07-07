@@ -114,7 +114,7 @@ void WCPPID::NeutrinoID::shower_clustering_connecting_to_main_vertex(){
       if (map_segment_in_shower.find(sg) != map_segment_in_shower.end()) continue;
       // 6583_144_7201
       double medium_dQ_dx_1 = sg->get_medium_dQ_dx()/(43e3/units::cm);
-      if (sg->get_particle_type()==11 ||sg->get_particle_type()==2212 && (medium_dQ_dx_1 > 1.45 && pair_result.first <=3 || medium_dQ_dx_1 > 2.0) || sg->get_particle_type()== 211 && medium_dQ_dx_1 > 2.0) continue;
+      if (sg->get_particle_type()==11 ||sg->get_particle_type()==2212 && (medium_dQ_dx_1 > 1.45 && pair_result.first <=3 || medium_dQ_dx_1 > 2.7) || sg->get_particle_type()== 211 && medium_dQ_dx_1 > 2.0) continue;
       
       WCPPID::WCShower *shower = new WCPPID::WCShower();
       shower->set_start_vertex(main_vertex, 1);
