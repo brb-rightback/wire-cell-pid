@@ -109,10 +109,12 @@ void WCPPID::NeutrinoID::shower_clustering_connecting_to_main_vertex(){
 
       
       std::pair<int, double> pair_result = calculate_num_daughter_tracks(main_vertex, sg, true);
-      //std::cout << sg->get_id() << " " << sg->get_particle_type()<< " " << sg->get_medium_dQ_dx()/(43e3/units::cm) << " " << pair_result.first << std::endl;
+
+      //      std::cout << sg->get_id() << " " << sg->get_particle_type()<< " " << sg->get_medium_dQ_dx()/(43e3/units::cm) << " " << pair_result.first << std::endl;
       if (map_segment_in_shower.find(sg) != map_segment_in_shower.end()) continue;
       // 6583_144_7201
-      if (sg->get_particle_type()==11 ||sg->get_particle_type()==2212 && (sg->get_medium_dQ_dx()/(43e3/units::cm)>1.45 && pair_result.first <=3 || sg->get_medium_dQ_dx()/(43e3/units::cm)>1.45 > 2.0)) continue;
+      double medium_dQ_dx_1 = sg->get_medium_dQ_dx()/(43e3/units::cm);
+      if (sg->get_particle_type()==11 ||sg->get_particle_type()==2212 && (medium_dQ_dx_1 > 1.45 && pair_result.first <=3 || medium_dQ_dx_1 > 2.0) || sg->get_particle_type()== 211 && medium_dQ_dx_1 > 2.0) continue;
       
       WCPPID::WCShower *shower = new WCPPID::WCShower();
       shower->set_start_vertex(main_vertex, 1);
@@ -183,10 +185,10 @@ void WCPPID::NeutrinoID::shower_clustering_connecting_to_main_vertex(){
       }
       
       
-      //std::cout << "kaka: " << flag_good_track << " " << n_tracks << " " << n_showers << " " << total_length/units::cm << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << " " << n_multi_vtx << " " << n_two_vtx << std::endl;
+      //      std::cout << "kaka: " << flag_good_track << " " << n_tracks << " " << n_showers << " " << total_length/units::cm << " " << max_length/units::cm << " " << total_length/n_tracks/units::cm << " " << n_multi_vtx << " " << n_two_vtx << std::endl;
 
       //7003_550_27509	
-      if ((!flag_good_track) && n_multi_vtx >0 && max_length < 65*units::cm && (total_length < n_tracks * 27*units::cm && total_length < 85*units::cm || total_length < n_tracks * 18*units::cm && total_length < 95*units::cm )&& n_two_vtx < 3){
+      if ((!flag_good_track) && n_multi_vtx >0 && max_length < 65*units::cm && (total_length < n_tracks * 27*units::cm && total_length < 85*units::cm || total_length < n_tracks * 18*units::cm && total_length < 95*units::cm ) && n_two_vtx < 3){
 	map_shower_max_sg[shower] = max_sg;
 	if (shower->get_total_length() > max_length){
 	  max_shower = shower;
