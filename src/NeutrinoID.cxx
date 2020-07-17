@@ -2342,7 +2342,6 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.cosmict_flag_7 = false;
   tagger_info.cosmict_flag_8 = false;
   tagger_info.cosmict_flag_9 = false;
-  tagger_info.cosmict_flag_10 = false;
   tagger_info.cosmict_flag = false;
 
   // single muon
@@ -2357,7 +2356,8 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.cosmict_2_dQ_dx_front = 0;
   tagger_info.cosmict_2_theta = 0;
   tagger_info.cosmict_2_phi = 0;
-
+  tagger_info.cosmict_2_valid_tracks = 0;
+  
   // single muon (long)
   tagger_info.cosmict_3_filled = 0;
   tagger_info.cosmict_3_flag_inside = 0;
@@ -2367,6 +2367,7 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.cosmict_3_dQ_dx_end = 0;
   tagger_info.cosmict_3_theta = 0;
   tagger_info.cosmict_3_phi = 0;
+  tagger_info.cosmict_3_valid_tracks = 0;
 
   // kinematics muon
   tagger_info.cosmict_4_filled = 0;
@@ -2404,4 +2405,16 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.cosmict_8_flag_out = 0;
   tagger_info.cosmict_8_muon_length = 0;
   tagger_info.cosmict_8_acc_length = 0;
+
+  // numu tagger
+  tagger_info.numu_cc_flag_3 = 0;
+  tagger_info.numu_cc_3_particle_type = 0;
+  tagger_info.numu_cc_3_max_length = 0;
+  tagger_info.numu_cc_3_acc_track_length = 0;
+  tagger_info.numu_cc_3_max_length_all = 0;
+  tagger_info.numu_cc_3_max_muon_length = 0;
+  tagger_info.numu_cc_3_n_daughter_tracks = 0;
+  tagger_info.numu_cc_3_n_daughter_all = 0;
+
+  tagger_info.numu_cc_flag = 0;
 }

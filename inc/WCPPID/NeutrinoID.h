@@ -619,7 +619,7 @@ namespace WCPPID{
     int cosmict_flag_7;  // muon+ michel
     int cosmict_flag_8;  // muon + michel + special
     int cosmict_flag_9;  // this tagger is relevant for nueCC, see "cosmic tagger ones, one case of cosmics ..." (frist one ...)
-    int cosmict_flag_10;  // front upstream (dirt)
+    std::vector<int> cosmict_flag_10;  // front upstream (dirt)
     int cosmict_flag;
 
     // single muon
@@ -634,6 +634,7 @@ namespace WCPPID{
     double cosmict_2_dQ_dx_front;
     double cosmict_2_theta;
     double cosmict_2_phi;
+    int cosmict_2_valid_tracks;
 
     // signel muon (long)
     int cosmict_3_filled;
@@ -644,6 +645,7 @@ namespace WCPPID{
     double cosmict_3_dQ_dx_front;
     double cosmict_3_theta;
     double cosmict_3_phi;
+    int cosmict_3_valid_tracks;
 
     // kinematics muon
     int cosmict_4_filled;
@@ -691,6 +693,38 @@ namespace WCPPID{
     std::vector<double> cosmict_10_length;
     
     // numu vs. nc tagger
+    int numu_cc_flag;
+
+    // single muon connected to neutrino vertex
+    std::vector<int> numu_cc_flag_1;
+    std::vector<int> numu_cc_1_particle_type;
+    std::vector<double> numu_cc_1_length;
+    std::vector<double> numu_cc_1_medium_dQ_dx;
+    std::vector<double> numu_cc_1_dQ_dx_cut;
+    std::vector<double> numu_cc_1_direct_length;
+    std::vector<int> numu_cc_1_n_daughter_tracks;
+    std::vector<int> numu_cc_1_n_daughter_all;
+    
+    // long muon connected to neutrino vertex
+    std::vector<int> numu_cc_flag_2;
+    std::vector<double> numu_cc_2_length;
+    std::vector<double> numu_cc_2_total_length;
+    std::vector<int> numu_cc_2_n_daughter_tracks;
+    std::vector<int> numu_cc_2_n_daughter_all;
+    
+    // any muon ...
+    int numu_cc_flag_3;
+    int numu_cc_3_particle_type;
+    double numu_cc_3_max_length;
+    double numu_cc_3_acc_track_length;
+    double numu_cc_3_max_length_all;
+    double numu_cc_3_max_muon_length;
+    int numu_cc_3_n_daughter_tracks;
+    int numu_cc_3_n_daughter_all;
+    
+    
+
+    
     
   };
 
@@ -964,6 +998,9 @@ namespace WCPPID{
 
     bool cosmic_tagger();
     std::pair<bool, double> numu_tagger();
+    std::pair<int, int> count_daughters(WCPPID::ProtoSegment *max_muon);
+    std::pair<int, int> count_daughters(WCPPID::WCShower *max_long_muon);
+    
     bool nue_tagger(double muon_kine_energy = 0);
     void examine_showers();
     void examine_shower_1();

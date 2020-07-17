@@ -2002,20 +2002,21 @@ int main(int argc, char* argv[])
     T_tagger->Branch("cosmict_flag_7",&tagger_info.cosmict_flag_7,"cosmict_flag_7/I");
     T_tagger->Branch("cosmict_flag_8",&tagger_info.cosmict_flag_8,"cosmict_flag_8/I");
     T_tagger->Branch("cosmict_flag_9",&tagger_info.cosmict_flag_9,"cosmict_flag_9/I");
-    T_tagger->Branch("cosmict_flag_10",&tagger_info.cosmict_flag_10,"cosmict_flag_10/I");
+    T_tagger->Branch("cosmict_flag_10",&tagger_info.cosmict_flag_10);
     T_tagger->Branch("cosmict_flag",&tagger_info.cosmict_flag,"cosmict_flag/I");
 
     T_tagger->Branch("cosmict_2_filled",&tagger_info.cosmict_2_filled,"cosmict_2_filled/I");
     T_tagger->Branch("cosmict_2_particle_type",&tagger_info.cosmict_2_particle_type,"cosmict_2_particle_type/I");
     T_tagger->Branch("cosmict_2_n_muon_tracks",&tagger_info.cosmict_2_n_muon_tracks,"cosmict_2_n_muon_tracks/I");
-    T_tagger->Branch("cosmict_2_total_shower_length",&tagger_info.cosmict_2_total_shower_length,"cosmict_2_total_shower_length/I");
-    T_tagger->Branch("cosmict_2_flag_inside",&tagger_info.cosmict_2_flag_inside,"cosmict_2_flag_inside/D");
-    T_tagger->Branch("cosmict_2_angle_beam",&tagger_info.cosmict_2_angle_beam,"cosmict_2_angle_beam/I");
-    T_tagger->Branch("cosmict_2_flag_dir_weak",&tagger_info.cosmict_2_flag_dir_weak,"cosmict_2_flag_dir_weak/D");
-    T_tagger->Branch("cosmict_2_dQ_dx_end",&tagger_info.cosmict_2_dQ_dx_end,"cosmict_2_dQ_dx_end/I");
+    T_tagger->Branch("cosmict_2_total_shower_length",&tagger_info.cosmict_2_total_shower_length,"cosmict_2_total_shower_length/D");
+    T_tagger->Branch("cosmict_2_flag_inside",&tagger_info.cosmict_2_flag_inside,"cosmict_2_flag_inside/I");
+    T_tagger->Branch("cosmict_2_angle_beam",&tagger_info.cosmict_2_angle_beam,"cosmict_2_angle_beam/D");
+    T_tagger->Branch("cosmict_2_flag_dir_weak",&tagger_info.cosmict_2_flag_dir_weak,"cosmict_2_flag_dir_weak/I");
+    T_tagger->Branch("cosmict_2_dQ_dx_end",&tagger_info.cosmict_2_dQ_dx_end,"cosmict_2_dQ_dx_end/D");
     T_tagger->Branch("cosmict_2_dQ_dx_front",&tagger_info.cosmict_2_dQ_dx_front,"cosmict_2_dQ_dx_front/D");
     T_tagger->Branch("cosmict_2_theta",&tagger_info.cosmict_2_theta,"cosmict_2_theta/D");
     T_tagger->Branch("cosmict_2_phi",&tagger_info.cosmict_2_phi,"cosmict_2_phi/D");
+    T_tagger->Branch("cosmict_2_valid_tracks",&tagger_info.cosmict_2_valid_tracks,"cosmict_2_valid_tracks/I");
 
     T_tagger->Branch("cosmict_3_filled",&tagger_info.cosmict_3_filled,"cosmict_3_filled/I");
     T_tagger->Branch("cosmict_3_flag_inside",&tagger_info.cosmict_3_flag_inside,"cosmict_3_flag_inside/I");
@@ -2025,6 +2026,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("cosmict_3_dQ_dx_front",&tagger_info.cosmict_3_dQ_dx_front,"cosmict_3_dQ_dx_front/D");
     T_tagger->Branch("cosmict_3_theta",&tagger_info.cosmict_3_theta,"cosmict_3_theta/D");
     T_tagger->Branch("cosmict_3_phi",&tagger_info.cosmict_3_phi,"cosmict_3_phi/D");
+    T_tagger->Branch("cosmict_3_valid_tracks",&tagger_info.cosmict_3_valid_tracks,"cosmict_3_valid_tracks/I");
     
     T_tagger->Branch("cosmict_4_filled",&tagger_info.cosmict_4_filled,"cosmict_4_filled/I");
     T_tagger->Branch("cosmict_4_flag_inside",&tagger_info.cosmict_4_flag_inside,"cosmict_4_flag_inside/I");
@@ -2056,8 +2058,8 @@ int main(int argc, char* argv[])
 
     T_tagger->Branch("cosmict_8_filled",&tagger_info.cosmict_8_filled,"cosmict_8_filled/I");
     T_tagger->Branch("cosmict_8_flag_out",&tagger_info.cosmict_8_flag_out,"cosmict_8_flag_out/I");
-    T_tagger->Branch("cosmict_8_muon_length",&tagger_info.cosmict_8_muon_length,"cosmict_8_muon_length/I");
-    T_tagger->Branch("cosmict_8_acc_length",&tagger_info.cosmict_8_acc_length,"cosmict_8_acc_length/I");
+    T_tagger->Branch("cosmict_8_muon_length",&tagger_info.cosmict_8_muon_length,"cosmict_8_muon_length/D");
+    T_tagger->Branch("cosmict_8_acc_length",&tagger_info.cosmict_8_acc_length,"cosmict_8_acc_length/D");
 
     T_tagger->Branch("cosmict_10_flag_inside",&tagger_info.cosmict_10_flag_inside);
     T_tagger->Branch("cosmict_10_vtx_z",&tagger_info.cosmict_10_vtx_z);
@@ -2066,7 +2068,31 @@ int main(int argc, char* argv[])
     T_tagger->Branch("cosmict_10_angle_beam",&tagger_info.cosmict_10_angle_beam);
     T_tagger->Branch("cosmict_10_length",&tagger_info.cosmict_10_length);
     
+    T_tagger->Branch("numu_cc_flag",&tagger_info.numu_cc_flag,"numu_cc_flag/I");
 
+    T_tagger->Branch("numu_cc_flag_1",&tagger_info.numu_cc_flag_1);
+    T_tagger->Branch("numu_cc_1_particle_type",&tagger_info.numu_cc_1_particle_type);
+    T_tagger->Branch("numu_cc_1_length",&tagger_info.numu_cc_1_length);
+    T_tagger->Branch("numu_cc_1_medium_dQ_dx",&tagger_info.numu_cc_1_medium_dQ_dx);
+    T_tagger->Branch("numu_cc_1_dQ_dx_cut",&tagger_info.numu_cc_1_dQ_dx_cut);
+    T_tagger->Branch("numu_cc_1_direct_length",&tagger_info.numu_cc_1_direct_length);
+    T_tagger->Branch("numu_cc_1_n_daughter_tracks",&tagger_info.numu_cc_1_n_daughter_tracks);
+    T_tagger->Branch("numu_cc_1_n_daughter_all",&tagger_info.numu_cc_1_n_daughter_all);
+
+    T_tagger->Branch("numu_cc_flag_2",&tagger_info.numu_cc_flag_2);
+    T_tagger->Branch("numu_cc_2_length",&tagger_info.numu_cc_2_length);
+    T_tagger->Branch("numu_cc_2_total_length",&tagger_info.numu_cc_2_total_length);
+    T_tagger->Branch("numu_cc_2_n_daughter_tracks",&tagger_info.numu_cc_2_n_daughter_tracks);
+    T_tagger->Branch("numu_cc_2_n_daughter_all",&tagger_info.numu_cc_2_n_daughter_all);
+
+    T_tagger->Branch("numu_cc_flag_3",&tagger_info.numu_cc_flag_3,"numu_cc_flag_3/I");
+    T_tagger->Branch("numu_cc_3_particle_type",&tagger_info.numu_cc_3_particle_type,"numu_cc_3_particle_type/I");
+    T_tagger->Branch("numu_cc_3_max_length",&tagger_info.numu_cc_3_max_length,"numu_cc_3_max_length/D");
+    T_tagger->Branch("numu_cc_3_track_length",&tagger_info.numu_cc_3_acc_track_length,"numu_cc_3_acc_track_length/D");
+    T_tagger->Branch("numu_cc_3_max_length_all",&tagger_info.numu_cc_3_max_length_all,"numu_cc_3_max_length_all/D");
+    T_tagger->Branch("numu_cc_3_max_muon_length",&tagger_info.numu_cc_3_max_muon_length,"numu_cc_3_max_muon_length/D");
+    T_tagger->Branch("numu_cc_3_n_daughter_tracks",&tagger_info.numu_cc_3_n_daughter_tracks,"numu_cc_3_n_daughter_tracks/I");
+    T_tagger->Branch("numu_cc_3_n_daughter_all",&tagger_info.numu_cc_3_n_daughter_all,"numu_cc_3_n_daughter_all/I");
     
     for (size_t i=0;i!=neutrino_vec.size();i++){
       WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();
