@@ -2332,6 +2332,76 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.tro_flag = true;
 
 
-  // numu vs. NC tagger ...
+  // cosmic tagger
+  tagger_info.cosmict_flag_1 = false;
+  tagger_info.cosmict_flag_2 = false;
+  tagger_info.cosmict_flag_3 = false; 
+  tagger_info.cosmict_flag_4 = false;
+  tagger_info.cosmict_flag_5 = false;
+  tagger_info.cosmict_flag_6 = false;
+  tagger_info.cosmict_flag_7 = false;
+  tagger_info.cosmict_flag_8 = false;
+  tagger_info.cosmict_flag_9 = false;
+  tagger_info.cosmict_flag_10 = false;
+  tagger_info.cosmict_flag = false;
+
+  // single muon
+  tagger_info.cosmict_2_filled = 0;
+  tagger_info.cosmict_2_particle_type = 0;
+  tagger_info.cosmict_2_n_muon_tracks = 0;
+  tagger_info.cosmict_2_total_shower_length = 0;
+  tagger_info.cosmict_2_flag_inside = 1;
+  tagger_info.cosmict_2_angle_beam = 0;
+  tagger_info.cosmict_2_flag_dir_weak = 0;
+  tagger_info.cosmict_2_dQ_dx_end = 0;
+  tagger_info.cosmict_2_dQ_dx_front = 0;
+  tagger_info.cosmict_2_theta = 0;
+  tagger_info.cosmict_2_phi = 0;
+
+  // single muon (long)
+  tagger_info.cosmict_3_filled = 0;
+  tagger_info.cosmict_3_flag_inside = 0;
+  tagger_info.cosmict_3_angle_beam = 0;
+  tagger_info.cosmict_3_flag_dir_weak = 0;
+  tagger_info.cosmict_3_dQ_dx_front = 0;
+  tagger_info.cosmict_3_dQ_dx_end = 0;
+  tagger_info.cosmict_3_theta = 0;
+  tagger_info.cosmict_3_phi = 0;
+
+  // kinematics muon
+  tagger_info.cosmict_4_filled = 0;
+  tagger_info.cosmict_4_flag_inside = 0;
+  tagger_info.cosmict_4_angle_beam = 0;
+  tagger_info.cosmict_4_connected_showers = 0;
   
+  // kinematics muon (long)
+  tagger_info.cosmict_5_filled = 0;
+  tagger_info.cosmict_5_flag_inside = 0;
+  tagger_info.cosmict_5_angle_beam = 0;
+  tagger_info.cosmict_5_connected_showers = 0;
+
+  // special
+  tagger_info.cosmict_6_filled = 0;
+  tagger_info.cosmict_6_flag_dir_weak = 0;
+  tagger_info.cosmict_6_flag_inside = 1; 
+  tagger_info.cosmict_6_angle = 0;
+
+  //muon + michel
+  tagger_info.cosmict_7_filled = 0;
+  tagger_info.cosmict_7_flag_sec = 0;
+  tagger_info.cosmict_7_n_muon_tracks = 0;
+  tagger_info.cosmict_7_total_shower_length = 0;
+  tagger_info.cosmict_7_flag_inside = 1;
+  tagger_info.cosmict_7_angle_beam =  0;
+  tagger_info.cosmict_7_flag_dir_weak = 0;
+  tagger_info.cosmict_7_dQ_dx_end = 0;
+  tagger_info.cosmict_7_dQ_dx_front = 0;
+  tagger_info.cosmict_7_theta = 0;
+  tagger_info.cosmict_7_phi = 0;
+
+  // muon + michel + special 
+  tagger_info.cosmict_8_filled = 0;
+  tagger_info.cosmict_8_flag_out = 0;
+  tagger_info.cosmict_8_muon_length = 0;
+  tagger_info.cosmict_8_acc_length = 0;
 }

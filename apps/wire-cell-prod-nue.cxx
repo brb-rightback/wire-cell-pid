@@ -1990,6 +1990,83 @@ int main(int argc, char* argv[])
     T_tagger->Branch("tro_5_v_flag",&tagger_info.tro_5_v_flag);
 
     T_tagger->Branch("tro_flag",&tagger_info.tro_flag,"tro_flag/I");
+
+
+    // cosmic tagger ...
+    T_tagger->Branch("cosmict_flag_1",&tagger_info.cosmict_flag_1,"cosmict_flag_1/I");
+    T_tagger->Branch("cosmict_flag_2",&tagger_info.cosmict_flag_2,"cosmict_flag_2/I");
+    T_tagger->Branch("cosmict_flag_3",&tagger_info.cosmict_flag_3,"cosmict_flag_3/I");
+    T_tagger->Branch("cosmict_flag_4",&tagger_info.cosmict_flag_4,"cosmict_flag_4/I");
+    T_tagger->Branch("cosmict_flag_5",&tagger_info.cosmict_flag_5,"cosmict_flag_5/I");
+    T_tagger->Branch("cosmict_flag_6",&tagger_info.cosmict_flag_6,"cosmict_flag_6/I");
+    T_tagger->Branch("cosmict_flag_7",&tagger_info.cosmict_flag_7,"cosmict_flag_7/I");
+    T_tagger->Branch("cosmict_flag_8",&tagger_info.cosmict_flag_8,"cosmict_flag_8/I");
+    T_tagger->Branch("cosmict_flag_9",&tagger_info.cosmict_flag_9,"cosmict_flag_9/I");
+    T_tagger->Branch("cosmict_flag_10",&tagger_info.cosmict_flag_10,"cosmict_flag_10/I");
+    T_tagger->Branch("cosmict_flag",&tagger_info.cosmict_flag,"cosmict_flag/I");
+
+    T_tagger->Branch("cosmict_2_filled",&tagger_info.cosmict_2_filled,"cosmict_2_filled/I");
+    T_tagger->Branch("cosmict_2_particle_type",&tagger_info.cosmict_2_particle_type,"cosmict_2_particle_type/I");
+    T_tagger->Branch("cosmict_2_n_muon_tracks",&tagger_info.cosmict_2_n_muon_tracks,"cosmict_2_n_muon_tracks/I");
+    T_tagger->Branch("cosmict_2_total_shower_length",&tagger_info.cosmict_2_total_shower_length,"cosmict_2_total_shower_length/I");
+    T_tagger->Branch("cosmict_2_flag_inside",&tagger_info.cosmict_2_flag_inside,"cosmict_2_flag_inside/D");
+    T_tagger->Branch("cosmict_2_angle_beam",&tagger_info.cosmict_2_angle_beam,"cosmict_2_angle_beam/I");
+    T_tagger->Branch("cosmict_2_flag_dir_weak",&tagger_info.cosmict_2_flag_dir_weak,"cosmict_2_flag_dir_weak/D");
+    T_tagger->Branch("cosmict_2_dQ_dx_end",&tagger_info.cosmict_2_dQ_dx_end,"cosmict_2_dQ_dx_end/I");
+    T_tagger->Branch("cosmict_2_dQ_dx_front",&tagger_info.cosmict_2_dQ_dx_front,"cosmict_2_dQ_dx_front/D");
+    T_tagger->Branch("cosmict_2_theta",&tagger_info.cosmict_2_theta,"cosmict_2_theta/D");
+    T_tagger->Branch("cosmict_2_phi",&tagger_info.cosmict_2_phi,"cosmict_2_phi/D");
+
+    T_tagger->Branch("cosmict_3_filled",&tagger_info.cosmict_3_filled,"cosmict_3_filled/I");
+    T_tagger->Branch("cosmict_3_flag_inside",&tagger_info.cosmict_3_flag_inside,"cosmict_3_flag_inside/I");
+    T_tagger->Branch("cosmict_3_angle_beam",&tagger_info.cosmict_3_angle_beam,"cosmict_3_angle_beam/D");
+    T_tagger->Branch("cosmict_3_flag_dir_weak",&tagger_info.cosmict_3_flag_dir_weak,"cosmict_3_flag_dir_weak/I");
+    T_tagger->Branch("cosmict_3_dQ_dx_end",&tagger_info.cosmict_3_dQ_dx_end,"cosmict_3_dQ_dx_end/D");
+    T_tagger->Branch("cosmict_3_dQ_dx_front",&tagger_info.cosmict_3_dQ_dx_front,"cosmict_3_dQ_dx_front/D");
+    T_tagger->Branch("cosmict_3_theta",&tagger_info.cosmict_3_theta,"cosmict_3_theta/D");
+    T_tagger->Branch("cosmict_3_phi",&tagger_info.cosmict_3_phi,"cosmict_3_phi/D");
+    
+    T_tagger->Branch("cosmict_4_filled",&tagger_info.cosmict_4_filled,"cosmict_4_filled/I");
+    T_tagger->Branch("cosmict_4_flag_inside",&tagger_info.cosmict_4_flag_inside,"cosmict_4_flag_inside/I");
+    T_tagger->Branch("cosmict_4_angle_beam",&tagger_info.cosmict_4_angle_beam,"cosmict_4_angle_beam/D");
+    T_tagger->Branch("cosmict_4_connected_showers",&tagger_info.cosmict_4_connected_showers,"cosmict_4_connected_showers/I");
+
+    T_tagger->Branch("cosmict_5_filled",&tagger_info.cosmict_5_filled,"cosmict_5_filled/I");
+    T_tagger->Branch("cosmict_5_flag_inside",&tagger_info.cosmict_5_flag_inside,"cosmict_5_flag_inside/I");
+    T_tagger->Branch("cosmict_5_angle_beam",&tagger_info.cosmict_5_angle_beam,"cosmict_5_angle_beam/D");
+    T_tagger->Branch("cosmict_5_connected_showers",&tagger_info.cosmict_5_connected_showers,"cosmict_5_connected_showers/I");
+
+    T_tagger->Branch("cosmict_6_filled",&tagger_info.cosmict_6_filled,"cosmict_6_filled/I");
+    T_tagger->Branch("cosmict_6_flag_dir_weak",&tagger_info.cosmict_6_flag_dir_weak,"cosmict_6_flag_dir_weak/I");
+    T_tagger->Branch("cosmict_6_flag_inside",&tagger_info.cosmict_6_flag_inside,"cosmict_6_flag_inside/I");
+    T_tagger->Branch("cosmict_6_angle",&tagger_info.cosmict_6_angle,"cosmict_6_angle/D");
+    
+
+    T_tagger->Branch("cosmict_7_filled",&tagger_info.cosmict_7_filled,"cosmict_7_filled/I");
+    T_tagger->Branch("cosmict_7_flag_sec",&tagger_info.cosmict_7_flag_sec,"cosmict_7_flag_sec/I");
+    T_tagger->Branch("cosmict_7_n_muon_tracks",&tagger_info.cosmict_7_n_muon_tracks,"cosmict_7_n_muon_tracks/I");
+    T_tagger->Branch("cosmict_7_total_shower_length",&tagger_info.cosmict_7_total_shower_length,"cosmict_7_total_shower_length/D");
+    T_tagger->Branch("cosmict_7_flag_inside",&tagger_info.cosmict_7_flag_inside,"cosmict_7_flag_inside/I");
+    T_tagger->Branch("cosmict_7_angle_beam",&tagger_info.cosmict_7_angle_beam,"cosmict_7_angle_beam/D");
+    T_tagger->Branch("cosmict_7_flag_dir_weak",&tagger_info.cosmict_7_flag_dir_weak,"cosmict_7_flag_dir_weak/I");
+    T_tagger->Branch("cosmict_7_dQ_dx_end",&tagger_info.cosmict_7_dQ_dx_end,"cosmict_7_dQ_dx_end/D");
+    T_tagger->Branch("cosmict_7_dQ_dx_front",&tagger_info.cosmict_7_dQ_dx_front,"cosmict_7_dQ_dx_front/D");
+    T_tagger->Branch("cosmict_7_theta",&tagger_info.cosmict_7_theta,"cosmict_7_theta/D");
+    T_tagger->Branch("cosmict_7_phi",&tagger_info.cosmict_7_phi,"cosmict_7_phi/D");
+
+    T_tagger->Branch("cosmict_8_filled",&tagger_info.cosmict_8_filled,"cosmict_8_filled/I");
+    T_tagger->Branch("cosmict_8_flag_out",&tagger_info.cosmict_8_flag_out,"cosmict_8_flag_out/I");
+    T_tagger->Branch("cosmict_8_muon_length",&tagger_info.cosmict_8_muon_length,"cosmict_8_muon_length/I");
+    T_tagger->Branch("cosmict_8_acc_length",&tagger_info.cosmict_8_acc_length,"cosmict_8_acc_length/I");
+
+    T_tagger->Branch("cosmict_10_flag_inside",&tagger_info.cosmict_10_flag_inside);
+    T_tagger->Branch("cosmict_10_vtx_z",&tagger_info.cosmict_10_vtx_z);
+    T_tagger->Branch("cosmict_10_flag_shower",&tagger_info.cosmict_10_flag_shower);
+    T_tagger->Branch("cosmict_10_flag_dir_weak",&tagger_info.cosmict_10_flag_dir_weak);
+    T_tagger->Branch("cosmict_10_angle_beam",&tagger_info.cosmict_10_angle_beam);
+    T_tagger->Branch("cosmict_10_length",&tagger_info.cosmict_10_length);
+    
+
     
     for (size_t i=0;i!=neutrino_vec.size();i++){
       WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();

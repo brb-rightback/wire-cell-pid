@@ -610,7 +610,85 @@ namespace WCPPID{
 
 
     // cosmic tagger ...
+    int cosmict_flag_1; // fiducial volume vertex
+    int cosmict_flag_2;  // single muon
+    int cosmict_flag_3;  // single muon (long)
+    int cosmict_flag_4;  // kinematics muon
+    int cosmict_flag_5; // kinematics muon (long)
+    int cosmict_flag_6; // special ...
+    int cosmict_flag_7;  // muon+ michel
+    int cosmict_flag_8;  // muon + michel + special
+    int cosmict_flag_9;  // this tagger is relevant for nueCC, see "cosmic tagger ones, one case of cosmics ..." (frist one ...)
+    int cosmict_flag_10;  // front upstream (dirt)
+    int cosmict_flag;
+
+    // single muon
+    int cosmict_2_filled;
+    int cosmict_2_particle_type;
+    int cosmict_2_n_muon_tracks;
+    double cosmict_2_total_shower_length;
+    int cosmict_2_flag_inside;
+    double cosmict_2_angle_beam;
+    int cosmict_2_flag_dir_weak;
+    double cosmict_2_dQ_dx_end;
+    double cosmict_2_dQ_dx_front;
+    double cosmict_2_theta;
+    double cosmict_2_phi;
+
+    // signel muon (long)
+    int cosmict_3_filled;
+    int cosmict_3_flag_inside;
+    double cosmict_3_angle_beam;
+    int cosmict_3_flag_dir_weak;
+    double cosmict_3_dQ_dx_end;
+    double cosmict_3_dQ_dx_front;
+    double cosmict_3_theta;
+    double cosmict_3_phi;
+
+    // kinematics muon
+    int cosmict_4_filled;
+    int cosmict_4_flag_inside;
+    double cosmict_4_angle_beam;
+    int cosmict_4_connected_showers;  // need to be careful about the nueCC ...
     
+    // kinematics muon (long)
+    int cosmict_5_filled;
+    int cosmict_5_flag_inside;
+    double cosmict_5_angle_beam;
+    int cosmict_5_connected_showers;
+
+    // special
+    int cosmict_6_filled;
+    int cosmict_6_flag_dir_weak;
+    int cosmict_6_flag_inside;
+    double cosmict_6_angle;
+
+    // muon + michel
+    int cosmict_7_filled;
+    int cosmict_7_flag_sec;
+    int cosmict_7_n_muon_tracks;
+    double cosmict_7_total_shower_length;
+    int cosmict_7_flag_inside;
+    double cosmict_7_angle_beam;
+    int cosmict_7_flag_dir_weak;
+    double cosmict_7_dQ_dx_end;
+    double cosmict_7_dQ_dx_front;
+    double cosmict_7_theta;
+    double cosmict_7_phi;
+    
+    // muon + michel + special
+    int cosmict_8_filled;
+    int cosmict_8_flag_out;
+    double cosmict_8_muon_length;
+    double cosmict_8_acc_length;
+    
+    // front upstream (dirt)
+    std::vector<int> cosmict_10_flag_inside;
+    std::vector<double> cosmict_10_vtx_z;
+    std::vector<int> cosmict_10_flag_shower;
+    std::vector<int> cosmict_10_flag_dir_weak;
+    std::vector<double> cosmict_10_angle_beam;
+    std::vector<double> cosmict_10_length;
     
     // numu vs. nc tagger
     

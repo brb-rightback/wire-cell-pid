@@ -130,6 +130,18 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 
 
 	//	std::cout << "Xin_BB: " << sg->get_particle_type() << " " <<  n_muon_tracks << " " << total_shower_length/units::cm << " " <<sg->get_length()/units::cm << " " << main_vertex->get_fit_pt().x/units::cm << " " << main_vertex->get_fit_pt().y/units::cm << " " << main_vertex->get_fit_pt().z/units::cm << " " << fid->inside_fiducial_volume(test_p1, offset_x) << " " << sg->is_dir_weak() << " " << dir.Theta()/3.1415926*180. << " " << dir.Phi()/3.1415926*180. << " " << dQ_dx_front/(43e3/units::cm) << " " << dQ_dx_end/(43e3/units::cm) << std::endl;
+
+	tagger_info.cosmict_2_filled = 1;
+	tagger_info.cosmict_2_particle_type = sg->get_particle_type();
+	tagger_info.cosmict_2_n_muon_tracks = n_muon_tracks;
+	tagger_info.cosmict_2_total_shower_length = total_shower_length/units::cm;
+	tagger_info.cosmict_2_flag_inside = flag_inside;
+	tagger_info.cosmict_2_angle_beam = dir.Angle(dir_beam)/3.1415926*180.;
+	tagger_info.cosmict_2_flag_dir_weak = sg->is_dir_weak();
+	tagger_info.cosmict_2_dQ_dx_end = dQ_dx_end/(43e3/units::cm);
+	tagger_info.cosmict_2_dQ_dx_front = dQ_dx_front/(43e3/units::cm);
+	tagger_info.cosmict_2_theta = dir.Theta()/3.1415926*180.;
+	tagger_info.cosmict_2_phi = dir.Phi()/3.1415926*180.;
 	
 	if (sg->get_particle_type() == 13 && n_muon_tracks <=2 && total_shower_length < 40*units::cm && ( (!flag_inside) && dir.Angle(dir_beam)/3.1415926*180. > 40  || (flag_inside &&  (sg->is_dir_weak() && (!(dQ_dx_end > 1.4 *43e3/units::cm && dQ_dx_end > 1.2 * dQ_dx_front)) || dir.Angle(dir_beam)/3.1415926*180. > 60)) )
 	    && (dir.Theta()/3.1415926*180.>=100. || fabs(fabs(dir.Phi()/3.1415926*180.)-90)<=50)
@@ -144,6 +156,8 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
       /* 	neutrino_type |= 1UL << 1; */
       /* 	return true; */
       /* } */
+	
+	
       }else if (long_muon != 0){
 	
 	WCPPID::ProtoSegment *start_sg = long_muon->get_start_segment();
@@ -176,6 +190,15 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	}
 
 	//	std::cout << "Xin_BB_(long): " << long_muon->get_total_track_length()/units::cm << " " << main_vertex->get_fit_pt().x/units::cm << " " << main_vertex->get_fit_pt().y/units::cm << " " << main_vertex->get_fit_pt().z/units::cm << " " << fid->inside_fiducial_volume(test_p1, offset_x) << " " << last_sg->is_dir_weak() << " " << dir.Theta()/3.1415926*180. << " " << dir.Phi()/3.1415926*180. << " " << dQ_dx_front/(43e3/units::cm) << " " << dQ_dx_end/(43e3/units::cm) << std::endl;
+
+	tagger_info.cosmict_3_filled = 1;
+	tagger_info.cosmict_3_flag_inside = flag_inside;
+	tagger_info.cosmict_3_angle_beam = dir.Angle(dir_beam)/3.1415926*180.;
+	tagger_info.cosmict_3_flag_dir_weak = last_sg->is_dir_weak();
+	tagger_info.cosmict_3_dQ_dx_front = dQ_dx_front/(43e3/units::cm);
+	tagger_info.cosmict_3_dQ_dx_end = dQ_dx_end/(43e3/units::cm);
+	tagger_info.cosmict_3_theta = dir.Theta()/3.1415926*180.;
+	tagger_info.cosmict_3_phi = dir.Phi()/3.1415926*180.;
 	
 	if ( ( (!flag_inside) && dir.Angle(dir_beam)/3.1415926*180. > 40
 	       || (flag_inside && 
@@ -197,6 +220,11 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
       TVector3 dir = sg->cal_dir_3vector(main_vertex->get_fit_pt(), 15*units::cm);
       bool flag_inside = fid->inside_fiducial_volume(test_p1, offset_x);
 
+      tagger_info.cosmict_4_filled = 1;
+      tagger_info.cosmict_4_flag_inside = flag_inside;
+      tagger_info.cosmict_4_angle_beam = dir.Angle(dir_beam)/3.1415926*180.;
+      tagger_info.cosmict_4_connected_showers = connected_showers;
+      
       //std::cout << "Xin: " << sg->get_length()/units::cm << " " << flag_inside << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << connected_showers << std::endl;
       if ( (!flag_inside) && dir.Angle(dir_beam)/3.1415926*180. > 100 && connected_showers ==0){
 	flag_cosmic_4 = true;
@@ -211,8 +239,13 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
       bool flag_inside = fid->inside_fiducial_volume(test_p1, offset_x); 
 
       //std::cout << "Xin_(long): " << flag_inside << " " << connected_showers << " " << dir.Angle(dir_beam)/3.1415926*180. << std::endl;
+
+      tagger_info.cosmict_5_filled = 1;
+      tagger_info.cosmict_5_flag_inside = flag_inside;
+      tagger_info.cosmict_5_angle_beam = dir.Angle(dir_beam)/3.1415926*180.;
+      tagger_info.cosmict_5_connected_showers = connected_showers;
       
-      if ( (!flag_inside) && dir.Angle(dir_beam)/3.1415926*180. > 100 && connected_showers ==0){
+      if ( (!flag_inside) && dir.Angle(dir_beam)/3.1415926*180. > 100 && connected_showers == 0){
 	flag_cosmic_5 = true;
 	if (flag_print)  std::cout << "Xin_F_(long): " << long_muon->get_total_track_length()/units::cm << " " << flag_inside << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << connected_showers << std::endl;
       }
@@ -447,9 +480,15 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	
       }else if (muon_2nd !=0){
 	if (muon_2nd->is_dir_weak() && muon_2nd->get_length() < 8*units::cm)  flag_sec = true;
+	
+	TVector3 dir2 = muon_2nd->cal_dir_3vector(main_vertex->get_fit_pt(), 15*units::cm);
 
+	tagger_info.cosmict_6_filled = 1;
+	tagger_info.cosmict_6_flag_dir_weak = muon_2nd->is_dir_weak();
+	tagger_info.cosmict_6_flag_inside = fid->inside_fiducial_volume(find_other_vertex(muon_2nd, main_vertex)->get_fit_pt(), offset_x);
+	tagger_info.cosmict_6_angle = dir.Angle(dir2)/3.1415926*180.;
+	
 	if (muon_2nd->is_dir_weak() && (!fid->inside_fiducial_volume(find_other_vertex(muon_2nd, main_vertex)->get_fit_pt(), offset_x))){
-	  TVector3 dir2 = muon_2nd->cal_dir_3vector(main_vertex->get_fit_pt(), 15*units::cm);
 	  if (dir.Angle(dir2)/3.1415926*180. > 170){
 	    if (flag_print)       std::cout << "Xin_G: " << std::endl;
 	    flag_cosmic_6 = true;
@@ -460,6 +499,18 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 
       //      std::cout << "Xin_C: " << flag_sec << " " << muon_length/units::cm  << " " << flag_inside << " " << flag_weak_dir << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << dir.Angle(dir_vertical)/3.1415926*180. << " " << dir.Angle(dir_drift)/3.1415926*180. << " " << dQ_dx_front/(43e3/units::cm) << " " << dQ_dx_end/(43e3/units::cm) << " " << n_muon_tracks << " " << total_shower_length/units::cm << std::endl;
       //      std::cout << "Xin_CC: " << flag_sec << " " << muon_length/units::cm  << " " << flag_inside << " " << flag_weak_dir << " " << dir.Theta()/3.1415926*180. << " " << dir.Phi()/3.1415926*180. << " " << dir.Angle(dir_drift)/3.1415926*180. << " " << dQ_dx_front/(43e3/units::cm) << " " << dQ_dx_end/(43e3/units::cm) << std::endl;
+
+      tagger_info.cosmict_7_filled = 1;
+      tagger_info.cosmict_7_flag_sec = flag_sec;
+      tagger_info.cosmict_7_n_muon_tracks = n_muon_tracks;
+      tagger_info.cosmict_7_total_shower_length = total_shower_length/units::cm;
+      tagger_info.cosmict_7_flag_inside = flag_inside;
+      tagger_info.cosmict_7_angle_beam =  dir.Angle(dir_beam)/3.1415926*180.;
+      tagger_info.cosmict_7_flag_dir_weak = flag_weak_dir;
+      tagger_info.cosmict_7_dQ_dx_end = dQ_dx_end/(43e3/units::cm);
+      tagger_info.cosmict_7_dQ_dx_front = dQ_dx_front/(43e3/units::cm);
+      tagger_info.cosmict_7_theta = dir.Theta()/3.1415926*180.;
+      tagger_info.cosmict_7_phi = dir.Phi()/3.1415926*180.;
       
       if (flag_sec && n_muon_tracks <=2 && total_shower_length < 40*units::cm){
 	if (( (!flag_inside) && dir.Angle(dir_beam)/3.1415926*180. > 40
@@ -504,6 +555,12 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	}
 	//      	std::cout << dir.Angle(dir2)/3.1415926*180.  << " " << sg1->get_length()/units::cm << " " << muon_length/units::cm<< std::endl;
       }
+
+      tagger_info.cosmict_8_filled = 1;
+      tagger_info.cosmict_8_flag_out = flag_out;
+      tagger_info.cosmict_8_muon_length = muon_length/units::cm;
+      tagger_info.cosmict_8_acc_length = acc_length/units::cm;
+      
       if (flag_out && muon_length > 100*units::cm && acc_length < 12*units::cm){
 	if (flag_print)       std::cout << "Xin_H: " << std::endl;
 	flag_cosmic_8 = true;
@@ -732,6 +789,13 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	double angle_beam = dir.Angle(dir_beam)/3.1415926*180.;
 	if (angle_beam > 90) angle_beam = 180 - angle_beam;
 	double length = sg->get_length();
+
+	tagger_info.cosmict_10_flag_inside.push_back(fid->inside_fiducial_volume(vtx->get_fit_pt(), offset_x));
+	tagger_info.cosmict_10_vtx_z.push_back(vtx->get_fit_pt().z/units::cm);
+	tagger_info.cosmict_10_flag_shower.push_back(sg->get_flag_shower());
+	tagger_info.cosmict_10_flag_dir_weak.push_back(sg->is_dir_weak());
+	tagger_info.cosmict_10_angle_beam.push_back(angle_beam);
+	tagger_info.cosmict_10_length.push_back(length/units::cm);
 	
 	if ((!sg->get_flag_shower()) && sg->is_dir_weak() && angle_beam < 25 && length > 10*units::cm){
 	  flag_cosmic_10 = true;
@@ -746,6 +810,20 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 
   std::cout << flag_cosmic_1 << " " << flag_cosmic_2 << " " << flag_cosmic_3 << " " << flag_cosmic_4 << " " << flag_cosmic_5 << " " << flag_cosmic_6 << " " << flag_cosmic_7 << " " << flag_cosmic_8 << " " << flag_cosmic_9 << " " << flag_cosmic_10 << std::endl;
 
+  
+  tagger_info.cosmict_flag_1 = flag_cosmic_1;
+  tagger_info.cosmict_flag_2 = flag_cosmic_2;
+  tagger_info.cosmict_flag_3 = flag_cosmic_3;
+  tagger_info.cosmict_flag_4 = flag_cosmic_4;
+  tagger_info.cosmict_flag_5 = flag_cosmic_5;
+  tagger_info.cosmict_flag_6 = flag_cosmic_6;
+  tagger_info.cosmict_flag_7 = flag_cosmic_7;
+  tagger_info.cosmict_flag_8 = flag_cosmic_8;
+  tagger_info.cosmict_flag_9 = flag_cosmic_9;
+  tagger_info.cosmict_flag_10 = flag_cosmic_10;
+  tagger_info.cosmict_flag = flag_cosmic;
+  
+  
   flag_cosmic = flag_cosmic_1 || flag_cosmic_2 || flag_cosmic_3 || flag_cosmic_4 || flag_cosmic_5
     || flag_cosmic_6 || flag_cosmic_7 || flag_cosmic_8 || flag_cosmic_9 || flag_cosmic_10;
     
