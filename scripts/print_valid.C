@@ -1031,6 +1031,222 @@ void print_valid(TString run_info = "7019_5_264"){
   T->SetBranchAddress("tro_5_v_flag",&tro_5_v_flag);
   
   T->SetBranchAddress("tro_flag",&tro_flag);
+
+  // cosmic tagger
+  int cosmict_flag_1; // fiducial volume vertex
+  int cosmict_flag_2;  // single muon
+  int cosmict_flag_3;  // single muon (long)
+  int cosmict_flag_4;  // kinematics muon
+  int cosmict_flag_5; // kinematics muon (long)
+  int cosmict_flag_6; // special ...
+  int cosmict_flag_7;  // muon+ michel
+  int cosmict_flag_8;  // muon + michel + special
+  int cosmict_flag_9;  // this tagger is relevant for nueCC, see "cosmic tagger ones, one case of cosmics ..." (frist one ...)
+  std::vector<int> *cosmict_flag_10 = new std::vector<int>;  // front upstream (dirt)
+  int cosmict_flag;
+  
+  // single muon
+  int cosmict_2_filled;
+  int cosmict_2_particle_type;
+  int cosmict_2_n_muon_tracks;
+  double cosmict_2_total_shower_length;
+  int cosmict_2_flag_inside;
+  double cosmict_2_angle_beam;
+  int cosmict_2_flag_dir_weak;
+  double cosmict_2_dQ_dx_end;
+  double cosmict_2_dQ_dx_front;
+  double cosmict_2_theta;
+  double cosmict_2_phi;
+  int cosmict_2_valid_tracks;
+  
+  // signel muon (long)
+  int cosmict_3_filled;
+  int cosmict_3_flag_inside;
+  double cosmict_3_angle_beam;
+  int cosmict_3_flag_dir_weak;
+  double cosmict_3_dQ_dx_end;
+  double cosmict_3_dQ_dx_front;
+  double cosmict_3_theta;
+  double cosmict_3_phi;
+  int cosmict_3_valid_tracks;
+  
+  // kinematics muon
+  int cosmict_4_filled;
+  int cosmict_4_flag_inside;
+  double cosmict_4_angle_beam;
+  int cosmict_4_connected_showers;  // need to be careful about the nueCC ...
+  
+  // kinematics muon (long)
+  int cosmict_5_filled;
+  int cosmict_5_flag_inside;
+  double cosmict_5_angle_beam;
+  int cosmict_5_connected_showers;
+  
+  // special
+  int cosmict_6_filled;
+  int cosmict_6_flag_dir_weak;
+  int cosmict_6_flag_inside;
+  double cosmict_6_angle;
+  
+  // muon + michel
+  int cosmict_7_filled;
+  int cosmict_7_flag_sec;
+  int cosmict_7_n_muon_tracks;
+  double cosmict_7_total_shower_length;
+  int cosmict_7_flag_inside;
+  double cosmict_7_angle_beam;
+  int cosmict_7_flag_dir_weak;
+  double cosmict_7_dQ_dx_end;
+  double cosmict_7_dQ_dx_front;
+  double cosmict_7_theta;
+  double cosmict_7_phi;
+  
+  // muon + michel + special
+  int cosmict_8_filled;
+  int cosmict_8_flag_out;
+  double cosmict_8_muon_length;
+  double cosmict_8_acc_length;
+  
+  // front upstream (dirt)
+  std::vector<int> *cosmict_10_flag_inside= new std::vector<int>;
+  std::vector<double> *cosmict_10_vtx_z= new std::vector<double>;
+  std::vector<int> *cosmict_10_flag_shower= new std::vector<int>;
+  std::vector<int> *cosmict_10_flag_dir_weak= new std::vector<int>;
+  std::vector<double> *cosmict_10_angle_beam= new std::vector<double>;
+  std::vector<double> *cosmict_10_length = new std::vector<double>;
+
+  T->SetBranchAddress("cosmict_flag_1",&cosmict_flag_1);
+  T->SetBranchAddress("cosmict_flag_2",&cosmict_flag_2);
+  T->SetBranchAddress("cosmict_flag_3",&cosmict_flag_3);
+  T->SetBranchAddress("cosmict_flag_4",&cosmict_flag_4);
+  T->SetBranchAddress("cosmict_flag_5",&cosmict_flag_5);
+  T->SetBranchAddress("cosmict_flag_6",&cosmict_flag_6);
+  T->SetBranchAddress("cosmict_flag_7",&cosmict_flag_7);
+  T->SetBranchAddress("cosmict_flag_8",&cosmict_flag_8);
+  T->SetBranchAddress("cosmict_flag_9",&cosmict_flag_9);
+  T->SetBranchAddress("cosmict_flag_10",&cosmict_flag_10);
+  T->SetBranchAddress("cosmict_flag",&cosmict_flag);
+  
+  T->SetBranchAddress("cosmict_2_filled",&cosmict_2_filled);
+  T->SetBranchAddress("cosmict_2_particle_type",&cosmict_2_particle_type);
+  T->SetBranchAddress("cosmict_2_n_muon_tracks",&cosmict_2_n_muon_tracks);
+  T->SetBranchAddress("cosmict_2_total_shower_length",&cosmict_2_total_shower_length);
+  T->SetBranchAddress("cosmict_2_flag_inside",&cosmict_2_flag_inside);
+  T->SetBranchAddress("cosmict_2_angle_beam",&cosmict_2_angle_beam);
+  T->SetBranchAddress("cosmict_2_flag_dir_weak",&cosmict_2_flag_dir_weak);
+  T->SetBranchAddress("cosmict_2_dQ_dx_end",&cosmict_2_dQ_dx_end);
+  T->SetBranchAddress("cosmict_2_dQ_dx_front",&cosmict_2_dQ_dx_front);
+  T->SetBranchAddress("cosmict_2_theta",&cosmict_2_theta);
+  T->SetBranchAddress("cosmict_2_phi",&cosmict_2_phi);
+  T->SetBranchAddress("cosmict_2_valid_tracks",&cosmict_2_valid_tracks);
+  
+  T->SetBranchAddress("cosmict_3_filled",&cosmict_3_filled);
+  T->SetBranchAddress("cosmict_3_flag_inside",&cosmict_3_flag_inside);
+  T->SetBranchAddress("cosmict_3_angle_beam",&cosmict_3_angle_beam);
+  T->SetBranchAddress("cosmict_3_flag_dir_weak",&cosmict_3_flag_dir_weak);
+  T->SetBranchAddress("cosmict_3_dQ_dx_end",&cosmict_3_dQ_dx_end);
+  T->SetBranchAddress("cosmict_3_dQ_dx_front",&cosmict_3_dQ_dx_front);
+  T->SetBranchAddress("cosmict_3_theta",&cosmict_3_theta);
+  T->SetBranchAddress("cosmict_3_phi",&cosmict_3_phi);
+  T->SetBranchAddress("cosmict_3_valid_tracks",&cosmict_3_valid_tracks);
+  
+  T->SetBranchAddress("cosmict_4_filled",&cosmict_4_filled);
+  T->SetBranchAddress("cosmict_4_flag_inside",&cosmict_4_flag_inside);
+  T->SetBranchAddress("cosmict_4_angle_beam",&cosmict_4_angle_beam);
+  T->SetBranchAddress("cosmict_4_connected_showers",&cosmict_4_connected_showers);
+  
+  T->SetBranchAddress("cosmict_5_filled",&cosmict_5_filled);
+  T->SetBranchAddress("cosmict_5_flag_inside",&cosmict_5_flag_inside);
+  T->SetBranchAddress("cosmict_5_angle_beam",&cosmict_5_angle_beam);
+  T->SetBranchAddress("cosmict_5_connected_showers",&cosmict_5_connected_showers);
+  
+  T->SetBranchAddress("cosmict_6_filled",&cosmict_6_filled);
+  T->SetBranchAddress("cosmict_6_flag_dir_weak",&cosmict_6_flag_dir_weak);
+  T->SetBranchAddress("cosmict_6_flag_inside",&cosmict_6_flag_inside);
+  T->SetBranchAddress("cosmict_6_angle",&cosmict_6_angle);
+  
+  
+  T->SetBranchAddress("cosmict_7_filled",&cosmict_7_filled);
+  T->SetBranchAddress("cosmict_7_flag_sec",&cosmict_7_flag_sec);
+  T->SetBranchAddress("cosmict_7_n_muon_tracks",&cosmict_7_n_muon_tracks);
+  T->SetBranchAddress("cosmict_7_total_shower_length",&cosmict_7_total_shower_length);
+  T->SetBranchAddress("cosmict_7_flag_inside",&cosmict_7_flag_inside);
+  T->SetBranchAddress("cosmict_7_angle_beam",&cosmict_7_angle_beam);
+  T->SetBranchAddress("cosmict_7_flag_dir_weak",&cosmict_7_flag_dir_weak);
+  T->SetBranchAddress("cosmict_7_dQ_dx_end",&cosmict_7_dQ_dx_end);
+  T->SetBranchAddress("cosmict_7_dQ_dx_front",&cosmict_7_dQ_dx_front);
+  T->SetBranchAddress("cosmict_7_theta",&cosmict_7_theta);
+  T->SetBranchAddress("cosmict_7_phi",&cosmict_7_phi);
+  
+  T->SetBranchAddress("cosmict_8_filled",&cosmict_8_filled);
+  T->SetBranchAddress("cosmict_8_flag_out",&cosmict_8_flag_out);
+  T->SetBranchAddress("cosmict_8_muon_length",&cosmict_8_muon_length);
+  T->SetBranchAddress("cosmict_8_acc_length",&cosmict_8_acc_length);
+  
+  T->SetBranchAddress("cosmict_10_flag_inside",&cosmict_10_flag_inside);
+  T->SetBranchAddress("cosmict_10_vtx_z",&cosmict_10_vtx_z);
+  T->SetBranchAddress("cosmict_10_flag_shower",&cosmict_10_flag_shower);
+  T->SetBranchAddress("cosmict_10_flag_dir_weak",&cosmict_10_flag_dir_weak);
+  T->SetBranchAddress("cosmict_10_angle_beam",&cosmict_10_angle_beam);
+  T->SetBranchAddress("cosmict_10_length",&cosmict_10_length);
+  
+  
+  
+  // numu tagger
+  int numu_cc_flag;
+  
+  // single muon connected to neutrino vertex
+  std::vector<int> *numu_cc_flag_1= new std::vector<int>;
+  std::vector<int> *numu_cc_1_particle_type= new std::vector<int>;
+  std::vector<double> *numu_cc_1_length= new std::vector<double>;
+  std::vector<double> *numu_cc_1_medium_dQ_dx= new std::vector<double>;
+  std::vector<double> *numu_cc_1_dQ_dx_cut= new std::vector<double>;
+  std::vector<double> *numu_cc_1_direct_length= new std::vector<double>;
+  std::vector<int> *numu_cc_1_n_daughter_tracks= new std::vector<int>;
+  std::vector<int> *numu_cc_1_n_daughter_all= new std::vector<int>;
+  
+  // long muon connected to neutrino vertex
+  std::vector<int> *numu_cc_flag_2= new std::vector<int>;
+  std::vector<double> *numu_cc_2_length= new std::vector<double>;
+  std::vector<double> *numu_cc_2_total_length= new std::vector<double>;
+  std::vector<int> *numu_cc_2_n_daughter_tracks= new std::vector<int>;
+  std::vector<int> *numu_cc_2_n_daughter_all = new std::vector<int>;
+  
+  // any muon ...
+  int numu_cc_flag_3;
+  int numu_cc_3_particle_type;
+  double numu_cc_3_max_length;
+  double numu_cc_3_acc_track_length;
+  double numu_cc_3_max_length_all;
+  double numu_cc_3_max_muon_length;
+  int numu_cc_3_n_daughter_tracks;
+  int numu_cc_3_n_daughter_all;
+
+  T->SetBranchAddress("numu_cc_flag",&numu_cc_flag);
+  
+  T->SetBranchAddress("numu_cc_flag_1",&numu_cc_flag_1);
+  T->SetBranchAddress("numu_cc_1_particle_type",&numu_cc_1_particle_type);
+  T->SetBranchAddress("numu_cc_1_length",&numu_cc_1_length);
+  T->SetBranchAddress("numu_cc_1_medium_dQ_dx",&numu_cc_1_medium_dQ_dx);
+  T->SetBranchAddress("numu_cc_1_dQ_dx_cut",&numu_cc_1_dQ_dx_cut);
+  T->SetBranchAddress("numu_cc_1_direct_length",&numu_cc_1_direct_length);
+  T->SetBranchAddress("numu_cc_1_n_daughter_tracks",&numu_cc_1_n_daughter_tracks);
+  T->SetBranchAddress("numu_cc_1_n_daughter_all",&numu_cc_1_n_daughter_all);
+  
+  T->SetBranchAddress("numu_cc_flag_2",&numu_cc_flag_2);
+  T->SetBranchAddress("numu_cc_2_length",&numu_cc_2_length);
+  T->SetBranchAddress("numu_cc_2_total_length",&numu_cc_2_total_length);
+  T->SetBranchAddress("numu_cc_2_n_daughter_tracks",&numu_cc_2_n_daughter_tracks);
+  T->SetBranchAddress("numu_cc_2_n_daughter_all",&numu_cc_2_n_daughter_all);
+  
+  T->SetBranchAddress("numu_cc_flag_3",&numu_cc_flag_3);
+  T->SetBranchAddress("numu_cc_3_particle_type",&numu_cc_3_particle_type);
+  T->SetBranchAddress("numu_cc_3_max_length",&numu_cc_3_max_length);
+  T->SetBranchAddress("numu_cc_3_track_length",&numu_cc_3_acc_track_length);
+  T->SetBranchAddress("numu_cc_3_max_length_all",&numu_cc_3_max_length_all);
+  T->SetBranchAddress("numu_cc_3_max_muon_length",&numu_cc_3_max_muon_length);
+  T->SetBranchAddress("numu_cc_3_n_daughter_tracks",&numu_cc_3_n_daughter_tracks);
+  T->SetBranchAddress("numu_cc_3_n_daughter_all",&numu_cc_3_n_daughter_all);
   
   
   T->GetEntry(0);  // total 47 of them ...
@@ -1085,8 +1301,37 @@ void print_valid(TString run_info = "7019_5_264"){
   bool mgt_print = false;
   bool sig_print = false;
   bool tro_print = false;
+  bool cosmict_print = false;
+  bool numu_cc_print = true;
   
   // Now print out the information ...
+  if (numu_cc_print){
+    std::cout << "numu_cc_general: " << numu_cc_flag << std::endl;
+    for (size_t i=0;i!=numu_cc_flag_1->size();i++){
+      std::cout << "numu_cc_1: " << numu_cc_flag_1->at(i) << " " << numu_cc_1_particle_type->at(i) << " " << numu_cc_1_length->at(i) << " " << numu_cc_1_medium_dQ_dx->at(i) << " " << numu_cc_1_dQ_dx_cut->at(i) << " " << numu_cc_1_direct_length->at(i) << " " << numu_cc_1_n_daughter_tracks->at(i) << " " << numu_cc_1_n_daughter_all->at(i) << std::endl;
+    }
+    for (size_t i=0; i!= numu_cc_flag_2->size(); i++){
+      std::cout << "numu_cc_2: " << numu_cc_flag_2->at(i) << " " << numu_cc_2_length->at(i) << " " << numu_cc_2_total_length->at(i) << " " << numu_cc_2_n_daughter_tracks->at(i) << " " << numu_cc_2_n_daughter_all->at(i) << std::endl;
+    }
+
+    std::cout << "numu_cc_3: " << numu_cc_flag_3 << " " << numu_cc_3_particle_type << " " << numu_cc_3_max_length << " " << numu_cc_3_acc_track_length << " " << numu_cc_3_max_length_all << " "<< numu_cc_3_max_muon_length << " " << numu_cc_3_n_daughter_tracks << " " << numu_cc_3_n_daughter_all << std::endl;
+    
+  }
+  
+  if (cosmict_print){
+    std::cout << "cosmict_general: " << cosmict_flag << " " << cosmict_flag_1 << " " << cosmict_flag_9 << std::endl;
+    std::cout << "cosmcit_2: " << cosmict_flag_2 << " " << cosmict_2_filled << " " << cosmict_2_particle_type << " " << cosmict_2_n_muon_tracks << " " << cosmict_2_total_shower_length << " " << cosmict_2_flag_inside << " " << cosmict_2_angle_beam << " " << cosmict_2_flag_dir_weak <<  " " << cosmict_2_dQ_dx_end << " " << cosmict_2_dQ_dx_front << " " << cosmict_2_theta << " " << cosmict_2_phi << " " << cosmict_2_valid_tracks << std::endl;
+    std::cout << "cosmict_3: " << cosmict_flag_3 << " " << cosmict_3_filled << " " << cosmict_3_flag_inside << " " << cosmict_3_angle_beam << " " << cosmict_3_flag_dir_weak << " " << cosmict_3_dQ_dx_end << " " << cosmict_3_dQ_dx_front << " " << cosmict_3_theta << " " << cosmict_3_phi << " " << cosmict_3_valid_tracks << std::endl;
+    std::cout << "cosmict_4: " << cosmict_flag_4 << " " << cosmict_4_filled << " " << cosmict_4_flag_inside << " " << cosmict_4_angle_beam << " " << cosmict_4_connected_showers << std::endl;
+    std::cout << "cosmict_5: " << cosmict_flag_5 << " " << cosmict_5_filled << " " << cosmict_5_flag_inside << " " << cosmict_5_angle_beam << " " << cosmict_5_connected_showers << std::endl;
+    std::cout << "cosmict_6: " << cosmict_flag_6 << " " << cosmict_6_filled << " " << cosmict_6_flag_dir_weak << " " << cosmict_6_flag_inside << " " << cosmict_6_angle << std::endl;
+    std::cout << "cosmict_7: " << cosmict_flag_7 << " " << cosmict_7_filled << " " << cosmict_7_flag_sec << " " << cosmict_7_n_muon_tracks << " " << cosmict_7_total_shower_length << " " << cosmict_7_flag_inside << " " << cosmict_7_angle_beam << " " << cosmict_7_flag_dir_weak << " " << cosmict_7_dQ_dx_end << " " << cosmict_7_dQ_dx_front << " " << cosmict_7_theta << " " << cosmict_7_phi << std::endl;
+    std::cout << "cosmict_8: " << cosmict_flag_8 << " " << cosmict_8_filled << " " << cosmict_8_flag_out << " " << cosmict_8_muon_length << " " << cosmict_8_acc_length << std::endl;
+    for (size_t i=0;i!=cosmict_flag_10->size();i++){
+      std::cout << "cosmict_10: " << cosmict_flag_10->at(i) << " " << cosmict_10_flag_inside->at(i) << " " << cosmict_10_vtx_z->at(i) << " " << cosmict_10_flag_shower->at(i) << " " << cosmict_10_angle_beam->at(i) << " " << cosmict_10_length->at(i) << std::endl;
+    }
+  }
+
   if (tro_print){
     for (size_t i=0;i!=tro_1_v_particle_type->size();i++){
       std::cout << "tro_1: " << tro_1_v_particle_type->at(i) << " " << tro_1_v_flag_dir_weak->at(i) << " " << tro_1_v_min_dis->at(i) << " " << tro_1_v_sg1_length->at(i) << " " << tro_1_v_shower_main_length->at(i) << " " << tro_1_v_max_n_vtx_segs->at(i) << " " << tro_1_v_tmp_length->at(i) << " " << tro_1_v_medium_dQ_dx->at(i) << " " << tro_1_v_dQ_dx_cut->at(i) << " " << tro_1_v_flag_shower_topology->at(i) << " " << tro_1_v_flag->at(i) << std::endl;
