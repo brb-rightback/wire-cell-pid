@@ -2330,4 +2330,8 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.tro_3_energy = 0;
   tagger_info.tro_3_flag = true;
   tagger_info.tro_flag = true;
+
+
+  // numu vs. NC tagger ...
+  
 }

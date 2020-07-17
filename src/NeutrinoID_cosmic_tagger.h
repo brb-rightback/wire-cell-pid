@@ -3,7 +3,18 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
   TVector3 dir_drift(1,0,0);
   TVector3 dir_vertical(0,1,0);
 
-
+  bool flag_cosmic = false;
+  
+  bool flag_cosmic_1 = false;
+  bool flag_cosmic_2 = false;
+  bool flag_cosmic_3 = false;
+  bool flag_cosmic_4 = false;
+  bool flag_cosmic_5 = false;
+  bool flag_cosmic_6 = false;
+  bool flag_cosmic_7 = false;
+  bool flag_cosmic_8 = false;
+  bool flag_cosmic_9 = false;
+  bool flag_cosmic_10 = false;
   
   bool flag_print = false;
   
@@ -22,9 +33,8 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
   
   if (! fid->inside_fiducial_volume(test_p, offset_x, &stm_tol_vec)){  // Xiangpan's boundary
     // if (!fid->inside_fiducial_volume(test_p, offset_x)){ // original boundary
-    neutrino_type |= 1UL << 1;
+    flag_cosmic_1 = true;
     if (flag_print) std::cout << "Xin_A: " << test_p << " " << true << std::endl;
-    return true;
   }
 
   //  std::cout << "Entering cosmic tagger" << std::endl;
@@ -125,9 +135,8 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	    && (dir.Theta()/3.1415926*180.>=100. || fabs(fabs(dir.Phi()/3.1415926*180.)-90)<=50)
 	    ){
 
-	  neutrino_type |= 1UL << 1;
+	  flag_cosmic_2 = true;
 	  if (flag_print) std::cout << "Xin_B: " << sg->get_length()/units::cm << " " << main_vertex->get_fit_pt().x/units::cm << " " << main_vertex->get_fit_pt().y/units::cm << " " << main_vertex->get_fit_pt().z/units::cm << " " << fid->inside_fiducial_volume(test_p1, offset_x) << " " << sg->is_dir_weak() << " " << dir.Theta()/3.1415926*180. << " " << dir.Phi()/3.1415926*180. << " " << dQ_dx_front/(43e3/units::cm) << " " << dQ_dx_end/(43e3/units::cm) << std::endl;
-	  return true;
 	}/* else if (sg->get_particle_type()==13 && flag_inside && (!sg->is_dir_weak()) && */
       /* 		(dir.Angle(dir_drift)/3.1415926*180. > 165     // prolonged towards anode ... */
       /* 		 || dir.Angle(dir_vertical)/3.1415926*180. > 150) // vertical down ... */
@@ -173,10 +182,8 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 		   (last_sg->is_dir_weak() && (!(dQ_dx_end > 1.4 *43e3/units::cm && dQ_dx_end > 1.2 * dQ_dx_front)) || dir.Angle(dir_beam)/3.1415926*180. > 60)))
 	     && (dir.Theta()/3.1415926*180.>=100. || fabs(fabs(dir.Phi()/3.1415926*180.)-90)<=50)
 	     ){
-	  neutrino_type |= 1UL << 1;
+	  flag_cosmic_3 = true;
 	  if (flag_print) std::cout << "Xin_B_(long): " << long_muon->get_total_track_length()/units::cm << " " << main_vertex->get_fit_pt().x/units::cm << " " << main_vertex->get_fit_pt().y/units::cm << " " << main_vertex->get_fit_pt().z/units::cm << " " << fid->inside_fiducial_volume(test_p1, offset_x) << " " << last_sg->is_dir_weak() << " " << dir.Theta()/3.1415926*180. << " " << dir.Phi()/3.1415926*180. << " " << dQ_dx_front/(43e3/units::cm) << " " << dQ_dx_end/(43e3/units::cm) << std::endl;
-
-	  return true;
 	}
       }
     }
@@ -192,9 +199,8 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 
       //std::cout << "Xin: " << sg->get_length()/units::cm << " " << flag_inside << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << connected_showers << std::endl;
       if ( (!flag_inside) && dir.Angle(dir_beam)/3.1415926*180. > 100 && connected_showers ==0){
-	neutrino_type |= 1UL << 1;
+	flag_cosmic_4 = true;
 	if (flag_print)  std::cout << "Xin_F: " << sg->get_length()/units::cm << " " << flag_inside << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << connected_showers << std::endl;
-     	return true; 
       }
     }else if (long_muon != 0){
       WCPPID::ProtoSegment *start_sg = long_muon->get_start_segment();
@@ -207,11 +213,9 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
       //std::cout << "Xin_(long): " << flag_inside << " " << connected_showers << " " << dir.Angle(dir_beam)/3.1415926*180. << std::endl;
       
       if ( (!flag_inside) && dir.Angle(dir_beam)/3.1415926*180. > 100 && connected_showers ==0){
-	neutrino_type |= 1UL << 1;
+	flag_cosmic_5 = true;
 	if (flag_print)  std::cout << "Xin_F_(long): " << long_muon->get_total_track_length()/units::cm << " " << flag_inside << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << connected_showers << std::endl;
-     	return true; 
       }
-      
     }
   }
 
@@ -448,18 +452,13 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	  TVector3 dir2 = muon_2nd->cal_dir_3vector(main_vertex->get_fit_pt(), 15*units::cm);
 	  if (dir.Angle(dir2)/3.1415926*180. > 170){
 	    if (flag_print)       std::cout << "Xin_G: " << std::endl;
-	    neutrino_type |= 1UL << 1;
-	    return true;
+	    flag_cosmic_6 = true;
 	  }
 	}
 	//	std::cout << dir.Angle(dir2)/3.1415926*180. << " " << muon_2nd->is_dir_weak() << " " << fid->inside_fiducial_volume(find_other_vertex(muon_2nd, main_vertex)->get_fit_pt(), offset_x) << std::endl;
       }
 
-      
-      
-      
       //      std::cout << "Xin_C: " << flag_sec << " " << muon_length/units::cm  << " " << flag_inside << " " << flag_weak_dir << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << dir.Angle(dir_vertical)/3.1415926*180. << " " << dir.Angle(dir_drift)/3.1415926*180. << " " << dQ_dx_front/(43e3/units::cm) << " " << dQ_dx_end/(43e3/units::cm) << " " << n_muon_tracks << " " << total_shower_length/units::cm << std::endl;
-
       //      std::cout << "Xin_CC: " << flag_sec << " " << muon_length/units::cm  << " " << flag_inside << " " << flag_weak_dir << " " << dir.Theta()/3.1415926*180. << " " << dir.Phi()/3.1415926*180. << " " << dir.Angle(dir_drift)/3.1415926*180. << " " << dQ_dx_front/(43e3/units::cm) << " " << dQ_dx_end/(43e3/units::cm) << std::endl;
       
       if (flag_sec && n_muon_tracks <=2 && total_shower_length < 40*units::cm){
@@ -468,8 +467,7 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	    && (dir.Theta()/3.1415926*180.>=100. || fabs(fabs(dir.Phi()/3.1415926*180.)-90)<=50)
 	    ){
 	  if (flag_print)       std::cout << "Xin_C: " << flag_sec << " " << muon_length/units::cm  << " " << flag_inside << " " << flag_weak_dir << " " << dir.Angle(dir_beam)/3.1415926*180. << " " << dir.Angle(dir_vertical)/3.1415926*180. << " " << dir.Angle(dir_drift)/3.1415926*180. << " " << dQ_dx_front/(43e3/units::cm) << " " << dQ_dx_end/(43e3/units::cm) << std::endl;
-	  neutrino_type |= 1UL << 1;
-	  return true;
+	  flag_cosmic_7 = true;
 	}
 	/* else if (muon->get_particle_type()==13 && flag_inside && (!muon->is_dir_weak()) && */
 	/* 	  (dir.Angle(dir_drift)/3.1415926*180. > 165     // prolonged towards anode ... */
@@ -508,8 +506,7 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
       }
       if (flag_out && muon_length > 100*units::cm && acc_length < 12*units::cm){
 	if (flag_print)       std::cout << "Xin_H: " << std::endl;
-	neutrino_type |= 1UL << 1;
-	return true;
+	flag_cosmic_8 = true;
       }
       //      std::cout << flag_out << " " << acc_length/units::cm << " " << muon_length/units::cm << std::endl;
     }
@@ -634,19 +631,19 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
     
     //    std::cout << num_cosmic << " Xin " << acc_cosmic_length/units::cm << " " << acc_small_length/units::cm << " " << acc_total_length/units::cm << " " << main_vertex->get_fit_pt() << " " << showers.size() << " " << highest_y/units::cm << " " << max_length/units::cm << " " << flag_main_cluster << std::endl;   
 
-    bool flag_cosmic = false;
+    bool flagp_cosmic = false;
     if ( (num_cosmic >2 && acc_cosmic_length + acc_small_length  > 0.55 * (acc_total_length)||
 	  num_cosmic >=2 && acc_cosmic_length + acc_small_length  > 0.7 * (acc_total_length) ||
 	  num_cosmic ==1 && acc_cosmic_length + acc_small_length  > 0.625 * (acc_total_length) && highest_y > 102*units::cm
 	   ) && main_vertex->get_fit_pt().y > 0 && flag_main_cluster && highest_y > 80*units::cm 
 	 ) {
-      flag_cosmic = true;
+      flagp_cosmic = true;
     }
     if (num_cosmic == 1 && acc_cosmic_length > 100*units::cm){
-      flag_cosmic = false;
+      flagp_cosmic = false;
     }
 
-    if (flag_cosmic){
+    if (flagp_cosmic){
       // try to see nueCC events ...
       int n_solid_tracks = 0;
       int n_direct_showers = 0;
@@ -701,9 +698,7 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
       tagger_info.cosmic_filled = 1;
       
       if ((n_solid_tracks >0 && energy_main_showers > 80*units::MeV || energy_main_showers > 200*units::MeV) && (energy_indirect_showers < energy_main_showers * 0.6 || n_solid_tracks > 0 && energy_indirect_showers < energy_main_showers)){
-	flag_cosmic = false;
-
-
+	flagp_cosmic = false;
 	
 	//	std::cout << "kaka: " << n_solid_tracks << " " <<  n_direct_showers << " " << energy_direct_showers << " " << n_main_showers  << " " <<  energy_main_showers << " " << n_indirect_showers << " " <<  energy_indirect_showers  << " " << tagger_info.cosmic_filled << std::endl;
 
@@ -717,10 +712,10 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
     }
     
     
-    if (flag_cosmic){
-      neutrino_type |= 1UL << 1;
+    if (flagp_cosmic){
+      flag_cosmic_9 = true;
       if (flag_print)  std::cout << num_cosmic << " Xin_D: " << acc_cosmic_length/units::cm << " " << acc_small_length/units::cm << " " << acc_total_length/units::cm << " " << main_vertex->get_fit_pt() << " " << showers.size() << " " << highest_y/units::cm << " " << max_length/units::cm << " " << flag_main_cluster << std::endl;     
-      return true;
+      
     }
   } // else
 
@@ -739,16 +734,26 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
 	double length = sg->get_length();
 	
 	if ((!sg->get_flag_shower()) && sg->is_dir_weak() && angle_beam < 25 && length > 10*units::cm){
-	  neutrino_type |= 1UL << 1;
+	  flag_cosmic_10 = true;
 	  //      std::cout << true << std::endl;
 	  if (flag_print) std::cout << "Xin_E: " << true << std::endl;
-	  return true;
 	}
 	//std::cout << dir.Angle(dir_beam)/3.1415926*180. << " " << sg->get_flag_dir() << " " << sg->is_dir_weak() << std::endl;
       }
     }
     //    std::cout << vtx->get_fit_pt() << " " << fid->inside_fiducial_volume(vtx->get_fit_pt(), offset_x) << std::endl;
   }
+
+  std::cout << flag_cosmic_1 << " " << flag_cosmic_2 << " " << flag_cosmic_3 << " " << flag_cosmic_4 << " " << flag_cosmic_5 << " " << flag_cosmic_6 << " " << flag_cosmic_7 << " " << flag_cosmic_8 << " " << flag_cosmic_9 << " " << flag_cosmic_10 << std::endl;
+
+  flag_cosmic = flag_cosmic_1 || flag_cosmic_2 || flag_cosmic_3 || flag_cosmic_4 || flag_cosmic_5
+    || flag_cosmic_6 || flag_cosmic_7 || flag_cosmic_8 || flag_cosmic_9 || flag_cosmic_10;
+    
   
-  return false;
+  
+  if (flag_cosmic){
+    neutrino_type |= 1UL << 1;
+  }
+  
+  return flag_cosmic;
 }

@@ -7,6 +7,8 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
   
   bool flag_numu_cc = false;
 
+
+  
   bool flag_print = false;
   
   double dis_cut = 5*units::cm; // muon shorter than this is not useful ...
@@ -21,10 +23,6 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
     double length = sg->get_length();
     double direct_length = sg->get_direct_length();
     double medium_dQ_dx = sg->get_medium_dQ_dx();
-
-    /* if (sg->get_particle_type()==13){ */
-    
-    /* } */
     
     double dQ_dx_cut = 0.8866+0.9533 *pow(18*units::cm/length, 0.4234);//0.85+0.95 *sqrt(25./ (length / units::cm));
 
@@ -37,13 +35,10 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
 	max_muon_length = length;
 	max_muon = sg;
       }
-    }
+    }    
   }
 
-
-
-  //  if (!flag_numu_cc){
-    // check long muon  in WCshowers ...
+  // check long muon  in WCshowers ...
   for (auto it = showers.begin(); it != showers.end(); it++){
     WCPPID::WCShower *shower = *it;
     if (abs(shower->get_start_segment()->get_particle_type())==13 && main_cluster->get_cluster_id() == shower->get_start_segment()->get_cluster_id()){
@@ -59,11 +54,8 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
       //	std::cout << main_cluster->get_cluster_id() << " " << shower->get_start_segment()->get_cluster_id() << " " << length/units::cm << " " << total_length/units::cm << std::endl;
     }
   }
-  // }
   
   
-  
-  //  if (!flag_numu_cc){
   double max_length = 0;
   double max_direct_length = 0;
   double max_medium_dQ_dx = 0;
@@ -75,7 +67,9 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
     double length = sg->get_length();
 
     if (sg->get_cluster_id() != main_vertex->get_cluster_id()) continue;
+
     if ((!sg->get_flag_shower()) && max_length_all < length) max_length_all = length;
+
     if (abs(sg->get_particle_type())==211) continue;
     
 
@@ -139,16 +133,13 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
     flag_numu_cc = true;
   }
 
-
-  
-  //  if (!flag_numu_cc) 
   //  std::cout <<"Xin " << max_length/units::cm << " " << max_direct_length/units::cm << " " << max_medium_dQ_dx << " " << acc_track_length/units::cm << std::endl; 
 
+  
   if (max_muon !=0 || max_long_muon !=0){
     TVector3 muon_dir;
     int n_daughter_tracks = 0;
-    int n_daughter_all = 0;
-    
+    int n_daughter_all = 0;    
     if (max_muon != 0){
       auto pair_vertices = find_vertices(max_muon);
       double dis1 = sqrt(pow(pair_vertices.first->get_fit_pt().x - main_vertex->get_fit_pt().x,2) + pow(pair_vertices.first->get_fit_pt().y - main_vertex->get_fit_pt().y,2) + pow(pair_vertices.first->get_fit_pt().z - main_vertex->get_fit_pt().z,2));
@@ -195,8 +186,7 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
 
     if (flag_numu_cc){
       double angle = muon_dir.Angle(dir_beam)/3.1415926*180.;
-
-      //      std::cout <<  "Xin: " << max_length_all/units::cm << " " << max_muon_length/units::cm << " " << muon_dir.Angle(dir_beam)/3.1415926*180. << " " << n_daughter_tracks << " " << n_daughter_all - n_daughter_tracks << " " << max_muon_length/(80*units::cm) + angle/46 << " " << " " << (angle-120)/40. - max_muon_length/(80.*units::cm) << " " << (angle-120)/120 - (max_length_all-max_muon_length-120*units::cm)/(100.*units::cm)<< std::endl;
+      // std::cout <<  "Xin: " << max_length_all/units::cm << " " << max_muon_length/units::cm << " " << muon_dir.Angle(dir_beam)/3.1415926*180. << " " << n_daughter_tracks << " " << n_daughter_all - n_daughter_tracks << " " << max_muon_length/(80*units::cm) + angle/46 << " " << " " << (angle-120)/40. - max_muon_length/(80.*units::cm) << " " << (angle-120)/120 - (max_length_all-max_muon_length-120*units::cm)/(100.*units::cm)<< std::endl;
       
       if (n_daughter_tracks >1 || n_daughter_all - n_daughter_tracks > 2
 	  || (max_length_all-max_muon_length > 100.*units::cm)){
@@ -205,6 +195,9 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
       }
     }
   }
+
+
+  
   
   // std::cout << "Xin1: " << max_muon_length/units::cm << std::endl;
   

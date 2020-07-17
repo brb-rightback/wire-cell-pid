@@ -607,7 +607,12 @@ namespace WCPPID{
     int lol_3_n_out;
     int lol_3_n_sum;    
     int lol_3_flag;
+
+
+    // cosmic tagger ...
     
+    
+    // numu vs. nc tagger
     
   };
 
