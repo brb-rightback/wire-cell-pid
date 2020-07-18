@@ -1774,6 +1774,10 @@ bool WCPPID::NeutrinoID::mip_quality(WCPPID::ProtoVertex* vertex, WCPPID::ProtoS
       if (length < shortest_length) {
 	shortest_length = length;
 	shortest_angle = dir1.Angle(dir2)/3.1415926*180.;
+
+	// found NaN value during the BDT test ...
+	if (std::isnan(shortest_angle)) shortest_angle = 0;
+	
 	shortest_acc_length = shower1->get_total_length(shower1->get_start_segment()->get_cluster_id());
       }
     }
@@ -1795,7 +1799,11 @@ bool WCPPID::NeutrinoID::mip_quality(WCPPID::ProtoVertex* vertex, WCPPID::ProtoS
     tagger_info.mip_quality_n_tracks = n_tracks;
     tagger_info.mip_quality_flag_inside_pi0 = flag_inside_pi0;
     tagger_info.mip_quality_n_pi0_showers = tmp_pi0_showers.size();
-    tagger_info.mip_quality_shortest_length = shortest_length/units::cm;
+    if (shortest_length > 10*units::m){
+      tagger_info.mip_quality_shortest_length = 1000; // 10 m 
+    }else{
+      tagger_info.mip_quality_shortest_length = shortest_length/units::cm;
+    }
     tagger_info.mip_quality_acc_length = shortest_acc_length/units::cm;
     tagger_info.mip_quality_shortest_angle = shortest_angle;
     tagger_info.mip_quality_flag_proton = flag_proton;
