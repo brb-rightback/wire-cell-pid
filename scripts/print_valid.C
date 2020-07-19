@@ -700,7 +700,7 @@ void print_valid(TString run_info = "7019_5_264"){
   T->SetBranchAddress("brm_shower_total_length",&brm_shower_total_length);
   T->SetBranchAddress("brm_connected_length",&brm_connected_length);
   T->SetBranchAddress("brm_n_size",&brm_n_size);
-  T->SetBranchAddress("brm_nacc_direct_length",&brm_acc_direct_length);
+  T->SetBranchAddress("brm_acc_direct_length",&brm_acc_direct_length);
   T->SetBranchAddress("brm_n_shower_main_segs",&brm_n_shower_main_segs);
   T->SetBranchAddress("brm_n_mu_main",&brm_n_mu_main);
   T->SetBranchAddress("brm_flag",&brm_flag);

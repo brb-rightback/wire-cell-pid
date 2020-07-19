@@ -1827,7 +1827,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("brm_shower_total_length",&tagger_info.brm_shower_total_length,"brm_shower_total_length/F");
     T_tagger->Branch("brm_connected_length",&tagger_info.brm_connected_length,"brm_connected_length/F");
     T_tagger->Branch("brm_n_size",&tagger_info.brm_n_size,"brm_n_size/F");
-    T_tagger->Branch("brm_nacc_direct_length",&tagger_info.brm_acc_direct_length,"brm_acc_direct_length/F");
+    T_tagger->Branch("brm_acc_direct_length",&tagger_info.brm_acc_direct_length,"brm_acc_direct_length/F");
     T_tagger->Branch("brm_n_shower_main_segs",&tagger_info.brm_n_shower_main_segs,"brm_n_shower_main_segs/F");
     T_tagger->Branch("brm_n_mu_main",&tagger_info.brm_n_mu_main,"brm_n_mu_main/F");
     T_tagger->Branch("brm_flag",&tagger_info.brm_flag,"brm_flag/F");
