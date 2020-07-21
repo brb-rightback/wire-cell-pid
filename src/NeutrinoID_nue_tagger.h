@@ -606,6 +606,9 @@ bool WCPPID::NeutrinoID::track_overclustering(WCPPID::WCShower *shower, bool fla
 	}
       }
       if (flag_fill){
+
+	if (std::isinf(dQ_dx_cut)) dQ_dx_cut = 10;
+	
 	tagger_info.tro_1_v_particle_type.push_back(sg1->get_particle_type());
 	tagger_info.tro_1_v_flag_dir_weak.push_back(sg1->is_dir_weak());
 	tagger_info.tro_1_v_min_dis.push_back(std::min(dis1,dis2)/units::cm);
