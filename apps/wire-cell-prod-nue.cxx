@@ -2093,6 +2093,43 @@ int main(int argc, char* argv[])
     T_tagger->Branch("numu_cc_3_max_muon_length",&tagger_info.numu_cc_3_max_muon_length,"numu_cc_3_max_muon_length/F");
     T_tagger->Branch("numu_cc_3_n_daughter_tracks",&tagger_info.numu_cc_3_n_daughter_tracks,"numu_cc_3_n_daughter_tracks/F");
     T_tagger->Branch("numu_cc_3_n_daughter_all",&tagger_info.numu_cc_3_n_daughter_all,"numu_cc_3_n_daughter_all/F");
+
+
+    // BDTs ...
+    T_tagger->Branch("mipid_score",&tagger_info.mipid_score,"mipid_score/F");
+    T_tagger->Branch("gap_score",&tagger_info.gap_score,"gap_score/F");
+    T_tagger->Branch("hol_lol_score",&tagger_info.hol_lol_score,"hol_lol_score/F");
+    T_tagger->Branch("cme_anc_score",&tagger_info.cme_anc_score,"cme_anc_score/F"); 
+    T_tagger->Branch("mgo_mgt_score",&tagger_info.mgo_mgt_score,"mgo_mgt_score/F");
+    T_tagger->Branch("br1_score",&tagger_info.br1_score,"br1_score/F");
+    
+    T_tagger->Branch("br3_score",&tagger_info.br3_score,"br3_score/F");
+    T_tagger->Branch("br3_3_score",&tagger_info.br3_3_score,"br3_3_score/F");
+    T_tagger->Branch("br3_5_score",&tagger_info.br3_5_score,"br3_5_score/F");
+    T_tagger->Branch("br3_6_score",&tagger_info.br3_6_score,"br3_6_score/F");
+    T_tagger->Branch("stemdir_br2_score",&tagger_info.stemdir_br2_score,"stemdir_br2_score/F");
+    T_tagger->Branch("trimuon_score",&tagger_info.trimuon_score,"trimuon_score/F");
+    
+    T_tagger->Branch("br4_tro_score",&tagger_info.br4_tro_score,"br4_tro_score/F");
+    T_tagger->Branch("mipquality_score",&tagger_info.mipquality_score,"mipquality_score/F");
+    T_tagger->Branch("pio_1_score",&tagger_info.pio_1_score,"pio_1_score/F");
+    T_tagger->Branch("pio_2_score",&tagger_info.pio_2_score,"pio_2_score/F");
+    T_tagger->Branch("stw_spt_score",&tagger_info.stw_spt_score,"stw_spt_score/F");
+    T_tagger->Branch("vis_1_score",&tagger_info.vis_1_score,"vis_1_score/F");
+    
+    T_tagger->Branch("vis_2_score",&tagger_info.vis_2_score,"vis_2_score/F");
+    T_tagger->Branch("stw_2_score",&tagger_info.stw_2_score,"stw_2_score/F");
+    T_tagger->Branch("stw_3_score",&tagger_info.stw_3_score,"stw_3_score/F");
+    T_tagger->Branch("stw_4_score",&tagger_info.stw_4_score,"stw_4_score/F");
+    T_tagger->Branch("sig_1_score",&tagger_info.sig_1_score,"sig_1_score/F");
+    T_tagger->Branch("sig_2_score",&tagger_info.sig_2_score,"sig_2_score/F");
+
+    T_tagger->Branch("lol_1_score",&tagger_info.lol_1_score,"lol_1_score/F");
+    T_tagger->Branch("lol_2_score",&tagger_info.lol_2_score,"lol_2_score/F");
+    T_tagger->Branch("tro_1_score",&tagger_info.tro_1_score,"tro_1_score/F");
+    T_tagger->Branch("tro_2_score",&tagger_info.tro_2_score,"tro_2_score/F");
+    T_tagger->Branch("tro_4_score",&tagger_info.tro_4_score,"tro_4_score/F");
+    T_tagger->Branch("tro_5_score",&tagger_info.tro_5_score,"tro_5_score/F");
     
     for (size_t i=0;i!=neutrino_vec.size();i++){
       WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();

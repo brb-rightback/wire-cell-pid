@@ -723,8 +723,37 @@ namespace WCPPID{
     float numu_cc_3_n_daughter_all;
     
     
-
-    
+    // nue BDTs
+    float mipid_score;
+    float gap_score;
+    float hol_lol_score;
+    float cme_anc_score;
+    float mgo_mgt_score;
+    float br1_score;
+    float br3_score;
+    float br3_3_score;
+    float br3_5_score;
+    float br3_6_score;
+    float stemdir_br2_score;
+    float trimuon_score;
+    float br4_tro_score;
+    float mipquality_score;
+    float pio_1_score;
+    float pio_2_score;
+    float stw_spt_score;
+    float vis_1_score;
+    float vis_2_score;
+    float stw_2_score;
+    float stw_3_score;
+    float stw_4_score;
+    float sig_1_score;
+    float sig_2_score;
+    float lol_1_score;
+    float lol_2_score;
+    float tro_1_score;
+    float tro_2_score;
+    float tro_4_score;
+    float tro_5_score;
     
   };
 
@@ -1002,6 +1031,40 @@ namespace WCPPID{
     std::pair<int, int> count_daughters(WCPPID::WCShower *max_long_muon);
     
     bool nue_tagger(double muon_kine_energy = 0);
+    
+    float cal_bdts();
+
+    float cal_mipid_bdt(float default_val = 0.5);
+    float cal_gap_bdt(float default_val = 0.5);
+    float cal_hol_lol_bdt(float default_val = 0.5);
+    float cal_cme_anc_bdt(float default_val = 0.5);
+    float cal_mgo_mgt_bdt(float default_val = 0.5);
+    float cal_br1_bdt(float default_val = 0.5);
+    float cal_br3_bdt(float default_val = 0.5);
+    float cal_br3_3_bdt(float default_val = 0.5);
+    float cal_br3_5_bdt(float default_val = 0.5);
+    float cal_br3_6_bdt(float default_val = 0.5);
+    float cal_stemdir_br2_bdt(float default_val = 0.5);
+    float cal_trimuon_bdt(float default_val = 0.5);
+    float cal_br4_tro_bdt(float default_val = 0.5);
+    float cal_mipquality_bdt(float default_val = 0.5);
+    float cal_pio_1_bdt(float default_val = 0.5);
+    float cal_pio_2_bdt(float default_val = 0.5);
+    float cal_stw_spt_bdt(float default_val = 0.5);
+    float cal_vis_1_bdt(float default_val = 0.5);
+    float cal_vis_2_bdt(float default_val = 0.5);
+    float cal_stw_2_bdt(float default_val = 0.5);
+    float cal_stw_3_bdt(float default_val = 0.5);
+    float cal_stw_4_bdt(float default_val = 0.5);
+    float cal_sig_1_bdt(float default_val = 0.5);
+    float cal_sig_2_bdt(float default_val = 0.5);
+    float cal_lol_1_bdt(float default_val = 0.5);
+    float cal_lol_2_bdt(float default_val = 0.5);
+    float cal_tro_1_bdt(float default_val = 0.5);
+    float cal_tro_2_bdt(float default_val = 0.5);
+    float cal_tro_4_bdt(float default_val = 0.5);
+    float cal_tro_5_bdt(float default_val = 0.5);
+    
     void examine_showers();
     void examine_shower_1();
     std::pair<bool, int> gap_identification(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment* sg, bool flag_single_shower = false, int valid_tracks = 0, double Eshower = 0, bool flag_fill = false);

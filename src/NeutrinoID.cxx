@@ -30,6 +30,8 @@ using namespace WCP;
 #include "NeutrinoID_nue_functions.h"
 #include "NeutrinoID_pio_tagger.h"
 
+#include "NeutrinoID_nue_bdts.h"
+
 WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<WCPPID::PR3DCluster*>& other_clusters1, std::vector<WCPPID::PR3DCluster*>& all_clusters1, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x, int flag_neutrino_id_process)
   : acc_vertex_id(0)
   , acc_segment_id(0)
@@ -222,6 +224,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     
   }
 
+
+  cal_bdts();
   
   //std::cout << "Final Information: " << std::endl;
   //print_segs_info(main_vertex);
@@ -2417,4 +2421,38 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.numu_cc_3_n_daughter_all = 0;
 
   tagger_info.numu_cc_flag = 0;
+
+
+  // nue BDTs
+  tagger_info.mipid_score=0;
+  tagger_info.gap_score=0;
+  tagger_info.hol_lol_score=0;
+  tagger_info.cme_anc_score=0;
+  tagger_info.mgo_mgt_score=0;
+  tagger_info.br1_score=0;
+  tagger_info.br3_score=0;
+  tagger_info.br3_3_score=0;
+  tagger_info.br3_5_score=0;
+  tagger_info.br3_6_score=0;
+  tagger_info.stemdir_br2_score=0;
+  tagger_info.trimuon_score=0;
+  tagger_info.br4_tro_score=0;
+  tagger_info.mipquality_score=0;
+  tagger_info.pio_1_score=0;
+  tagger_info.pio_2_score=0;
+  tagger_info.stw_spt_score=0;
+  tagger_info.vis_1_score=0;
+  tagger_info.vis_2_score=0;
+  tagger_info.stw_2_score=0;
+  tagger_info.stw_3_score=0;
+  tagger_info.stw_4_score=0;
+  tagger_info.sig_1_score=0;
+  tagger_info.sig_2_score=0;
+  tagger_info.lol_1_score=0;
+  tagger_info.lol_2_score=0;
+  tagger_info.tro_1_score=0;
+  tagger_info.tro_2_score=0;
+  tagger_info.tro_4_score=0;
+  tagger_info.tro_5_score=0;
+
 }
