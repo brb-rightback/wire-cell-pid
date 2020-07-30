@@ -32,7 +32,7 @@ using namespace WCP;
 
 #include "NeutrinoID_nue_bdts.h"
 
-WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<WCPPID::PR3DCluster*>& other_clusters1, std::vector<WCPPID::PR3DCluster*>& all_clusters1, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x, int flag_neutrino_id_process)
+WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<WCPPID::PR3DCluster*>& other_clusters1, std::vector<WCPPID::PR3DCluster*>& all_clusters1, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x, int flag_neutrino_id_process, bool flag_bdt)
   : acc_vertex_id(0)
   , acc_segment_id(0)
   , main_cluster(main_cluster1)
@@ -48,6 +48,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   , main_vertex(0)
   , main_cluster_initial_pair_vertices(std::make_pair((WCPPID::ProtoVertex*)0, (WCPPID::ProtoVertex*)0))
   , neutrino_type(0)
+  , flag_bdt(flag_bdt)
 {
   bool flag_other_clusters = true;
   bool flag_main_cluster = true;
@@ -224,8 +225,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     
   }
 
-
-  cal_bdts();
+  if (flag_bdt)
+    tagger_info.nue_score = cal_bdts();
   
   //std::cout << "Final Information: " << std::endl;
   //print_segs_info(main_vertex);
@@ -2454,5 +2455,5 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.tro_2_score=0;
   tagger_info.tro_4_score=0;
   tagger_info.tro_5_score=0;
-
+  tagger_info.nue_score = 0;
 }

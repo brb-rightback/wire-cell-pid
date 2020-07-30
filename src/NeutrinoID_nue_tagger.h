@@ -607,7 +607,7 @@ bool WCPPID::NeutrinoID::track_overclustering(WCPPID::WCShower *shower, bool fla
       }
       if (flag_fill){
 
-	if (std::isinf(dQ_dx_cut)) dQ_dx_cut = 10;
+	if (std::isinf(dQ_dx_cut) || std::isnan(dQ_dx_cut)) dQ_dx_cut = 10;
 	
 	tagger_info.tro_1_v_particle_type.push_back(sg1->get_particle_type());
 	tagger_info.tro_1_v_flag_dir_weak.push_back(sg1->is_dir_weak());
@@ -1802,11 +1802,13 @@ bool WCPPID::NeutrinoID::mip_quality(WCPPID::ProtoVertex* vertex, WCPPID::ProtoS
     tagger_info.mip_quality_n_tracks = n_tracks;
     tagger_info.mip_quality_flag_inside_pi0 = flag_inside_pi0;
     tagger_info.mip_quality_n_pi0_showers = tmp_pi0_showers.size();
+
     if (shortest_length > 10*units::m){
       tagger_info.mip_quality_shortest_length = 1000; // 10 m 
     }else{
       tagger_info.mip_quality_shortest_length = shortest_length/units::cm;
     }
+    
     tagger_info.mip_quality_acc_length = shortest_acc_length/units::cm;
     tagger_info.mip_quality_shortest_angle = shortest_angle;
     tagger_info.mip_quality_flag_proton = flag_proton;
@@ -2209,6 +2211,8 @@ int WCPPID::NeutrinoID::mip_identification(WCPPID::ProtoVertex* vertex, WCPPID::
     
 
   if (flag_fill){
+    if (min_dis > 1000*units::cm) min_dis = 1000*units::cm;
+    
     if (mip_id == -1)   tagger_info.mip_flag = false;  else tagger_info.mip_flag = true;
     tagger_info.mip_n_first_non_mip_2 = n_first_non_mip_2;
     tagger_info.mip_n_first_mip = n_first_mip;

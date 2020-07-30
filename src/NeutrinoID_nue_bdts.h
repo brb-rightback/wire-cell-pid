@@ -3,42 +3,100 @@
 float WCPPID::NeutrinoID::cal_bdts(){
   double val =0 ;
 
-  tagger_info.mipid_score     = cal_mipid_bdt();
-  tagger_info.gap_score       = cal_gap_bdt(); 
+  bool flag_print = true;
+  
+  // PIDs ...
+  tagger_info.mipid_score     = cal_mipid_bdt(0.26);
+  tagger_info.gap_score       = cal_gap_bdt(0.32); 
   tagger_info.hol_lol_score   = cal_hol_lol_bdt();
   tagger_info.cme_anc_score   = cal_cme_anc_bdt();
   tagger_info.mgo_mgt_score   = cal_mgo_mgt_bdt();
   tagger_info.br1_score       = cal_br1_bdt();
   tagger_info.br3_score       = cal_br3_bdt();
-  tagger_info.br3_3_score     = cal_br3_3_bdt();
-  tagger_info.br3_5_score     = cal_br3_5_bdt();
-  tagger_info.br3_6_score     = cal_br3_6_bdt();
+  tagger_info.br3_3_score     = cal_br3_3_bdt(0.3);
+  tagger_info.br3_5_score     = cal_br3_5_bdt(0.42);
+  tagger_info.br3_6_score     = cal_br3_6_bdt(0.75);
   tagger_info.stemdir_br2_score=cal_stemdir_br2_bdt();
   tagger_info.trimuon_score   = cal_trimuon_bdt();
   tagger_info.br4_tro_score   = cal_br4_tro_bdt();
   tagger_info.mipquality_score= cal_mipquality_bdt();
-  tagger_info.pio_1_score     = cal_pio_1_bdt();
-  tagger_info.pio_2_score     = cal_pio_2_bdt();
+  tagger_info.pio_1_score     = cal_pio_1_bdt(0.1);
+  tagger_info.pio_2_score     = cal_pio_2_bdt(0.2);
   tagger_info.stw_spt_score   = cal_stw_spt_bdt();
-  tagger_info.vis_1_score     = cal_vis_1_bdt();
-  tagger_info.vis_2_score     = cal_vis_2_bdt();
-  tagger_info.stw_2_score     = cal_stw_2_bdt();
-  tagger_info.stw_3_score     = cal_stw_3_bdt();
-  tagger_info.stw_4_score     = cal_stw_4_bdt();
-  tagger_info.sig_1_score     = cal_sig_1_bdt();
-  tagger_info.sig_2_score     = cal_sig_2_bdt();
-  tagger_info.lol_1_score     = cal_lol_1_bdt();
-  tagger_info.lol_2_score     = cal_lol_2_bdt();
-  tagger_info.tro_1_score     = cal_tro_1_bdt();
-  tagger_info.tro_2_score     = cal_tro_2_bdt();
-  tagger_info.tro_4_score     = cal_tro_4_bdt();
-  tagger_info.tro_5_score     = cal_tro_5_bdt();
+  tagger_info.vis_1_score     = cal_vis_1_bdt(0.6);
+  tagger_info.vis_2_score     = cal_vis_2_bdt(0.52);
+  tagger_info.stw_2_score     = cal_stw_2_bdt(0.7);
+  tagger_info.stw_3_score     = cal_stw_3_bdt(0.5);
+  tagger_info.stw_4_score     = cal_stw_4_bdt(0.7);
+  tagger_info.sig_1_score     = cal_sig_1_bdt(0.59);
+  tagger_info.sig_2_score     = cal_sig_2_bdt(0.55);
+  tagger_info.lol_1_score     = cal_lol_1_bdt(0.85);
+  tagger_info.lol_2_score     = cal_lol_2_bdt(0.7);
+  tagger_info.tro_1_score     = cal_tro_1_bdt(0.28);
+  tagger_info.tro_2_score     = cal_tro_2_bdt(0.35);
+  tagger_info.tro_4_score     = cal_tro_4_bdt(0.33);
+  tagger_info.tro_5_score     = cal_tro_5_bdt(0.5);
 
-  std::cout << tagger_info.mipid_score << " " << tagger_info.gap_score << " " << tagger_info.hol_lol_score << " " << tagger_info.cme_anc_score << " " << tagger_info.mgo_mgt_score << " " << tagger_info.br1_score << std::endl;
-  std::cout << tagger_info.br3_score << " " << tagger_info.br3_3_score << " " << tagger_info.br3_5_score << " " << tagger_info.br3_6_score << " " << tagger_info.stemdir_br2_score << " "<< tagger_info.trimuon_score << std::endl;
-  std::cout << tagger_info.br4_tro_score << " " << tagger_info.mipquality_score << " " << tagger_info.pio_1_score << " " << tagger_info.pio_2_score << " " << tagger_info.stw_spt_score << " " << tagger_info.vis_1_score << std::endl;
-  std::cout << tagger_info.vis_2_score << " " << tagger_info.stw_2_score << " " << tagger_info.stw_3_score << " " << tagger_info.stw_4_score << " " << tagger_info.sig_1_score << " " << tagger_info.sig_2_score << std::endl;
-  std::cout << tagger_info.lol_1_score << " " << tagger_info.lol_2_score << " " << tagger_info.tro_1_score << " " << tagger_info.tro_2_score << " " << tagger_info.tro_4_score << " " << tagger_info.tro_5_score << std::endl;
+  float default_val = -1;
+  
+  TMVA::Reader reader;
+  
+  reader.AddVariable("mip_energy",&tagger_info.mip_energy);
+  reader.AddVariable("mip_vec_dQ_dx_0",&tagger_info.mip_vec_dQ_dx_0);
+  reader.AddVariable("mip_vec_dQ_dx_1",&tagger_info.mip_vec_dQ_dx_1);
+  reader.AddVariable("mip_vec_dQ_dx_2",&tagger_info.mip_vec_dQ_dx_2);
+  reader.AddVariable("mip_vec_dQ_dx_3",&tagger_info.mip_vec_dQ_dx_3);
+  reader.AddVariable("mip_vec_dQ_dx_4",&tagger_info.mip_vec_dQ_dx_4);
+  reader.AddVariable("mipid_score",&tagger_info.mipid_score);
+  reader.AddVariable("gap_score",&tagger_info.gap_score);
+  reader.AddVariable("hol_lol_score",&tagger_info.hol_lol_score);
+  reader.AddVariable("cme_anc_score",&tagger_info.cme_anc_score);
+  reader.AddVariable("mgo_mgt_score",&tagger_info.mgo_mgt_score);
+  reader.AddVariable("br1_score",&tagger_info.br1_score);
+  reader.AddVariable("br3_score",&tagger_info.br3_score);
+  reader.AddVariable("br3_3_score",&tagger_info.br3_3_score);
+  reader.AddVariable("br3_5_score",&tagger_info.br3_5_score);
+  reader.AddVariable("br3_6_score",&tagger_info.br3_6_score);
+  reader.AddVariable("stemdir_br2_score",&tagger_info.stemdir_br2_score);
+  reader.AddVariable("trimuon_score",&tagger_info.trimuon_score);
+  reader.AddVariable("br4_tro_score",&tagger_info.br4_tro_score);
+  reader.AddVariable("mipquality_score",&tagger_info.mipquality_score);
+  reader.AddVariable("pio_1_score",&tagger_info.pio_1_score);
+  reader.AddVariable("pio_2_score",&tagger_info.pio_2_score);
+  reader.AddVariable("stw_spt_score",&tagger_info.stw_spt_score);
+  reader.AddVariable("vis_1_score",&tagger_info.vis_1_score);
+  reader.AddVariable("vis_2_score",&tagger_info.vis_2_score);
+  reader.AddVariable("stw_2_score",&tagger_info.stw_2_score);
+  reader.AddVariable("stw_3_score",&tagger_info.stw_3_score);
+  reader.AddVariable("stw_4_score",&tagger_info.stw_4_score);
+  reader.AddVariable("sig_1_score",&tagger_info.sig_1_score);
+  reader.AddVariable("sig_2_score",&tagger_info.sig_2_score);
+  reader.AddVariable("lol_1_score",&tagger_info.lol_1_score);
+  reader.AddVariable("lol_2_score",&tagger_info.lol_2_score);
+  reader.AddVariable("tro_1_score",&tagger_info.tro_1_score);
+  reader.AddVariable("tro_2_score",&tagger_info.tro_2_score);
+  reader.AddVariable("tro_4_score",&tagger_info.tro_4_score);
+  reader.AddVariable("tro_5_score",&tagger_info.tro_5_score);
+  
+  reader.BookMVA( "MyBDT", "input_data_files/weights/BDTcombine_BDT800_3.weights.xml");
+
+  if (tagger_info.br_filled==1){
+    val = reader.EvaluateMVA("MyBDT");
+
+    if (flag_print){
+      std::cout << "BDT: " << val << std::endl;
+      std::cout << "BDT: " << tagger_info.mipid_score << " " <<  tagger_info.tro_1_score << " " << tagger_info.tro_2_score << " " << tagger_info.tro_4_score << " " << tagger_info.tro_5_score << std::endl;
+      std::cout << "BDT: " << tagger_info.br4_tro_score << " " << tagger_info.lol_1_score << " " << tagger_info.lol_2_score << " " << tagger_info.sig_1_score << " " << tagger_info.sig_2_score << std::endl;
+      std::cout << "BDT: " << tagger_info.br3_score << " " << tagger_info.br3_3_score << " " << tagger_info.br3_5_score << " " << tagger_info.br3_6_score << " " << tagger_info.gap_score << std::endl;
+      std::cout << "BDT: " << tagger_info.stw_spt_score << " " << tagger_info.stw_2_score << " " << tagger_info.stw_3_score << " " << tagger_info.stw_4_score << " " << tagger_info.mgo_mgt_score << std::endl;
+      std::cout << "BDT: " << tagger_info.vis_1_score << " " << tagger_info.vis_2_score << " " << tagger_info.pio_1_score << " " << tagger_info.pio_2_score << " " << tagger_info.mipquality_score << std::endl;
+      std::cout << "BDT: " << tagger_info.br1_score << " " << tagger_info.stemdir_br2_score << " " << tagger_info.trimuon_score  <<  " " <<  tagger_info.hol_lol_score << " " << tagger_info.cme_anc_score << std::endl;
+    }
+    
+  }else{
+    val = default_val;
+  }
+    
   
   return val;
 }
@@ -46,6 +104,7 @@ float WCPPID::NeutrinoID::cal_bdts(){
 float WCPPID::NeutrinoID::cal_mipid_bdt(float default_val){
   TMVA::Reader reader;
   float val = default_val ; // default 
+
   
 
   reader.AddVariable("mip_energy",&tagger_info.mip_energy);

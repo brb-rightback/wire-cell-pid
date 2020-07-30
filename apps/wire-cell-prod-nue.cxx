@@ -31,7 +31,9 @@ int main(int argc, char* argv[])
   bool flag_debug_output = true; // output
   int datatier = 0; // data=0, overlay=1, full mc=2
   int flag_calib_corr = 1;
-  int flag_neutrino_id_process = 1; // 1 for development chain, 2 for current frozen chain 
+  int flag_neutrino_id_process = 1; // 1 for development chain, 2 for current frozen chain
+  bool flag_bdt = false;
+  
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
     case 'd':
@@ -42,6 +44,9 @@ int main(int argc, char* argv[])
       break;
     case 'n':
       flag_neutrino_id_process = atoi(&argv[i][2]);
+      break;
+    case 'b':
+      flag_bdt = atoi(&argv[i][2]);
       break;
     }
   }
@@ -1258,7 +1263,8 @@ int main(int argc, char* argv[])
     }
 
     double offset_x =     (flash_time - time_offset)*2./nrebin*time_slice_width;
-    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process);
+    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process, flag_bdt);
+    
     neutrino_vec.push_back(neutrino);
     map_flash_tpc_pair_neutrino_id[std::make_pair(it->first, it->second)] = neutrino;
   }
@@ -2130,6 +2136,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("tro_2_score",&tagger_info.tro_2_score,"tro_2_score/F");
     T_tagger->Branch("tro_4_score",&tagger_info.tro_4_score,"tro_4_score/F");
     T_tagger->Branch("tro_5_score",&tagger_info.tro_5_score,"tro_5_score/F");
+    T_tagger->Branch("nue_score",&tagger_info.nue_score,"nue_score/F");
     
     for (size_t i=0;i!=neutrino_vec.size();i++){
       WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();
