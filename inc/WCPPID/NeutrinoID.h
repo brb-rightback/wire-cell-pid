@@ -812,7 +812,7 @@ namespace WCPPID{
   
   class NeutrinoID{
   public:
-    NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, std::vector<WCPPID::PR3DCluster*>& all_clusters, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis,	WCP::ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double flash_time, double offset_x, int flag_neutrino_id_process=1, bool flag_bdt = false);
+    NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, std::vector<WCPPID::PR3DCluster*>& all_clusters, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis,	WCP::ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double flash_time, double offset_x, int flag_neutrino_id_process=1, bool flag_bdt = false, bool flag_dl_vtx = false);
     ~NeutrinoID();
 
     // deal with the map ...
@@ -932,7 +932,9 @@ namespace WCPPID{
     std::tuple<bool, int, int> examine_main_vertex_candidate(WCPPID::ProtoVertex *vertex);
 
     void determine_overall_main_vertex();
+    void determine_overall_main_vertex_DL();
 
+    
     void examine_main_vertices();
     void examine_main_vertices(WCPPID::ProtoVertexSelection& vertices);
     void check_switch_main_cluster(WCPPID::ProtoVertex *temp_main_vertex, WCPPID::PR3DCluster *max_length_cluster);
@@ -1109,6 +1111,8 @@ namespace WCPPID{
   protected:
     int neutrino_type;
     bool flag_bdt;
+    bool flag_dl_vtx;
+    
     int acc_vertex_id;
     int acc_segment_id;
 

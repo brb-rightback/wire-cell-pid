@@ -33,6 +33,7 @@ int main(int argc, char* argv[])
   int flag_calib_corr = 1;
   int flag_neutrino_id_process = 1; // 1 for development chain, 2 for current frozen chain
   bool flag_bdt = false;
+  bool flag_dl_vtx = false;
   
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
@@ -47,6 +48,9 @@ int main(int argc, char* argv[])
       break;
     case 'b':
       flag_bdt = atoi(&argv[i][2]);
+      break;
+    case 'l':
+      flag_dl_vtx = atoi(&argv[i][2]);
       break;
     }
   }
@@ -1263,7 +1267,7 @@ int main(int argc, char* argv[])
     }
 
     double offset_x =     (flash_time - time_offset)*2./nrebin*time_slice_width;
-    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process, flag_bdt);
+    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process, flag_bdt, flag_dl_vtx);
     
     neutrino_vec.push_back(neutrino);
     map_flash_tpc_pair_neutrino_id[std::make_pair(it->first, it->second)] = neutrino;
