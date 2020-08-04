@@ -155,6 +155,7 @@ int main(int argc, char* argv[])
   mp.init_Pos_Efield_SCE_correction();
 
   if( flag_PosEfield_corr ) {
+    mp.set_flag_PosEfield_corr(true);
     std::cout<<std::endl<<" --> mp.get_flag_PosEfield_corr() "<<mp.get_flag_PosEfield_corr()<<std::endl<<std::endl;
 
     // search the following in ~/PID/src
