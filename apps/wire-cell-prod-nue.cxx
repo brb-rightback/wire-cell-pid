@@ -34,6 +34,7 @@ int main(int argc, char* argv[])
   int flag_neutrino_id_process = 1; // 1 for development chain, 2 for current frozen chain
   bool flag_bdt = false;
   bool flag_dl_vtx = false;
+  bool flag_PosEfield_corr = false;// Position and E-field correction for SCE
   
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
@@ -51,6 +52,9 @@ int main(int argc, char* argv[])
       break;
     case 'l':
       flag_dl_vtx = atoi(&argv[i][2]);
+      break;
+    case 'p':
+      flag_PosEfield_corr = atoi(&argv[i][2]);
       break;
     }
   }
@@ -79,6 +83,8 @@ int main(int argc, char* argv[])
        << " " << gds.angle(WirePlaneType_t(2))
        << endl;
   std::cout << argv[2] << " " << argv[3] << std::endl;
+  cout<<endl<<" --> flag_PosEfield_corr "<<flag_PosEfield_corr<<endl<<endl;
+
   TString filename = argv[2];
   int entry_no = atoi(argv[3]);
   
@@ -145,6 +151,15 @@ int main(int argc, char* argv[])
     mp.init_corr_files();
   mp.init_PID_dq_dx();   // default 
   //mp.init_PID_dq_dx("input_data_files/stopping_ave_dQ_dx_v2.root");
+
+  if( flag_PosEfield_corr ) {
+    mp.init_Pos_Efield_SCE_correction();
+    std::cout<<std::endl<<" --> mp.get_flag_PosEfield_corr() "<<mp.get_flag_PosEfield_corr()<<std::endl<<std::endl;
+
+    // search the following in ~/PID/src
+    // get_flag_PosEfield_corr()
+
+  }
 
    // test geometry ...
   const GeomWire *uwire = gds.by_planeindex(WirePlaneType_t(0),0);

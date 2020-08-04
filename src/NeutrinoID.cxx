@@ -1628,6 +1628,15 @@ void WCPPID::NeutrinoID::fill_skeleton_info_magnify(int mother_cluster_id, WCPPI
 	ptree.reco_rr = -1; // no residual range
 
 	T->Fill();
+
+	//std::cout<<" check vtx #### "<<"  "<<ptree.reco_dx<<", x/y/z "<<ptree.reco_x<<"\t"<<ptree.reco_y<<std::endl;
+
+	
+	// std::cout<<" check vtx #### "<<"  "
+	// 	 <<ptree.reco_x<<"\t"<<ptree.reco_y<<"\t dx and dQ: "
+	// 	 <<vtx->get_dx()/units::cm<<"\t"
+	// 	 <<vtx->get_dQ()
+	// 	 <<std::endl;
       }
     }
 
@@ -1715,6 +1724,14 @@ void WCPPID::NeutrinoID::fill_skeleton_info_magnify(int mother_cluster_id, WCPPI
 	ptree.reco_reduced_chi2 = reduced_chi2_vec.at(i);
 	ptree.reco_rr = rr_vec.at(i)/units::cm; // no residual range
 	T->Fill();
+
+	//std::cout<<" check pts ---> "<<i<<"  "<<ptree.reco_dx<<", x/y/z "<<ptree.reco_x<<"\t"<<ptree.reco_y<<std::endl;
+
+	// std::cout<<" check pts ---> "<<i<<"  "
+	// 	 <<ptree.reco_x<<"\t"<<ptree.reco_y<<"\t dx and dQ: "
+	// 	 <<dx_vec.at(i)/units::cm<<"\t"
+	// 	 <<dQ_vec.at(i)
+	// 	 <<std::endl;
       }
     }
   }

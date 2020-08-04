@@ -205,6 +205,25 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
       dx_vec.at(i1) = sqrt(pow(curr_rec_pos.x-prev_rec_pos.x,2)+pow(curr_rec_pos.y-prev_rec_pos.y,2)+pow(curr_rec_pos.z-prev_rec_pos.z,2))
 	+ sqrt(pow(curr_rec_pos.x-next_rec_pos.x,2)+pow(curr_rec_pos.y-next_rec_pos.y,2)+pow(curr_rec_pos.z-next_rec_pos.z,2));
 
+      //dx_vec.at(i1) *= 2;
+      //std::cout<<" ---> dx "<<dx_vec.at(i1)/units::cm<<", x/y/z "<<pts.at(i1).x/units::cm<<"\t"<<pts.at(i1).y/units::cm<<std::endl;
+      
+      if( mp.get_flag_PosEfield_corr() ) {
+
+	double dx_after_corr = mp.func_dx_after_Pos_Efield_SCE_correction( pts.at(i1-1).x/units::cm, pts.at(i1-1).y/units::cm, pts.at(i1-1).z/units::cm, 
+									   pts.at(i1+0).x/units::cm, pts.at(i1+0).y/units::cm, pts.at(i1+0).z/units::cm, 
+									   pts.at(i1+1).x/units::cm, pts.at(i1+1).y/units::cm, pts.at(i1+1).z/units::cm );	
+
+	//std::cout<<" ---> dx "
+	//	 <<dx_vec.at(i1)/units::cm<<"\t"
+	//	 <<dx_after_corr<<"\t"
+	//	 <<" after/before "<<dx_after_corr/(dx_vec.at(i1)/units::cm)<<std::endl;
+
+	dx_vec.at(i1) = dx_after_corr * units::cm;
+      }
+
+      
+
       std::vector<double> centers_U ;
       std::vector<double> centers_V ;
       std::vector<double> centers_W ;
@@ -417,6 +436,23 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
     for (size_t i=0;i!=connected_pts.size();i++){
       tmp_dx += sqrt(pow(connected_pts.at(i).x - curr_rec_pos.x,2) + pow(connected_pts.at(i).y - curr_rec_pos.y,2) + pow(connected_pts.at(i).z - curr_rec_pos.z,2));
     }
+    
+    // ttt
+    if( mp.get_flag_PosEfield_corr() ) {
+      double user_dx = 0;
+
+      for (size_t i=0;i!=connected_pts.size();i++){
+	double dx_after_corr = mp.func_dx_after_Pos_Efield_SCE_correction( connected_pts.at(i).x/units::cm, connected_pts.at(i).y/units::cm, connected_pts.at(i).z/units::cm, 
+									   curr_rec_pos.x/units::cm, curr_rec_pos.y/units::cm, curr_rec_pos.z/units::cm);
+	user_dx += dx_after_corr*units::cm;
+      }
+      
+      tmp_dx = user_dx;
+
+      //std::cout<<" ---> check "<<user_dx/tmp_dx<<std::endl;
+    }
+
+
     vtx->set_dx(tmp_dx);
     for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
       WCPPID::ProtoSegment *sg = *it1;
@@ -798,10 +834,7 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
       double tmp_pu = vtx->get_pu();
       double tmp_pv = vtx->get_pv();
       double tmp_pw = vtx->get_pw();
-      double tmp_pt = vtx->get_pt();
-
-      
-
+      double tmp_pt = vtx->get_pt();      
       
       vtx->set_fit(p, tmp_dQ, tmp_dx, tmp_pu, tmp_pv, tmp_pw, tmp_pt, tmp_reduced_chi2);
     }
@@ -809,6 +842,7 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
     PointVector& pts = sg->get_point_vec();
     std::vector<int>& indices = sg->get_fit_index_vec();
     std::vector<double>& dQ_vec = sg->get_dQ_vec();
+    std::vector<double>& dx_vec = sg->get_dx_vec();//   
     std::vector<double>& reduced_chi2_vec = sg->get_reduced_chi2_vec();
     for (size_t i=0;i!=dQ_vec.size();i++){
       double corr = 1;
@@ -817,6 +851,21 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
       }
       dQ_vec.at(i) = pos_3D(indices.at(i)) * corr;
       reduced_chi2_vec.at(i) = traj_reduced_chi2.at(indices.at(i));
+
+      ///
+      if( mp.get_flag_PosEfield_corr() ) {
+
+	double dQdx_after_corr = mp.func_dQdx_after_Pos_Efield_SCE_correction( pts.at(i).x/units::cm, pts.at(i).y/units::cm, pts.at(i).z/units::cm, 
+									    dQ_vec.at(i), dx_vec.at(i) );
+
+	double dQ_after_corr = dQdx_after_corr * dx_vec.at(i);
+
+	dQ_vec.at(i) = dQ_after_corr;
+	
+	//std::cout<<" dQ_dx check ---> before and after "<<i<<"\t"<<dQ_vec.at(i)<<"\t"<<dQ_after_corr<<"\t"<<dQ_after_corr/dQ_vec.at(i)<<std::endl;
+      }
+           
+      //std::cout<<" -dQ_dx --> check seg "<<i<<" "<<dx_vec.at(i)<<", pos "<<pts.at(i).x/units::cm<<std::endl;
     }
     
     
