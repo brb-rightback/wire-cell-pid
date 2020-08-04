@@ -1329,7 +1329,14 @@ void WCPPID::NeutrinoID::fill_reco_simple_tree(WCPPID::WCRecoTree& rtree){
 void WCPPID::NeutrinoID::fill_kine_tree(WCPPID::KineInfo& rtree){
   // neutrino vertex distance to wall ...
   Point nu_vtx = main_vertex->get_fit_pt();
-  
+
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  Point corr_nu_vtx = mp.func_pos_SCE_correction(nu_vtx);
+  rtree.kine_nu_x_corr = corr_nu_vtx.x/units::cm;
+  rtree.kine_nu_y_corr = corr_nu_vtx.y/units::cm;
+  rtree.kine_nu_z_corr = corr_nu_vtx.z/units::cm;
+
+  std::cout << nu_vtx << " " << corr_nu_vtx << std::endl;
   
   // neutrino energy reconstruction ...
   

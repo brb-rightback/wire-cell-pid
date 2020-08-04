@@ -152,8 +152,9 @@ int main(int argc, char* argv[])
   mp.init_PID_dq_dx();   // default 
   //mp.init_PID_dq_dx("input_data_files/stopping_ave_dQ_dx_v2.root");
 
+  mp.init_Pos_Efield_SCE_correction();
+
   if( flag_PosEfield_corr ) {
-    mp.init_Pos_Efield_SCE_correction();
     std::cout<<std::endl<<" --> mp.get_flag_PosEfield_corr() "<<mp.get_flag_PosEfield_corr()<<std::endl<<std::endl;
 
     // search the following in ~/PID/src
