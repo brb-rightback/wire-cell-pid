@@ -1072,6 +1072,8 @@ void WCPPID::NeutrinoID::fill_reco_tree(WCPPID::ProtoSegment* sg, WCRecoTree& rt
   
   
   //    std::cout << sg->cal_kine_range()/units::MeV << " " << sg->cal_kine_dQdx()/units::MeV << std::endl;
+  rtree.mc_included[rtree.mc_Ntrack] = 1; // always included
+  
   rtree.mc_pdg[rtree.mc_Ntrack] = sg->get_particle_type(); // all muons for now ...
   rtree.mc_process[rtree.mc_Ntrack] = 0;
   rtree.mc_mother[rtree.mc_Ntrack] = 0; 
@@ -1143,6 +1145,14 @@ void WCPPID::NeutrinoID::fill_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rt
   rtree.mc_id[rtree.mc_Ntrack]  = sg1->get_cluster_id()*1000 + sg1->get_id();
   rtree.mc_pdg[rtree.mc_Ntrack] = shower->get_particle_type();
   rtree.mc_process[rtree.mc_Ntrack] = 0;
+
+  if (shower->get_start_vertex().second <=2){
+    rtree.mc_included[rtree.mc_Ntrack] = 1;
+  }else{
+    rtree.mc_included[rtree.mc_Ntrack] = shower->get_start_vertex().second; // 3 or 4 ...
+  }
+
+
   
   rtree.mc_kine_range[rtree.mc_Ntrack] = shower->get_kine_range()/units::MeV;
   rtree.mc_kine_dQdx[rtree.mc_Ntrack] = shower->get_kine_dQdx()/units::MeV;
@@ -1186,7 +1196,9 @@ void WCPPID::NeutrinoID::fill_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rt
 }
 
 std::pair<int, int> WCPPID::NeutrinoID::fill_pi0_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rtree){
-
+  // not calculation energy ....
+  rtree.mc_included[rtree.mc_Ntrack] = 0;
+  
   if (map_pio_id_saved_pair.find( map_shower_pio_id[shower]) == map_pio_id_saved_pair.end()){
     WCPPID::ProtoSegment *sg1 = shower->get_start_segment();
     rtree.mc_id[rtree.mc_Ntrack]  = sg1->get_cluster_id()*1000 + map_shower_pio_id[shower];
@@ -1242,6 +1254,8 @@ int WCPPID::NeutrinoID::fill_psuedo_reco_tree(WCPPID::WCShower* shower, WCRecoTr
     rtree.mc_pdg[rtree.mc_Ntrack] = 2112;
   }
   rtree.mc_process[rtree.mc_Ntrack] = 0;
+
+  rtree.mc_included[rtree.mc_Ntrack] = 0;
   
   rtree.mc_kine_range[rtree.mc_Ntrack] = 0;
   rtree.mc_kine_dQdx[rtree.mc_Ntrack] = 0;
@@ -1312,6 +1326,16 @@ void WCPPID::NeutrinoID::fill_reco_simple_tree(WCPPID::WCRecoTree& rtree){
   // std::cout << rtree.mc_Ntrack << std::endl;
 }
 
+void WCPPID::NeutrinoID::fill_kine_tree(WCPPID::KineInfo& rtree){
+  // neutrino vertex distance to wall ...
+  Point nu_vtx = main_vertex->get_fit_pt();
+  
+  
+  // neutrino energy reconstruction ...
+  
+  // pio reconstruction ...
+  
+}
 
 
 void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){

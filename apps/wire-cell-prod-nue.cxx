@@ -2217,12 +2217,17 @@ int main(int argc, char* argv[])
   TMC->Branch("mc_endMomentum", &reco_tree.mc_endMomentum, "mc_endMomentum[mc_Ntrack][4]/F");  // start momentum of this track; size == mc_Ntrack
   TMC->SetDirectory(file1);
 
+  WCPPID::KineInfo kine_tree;
+  
   for (size_t i=0; i!= neutrino_vec.size();i++){
     //    neutrino_vec.at(i)->fill_proto_main_tree(reco_tree);
     neutrino_vec.at(i)->fill_particle_tree(reco_tree);
+    neutrino_vec.at(i)->fill_kine_tree(kine_tree);
   }
   TMC->Fill();
 
+
+  
 
   
   TTree *T_cluster ;

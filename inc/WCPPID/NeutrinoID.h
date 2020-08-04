@@ -46,13 +46,16 @@ namespace WCPPID{
     int mc_pdg[1000];  // track particle pdg; size == mc_Ntrack
     int mc_process[1000];  // track generation process code; size == mc_Ntrack
     int mc_mother[1000];  // mother id of this track; size == mc_Ntrack
-
+    int mc_included[1000]; // whether this particle should be included in the energy calculation ...
+    
     int mc_dir_weak[1000]; // weak direction ...
     int mc_stopped[1000]; // if things are stopped
     float mc_length[1000]; // length
+    
     float mc_kine_range[1000];
     float mc_kine_dQdx[1000];
     float mc_kine_charge[1000];
+    
     
     float mc_startXYZT[1000][4];  // start position of this track; size == mc_Ntrack
     float mc_endXYZT[1000][4];  // end position of this track; size == mc_Ntrack
@@ -61,6 +64,29 @@ namespace WCPPID{
     std::vector<std::vector<int> > *mc_daughters;
   };
 
+
+  struct KineInfo
+  {
+    // neutrino vertex ...
+    float kine_nu_x_corr;
+    float kine_nu_y_corr;
+    float kine_nu_z_corr;
+    
+    // energy ...
+    float kine_reco_Enu; // kinetic energy  + additional energy ...
+    float kine_reco_add_energy;  // mass, binding energy ...
+    std::vector<float> kine_energy_particle;  // energy of each particle
+    std::vector<int> kine_energy_info; // what kind of energy reconstruction?
+    std::vector<int> kine_energy_included; // included in the neutrino energy calculation?
+
+    // pi0 information ...
+
+    
+    
+    
+  };
+  
+  
   //
   struct TaggerInfo
   {
@@ -848,6 +874,8 @@ namespace WCPPID{
     void fill_reco_simple_tree(WCRecoTree& rtree);
     void fill_proto_main_tree(WCRecoTree& rtree);
     void fill_particle_tree(WCRecoTree& rtree);
+
+    void fill_kine_tree(KineInfo& rtree);
     
     void fill_skeleton_info_magnify(int mother_cluster_id, WCPointTree& ptree, TTree *T, double dQdx_scale, double dQdx_offset, bool flag_skip_vertex = false);
     void fill_skeleton_info(int mother_cluster_id, WCPointTree& ptree, TTree *T, double dQdx_scale, double dQdx_offset, bool flag_skip_vertex = false);

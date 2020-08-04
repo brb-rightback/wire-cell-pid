@@ -260,8 +260,9 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv(){
   // examine shower trunk and added to shower
   examine_showers();
 
-  id_pi0_with_vertex();
 
+  id_pi0_with_vertex();
+  
   id_pi0_without_vertex();
   
 }
@@ -673,6 +674,12 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
     } // more than 1 shower
   } // candidate vertices ...
 
+
+  // store the pi0 in general ...
+
+  
+
+  // pi0 for the pattern recognition ...
   while(map_shower_pair_mass_vertex.size()>0){
     double mass_diff = 1e9;
     double mass_save = 0;
