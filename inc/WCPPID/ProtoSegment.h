@@ -123,6 +123,8 @@ namespace WCPPID{
     
     double cal_kine_range(double length);
     double cal_kine_dQdx(std::vector<double>& vec_dQ, std::vector<double>& vec_dx);
+
+    double get_kine_best(){return kenergy_best;};
     
     double get_kine_charge(){return kenergy_charge;};
     void set_kine_charge(double val){kenergy_charge = val;};
@@ -179,6 +181,7 @@ namespace WCPPID{
     // n 2112
     double particle_mass;
     double particle_4mom[4];
+    double kenergy_best;
     double kenergy_charge;
   };
   typedef std::vector<ProtoSegment*> ProtoSegmentSelection;

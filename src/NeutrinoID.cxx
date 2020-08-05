@@ -32,6 +32,9 @@ using namespace WCP;
 
 #include "NeutrinoID_nue_bdts.h"
 #include "NeutrinoID_DL.h"
+
+#include "NeutrinoID_kine.h"
+
 WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<WCPPID::PR3DCluster*>& other_clusters1, std::vector<WCPPID::PR3DCluster*>& all_clusters1, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x, int flag_neutrino_id_process, bool flag_bdt, bool flag_dl_vtx)
   : acc_vertex_id(0)
   , acc_segment_id(0)
@@ -1326,23 +1329,7 @@ void WCPPID::NeutrinoID::fill_reco_simple_tree(WCPPID::WCRecoTree& rtree){
   // std::cout << rtree.mc_Ntrack << std::endl;
 }
 
-void WCPPID::NeutrinoID::fill_kine_tree(WCPPID::KineInfo& rtree){
-  // neutrino vertex distance to wall ...
-  Point nu_vtx = main_vertex->get_fit_pt();
 
-  TPCParams& mp = Singleton<TPCParams>::Instance();
-  Point corr_nu_vtx = mp.func_pos_SCE_correction(nu_vtx);
-  rtree.kine_nu_x_corr = corr_nu_vtx.x/units::cm;
-  rtree.kine_nu_y_corr = corr_nu_vtx.y/units::cm;
-  rtree.kine_nu_z_corr = corr_nu_vtx.z/units::cm;
-
-  std::cout << nu_vtx << " " << corr_nu_vtx << std::endl;
-  
-  // neutrino energy reconstruction ...
-  
-  // pio reconstruction ...
-  
-}
 
 
 void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){

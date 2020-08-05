@@ -30,6 +30,7 @@ WCPPID::ProtoSegment::ProtoSegment(int id, std::list<WCP::WCPointCloud<double>::
   , particle_score(100)
   , particle_mass(0)
   , kenergy_charge(0)
+  , kenergy_best(0)
 {
   for (int i=0;i!=4;i++){
     particle_4mom[i] = 0;
@@ -1408,6 +1409,8 @@ void WCPPID::ProtoSegment::cal_4mom(){
   }else{
     kine_energy = cal_kine_range();
   }
+
+  kenergy_best = kine_energy;
 
   //  std::cout << id << " " << cal_kine_dQdx() << " " << cal_kine_range() << " " << particle_mass << " " << particle_type << std::endl;
   

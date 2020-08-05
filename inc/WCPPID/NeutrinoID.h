@@ -875,7 +875,7 @@ namespace WCPPID{
     void fill_proto_main_tree(WCRecoTree& rtree);
     void fill_particle_tree(WCRecoTree& rtree);
 
-    void fill_kine_tree(KineInfo& rtree);
+    void fill_kine_tree(KineInfo& ktree);
     
     void fill_skeleton_info_magnify(int mother_cluster_id, WCPointTree& ptree, TTree *T, double dQdx_scale, double dQdx_offset, bool flag_skip_vertex = false);
     void fill_skeleton_info(int mother_cluster_id, WCPointTree& ptree, TTree *T, double dQdx_scale, double dQdx_offset, bool flag_skip_vertex = false);
