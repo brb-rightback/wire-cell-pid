@@ -510,7 +510,49 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
     } // loop over showers
 
 
+    // save pi0 ...
+    double max_energy = kine_pio_energy_1 + kine_pio_energy_2;
+    
+    for (auto it = map_shower_pair_mass_point.begin(); it!= map_shower_pair_mass_point.end(); it++){
+      WCPPID::WCShower* shower_1 = it->first.first;
+      WCPPID::WCShower* shower_2 = it->first.second;
 
+      float mass_save = it->second.first;
+      Point vtx_point = it->second.second;
+
+      float energy_1 = shower_1->get_kine_charge();
+      float energy_2 = shower_2->get_kine_charge();
+      
+      if (energy_1 + energy_2 >= max_energy){
+	kine_pio_flag = 2;
+	kine_pio_mass = mass_save;
+
+	kine_pio_energy_1 = energy_1;
+	kine_pio_energy_2 = energy_2;
+
+	kine_pio_dis_1 = sqrt(pow(vtx_point.x - shower_1->get_start_point().x,2) + pow(vtx_point.y - shower_1->get_start_point().y,2) + pow(vtx_point.z - shower_1->get_start_point().z,2));
+	kine_pio_dis_2 = sqrt(pow(vtx_point.x - shower_2->get_start_point().x,2) + pow(vtx_point.y - shower_2->get_start_point().y,2) + pow(vtx_point.z - shower_2->get_start_point().z,2));
+
+	TVector3 dir1;
+	dir1.SetXYZ(shower_1->get_start_point().x - vtx_point.x, shower_1->get_start_point().y - vtx_point.y, shower_1->get_start_point().z - vtx_point.z);
+	
+	TVector3 dir2;
+	dir2.SetXYZ(shower_2->get_start_point().x - vtx_point.x, shower_2->get_start_point().y - vtx_point.y, shower_2->get_start_point().z - vtx_point.z);
+	
+	
+	kine_pio_theta_1 = dir1.Theta();
+	kine_pio_theta_2 = dir2.Theta();
+
+	kine_pio_phi_1 = dir1.Phi();
+	kine_pio_phi_2 = dir2.Phi();
+
+	kine_pio_angle = dir1.Angle(dir2);
+	
+      }
+    }
+    //
+
+    
     double mass_diff = 1e9;
     double mass_save = 0;
     WCPPID::WCShower *shower_1 = 0;
@@ -675,8 +717,55 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
   } // candidate vertices ...
 
 
-  // store the pi0 in general ...
+  // store the pi0 in general for energy
+  float max_energy = 0;
+  for (auto it = map_shower_pair_mass_vertex.begin(); it != map_shower_pair_mass_vertex.end(); it++){
+    WCPPID::WCShower *shower_1 = it->first.first;
+    WCPPID::WCShower *shower_2 = it->first.second;
+    float energy_1 = shower_1->get_kine_charge();
+    float energy_2 = shower_2->get_kine_charge();
 
+    if (energy_1 + energy_2 > max_energy){
+      for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
+	double mass_pio = it1->first;
+	WCPPID::ProtoVertex *vtx = it1->second;
+
+	max_energy = energy_1 + energy_2;
+
+	kine_pio_flag = 1;
+	kine_pio_mass = mass_pio;
+
+	kine_pio_energy_1 = energy_1;
+	kine_pio_energy_2 = energy_2;
+
+	kine_pio_dis_1 = sqrt(pow(vtx->get_fit_pt().x - shower_1->get_start_point().x,2) + pow(vtx->get_fit_pt().y - shower_1->get_start_point().y,2) + pow(vtx->get_fit_pt().z - shower_1->get_start_point().z,2));
+	kine_pio_dis_2 = sqrt(pow(vtx->get_fit_pt().x - shower_2->get_start_point().x,2) + pow(vtx->get_fit_pt().y - shower_2->get_start_point().y,2) + pow(vtx->get_fit_pt().z - shower_2->get_start_point().z,2));
+
+	TVector3 dir1;
+	if (kine_pio_dis_1 < 3*units::cm){
+	  dir1 = shower_1->cal_dir_3vector(shower_1->get_start_vertex().first->get_fit_pt(), 15*units::cm);
+	}else{
+	  dir1.SetXYZ(shower_1->get_start_point().x - vtx->get_fit_pt().x, shower_1->get_start_point().y - vtx->get_fit_pt().y, shower_1->get_start_point().z - vtx->get_fit_pt().z);
+	}
+	TVector3 dir2;
+	if (kine_pio_dis_2 < 3*units::cm){
+	  dir2 = shower_2->cal_dir_3vector(shower_2->get_start_vertex().first->get_fit_pt(), 15*units::cm);
+	}else{
+	  dir2.SetXYZ(shower_2->get_start_point().x - vtx->get_fit_pt().x, shower_2->get_start_point().y - vtx->get_fit_pt().y, shower_2->get_start_point().z - vtx->get_fit_pt().z);
+	}
+	
+	kine_pio_theta_1 = dir1.Theta();
+	kine_pio_theta_2 = dir2.Theta();
+
+	kine_pio_phi_1 = dir1.Phi();
+	kine_pio_phi_2 = dir2.Phi();
+
+	kine_pio_angle = dir1.Angle(dir2);
+      }
+    }
+    
+  }
+  // store the pi0 for energy ...
   
 
   // pi0 for the pattern recognition ...

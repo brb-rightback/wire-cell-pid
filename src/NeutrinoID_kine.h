@@ -256,8 +256,27 @@ void WCPPID::NeutrinoID::fill_kine_tree(WCPPID::KineInfo& ktree){
   
   ktree.kine_reco_Enu += ktree.kine_reco_add_energy;
   
-  //  std::cout << ktree.kine_reco_Enu << " " << ktree.kine_reco_add_energy << std::endl;
+  //std::cout << ktree.kine_reco_Enu << " " << ktree.kine_reco_add_energy << std::endl;
   
   // pio reconstruction ...
+  
+  ktree.kine_pio_mass = kine_pio_mass/units::MeV;
+  ktree.kine_pio_flag = kine_pio_flag;
+  
+  ktree.kine_pio_energy_1 = kine_pio_energy_1/units::MeV;
+  ktree.kine_pio_theta_1 = kine_pio_theta_1/3.1415926*180.;
+  ktree.kine_pio_phi_1 = kine_pio_phi_1/3.1415926*180.;
+  ktree.kine_pio_dis_1 = kine_pio_dis_1/units::cm;
+  
+  ktree.kine_pio_energy_2 = kine_pio_energy_2/units::MeV;
+  ktree.kine_pio_theta_2 = kine_pio_theta_2/3.1415926*180.;
+  ktree.kine_pio_phi_2 = kine_pio_phi_2/3.1415926*180.;
+  ktree.kine_pio_dis_2 = kine_pio_dis_2/units::cm;
+
+  ktree.kine_pio_angle = kine_pio_angle/3.1415926*180.;
+
+  // std::cout << ktree.kine_pio_flag << " " << ktree.kine_pio_mass << " " << ktree.kine_pio_energy_1 << " " << ktree.kine_pio_energy_2 << " " << ktree.kine_pio_angle << std::endl;
+  
+  
   
 }

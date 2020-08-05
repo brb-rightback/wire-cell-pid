@@ -2235,6 +2235,35 @@ int main(int argc, char* argv[])
   TMC->SetDirectory(file1);
 
   WCPPID::KineInfo kine_tree;
+  kine_tree.kine_pio_flag = 0;
+
+  TTree *T_kine = new TTree("T_kine","T_kine");
+  T_kine->SetDirectory(file1);
+  T_kine->Branch("kine_nu_x_corr",&kine_tree.kine_nu_x_corr,"kine_nu_x_corr/F");
+  T_kine->Branch("kine_nu_y_corr",&kine_tree.kine_nu_y_corr,"kine_nu_y_corr/F");
+  T_kine->Branch("kine_nu_z_corr",&kine_tree.kine_nu_z_corr,"kine_nu_z_corr/F");
+
+  T_kine->Branch("kine_reco_Enu",&kine_tree.kine_reco_Enu,"kine_reco_Enu/F");
+  T_kine->Branch("kine_reco_add_energy",&kine_tree.kine_reco_add_energy,"kine_reco_add_energy/F");
+  T_kine->Branch("kine_energy_particle",&kine_tree.kine_energy_particle);
+  T_kine->Branch("kine_energy_info",&kine_tree.kine_energy_info);
+  T_kine->Branch("kine_particle_type",&kine_tree.kine_particle_type);
+  T_kine->Branch("kine_energy_included",&kine_tree.kine_energy_included);
+
+  T_kine->Branch("kine_pio_mass",&kine_tree.kine_pio_mass,"kine_pio_mass/F");
+  T_kine->Branch("kine_pio_flag",&kine_tree.kine_pio_flag,"kine_pio_flag/I");
+  
+  T_kine->Branch("kine_pio_energy_1",&kine_tree.kine_pio_energy_1,"kine_pio_energy_1/F");
+  T_kine->Branch("kine_pio_theta_1",&kine_tree.kine_pio_theta_1,"kine_pio_theta_1/F");
+  T_kine->Branch("kine_pio_phi_1",&kine_tree.kine_pio_phi_1,"kine_pio_phi_1/F");
+  T_kine->Branch("kine_pio_dis_1",&kine_tree.kine_pio_dis_1,"kine_pio_dis_1/F");
+
+  T_kine->Branch("kine_pio_energy_2",&kine_tree.kine_pio_energy_2,"kine_pio_energy_2/F");
+  T_kine->Branch("kine_pio_theta_2",&kine_tree.kine_pio_theta_2,"kine_pio_theta_2/F");
+  T_kine->Branch("kine_pio_phi_2",&kine_tree.kine_pio_phi_2,"kine_pio_phi_2/F");
+  T_kine->Branch("kine_pio_dis_2",&kine_tree.kine_pio_dis_2,"kine_pio_dis_2/F");
+
+  T_kine->Branch("kine_pio_angle",&kine_tree.kine_pio_angle,"kine_pio_angle/F");
   
   for (size_t i=0; i!= neutrino_vec.size();i++){
     //    neutrino_vec.at(i)->fill_proto_main_tree(reco_tree);
@@ -2242,6 +2271,7 @@ int main(int argc, char* argv[])
     neutrino_vec.at(i)->fill_kine_tree(kine_tree );
   }
   TMC->Fill();
+  T_kine->Fill();
 
 
   

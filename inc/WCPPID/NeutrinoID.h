@@ -81,8 +81,20 @@ namespace WCPPID{
     std::vector<int> kine_energy_included; // included in the neutrino energy calculation?
 
     // pi0 information ...
+    float kine_pio_mass; // mass
+    int kine_pio_flag; // 0 not filled, 1, with vertex, 2 without vertex
 
+    float kine_pio_energy_1;
+    float kine_pio_theta_1;
+    float kine_pio_phi_1;
+    float kine_pio_dis_1;
     
+    float kine_pio_energy_2;
+    float kine_pio_theta_2;
+    float kine_pio_phi_2;
+    float kine_pio_dis_2;
+    
+    float kine_pio_angle;
     
     
   };
@@ -1136,6 +1148,22 @@ namespace WCPPID{
     void init_tagger_info();
     TaggerInfo tagger_info; 
 
+    
+    float kine_pio_mass; // mass
+    int kine_pio_flag; // 0 not filled, 1, with vertex, 2 without vertex
+
+    float kine_pio_energy_1;
+    float kine_pio_theta_1;
+    float kine_pio_phi_1;
+    float kine_pio_dis_1;
+    
+    float kine_pio_energy_2;
+    float kine_pio_theta_2;
+    float kine_pio_phi_2;
+    float kine_pio_dis_2;
+
+    float kine_pio_angle;
+    
     
   protected:
     int neutrino_type;

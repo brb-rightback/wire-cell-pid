@@ -2495,4 +2495,19 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.tro_4_score=0;
   tagger_info.tro_5_score=0;
   tagger_info.nue_score = 0;
+
+  kine_pio_flag = 0;
+  kine_pio_mass = 0;
+
+  kine_pio_energy_1 = 0;
+  kine_pio_theta_1 = 0;
+  kine_pio_phi_1 = 0;
+  kine_pio_dis_1 = 0;
+  
+  kine_pio_energy_2 = 0;
+  kine_pio_theta_2 = 0;
+  kine_pio_phi_2 = 0;
+  kine_pio_dis_2 = 0;
+
+  kine_pio_angle = 0;
 }
