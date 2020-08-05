@@ -77,6 +77,7 @@ namespace WCPPID{
     float kine_reco_add_energy;  // mass, binding energy ...
     std::vector<float> kine_energy_particle;  // energy of each particle
     std::vector<int> kine_energy_info; // what kind of energy reconstruction?
+    std::vector<int> kine_particle_type;
     std::vector<int> kine_energy_included; // included in the neutrino energy calculation?
 
     // pi0 information ...

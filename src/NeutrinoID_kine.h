@@ -50,6 +50,7 @@ void WCPPID::NeutrinoID::fill_kine_tree(WCPPID::KineInfo& ktree){
       float kine_range = shower->get_kine_range();
       
       ktree.kine_energy_particle.push_back(kine_best/units::MeV);
+      ktree.kine_particle_type.push_back(shower->get_start_segment()->get_particle_type());
       
       if (fabs(kine_best - kine_charge) < 0.001 * kine_best){
 	ktree.kine_energy_info.push_back(2); // charge ...
@@ -78,6 +79,7 @@ void WCPPID::NeutrinoID::fill_kine_tree(WCPPID::KineInfo& ktree){
       float kine_range = (*it)->cal_kine_range();
       
       ktree.kine_energy_particle.push_back(kine_best/units::MeV);
+      ktree.kine_particle_type.push_back((*it)->get_particle_type());
       
       if (fabs(kine_best - kine_charge) < 0.001 * kine_best){
 	ktree.kine_energy_info.push_back(2); // charge ...
@@ -139,6 +141,7 @@ void WCPPID::NeutrinoID::fill_kine_tree(WCPPID::KineInfo& ktree){
 	  float kine_range = curr_sg->cal_kine_range();
 	  
 	  ktree.kine_energy_particle.push_back(kine_best/units::MeV);
+	  ktree.kine_particle_type.push_back(curr_sg->get_particle_type());
 	  
 	  if (fabs(kine_best - kine_charge) < 0.001 * kine_best){
 	    ktree.kine_energy_info.push_back(2); // charge ...
@@ -169,6 +172,7 @@ void WCPPID::NeutrinoID::fill_kine_tree(WCPPID::KineInfo& ktree){
 	  float kine_range = shower->get_kine_range();
 	  
 	  ktree.kine_energy_particle.push_back(kine_best/units::MeV);
+	  ktree.kine_particle_type.push_back(shower->get_start_segment()->get_particle_type());
 	  
 	  if (fabs(kine_best - kine_charge) < 0.001 * kine_best){
 	    ktree.kine_energy_info.push_back(2); // charge ...
@@ -217,7 +221,8 @@ void WCPPID::NeutrinoID::fill_kine_tree(WCPPID::KineInfo& ktree){
     float kine_range = shower->get_kine_range();
 	  
     ktree.kine_energy_particle.push_back(kine_best/units::MeV);
-	  
+    ktree.kine_particle_type.push_back(shower->get_start_segment()->get_particle_type());
+    
     if (fabs(kine_best - kine_charge) < 0.001 * kine_best){
       ktree.kine_energy_info.push_back(2); // charge ...
     }else if (fabs(kine_best - kine_range) < 0.001*kine_best){
@@ -246,12 +251,12 @@ void WCPPID::NeutrinoID::fill_kine_tree(WCPPID::KineInfo& ktree){
   for (size_t i=0;i!=ktree.kine_energy_particle.size();i++){
     ktree.kine_reco_Enu += ktree.kine_energy_particle.at(i);
 
-    // std::cout << ktree.kine_energy_particle.at(i) << " " << ktree.kine_energy_info.at(i) << " " << ktree.kine_energy_included.at(i) << std::endl;
+    // std::cout << ktree.kine_energy_particle.at(i) << " " << ktree.kine_particle_type.at(i) << " " << ktree.kine_energy_info.at(i) << " " << ktree.kine_energy_included.at(i) << std::endl;
   }
   
   ktree.kine_reco_Enu += ktree.kine_reco_add_energy;
   
-  // std::cout << ktree.kine_reco_Enu << " " << ktree.kine_reco_add_energy << std::endl;
+  //  std::cout << ktree.kine_reco_Enu << " " << ktree.kine_reco_add_energy << std::endl;
   
   // pio reconstruction ...
   
