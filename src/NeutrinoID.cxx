@@ -2463,6 +2463,22 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.numu_cc_flag = 0;
 
 
+  // numu BDTs
+  tagger_info.cosmict_2_4_score = 0;
+  tagger_info.cosmict_3_5_score = 0;
+  tagger_info.cosmict_6_score = 0;
+  tagger_info.cosmict_7_score = 0;
+  tagger_info.cosmict_8_score = 0;
+  tagger_info.cosmict_10_score = 0;
+
+  tagger_info.numu_1_score = 0;
+  tagger_info.numu_2_score = 0;
+  tagger_info.numu_3_score = 0;
+
+  // total score, place holder for cosmict ...
+  tagger_info.cosmict_score = 0;
+  tagger_info.numu_score = 0;
+
   // nue BDTs
   tagger_info.mipid_score=0;
   tagger_info.gap_score=0;

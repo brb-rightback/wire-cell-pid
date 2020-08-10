@@ -760,6 +760,26 @@ namespace WCPPID{
     float numu_cc_3_max_muon_length;
     float numu_cc_3_n_daughter_tracks;
     float numu_cc_3_n_daughter_all;
+
+    // numu_BDTs
+    float cosmict_2_4_score;
+    float cosmict_3_5_score;
+    float cosmict_6_score;
+    float cosmict_7_score;
+    float cosmict_8_score;
+    // vector ...
+    float cosmict_10_score;
+    
+    // vector
+    float numu_1_score;
+    float numu_2_score;
+    // scalar
+    float numu_3_score;
+
+    // total one
+    float cosmict_score;
+    float numu_score;
+    
     
     
     // nue BDTs

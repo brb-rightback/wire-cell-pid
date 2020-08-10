@@ -2121,7 +2121,22 @@ int main(int argc, char* argv[])
     T_tagger->Branch("numu_cc_3_n_daughter_tracks",&tagger_info.numu_cc_3_n_daughter_tracks,"numu_cc_3_n_daughter_tracks/F");
     T_tagger->Branch("numu_cc_3_n_daughter_all",&tagger_info.numu_cc_3_n_daughter_all,"numu_cc_3_n_daughter_all/F");
 
+    // numu BDTs
+    T_tagger->Branch("cosmict_2_4_score",&tagger_info.cosmict_2_4_score, "cosmict_2_4_score/F");
+    T_tagger->Branch("cosmict_3_5_score",&tagger_info.cosmict_3_5_score, "cosmict_3_5_score/F");
+    T_tagger->Branch("cosmict_6_score",&tagger_info.cosmict_6_score, "cosmict_6_score/F");
+    T_tagger->Branch("cosmict_7_score",&tagger_info.cosmict_7_score, "cosmict_7_score/F");
+    T_tagger->Branch("cosmict_8_score",&tagger_info.cosmict_8_score, "cosmict_8_score/F");
+    T_tagger->Branch("cosmict_10_score",&tagger_info.cosmict_10_score, "cosmict_10_score/F");
 
+    T_tagger->Branch("numu_1_score",&tagger_info.numu_1_score,"numu_1_score/F");
+    T_tagger->Branch("numu_2_score",&tagger_info.numu_2_score,"numu_2_score/F");
+    T_tagger->Branch("numu_3_score",&tagger_info.numu_3_score,"numu_3_score/F");
+
+    T_tagger->Branch("cosmict_score",&tagger_info.cosmict_score,"cosmict_score/F");
+    T_tagger->Branch("numu_score",&tagger_info.numu_score,"numu_score/F");
+    
+    
     // BDTs ...
     T_tagger->Branch("mipid_score",&tagger_info.mipid_score,"mipid_score/F");
     T_tagger->Branch("gap_score",&tagger_info.gap_score,"gap_score/F");
