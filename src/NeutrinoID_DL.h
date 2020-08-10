@@ -1,16 +1,21 @@
- 
+#include "WCPPyUtil/SCN_Vertex.h"
+
 void WCPPID::NeutrinoID::determine_overall_main_vertex_DL(){
   // hack for now ... (need to be synced with main code ...)
   double dQdx_scale = 0.1;
   double dQdx_offset = -1000;
   
   // prepare the data for DL training
-  std::vector<std::tuple<float, float, float, float> > vec_xyzq;
+  std::vector< std::vector<float> > vec_xyzq;
+  vec_xyzq.resize(4);
 
   // go through vertex first
   for ( auto it = map_vertex_segments.begin(); it != map_vertex_segments.end(); it++){
     WCPPID::ProtoVertex *vtx = it->first;
-    vec_xyzq.push_back(std::make_tuple(vtx->get_fit_pt().x/units::cm, vtx->get_fit_pt().y/units::cm, vtx->get_fit_pt().z/units::cm, vtx->get_dQ() * dQdx_scale + dQdx_offset));
+    vec_xyzq[0].push_back(vtx->get_fit_pt().x/units::cm);
+    vec_xyzq[1].push_back(vtx->get_fit_pt().y/units::cm);
+    vec_xyzq[2].push_back(vtx->get_fit_pt().z/units::cm);
+    vec_xyzq[3].push_back(vtx->get_dQ() * dQdx_scale + dQdx_offset);
   }
   // go through segment ...
   for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){
@@ -18,7 +23,10 @@ void WCPPID::NeutrinoID::determine_overall_main_vertex_DL(){
     std::vector<WCP::Point>& pts = seg->get_point_vec();
     std::vector<double>& dQ_vec = seg->get_dQ_vec();
     for (size_t i=1; i+1<pts.size();i++){
-      vec_xyzq.push_back(std::make_tuple(pts.at(i).x/units::cm, pts.at(i).y/units::cm, pts.at(i).z/units::cm, dQ_vec.at(i) * dQdx_scale + dQdx_offset));
+      vec_xyzq[0].push_back(pts.at(i).x/units::cm);
+      vec_xyzq[1].push_back(pts.at(i).y/units::cm);
+      vec_xyzq[2].push_back(pts.at(i).z/units::cm);
+      vec_xyzq[3].push_back(dQ_vec.at(i) * dQdx_scale + dQdx_offset);
     }
   }
   
@@ -30,10 +38,26 @@ void WCPPID::NeutrinoID::determine_overall_main_vertex_DL(){
     cand_vertices.push_back(vtx);
   }
 
-  // find the vertex region (to be replaced by DL code ...)
-  double x_reg = 0*units::cm;
-  double y_reg = 0*units::cm;
-  double z_reg = 0*units::cm;
+
+  const std::string module = "SCN_Vertex";
+  const std::string function = "SCN_Vertex";
+  const std::string weights =
+      "/lbne/u/hyu/lbne/uboone/wire-cell-pydata/"
+      "scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth";
+
+  auto dnn_vtx = WCPPyUtil::SCN_Vertex(module, function, weights, vec_xyzq);
+  if (dnn_vtx.size()!=3) {
+    throw std::runtime_error("vtx.size()!=3");
+  }
+  std::cout << "NeutrinoID_DL: DNN: " ;
+  for(auto v : dnn_vtx) {
+    std::cout << v << " ";
+  }
+  std::cout << " cm" << std::endl;
+  
+  double x_reg = dnn_vtx[0]*units::cm;
+  double y_reg = dnn_vtx[1]*units::cm;
+  double z_reg = dnn_vtx[2]*units::cm;
   
   // find the main vertex
   double min_dis = 1e9;
@@ -44,6 +68,10 @@ void WCPPID::NeutrinoID::determine_overall_main_vertex_DL(){
       min_dis = dis;
       main_vertex = vtx;
     }
+  }
+  {
+    auto tmp_point = main_vertex->get_fit_pt();
+    std::cout << "NeutrinoID_DL: Hybrid: " << tmp_point.x << ", " << tmp_point.y << ", " << tmp_point.z << std::endl;
   }
   
   // switch the main cluster to the one to main vertex
