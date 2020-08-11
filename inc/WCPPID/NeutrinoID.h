@@ -993,7 +993,7 @@ namespace WCPPID{
     std::tuple<bool, int, int> examine_main_vertex_candidate(WCPPID::ProtoVertex *vertex);
 
     void determine_overall_main_vertex();
-    void determine_overall_main_vertex_DL();
+    bool determine_overall_main_vertex_DL();
 
     
     void examine_main_vertices();

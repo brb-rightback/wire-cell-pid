@@ -1,2 +1,2 @@
 #!/usr/bin/env python
-bld.make_package('WCPPID', use='EIGEN WCPQuickhull WCPNanoflann lsp BOOST GLPK WCPSst WCPData WCP2dToy ROOTSYS WCPPyUtil')
+bld.make_package('WCPPID', use='EIGEN WCPQuickhull WCPNanoflann lsp BOOST GLPK WCPSst WCPData WCP2dToy PYTHON WCPPyUtil ROOTSYS')

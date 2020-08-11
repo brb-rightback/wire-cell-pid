@@ -1935,7 +1935,7 @@ bool WCPPID::NeutrinoID::examine_direction(WCPPID::ProtoVertex* temp_vertex, boo
       double length = current_sg->get_length();
       //      std::cout << current_sg->get_id() << " " << current_sg->get_particle_type() << " " << flag_shower_in << std::endl;
       
-      if (current_sg->get_flag_dir() ==0 || current_sg->is_dir_weak() || current_sg->get_flag_shower()){ // change direction ...
+      if (current_sg->get_flag_dir() ==0 || current_sg->is_dir_weak() || current_sg->get_flag_shower() || flag_final){ // change direction ...
 	bool flag_start;
 	if (current_sg->get_wcpt_vec().front().index == prev_vtx->get_wcpt().index)
 	  flag_start = true;

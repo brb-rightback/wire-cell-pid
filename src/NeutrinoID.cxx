@@ -176,7 +176,8 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
 
   if (flag_main_cluster){
     if (flag_dl_vtx){
-      determine_overall_main_vertex_DL();
+      bool flag_change = determine_overall_main_vertex_DL();
+      if (!flag_change) determine_overall_main_vertex();
     }else{
       determine_overall_main_vertex();
     }
@@ -185,7 +186,6 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   
   
   if (flag_main_cluster && main_vertex !=0){
-
     
     
     // fit the vertex in 3D 
