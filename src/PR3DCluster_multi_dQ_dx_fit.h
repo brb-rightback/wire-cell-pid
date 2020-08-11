@@ -856,9 +856,9 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
       if( mp.get_flag_PosEfield_corr() ) {
 
 	double dQdx_after_corr = mp.func_dQdx_after_Pos_Efield_SCE_correction( pts.at(i).x/units::cm, pts.at(i).y/units::cm, pts.at(i).z/units::cm, 
-									    dQ_vec.at(i), dx_vec.at(i) );
+									       dQ_vec.at(i), dx_vec.at(i)/units::cm );
 
-	double dQ_after_corr = dQdx_after_corr * dx_vec.at(i);
+	double dQ_after_corr = dQdx_after_corr * dx_vec.at(i)/units::cm;
 
 	dQ_vec.at(i) = dQ_after_corr;
 	
