@@ -847,13 +847,14 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
   tagger_info.cosmict_flag_8 = flag_cosmic_8;
   tagger_info.cosmict_flag_9 = flag_cosmic_9;
   //  tagger_info.cosmict_flag_10 = flag_cosmic_10;
-  tagger_info.cosmict_flag = flag_cosmic;
+
   
   //  std::cout << "cosmict_general: " << flag_cosmic << " " << flag_cosmic_1 << " " << flag_cosmic_9 << std::endl;
   
   flag_cosmic = flag_cosmic_1 || flag_cosmic_2 || flag_cosmic_3 || flag_cosmic_4 || flag_cosmic_5
     || flag_cosmic_6 || flag_cosmic_7 || flag_cosmic_8 || flag_cosmic_9 || flag_cosmic_10_save;
-    
+  
+  tagger_info.cosmict_flag = flag_cosmic;
   
   
   if (flag_cosmic){
