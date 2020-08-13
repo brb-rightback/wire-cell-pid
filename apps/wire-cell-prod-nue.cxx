@@ -1776,7 +1776,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("br4_1_energy", &tagger_info.br4_1_energy, "br4_1_energy/F");
     T_tagger->Branch("br4_1_flag_avoid_muon_check", &tagger_info.br4_1_flag_avoid_muon_check, "br4_1_flag_avoid_muon_check/F");
     T_tagger->Branch("br4_1_n_vtx_segs", &tagger_info.br4_1_n_vtx_segs, "br4_1_n_vtx_segs/F");
-    T_tagger->Branch("br4_1_br4_1_n_main_segs", &tagger_info.br4_1_n_main_segs, "br4_1_n_main_segs/F");
+    T_tagger->Branch("br4_1_n_main_segs", &tagger_info.br4_1_n_main_segs, "br4_1_n_main_segs/F");
     T_tagger->Branch("br4_1_flag", &tagger_info.br4_1_flag, "br4_1_flag/F");
 
     T_tagger->Branch("br4_2_ratio_45", &tagger_info.br4_2_ratio_45, "br4_2_ratio_45/F");
