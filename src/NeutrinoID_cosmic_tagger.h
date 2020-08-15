@@ -106,7 +106,7 @@ bool WCPPID::NeutrinoID::cosmic_tagger(){
       //      std::cout << Eshower/units::MeV << " " << bad_reconstruction(shower) << " " << shower->get_start_vertex().second << " " << shower->get_start_segment()->get_cluster_id() << " " << valid_tracks << std::endl;
     }
 
-    //    std::cout << " " << map_vertex_to_shower[main_vertex].size() << std::endl;
+    //std::cout << muon << " " << map_vertex_to_shower[main_vertex].size() << std::endl;
 
     //    if (valid_tracks == 0){
       if ( muon != 0){

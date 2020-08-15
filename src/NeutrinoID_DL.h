@@ -129,7 +129,7 @@ bool WCPPID::NeutrinoID::determine_overall_main_vertex_DL(){
     if (tmp_new_main_cluster !=0) swap_main_cluster(tmp_new_main_cluster);
     
     // hard examination ???
-    bool flag_check = examine_direction(main_vertex, true);
+    bool flag_check = examine_direction(main_vertex);
     
     
     
