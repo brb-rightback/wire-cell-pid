@@ -809,7 +809,7 @@ void plot_valid(){
   T->SetBranchAddress("br4_1_energy", &br4_1_energy);
   T->SetBranchAddress("br4_1_flag_avoid_muon_check", &br4_1_flag_avoid_muon_check);
   T->SetBranchAddress("br4_1_n_vtx_segs", &br4_1_n_vtx_segs);
-  T->SetBranchAddress("br4_1_br4_1_n_main_segs", &br4_1_n_main_segs);
+  T->SetBranchAddress("br4_1_n_main_segs", &br4_1_n_main_segs);
   T->SetBranchAddress("br4_1_flag", &br4_1_flag);
   
   T->SetBranchAddress("br4_2_ratio_45", &br4_2_ratio_45);
