@@ -2233,7 +2233,8 @@ int main(int argc, char* argv[])
   TMC->Branch("mc_pdg", &reco_tree.mc_pdg, "mc_pdg[mc_Ntrack]/I");  // track particle pdg; size == mc_Ntrack
   TMC->Branch("mc_process", &reco_tree.mc_process, "mc_process[mc_Ntrack]/I");  // track generation process code; size == mc_Ntrack
   TMC->Branch("mc_mother", &reco_tree.mc_mother, "mc_mother[mc_Ntrack]/I");  // mother id of this track; size == mc_Ntrack
-
+  TMC->Branch("mc_included",&reco_tree.mc_included, "mc_included[mc_Ntrack]/I"); // flat labeling if this should be added to the neutrino energy ...
+  
   TMC->Branch("mc_dir_weak",&reco_tree.mc_dir_weak,"mc_dir_weak[mc_Ntrack]/I");
   TMC->Branch("mc_kine_range",&reco_tree.mc_kine_range,"mc_kine_range[mc_Ntrack]/F");
   TMC->Branch("mc_kine_dQdx",&reco_tree.mc_kine_dQdx,"mc_kine_dQdx[mc_Ntrack]/F");
@@ -2247,6 +2248,7 @@ int main(int argc, char* argv[])
   TMC->Branch("mc_endXYZT", &reco_tree.mc_endXYZT, "mc_endXYZT[mc_Ntrack][4]/F");  // start position of this track; size == mc_Ntrack
   TMC->Branch("mc_startMomentum", &reco_tree.mc_startMomentum, "mc_startMomentum[mc_Ntrack][4]/F");  // start momentum of this track; size == mc_Ntrack
   TMC->Branch("mc_endMomentum", &reco_tree.mc_endMomentum, "mc_endMomentum[mc_Ntrack][4]/F");  // start momentum of this track; size == mc_Ntrack
+  
   TMC->SetDirectory(file1);
 
   WCPPID::KineInfo kine_tree;
