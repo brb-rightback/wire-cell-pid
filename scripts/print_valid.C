@@ -563,7 +563,7 @@ void print_valid(TString run_info = "7019_5_264"){
   T->SetBranchAddress("br4_1_energy", &br4_1_energy);
   T->SetBranchAddress("br4_1_flag_avoid_muon_check", &br4_1_flag_avoid_muon_check);
   T->SetBranchAddress("br4_1_n_vtx_segs", &br4_1_n_vtx_segs);
-  T->SetBranchAddress("br4_1_br4_1_n_main_segs", &br4_1_n_main_segs);
+  T->SetBranchAddress("br4_1_n_main_segs", &br4_1_n_main_segs);
   T->SetBranchAddress("br4_1_flag", &br4_1_flag);
   
   T->SetBranchAddress("br4_2_ratio_45", &br4_2_ratio_45);
@@ -1248,6 +1248,92 @@ void print_valid(TString run_info = "7019_5_264"){
   T->SetBranchAddress("numu_cc_3_n_daughter_tracks",&numu_cc_3_n_daughter_tracks);
   T->SetBranchAddress("numu_cc_3_n_daughter_all",&numu_cc_3_n_daughter_all);
   
+  // BDT scores
+  float cosmict_2_4_score;
+  float cosmict_3_5_score;
+  float cosmict_6_score;
+  float cosmict_7_score;
+  float cosmict_8_score;
+  float cosmict_10_score;
+  float numu_1_score;
+  float numu_2_score;
+  float numu_3_score;
+  float cosmict_score;
+  float numu_score;
+  float mipid_score;
+  float gap_score;
+  float hol_lol_score;
+  float cme_anc_score;
+  float mgo_mgt_score;
+  float br1_score;
+  float br3_score;
+  float br3_3_score;
+  float br3_5_score;
+  float br3_6_score;
+  float stemdir_br2_score;
+  float trimuon_score;
+  float br4_tro_score;
+  float mipquality_score;
+  float pio_1_score;
+  float pio_2_score;
+  float stw_spt_score;
+  float vis_1_score;
+  float vis_2_score;
+  float stw_2_score;
+  float stw_3_score;
+  float stw_4_score;
+  float sig_1_score;
+  float sig_2_score;
+  float lol_1_score;
+  float lol_2_score;
+  float tro_1_score;
+  float tro_2_score;
+  float tro_4_score;
+  float tro_5_score;
+  float nue_score;
+
+  T->SetBranchAddress("cosmict_2_4_score",&cosmict_2_4_score);
+  T->SetBranchAddress("cosmict_3_5_score",&cosmict_3_5_score);
+  T->SetBranchAddress("cosmict_6_score",&cosmict_6_score);
+  T->SetBranchAddress("cosmict_7_score",&cosmict_7_score);
+  T->SetBranchAddress("cosmict_8_score",&cosmict_8_score);
+  T->SetBranchAddress("cosmict_10_score",&cosmict_10_score);
+  T->SetBranchAddress("numu_1_score",&numu_1_score);
+  T->SetBranchAddress("numu_2_score",&numu_2_score);
+  T->SetBranchAddress("numu_3_score",&numu_3_score);
+  T->SetBranchAddress("cosmict_score",&cosmict_score);
+  T->SetBranchAddress("numu_score",&numu_score);
+  T->SetBranchAddress("mipid_score",&mipid_score);
+  T->SetBranchAddress("gap_score",&gap_score);
+  T->SetBranchAddress("hol_lol_score",&hol_lol_score);
+  T->SetBranchAddress("cme_anc_score",&cme_anc_score);
+  T->SetBranchAddress("mgo_mgt_score",&mgo_mgt_score);
+  T->SetBranchAddress("br1_score",&br1_score);
+  T->SetBranchAddress("br3_score",&br3_score);
+  T->SetBranchAddress("br3_3_score",&br3_3_score);
+  T->SetBranchAddress("br3_5_score",&br3_5_score);
+  T->SetBranchAddress("br3_6_score",&br3_6_score);
+  T->SetBranchAddress("stemdir_br2_score",&stemdir_br2_score);
+  T->SetBranchAddress("trimuon_score",&trimuon_score);
+  T->SetBranchAddress("br4_tro_score",&br4_tro_score);
+  T->SetBranchAddress("mipquality_score",&mipquality_score);
+  T->SetBranchAddress("pio_1_score",&pio_1_score);
+  T->SetBranchAddress("pio_2_score",&pio_2_score);
+  T->SetBranchAddress("stw_spt_score",&stw_spt_score);
+  T->SetBranchAddress("vis_1_score",&vis_1_score);
+  T->SetBranchAddress("vis_2_score",&vis_2_score);
+  T->SetBranchAddress("stw_2_score",&stw_2_score);
+  T->SetBranchAddress("stw_3_score",&stw_3_score);
+  T->SetBranchAddress("stw_4_score",&stw_4_score);
+  T->SetBranchAddress("sig_1_score",&sig_1_score);
+  T->SetBranchAddress("sig_2_score",&sig_2_score);
+  T->SetBranchAddress("lol_1_score",&lol_1_score);
+  T->SetBranchAddress("lol_2_score",&lol_2_score);
+  T->SetBranchAddress("tro_1_score",&tro_1_score);
+  T->SetBranchAddress("tro_2_score",&tro_2_score);
+  T->SetBranchAddress("tro_4_score",&tro_4_score);
+  T->SetBranchAddress("tro_5_score",&tro_5_score);
+  T->SetBranchAddress("nue_score",&nue_score);
   
   T->GetEntry(0);  // total 47 of them ...
   if (!cosmic_flag) flag_info_vec.push_back(0);       // 1  checked
@@ -1277,33 +1363,34 @@ void print_valid(TString run_info = "7019_5_264"){
 
   std::cout << flag_info_vec.size() << std::endl;
 
-  bool cosmic_print = false; 
-  bool gap_print = false;
-  bool mip_quality_print = false;
-  bool mip_print = false;
-  bool pio_print = false;
-  bool stem_dir_print = false;
-  bool br1_print = false;
-  bool br2_print = false;
-  bool lol_print = false;
-  bool br3_print = false;
-  bool br4_print = false;
-  bool hol_print = false;
-  bool vis_print = false;
-  bool stem_len_print = false;
-  bool brm_print = false;
-  bool cme_print = false;
-  bool anc_print = false;
-  bool lem_print = false;
-  bool stw_print = false;
-  bool spt_print = false;
-  bool mgo_print = false;
-  bool mgt_print = false;
-  bool sig_print = false;
-  bool tro_print = false;
-  bool cosmict_print = false;
+  bool cosmic_print = true; 
+  bool gap_print = true;
+  bool mip_quality_print = true;
+  bool mip_print = true;
+  bool pio_print = true;
+  bool stem_dir_print = true;
+  bool br1_print = true;
+  bool br2_print = true;
+  bool lol_print = true;
+  bool br3_print = true;
+  bool br4_print = true;
+  bool hol_print = true;
+  bool vis_print = true;
+  bool stem_len_print = true;
+  bool brm_print = true;
+  bool cme_print = true;
+  bool anc_print = true;
+  bool lem_print = true;
+  bool stw_print = true;
+  bool spt_print = true;
+  bool mgo_print = true;
+  bool mgt_print = true;
+  bool sig_print = true;
+  bool tro_print = true;
+  bool cosmict_print = true;
   bool numu_cc_print = true;
-  
+  bool bdtscore_print = true; 
+ 
   // Now print out the information ...
   if (numu_cc_print){
     std::cout << "numu_cc_general: " << numu_cc_flag << std::endl;
@@ -1495,5 +1582,16 @@ void print_valid(TString run_info = "7019_5_264"){
     std::cout << "stem_len: " << stem_len_energy << " " << stem_len_length << " " << stem_len_flag_avoid_muon_check << " " << stem_len_num_daughters << " " << stem_len_daughter_length << " " << stem_len_flag << std::endl;
   }
 
+  if (bdtscore_print){
+   std::cout << "bdt scores: " 
+   << cosmict_2_4_score << " " << cosmict_3_5_score << " " << cosmict_6_score << " " << cosmict_7_score << " "<< cosmict_8_score << " " 
+   << cosmict_10_score << " " << numu_1_score << " " << numu_2_score << " " << numu_3_score << " " << cosmict_score << " " << numu_score << "\n" 
+   << mipid_score << " " << gap_score << " " << hol_lol_score << " " << cme_anc_score << " " << mgo_mgt_score << " " 
+   << br1_score << " " << br3_score << " " << br3_3_score << " " << br3_5_score << " " << br3_6_score << " " << stemdir_br2_score << "\n" 
+   << trimuon_score << " " << br4_tro_score << " " << mipquality_score << " " << pio_1_score << " " << pio_2_score << " " 
+   << stw_spt_score << " " << vis_1_score << " " << vis_2_score << " " << stw_2_score << " " << stw_3_score << "\n" 
+   << stw_4_score << " " << sig_1_score << " " << sig_2_score << " " << lol_1_score << " " << lol_2_score << " " << tro_1_score << " " 
+   << tro_2_score << " " << tro_4_score << " " << tro_5_score << " " << nue_score << "\n";
+  }
   
 }
