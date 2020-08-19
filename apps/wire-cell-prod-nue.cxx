@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
   int datatier = 0; // data=0, overlay=1, full mc=2
   int flag_calib_corr = 1;
   int flag_neutrino_id_process = 1; // 1 for development chain, 2 for current frozen chain
-  int flag_bdt = 0;
+  int flag_bdt = 1; // default 1 xgboost, 2 for TMVA
   bool flag_dl_vtx = true;
   bool flag_PosEfield_corr = false;// Position and E-field correction for SCE
   
