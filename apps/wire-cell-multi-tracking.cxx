@@ -10,6 +10,7 @@
 
 #include "WCPPID/ExecMon.h"
 #include "WCPPID/ImprovePR3DCluster.h"
+#include "WCPPID/NeutrinoID.h"
 
 #include "TH1.h"
 #include "TFile.h"
@@ -46,7 +47,7 @@ int main(int argc, char* argv[])
       break;
     }
   }
-    
+  int flag_data = 1;    
   WCPPID::ExecMon em("starting");
   cout << em("load geometry") << endl;
   
@@ -252,6 +253,11 @@ int main(int argc, char* argv[])
   TDC->SetBranchAddress("wire_index_v",&wire_index_v_vec);
   TDC->SetBranchAddress("wire_index_w",&wire_index_w_vec);
 
+  WCPPID::ToyFiducial *fid = new WCPPID::ToyFiducial(3,800,-first_u_dis/pitch_u, -first_v_dis/pitch_v, -first_w_dis/pitch_w,
+								   1./time_slice_width, 1./pitch_u, 1./pitch_v, 1./pitch_w, // slope
+								   angle_u,angle_v,angle_w,// angle
+								   3*units::cm, 117*units::cm, -116*units::cm, 0*units::cm, 1037*units::cm, 0*units::cm, 256*units::cm, flag_data);
+  
   // load cells ... 
   GeomCellSelection mcells;
   //  CellIndexMap map_mcell_cluster_id;
@@ -592,15 +598,10 @@ int main(int argc, char* argv[])
   ct_point_cloud.build_kdtree_index();
   
   std::map<WCPPID::PR3DCluster*, WCPPID::PR3DCluster*> old_new_cluster_map;
+  std::vector<WCPPID::NeutrinoID *> neutrino_vec;
   
   //std::cout << saved_parent_tpc_cluster_ids.size() << std::endl;
   for (size_t i=0; i!=live_clusters.size();i++){
-    // if (live_clusters.at(i)->get_cluster_id() !=70
-    // 	//     	&& live_clusters.at(i)->get_cluster_id() != 2
-    //  	//&& live_clusters.at(i)->get_cluster_id() != 6
-    //  	//&& live_clusters.at(i)->get_cluster_id() != 21 
-    // 	// 	&& live_clusters.at(i)->get_cluster_id() != 80 
-    //  	) continue;
     
     if (live_clusters.at(i)->get_num_points() <= 2) continue;
 
@@ -612,15 +613,13 @@ int main(int argc, char* argv[])
 
     std::cout << live_clusters.at(i)->get_cluster_id() << " " << map_cluster_parent_id[live_clusters.at(i)] << " " << flash_time << std::endl;
 
-    if (flag_main_cluster_only){
-      if (live_clusters.at(i)->get_cluster_id() == map_cluster_parent_id[live_clusters.at(i)]){
-	live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-      live_clusters.at(i)->recover_steiner_graph();
-      }
-    }else{
-      live_clusters.at(i)->create_steiner_graph(ct_point_cloud, gds, nrebin, frame_length, unit_dis);
-      live_clusters.at(i)->recover_steiner_graph();
-    }
+    std::vector<WCPPID::PR3DCluster*> additional_clusters;
+    double offset_x =     (flash_time - time_offset)*2./nrebin*time_slice_width;
+    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(live_clusters.at(i), additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, 1, 0, true);
+    
+    neutrino_vec.push_back(neutrino);
+    
+    
   }
   cout << em("Build graph for all clusters") << std::endl;
   
@@ -653,15 +652,11 @@ int main(int argc, char* argv[])
   T_cluster->SetDirectory(file1);
   
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-    // if (old_new_cluster_map.find(*it)==old_new_cluster_map.end()) continue;
-    // WCPPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
 
     WCPPID::PR3DCluster* new_cluster = *it;  
     ncluster = map_cluster_parent_id[new_cluster]; //new_cluster->get_cluster_id();
     
     ToyPointCloud *pcloud = new_cluster->get_point_cloud();
-    //ToyPointCloud *pcloud = new_cluster->get_point_cloud_steiner();
-    //ToyPointCloud *pcloud = new_cluster->get_point_cloud_steiner_terminal();
 
     if (pcloud!=0){
       WCP::WCPointCloud<double>& cloud = pcloud->get_cloud();
@@ -690,68 +685,57 @@ int main(int argc, char* argv[])
 	T_cluster->Fill();
       }
     }
-      
-    // SMGCSelection& mcells = new_cluster->get_mcells();
-    // for (size_t i=0;i!=mcells.size();i++){
-    //   SlimMergeGeomCell *mcell = (SlimMergeGeomCell*)mcells.at(i);
-    //   PointVector ps = mcell->get_sampling_points();
-    //   int time_slice = mcell->GetTimeSlice();
-    //   if (ps.size()==0){
-    // 	std::cout << "zero sampling points!" << std::endl;
-    //   }else{
-    // 	q = mcell->get_q() / ps.size();
-    // 	nq = ps.size();
-    // 	double offset_x = 0;
-    // 	for (int k=0;k!=ps.size();k++){
-    // 	  x = (ps.at(k).x- offset_x)/units::cm ;
-    // 	  y = ps.at(k).y/units::cm;
-    // 	  z = ps.at(k).z/units::cm;
-    // 	  //	std::vector<int> time_chs = ct_point_cloud.convert_3Dpoint_time_ch(ps.at(k));
-    // 	  //temp_time_slice = time_chs.at(0);
-    // 	  //ch_u = time_chs.at(1);
-    // 	  //ch_v = time_chs.at(2);
-    // 	  //ch_w = time_chs.at(3);
-	  
-    // 	  T_cluster->Fill();
-    // 	}
-    //   }
-    // }
-    
-
-    
+          
   }
 
   Double_t pu, pv, pw, pt;
   Double_t charge_save=1, ncharge_save=1, chi2_save=1, ndf_save=1;
-  TTree *T_rec = new TTree("T_rec","T_rec");
-  T_rec->Branch("x",&x,"x/D");
-  T_rec->Branch("y",&y,"y/D");
-  T_rec->Branch("z",&z,"z/D");
-  T_rec->Branch("q",&charge_save,"q/D");
-  T_rec->Branch("nq",&ncharge_save,"nq/D");
-  T_rec->Branch("chi2",&chi2_save,"chi2/D");
-  T_rec->Branch("ndf",&ndf_save,"ndf/D");
-  T_rec->Branch("pu",&pu,"pu/D");
-  T_rec->Branch("pv",&pv,"pv/D");
-  T_rec->Branch("pw",&pw,"pw/D");
-  T_rec->Branch("pt",&pt,"pt/D");
-  T_rec->SetDirectory(file1);
+    // also all points, charge can be used to save the track shower 
+  WCPPID::WCPointTree point_tree;
+  TTree *t_rec_simple = new TTree("T_rec","T_rec");
+  t_rec_simple->SetDirectory(file1);
+  t_rec_simple->Branch("x",&point_tree.reco_x,"x/D");
+  t_rec_simple->Branch("y",&point_tree.reco_y,"y/D");
+  t_rec_simple->Branch("z",&point_tree.reco_z,"z/D");
+  // hack charge to store the track or shower information ...
+  t_rec_simple->Branch("q",&point_tree.reco_flag_track_shower_charge,"q/D");
+  t_rec_simple->Branch("nq",&point_tree.reco_flag_track_shower,"nq/D");
+  //
+  t_rec_simple->Branch("cluster_id",&point_tree.reco_mother_cluster_id,"cluster_id/I");
+  // later can save the particle cluster id ...
+  t_rec_simple->Branch("real_cluster_id",&point_tree.reco_proto_cluster_id,"real_cluster_id/I");
+  t_rec_simple->Branch("sub_cluster_id",&point_tree.reco_cluster_id,"sub_cluster_id/I");
+  t_rec_simple->SetDirectory(file1);
 
+  // save skeleton ...
   TTree *t_rec_charge = new TTree("T_rec_charge","T_rec_charge");
   t_rec_charge->SetDirectory(file1);
-  t_rec_charge->Branch("x",&x,"x/D");
-  t_rec_charge->Branch("y",&y,"y/D");
-  t_rec_charge->Branch("z",&z,"z/D");
-  t_rec_charge->Branch("q",&charge_save,"q/D");
-  t_rec_charge->Branch("nq",&ncharge_save,"nq/D");
-  t_rec_charge->Branch("chi2",&chi2_save,"chi2/D");
-  t_rec_charge->Branch("ndf",&ndf_save,"ndf/D");
-  t_rec_charge->Branch("pu",&pu,"pu/D");
-  t_rec_charge->Branch("pv",&pv,"pv/D");
-  t_rec_charge->Branch("pw",&pw,"pw/D");
-  t_rec_charge->Branch("pt",&pt,"pt/D");
-  Double_t reduced_chi2;
-  t_rec_charge->Branch("reduced_chi2",&reduced_chi2,"reduced_chi2/D");
+  t_rec_charge->Branch("x",&point_tree.reco_x,"x/D");
+  t_rec_charge->Branch("y",&point_tree.reco_y,"y/D");
+  t_rec_charge->Branch("z",&point_tree.reco_z,"z/D");
+  t_rec_charge->Branch("q",&point_tree.reco_dQ,"q/D");
+  t_rec_charge->Branch("nq",&point_tree.reco_dx,"nq/D");
+  t_rec_charge->Branch("chi2",&point_tree.reco_chi2,"chi2/D");
+  t_rec_charge->Branch("ndf",&point_tree.reco_ndf,"ndf/D");
+  t_rec_charge->Branch("pu",&point_tree.reco_pu,"pu/D");
+  t_rec_charge->Branch("pv",&point_tree.reco_pv,"pv/D");
+  t_rec_charge->Branch("pw",&point_tree.reco_pw,"pw/D");
+  t_rec_charge->Branch("pt",&point_tree.reco_pt,"pt/D");
+  t_rec_charge->Branch("reduced_chi2",&point_tree.reco_reduced_chi2,"reduced_chi2/D");
+  t_rec_charge->Branch("flag_vertex",&point_tree.reco_flag_vertex,"flag_vertex/I");
+  t_rec_charge->Branch("flag_shower",&point_tree.reco_flag_track_shower,"flag_shower/I");
+  t_rec_charge->Branch("rr",&point_tree.reco_rr,"rr/D"); 
+  t_rec_charge->Branch("cluster_id",&point_tree.reco_mother_cluster_id,"cluster_id/I");
+  t_rec_charge->Branch("real_cluster_id",&point_tree.reco_proto_cluster_id,"real_cluster_id/I");
+  t_rec_charge->Branch("sub_cluster_id",&point_tree.reco_proto_cluster_id,"sub_cluster_id/I");
+
+  for (size_t i=0; i!= neutrino_vec.size();i++){
+    int mother_cluster_id = neutrino_vec.at(i)->get_main_cluster()->get_cluster_id();
+    neutrino_vec.at(i)->fill_skeleton_info_magnify(mother_cluster_id, point_tree, t_rec_charge, 1, 0);
+    //neutrino_vec.at(i)->fill_skeleton_info(mother_cluster_id, point_tree, t_rec_deblob, dQdx_scale, dQdx_offset, true);
+    neutrino_vec.at(i)->fill_point_info(mother_cluster_id, point_tree, t_rec_simple);
+  }
+
   
   TTree *T_proj_data = new TTree("T_proj_data","T_proj_data");
   std::vector<int> *proj_data_cluster_id = new std::vector<int>;
@@ -769,131 +753,12 @@ int main(int argc, char* argv[])
   T_proj_data->Branch("charge_pred",&proj_data_cluster_charge_pred);
   T_proj_data->SetDirectory(file1);
   
-  for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-    //     if (old_new_cluster_map.find(*it)==old_new_cluster_map.end()) continue;
-   //  WCPPID::PR3DCluster* new_cluster = old_new_cluster_map[*it];
-//     //    new_cluster->establish_same_mcell_steiner_edges(gds, false);
-// std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps(1);
-//     new_cluster->dijkstra_shortest_paths(wcps.first,1); 
-//     new_cluster->cal_shortest_path(wcps.second,1);
-//     //new_cluster->remove_same_mcell_steiner_edges();
-    
-    WCPPID::PR3DCluster* new_cluster = *it;
-    if (new_cluster->get_point_cloud_steiner()==0) continue;
 
-    if (new_cluster->get_point_cloud_steiner()->get_num_points() >= 2){
-      std::pair<WCPointCloud<double>::WCPoint,WCPointCloud<double>::WCPoint> wcps = new_cluster->get_two_boundary_wcps(2); 
-      // std::cout << wcps.first.x/units::cm << " " << wcps.first.y/units::cm << " " << wcps.first.z/units::cm << std::endl;
-      // std::cout << wcps.second.x/units::cm << " " << wcps.second.y/units::cm << " " << wcps.second.z/units::cm << std::endl;
-      new_cluster->dijkstra_shortest_paths(wcps.first,2); 
-      new_cluster->cal_shortest_path(wcps.second,2);
-
-      // std::cout << new_cluster->get_path_wcps().front().x/units::cm << " " << new_cluster->get_path_wcps().front().y/units::cm << " " << new_cluster->get_path_wcps().front().z/units::cm << std::endl;
-
-      // std::cout << new_cluster->get_path_wcps().back().x/units::cm << " " << new_cluster->get_path_wcps().back().y/units::cm << " " << new_cluster->get_path_wcps().back().z/units::cm << std::endl;
-
-      // for (auto it3 = new_cluster->get_path_wcps().begin(); it3!=new_cluster->get_path_wcps().end(); it3++){
-      // 	std::cout << it3->x/units::cm << " " << it3->y/units::cm << " " << it3->z/units::cm << std::endl;
-      // }
-      
-      // not enough points ...
-      if (new_cluster->get_path_wcps().size()<2) continue;
-    }
-    new_cluster->collect_charge_trajectory(ct_point_cloud);
-    
-
-    double flash_time = map_flash_info[map_tpc_flash_ids[map_cluster_parent_id[*it]]].second;
-    
-    std::cout << new_cluster->get_cluster_id() << std::endl;
-    
-    new_cluster->do_tracking(ct_point_cloud, global_wc_map, flash_time*units::microsecond);
-    
-    
-    ndf_save = new_cluster->get_cluster_id();
-    charge_save = 0;
-    ncharge_save = 0;
-    chi2_save = 0;
-    
-    std::list<WCPointCloud<double>::WCPoint>& wcps_list = new_cluster->get_path_wcps();
-    for (auto it = wcps_list.begin(); it!=wcps_list.end(); it++){
-       x = (*it).x/units::cm;
-       y = (*it).y/units::cm;
-       z = (*it).z/units::cm;
-
-       Point temp_p((*it).x,(*it).y,(*it).z);
-       std::vector<int> time_chs = ct_point_cloud.convert_3Dpoint_time_ch(temp_p);
-       pt = time_chs.at(0);
-       pu = time_chs.at(1);
-       pv = time_chs.at(2);
-       pw = time_chs.at(3);
-       
-       T_rec->Fill();
-     }
-    
-  }
-
-   cout << em("shortest path ...") << std::endl;
-
-  
+   // original save ...
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     WCPPID::PR3DCluster* cluster = *it;
+    int ndf_save= cluster->get_cluster_id(); 
 
-    ndf_save = cluster->get_cluster_id();
-
-    // original
-    PointVector& pts = cluster->get_fine_tracking_path();
-    //std::vector<double> dQ, dx;
-    std::vector<double>& dQ = cluster->get_dQ();
-    std::vector<double>& dx = cluster->get_dx();
-    std::vector<double>& tpu = cluster->get_pu();
-    std::vector<double>& tpv = cluster->get_pv();
-    std::vector<double>& tpw = cluster->get_pw();
-    std::vector<double>& tpt = cluster->get_pt();
-    std::vector<double>& Vreduced_chi2 = cluster->get_reduced_chi2();
-    //hack for now 
-    // for (auto it = pts.begin(); it!=pts.end(); it++){
-    //   dQ.push_back(0);
-    //   dx.push_back(1);
-    //   // std::vector<int> time_chs = ct_point_cloud.convert_3Dpoint_time_ch(*it);
-    //   // tpt.push_back(time_chs.at(0));
-    //   // tpu.push_back(time_chs.at(1));
-    //   // tpv.push_back(time_chs.at(2));
-    //   // tpw.push_back(time_chs.at(3));
-    // }
-    
-    //hack for now ...
-    //std::list<WCPointCloud<double>::WCPoint>& wcps_list = cluster->get_path_wcps();
-    //PointVector pts;
-    //std::vector<double> dQ, dx, tpu, tpv, tpw, tpt;
-    
-    // for (auto it = wcps_list.begin(); it!=wcps_list.end(); it++){
-    //   Point p((*it).x, (*it).y,  (*it).z);
-    //   pts.push_back(p);
-    //   dQ.push_back(0);
-    //   dx.push_back(1);
-    //   std::vector<int> time_chs = ct_point_cloud.convert_3Dpoint_time_ch(p);
-    //   tpt.push_back(time_chs.at(0));
-    //   tpu.push_back(time_chs.at(1));
-    //   tpv.push_back(time_chs.at(2));
-    //   tpw.push_back(time_chs.at(3));
-    // }
-    
-    if (pts.size()!=dQ.size() || pts.size()==0) continue;
-    
-    for (size_t i=0; i!=pts.size(); i++){
-      x = pts.at(i).x/units::cm;
-      y = pts.at(i).y/units::cm;
-      z = pts.at(i).z/units::cm;
-      charge_save = dQ.at(i);
-      ncharge_save = dx.at(i)/units::cm;
-      pu = tpu.at(i);
-      pv = tpv.at(i);
-      pw = tpw.at(i);
-      pt = tpt.at(i);
-      reduced_chi2 = Vreduced_chi2.at(i);
-      t_rec_charge->Fill();
-    }
-    
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_u_map = cluster->get_proj_data_u_map();
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_v_map = cluster->get_proj_data_v_map();
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_w_map = cluster->get_proj_data_w_map();
@@ -905,6 +770,8 @@ int main(int argc, char* argv[])
     std::vector<int> temp_charge_err;
     std::vector<int> temp_charge_pred;
     for (auto it = proj_data_u_map.begin(); it!=proj_data_u_map.end(); it++){
+      // if (it->first.first > 8256) std::cout << cluster->get_cluster_id() << " U " << it->first.first << std::endl;
+
       temp_channel.push_back(it->first.first);
       temp_timeslice.push_back(it->first.second);
       temp_charge.push_back(std::get<0>(it->second));
@@ -912,6 +779,8 @@ int main(int argc, char* argv[])
       temp_charge_pred.push_back(std::get<2>(it->second));
     }
     for (auto it = proj_data_v_map.begin(); it!=proj_data_v_map.end(); it++){
+      // if (it->first.first > 8256) std::cout << cluster->get_cluster_id() << " V " << it->first.first << std::endl;
+      
       temp_channel.push_back(it->first.first);
       temp_timeslice.push_back(it->first.second);
       temp_charge.push_back(std::get<0>(it->second));
@@ -919,6 +788,8 @@ int main(int argc, char* argv[])
       temp_charge_pred.push_back(std::get<2>(it->second));
     }
     for (auto it = proj_data_w_map.begin(); it!=proj_data_w_map.end(); it++){
+      //  if (it->first.first > 8256) std::cout << cluster->get_cluster_id() << " W " << it->first.first << std::endl;
+      
       temp_channel.push_back(it->first.first);
       temp_timeslice.push_back(it->first.second);
       temp_charge.push_back(std::get<0>(it->second));
@@ -930,7 +801,7 @@ int main(int argc, char* argv[])
     proj_data_cluster_charge->push_back(temp_charge);
     proj_data_cluster_charge_err->push_back(temp_charge_err);
     proj_data_cluster_charge_pred->push_back(temp_charge_pred);
-
+    
   }
   T_proj_data->Fill();
 
