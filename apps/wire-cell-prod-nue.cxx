@@ -2269,6 +2269,7 @@ int main(int argc, char* argv[])
 
   T_kine->Branch("kine_pio_mass",&kine_tree.kine_pio_mass,"kine_pio_mass/F");
   T_kine->Branch("kine_pio_flag",&kine_tree.kine_pio_flag,"kine_pio_flag/I");
+  T_kine->Branch("kine_pio_vtx_dis",&kine_tree.kine_pio_vtx_dis,"kine_pio_vtx_dis/F");
   
   T_kine->Branch("kine_pio_energy_1",&kine_tree.kine_pio_energy_1,"kine_pio_energy_1/F");
   T_kine->Branch("kine_pio_theta_1",&kine_tree.kine_pio_theta_1,"kine_pio_theta_1/F");

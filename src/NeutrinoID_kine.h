@@ -262,6 +262,7 @@ void WCPPID::NeutrinoID::fill_kine_tree(WCPPID::KineInfo& ktree){
   
   ktree.kine_pio_mass = kine_pio_mass/units::MeV;
   ktree.kine_pio_flag = kine_pio_flag;
+  ktree.kine_pio_vtx_dis = kine_pio_vtx_dis/units::cm;
   
   ktree.kine_pio_energy_1 = kine_pio_energy_1/units::MeV;
   ktree.kine_pio_theta_1 = kine_pio_theta_1/3.1415926*180.;

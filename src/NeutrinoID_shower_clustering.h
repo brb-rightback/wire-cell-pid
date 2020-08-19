@@ -526,7 +526,8 @@ void WCPPID::NeutrinoID::id_pi0_without_vertex(){
       if (energy_1 + energy_2 >= max_energy){
 	kine_pio_flag = 2;
 	kine_pio_mass = mass_save;
-
+	kine_pio_vtx_dis = sqrt(pow(vtx_point.x - main_vertex->get_fit_pt().x,2) + pow(vtx_point.y - main_vertex->get_fit_pt().y,2) + pow(vtx_point.z - main_vertex->get_fit_pt().z,2) );
+	
 	kine_pio_energy_1 = energy_1;
 	kine_pio_energy_2 = energy_2;
 
@@ -734,7 +735,9 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
 
 	kine_pio_flag = 1;
 	kine_pio_mass = mass_pio;
-
+	Point vtx_point = vtx->get_fit_pt();
+	kine_pio_vtx_dis = sqrt(pow(vtx_point.x - main_vertex->get_fit_pt().x,2) + pow(vtx_point.y - main_vertex->get_fit_pt().y,2) + pow(vtx_point.z - main_vertex->get_fit_pt().z,2) );
+	
 	kine_pio_energy_1 = energy_1;
 	kine_pio_energy_2 = energy_2;
 

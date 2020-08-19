@@ -2523,7 +2523,8 @@ void WCPPID::NeutrinoID::init_tagger_info(){
 
   kine_pio_flag = 0;
   kine_pio_mass = 0;
-
+  kine_pio_vtx_dis = 1000*units::cm; // 10 m
+  
   kine_pio_energy_1 = 0;
   kine_pio_theta_1 = 0;
   kine_pio_phi_1 = 0;
