@@ -735,7 +735,11 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
 
 	Point vtx_point = vtx->get_fit_pt();
 	double temp_dis = sqrt(pow(vtx_point.x - main_vertex->get_fit_pt().x,2) + pow(vtx_point.y - main_vertex->get_fit_pt().y,2) + pow(vtx_point.z - main_vertex->get_fit_pt().z,2) );
+	
+	if (vtx != shower_1->get_start_vertex().first && vtx != shower_2->get_start_vertex().first) continue;
 
+	//	std::cout << mass_pio/units::MeV << " " << vtx << " " << shower_1->get_start_vertex().first << " " << shower_2->get_start_vertex().first << std::endl;
+	
 	if (temp_dis < kine_pio_vtx_dis){
 	  kine_pio_vtx_dis = temp_dis;
 	  
