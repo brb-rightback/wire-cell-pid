@@ -727,43 +727,52 @@ void WCPPID::NeutrinoID::id_pi0_with_vertex(){
     float energy_2 = shower_2->get_kine_charge();
 
     if (energy_1 + energy_2 > max_energy){
+      kine_pio_vtx_dis = 1000*units::cm;
+      
       for (auto it1 = it->second.begin(); it1 != it->second.end(); it1++){
 	double mass_pio = it1->first;
 	WCPPID::ProtoVertex *vtx = it1->second;
 
-	max_energy = energy_1 + energy_2;
-
-	kine_pio_flag = 1;
-	kine_pio_mass = mass_pio;
 	Point vtx_point = vtx->get_fit_pt();
-	kine_pio_vtx_dis = sqrt(pow(vtx_point.x - main_vertex->get_fit_pt().x,2) + pow(vtx_point.y - main_vertex->get_fit_pt().y,2) + pow(vtx_point.z - main_vertex->get_fit_pt().z,2) );
-	
-	kine_pio_energy_1 = energy_1;
-	kine_pio_energy_2 = energy_2;
+	double temp_dis = sqrt(pow(vtx_point.x - main_vertex->get_fit_pt().x,2) + pow(vtx_point.y - main_vertex->get_fit_pt().y,2) + pow(vtx_point.z - main_vertex->get_fit_pt().z,2) );
 
-	kine_pio_dis_1 = sqrt(pow(vtx->get_fit_pt().x - shower_1->get_start_point().x,2) + pow(vtx->get_fit_pt().y - shower_1->get_start_point().y,2) + pow(vtx->get_fit_pt().z - shower_1->get_start_point().z,2));
-	kine_pio_dis_2 = sqrt(pow(vtx->get_fit_pt().x - shower_2->get_start_point().x,2) + pow(vtx->get_fit_pt().y - shower_2->get_start_point().y,2) + pow(vtx->get_fit_pt().z - shower_2->get_start_point().z,2));
+	if (temp_dis < kine_pio_vtx_dis){
+	  kine_pio_vtx_dis = temp_dis;
+	  
+	  max_energy = energy_1 + energy_2;
 
-	TVector3 dir1;
-	if (kine_pio_dis_1 < 3*units::cm){
-	  dir1 = shower_1->cal_dir_3vector(shower_1->get_start_vertex().first->get_fit_pt(), 15*units::cm);
+	  kine_pio_flag = 1;
+	  kine_pio_mass = mass_pio;
+
+	  //	std::cout <<  kine_pio_vtx_dis << " Xin " << std::endl;
+	  
+	  kine_pio_energy_1 = energy_1;
+	  kine_pio_energy_2 = energy_2;
+	  
+	  kine_pio_dis_1 = sqrt(pow(vtx->get_fit_pt().x - shower_1->get_start_point().x,2) + pow(vtx->get_fit_pt().y - shower_1->get_start_point().y,2) + pow(vtx->get_fit_pt().z - shower_1->get_start_point().z,2));
+	  kine_pio_dis_2 = sqrt(pow(vtx->get_fit_pt().x - shower_2->get_start_point().x,2) + pow(vtx->get_fit_pt().y - shower_2->get_start_point().y,2) + pow(vtx->get_fit_pt().z - shower_2->get_start_point().z,2));
+	  
+	  TVector3 dir1;
+	  if (kine_pio_dis_1 < 3*units::cm){
+	    dir1 = shower_1->cal_dir_3vector(shower_1->get_start_vertex().first->get_fit_pt(), 15*units::cm);
+	  }else{
+	    dir1.SetXYZ(shower_1->get_start_point().x - vtx->get_fit_pt().x, shower_1->get_start_point().y - vtx->get_fit_pt().y, shower_1->get_start_point().z - vtx->get_fit_pt().z);
+	  }
+	  TVector3 dir2;
+	  if (kine_pio_dis_2 < 3*units::cm){
+	    dir2 = shower_2->cal_dir_3vector(shower_2->get_start_vertex().first->get_fit_pt(), 15*units::cm);
 	}else{
-	  dir1.SetXYZ(shower_1->get_start_point().x - vtx->get_fit_pt().x, shower_1->get_start_point().y - vtx->get_fit_pt().y, shower_1->get_start_point().z - vtx->get_fit_pt().z);
+	    dir2.SetXYZ(shower_2->get_start_point().x - vtx->get_fit_pt().x, shower_2->get_start_point().y - vtx->get_fit_pt().y, shower_2->get_start_point().z - vtx->get_fit_pt().z);
+	  }
+	  
+	  kine_pio_theta_1 = dir1.Theta();
+	  kine_pio_theta_2 = dir2.Theta();
+	  
+	  kine_pio_phi_1 = dir1.Phi();
+	  kine_pio_phi_2 = dir2.Phi();
+	  
+	  kine_pio_angle = dir1.Angle(dir2);
 	}
-	TVector3 dir2;
-	if (kine_pio_dis_2 < 3*units::cm){
-	  dir2 = shower_2->cal_dir_3vector(shower_2->get_start_vertex().first->get_fit_pt(), 15*units::cm);
-	}else{
-	  dir2.SetXYZ(shower_2->get_start_point().x - vtx->get_fit_pt().x, shower_2->get_start_point().y - vtx->get_fit_pt().y, shower_2->get_start_point().z - vtx->get_fit_pt().z);
-	}
-	
-	kine_pio_theta_1 = dir1.Theta();
-	kine_pio_theta_2 = dir2.Theta();
-
-	kine_pio_phi_1 = dir1.Phi();
-	kine_pio_phi_2 = dir2.Phi();
-
-	kine_pio_angle = dir1.Angle(dir2);
       }
     }
     
