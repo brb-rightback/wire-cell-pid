@@ -282,7 +282,7 @@ float WCPPID::NeutrinoID::cal_bdts_xgboost(){
   reader.AddVariable("tro_3_n_muon_segs",&tagger_info.tro_3_n_muon_segs);
   reader.AddVariable("br4_1_n_main_segs",&tagger_info.br4_1_n_main_segs); // naming issue
   
-  reader.BookMVA( "MyBDT", "./input_data_files/xgboost_set8_kaicheng.xml");
+  reader.BookMVA( "MyBDT", "./input_data_files/xgboost_set8seed7_kaicheng_0819.xml");
   
 
   if (tagger_info.br_filled==1){
