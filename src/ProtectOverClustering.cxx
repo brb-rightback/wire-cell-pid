@@ -3,7 +3,7 @@
 
 using namespace WCP;
 
-void WCPPID::Protect_Over_Clustering(std::vector<std::pair<int, Opflash*> >& to_be_checked, WCPPID::PR3DClusterSelection& live_clusters, std::map<WCPPID::PR3DCluster*, int>& map_cluster_parent_id,  std::map<int, std::vector<WCPPID::PR3DCluster*> >& map_parentid_clusters, WCP::ToyCTPointCloud& ct_point_cloud, bool flag_match_data, int run_no, double time_offset, double nrebin, double time_slice_width ){
+void WCPPID::Protect_Over_Clustering(double eventTime, std::vector<std::pair<int, Opflash*> >& to_be_checked, WCPPID::PR3DClusterSelection& live_clusters, std::map<WCPPID::PR3DCluster*, int>& map_cluster_parent_id,  std::map<int, std::vector<WCPPID::PR3DCluster*> >& map_parentid_clusters, WCP::ToyCTPointCloud& ct_point_cloud, bool flag_match_data, int run_no, double time_offset, double nrebin, double time_slice_width, bool flag_timestamp ){
   // update live_clusters,  map_parentid_clusters, map_cluster_parent_id;
   // keep the original id for the main cluster ...
 
@@ -72,15 +72,15 @@ void WCPPID::Protect_Over_Clustering(std::vector<std::pair<int, Opflash*> >& to_
 	//	std::cout << second_max << " " << max_number_cells << " " << main_id << std::endl;
 	
 	if (second_max > 0.7 * max_number_cells){
-	  if (pl == 0 ) pl = new Photon_Library(run_no,flag_match_data);
-	  std::pair<double, double> results = WCPPID::compare_pe_pattern(run_no, offset_x, pl, vec_mcells.at(main_id), flash ,flag_match_data);
+	  if (pl == 0 ) pl = new Photon_Library(eventTime, run_no,flag_match_data, false, flag_timestamp);
+	  std::pair<double, double> results = WCPPID::compare_pe_pattern(eventTime, run_no, offset_x, pl, vec_mcells.at(main_id), flash ,flag_match_data, flag_timestamp);
 	  double min_score = results.first;
 	  double min_ratio = results.second;
 	  
 	  // second round of examination ...
 	  for (size_t j=0;j<vec_mcells.size();j++){
 	    if (vec_mcells.at(j).size() < 0.7 * max_number_cells || j==main_id) continue;
-	    results = WCPPID::compare_pe_pattern(run_no, offset_x, pl, vec_mcells.at(j), flash ,flag_match_data);
+	    results = WCPPID::compare_pe_pattern(eventTime, run_no, offset_x, pl, vec_mcells.at(j), flash ,flag_match_data, flag_timestamp);
 	    double score;
 	    if (fabs(1-results.second) > fabs(1-min_ratio)){
 	      score = sqrt(pow(results.first,2) + pow(results.second - min_ratio,2));
@@ -169,7 +169,9 @@ int WCPPID::get_next_cluster_id(int acc_cluster_id, std::set<int>& used_cluster_
 
 
 
-std::pair<double, double> WCPPID::compare_pe_pattern(int run_no, double offset_x, WCP::Photon_Library *pl, WCP::SMGCSelection& mcells, WCP::Opflash* flash, bool flag_match_data){
+std::pair<double, double> WCPPID::compare_pe_pattern(double eventTime, int run_no, double offset_x, WCP::Photon_Library *pl, WCP::SMGCSelection& mcells, WCP::Opflash* flash, bool flag_match_data, bool flag_timestamp){
+
+  std::cout << "ZXin_2: " << eventTime << " " << flag_timestamp << std::endl;
   
   std::vector<double> pred_pmt_light(32,0);
   double rel_light_yield_err = pl->rel_light_yield_err;

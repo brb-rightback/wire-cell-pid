@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
   int flag_bdt = 1; // default 1 xgboost, 2 for TMVA
   bool flag_dl_vtx = true;
   bool flag_PosEfield_corr = false;// Position and E-field correction for SCE
-  
+  bool flag_timestamp = false;
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
     case 'd':
@@ -55,6 +55,9 @@ int main(int argc, char* argv[])
       break;
     case 'p':
       flag_PosEfield_corr = atoi(&argv[i][2]);
+      break;
+    case 'z':
+      flag_timestamp = atoi(&argv[i][2]);
       break;
     }
   }
@@ -92,7 +95,7 @@ int main(int argc, char* argv[])
   TTree *Trun = (TTree*)file->Get("Trun");
 
   if (entry_no >=Trun->GetEntries()) return 0;
-  
+  double eventTime = 0;
   int run_no, subrun_no, event_no;
   int time_offset;
   int nrebin;
@@ -108,6 +111,14 @@ int main(int argc, char* argv[])
   Trun->SetBranchAddress("eventNo",&event_no);
   Trun->SetBranchAddress("runNo",&run_no);
   Trun->SetBranchAddress("subRunNo",&subrun_no);
+
+  if (Trun->GetBranch("eventTime")){
+    Trun->SetBranchAddress("eventTime",&eventTime);
+  }else{
+    eventTime = 0;
+    flag_timestamp = false;
+  }
+
   unsigned int triggerbits;
   Trun->SetBranchAddress("triggerBits",&triggerbits);
   Trun->SetBranchAddress("unit_dis",&unit_dis);
@@ -1246,7 +1257,7 @@ int main(int argc, char* argv[])
     to_be_checked.push_back(std::make_pair(it->second, map_flash_info[it->first]) );
   }
   
-  WCPPID::Protect_Over_Clustering(to_be_checked, live_clusters, map_cluster_parent_id, map_parentid_clusters, ct_point_cloud, flag_match_data, run_no, time_offset, nrebin, time_slice_width);
+  WCPPID::Protect_Over_Clustering(eventTime,to_be_checked, live_clusters, map_cluster_parent_id, map_parentid_clusters, ct_point_cloud, flag_match_data, run_no, time_offset, nrebin, time_slice_width, flag_timestamp);
   
   for (size_t i=0; i!=live_clusters.size();i++){
     if (live_clusters.at(i)->get_point_cloud()==0){

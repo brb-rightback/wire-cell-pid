@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
       break;
     }
   }
-
+  bool flag_timestamp = false;
   int flag_data = 1; // data
   if(datatier==1 || datatier==2) flag_data=0; // overlay, full mc
   bool flag_match_data = true;
@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
   TString filename = argv[2];
   TFile *file = new TFile(filename);
   TTree *Trun = (TTree*)file->Get("Trun");
-
+  double eventTime;
   int run_no, subrun_no, event_no;
   int time_offset;
   int nrebin;
@@ -100,6 +100,8 @@ int main(int argc, char* argv[])
   Trun->SetBranchAddress("eventNo",&event_no);
   Trun->SetBranchAddress("runNo",&run_no);
   Trun->SetBranchAddress("subRunNo",&subrun_no);
+  Trun->SetBranchAddress("eventTime",&eventTime);
+  
   unsigned int triggerbits;
   Trun->SetBranchAddress("triggerBits",&triggerbits);
   Trun->SetBranchAddress("unit_dis",&unit_dis);
@@ -725,7 +727,7 @@ int main(int argc, char* argv[])
       //debugging
       bool pass_pre_glm_cuts = (!flag_low_energy && !flag_lm && !flag_tgm && !tag_stm);
 
-      WCP::Photon_Library pl(run_no,flag_match_data);
+      WCP::Photon_Library pl(eventTime, run_no,flag_match_data);
       // run the geometric light mismatch tagger
       bool fully_contained = (event_type >> 2) & 1U;
       std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> glm_tagger_results = fid->glm_tagger(flashes, main_cluster, additional_clusters, map_flash_info[flash_id], map_flash_tpc_pair_type[std::make_pair(flash_id, ncluster)], &pl, time_offset, nrebin, unit_dis, ct_point_cloud, run_no, subrun_no, event_no, fully_contained, flag_match_data, false);

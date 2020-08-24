@@ -1,5 +1,5 @@
  
-std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::glm_tagger(WCP::OpflashSelection& flashes, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WCP::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WCP::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool fully_contained, bool flag_match_data, bool debug_tagger){
+std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::glm_tagger(double eventTime, WCP::OpflashSelection& flashes, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WCP::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WCP::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool fully_contained, bool flag_match_data, bool flag_timestamp, bool debug_tagger){
 
 
 	std::cout << "starting glm tagger ================================================================" << std::endl;
@@ -103,7 +103,7 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::glm_ta
 
 			//Flash PE Prediction
 			bool flag_good_bundle;
-			std::vector<double> pred_pmt_light = calculate_pred_pe(run_no, offset_x, pl, main_cluster, additional_clusters, flash, flag_match_data);
+			std::vector<double> pred_pmt_light = calculate_pred_pe(eventTime, run_no, offset_x, pl, main_cluster, additional_clusters, flash, flag_match_data, flag_timestamp);
 
 			//Compute the PE centroids for the flash PE and predicted PE
 			double pred_pe_tot = 0;
@@ -371,8 +371,10 @@ bool WCPPID::ToyFiducial::inside_x_region(std::vector<std::vector<WCP::WCPointCl
 }
 
 //Helper function that creates a vector of predicted PMT responses
-std::vector<double> WCPPID::ToyFiducial::calculate_pred_pe(int run_no, double offset_x, WCP::Photon_Library *pl, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* flash, bool flag_match_data){
+std::vector<double> WCPPID::ToyFiducial::calculate_pred_pe(double eventTime, int run_no, double offset_x, WCP::Photon_Library *pl, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* flash, bool flag_match_data, bool flag_timestamp){
 
+  std::cout << "ZXin_3: " << eventTime << " " << flag_timestamp << std::endl;
+  
 	std::vector<double> pred_pmt_light(32,0);
 	double rel_light_yield_err = pl->rel_light_yield_err;
 	double scaling_light_mag = pl->scaling_light_mag;
@@ -2146,7 +2148,7 @@ bool WCPPID::ToyFiducial::inside1_outside0_SCB(WCP::Point& p, double offset_x, d
 }
 
 
-std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::M2_cosmic_tagger(WCP::OpflashSelection& flashes, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WCP::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WCP::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool flag_data, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, bool debug_tagger)
+std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::M2_cosmic_tagger(double eventTime, WCP::OpflashSelection& flashes, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* main_flash, std::tuple<int, double, double, int>& bundle_info, WCP::Photon_Library *pl, int time_offset, int nrebin, float unit_dis, WCP::ToyCTPointCloud& ct_point_cloud, int run_no, int subrun_no, int event_no, bool flag_data, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, bool flag_timestamp, bool debug_tagger)
 {
   std::cout<<std::endl<<" ---------> Hello M2"<<std::endl<<std::endl;
   //std::cout<<" M2: main_flash->get_time() "<<main_flash->get_time()<<std::endl;
@@ -2277,7 +2279,7 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::M2_cos
 
       if(flash->get_time() == main_flash->get_time()){	
 
-	std::vector<double> pred_pmt_light = calculate_pred_pe(run_no, offset_x, pl, main_cluster, additional_clusters, flash, flag_data);	
+	std::vector<double> pred_pmt_light = calculate_pred_pe(eventTime, run_no, offset_x, pl, main_cluster, additional_clusters, flash, flag_data, flag_timestamp);	
 	for(int i=0; i<int(pred_pmt_light.size()); i++){
 	  double flash_pe = flash->get_PE(i);
 	  double pred_pe = pred_pmt_light[i];
@@ -2400,7 +2402,7 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::M2_cos
 	  double chi2_user = 0;
 	  int ndf_user = 0;
 
-	  std::vector<double> pred_pmt_light = calculate_pred_pe(run_no, offset_x, pl, main_cluster, additional_clusters, flash, flag_data);	
+	  std::vector<double> pred_pmt_light = calculate_pred_pe(eventTime, run_no, offset_x, pl, main_cluster, additional_clusters, flash, flag_data, flag_timestamp);	
 	  for(int i=0; i<int(pred_pmt_light.size()); i++){
 	    double flash_pe = flash->get_PE(i);
 	    double pred_pe = pred_pmt_light[i];
@@ -2630,7 +2632,7 @@ std::tuple<int, WCPPID::PR3DCluster*, WCP::Opflash*> WCPPID::ToyFiducial::M2_cos
 	  double pmt_posZ_center = 0;
 	  double total_meas_pe = 0;
 
-	  std::vector<double> pred_pmt_light = calculate_pred_pe(run_no, offset_x, pl, main_cluster, additional_clusters, flash, flag_data);	
+	  std::vector<double> pred_pmt_light = calculate_pred_pe(eventTime, run_no, offset_x, pl, main_cluster, additional_clusters, flash, flag_data, flag_timestamp);	
 	  for(int i=0; i<int(pred_pmt_light.size()); i++){
 	    double flash_pe = flash->get_PE(i);
 	    double pred_pe = pred_pmt_light[i];
