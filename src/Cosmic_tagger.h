@@ -373,7 +373,7 @@ bool WCPPID::ToyFiducial::inside_x_region(std::vector<std::vector<WCP::WCPointCl
 //Helper function that creates a vector of predicted PMT responses
 std::vector<double> WCPPID::ToyFiducial::calculate_pred_pe(double eventTime, int run_no, double offset_x, WCP::Photon_Library *pl, WCPPID::PR3DCluster* main_cluster, std::vector<WCPPID::PR3DCluster*> additional_clusters, WCP::Opflash* flash, bool flag_match_data, bool flag_timestamp){
 
-  std::cout << "ZXin_3: " << eventTime << " " << flag_timestamp << std::endl;
+  //  std::cout << "ZXin_3: " << eventTime << " " << flag_timestamp << std::endl;
   
 	std::vector<double> pred_pmt_light(32,0);
 	double rel_light_yield_err = pl->rel_light_yield_err;
@@ -560,7 +560,7 @@ std::vector<double> WCPPID::ToyFiducial::calculate_pred_pe(double eventTime, int
 	    norm_factor[i] = 1;
 	  }
 	  if (flag_match_data){
-	    if (run_no >= 12809)
+	    if ((run_no >= 12809 && (!flag_timestamp)) || (flag_timestamp && eventTime >= 1505170407))
 	      norm_factor[17] = 0;
 	  }
 	  

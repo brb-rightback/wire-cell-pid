@@ -171,7 +171,7 @@ int WCPPID::get_next_cluster_id(int acc_cluster_id, std::set<int>& used_cluster_
 
 std::pair<double, double> WCPPID::compare_pe_pattern(double eventTime, int run_no, double offset_x, WCP::Photon_Library *pl, WCP::SMGCSelection& mcells, WCP::Opflash* flash, bool flag_match_data, bool flag_timestamp){
 
-  std::cout << "ZXin_2: " << eventTime << " " << flag_timestamp << std::endl;
+  //  std::cout << "ZXin_2: " << eventTime << " " << flag_timestamp << std::endl;
   
   std::vector<double> pred_pmt_light(32,0);
   double rel_light_yield_err = pl->rel_light_yield_err;
@@ -357,7 +357,7 @@ std::pair<double, double> WCPPID::compare_pe_pattern(double eventTime, int run_n
       norm_factor[i] = 1;
     }
     if (flag_match_data){
-      if (run_no >= 12809)
+      if ((run_no >= 12809 && (!flag_timestamp)) || (flag_timestamp && eventTime >= 1505170407))
 	norm_factor[17] = 0;
     }
     
