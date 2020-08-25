@@ -119,6 +119,8 @@ int main(int argc, char* argv[])
     flag_timestamp = false;
   }
 
+ 
+
   unsigned int triggerbits;
   Trun->SetBranchAddress("triggerBits",&triggerbits);
   Trun->SetBranchAddress("unit_dis",&unit_dis);
@@ -133,6 +135,9 @@ int main(int argc, char* argv[])
   Trun->SetBranchAddress("raw_charge_err",&raw_charge_err);
     
   Trun->GetEntry(entry_no);
+
+  
+  
   double lowerwindow = 0;
   double upperwindow = 0;
   if((triggerbits>>11) & 1U) { lowerwindow=3.1875; upperwindow=4.96876;} // bnb  
@@ -1312,6 +1317,7 @@ int main(int argc, char* argv[])
   Trun1->Branch("eventNo",&event_no,"eventNo/I");
   Trun1->Branch("runNo",&run_no,"runNo/I");
   Trun1->Branch("subRunNo",&subrun_no,"subRunNo/I");
+  Trun1->Branch("eventTime",&eventTime,"eventTime/D");
   
   Trun1->Branch("triggerBits",&triggerbits,"triggerBits/i");
   Trun1->Branch("unit_dis",&unit_dis,"unit_dis/F");

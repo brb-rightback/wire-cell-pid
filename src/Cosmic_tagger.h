@@ -563,6 +563,8 @@ std::vector<double> WCPPID::ToyFiducial::calculate_pred_pe(double eventTime, int
 	    if ((run_no >= 12809 && (!flag_timestamp)) || (flag_timestamp && eventTime >= 1505170407))
 	      norm_factor[17] = 0;
 	  }
+
+	  //std::cout << "kaka1 " << run_no << " " << eventTime << " " << flag_timestamp << " " << eventTime - 1505170407 << " " << norm_factor[17] << std::endl;
 	  
   	  double sum1 = 0, sum2 = 0, max_pe = 0;
   	  for (size_t i=0;i!=32;i++){
