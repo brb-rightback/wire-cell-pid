@@ -106,6 +106,11 @@ bool WCPPID::NeutrinoID::determine_overall_main_vertex_DL(){
       num_tracks ++;
     }
     if (num_bad >0 && num_bad == num_tracks) flag_pass = false;
+
+    // 2 cm cut ..
+    if (min_dis > dl_vtx_cut) flag_pass = false;
+
+    //    std::cout <<"kaka: " << dl_vtx_cut/units::cm << std::endl;
     
     // now just do the change ....
     if (flag_pass){

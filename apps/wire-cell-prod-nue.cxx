@@ -36,6 +36,9 @@ int main(int argc, char* argv[])
   bool flag_dl_vtx = true;
   bool flag_PosEfield_corr = false;// Position and E-field correction for SCE
   bool flag_timestamp = false;
+  
+  float dl_vtx_cut = 2.0;
+  
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
     case 'd':
@@ -53,6 +56,9 @@ int main(int argc, char* argv[])
     case 'l':
       flag_dl_vtx = atoi(&argv[i][2]);
       break;
+    case 'c':
+      dl_vtx_cut = atof(&argv[i][2]);
+      break;
     case 'p':
       flag_PosEfield_corr = atoi(&argv[i][2]);
       break;
@@ -61,6 +67,7 @@ int main(int argc, char* argv[])
       break;
     }
   }
+  dl_vtx_cut = dl_vtx_cut * units::cm;
 
   int flag_data = 1; // data
   if(datatier==1 || datatier==2) flag_data=0; // overlay, full mc
@@ -1300,7 +1307,7 @@ int main(int argc, char* argv[])
     }
 
     double offset_x =     (flash_time - time_offset)*2./nrebin*time_slice_width;
-    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process, flag_bdt, flag_dl_vtx);
+    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process, flag_bdt, flag_dl_vtx, dl_vtx_cut);
     
     neutrino_vec.push_back(neutrino);
     map_flash_tpc_pair_neutrino_id[std::make_pair(it->first, it->second)] = neutrino;
