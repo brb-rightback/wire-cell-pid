@@ -132,7 +132,7 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
     double medium_dQ_dx = sg->get_medium_dQ_dx();
     double dQ_dx_cut = 0.8866+0.9533 *pow(18*units::cm/length, 0.4234);
     
-    //    std::cout << sg->get_id() << " " << sg->get_flag_shower() << " " << sg->get_flag_shower_topology() << " " << medium_dQ_dx/(43e3/units::cm) << " " << dQ_dx_cut << " " << length/units::cm << " " << direct_length/units::cm << std::endl;
+    //std::cout << sg->get_id() << " " << sg->get_flag_shower() << " " << sg->get_flag_shower_topology() << " " << medium_dQ_dx/(43e3/units::cm) << " " << dQ_dx_cut << " " << length/units::cm << " " << direct_length/units::cm << std::endl;
 
     if (sg->get_flag_avoid_muon_check()) continue;
     if (sg->get_flag_shower() && (!sg->get_flag_shower_topology()) || (!sg->get_flag_shower()) || length > 50*units::cm){
@@ -206,7 +206,7 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
   tagger_info.numu_cc_3_n_daughter_tracks = n_daughter_tracks;
   tagger_info.numu_cc_3_n_daughter_all = n_daughter_all;
 
-  //  std::cout << "numu_cc_3: " << flag_numu_cc_3 << " " << tmp_particle_type << " " << max_length/units::cm << " " << acc_track_length/units::cm << " " << max_length_all/units::cm << " " << max_muon_length/units::cm << " " << n_daughter_tracks << " " << n_daughter_all << std::endl;
+  //std::cout << "numu_cc_3: " << flag_numu_cc_3 << " " << tmp_particle_type << " " << max_length/units::cm << " " << acc_track_length/units::cm << " " << max_length_all/units::cm << " " << max_muon_length/units::cm << " " << n_daughter_tracks << " " << n_daughter_all << std::endl;
   
   //  std::cout <<"Xin " << max_length/units::cm << " " << max_direct_length/units::cm << " " << max_medium_dQ_dx << " " << acc_track_length/units::cm << std::endl; 
 
