@@ -1096,6 +1096,19 @@ namespace WCPPID{
     std::pair<int, int> count_daughters(WCPPID::WCShower *max_long_muon);
     
     bool nue_tagger(double muon_kine_energy = 0);
+
+    float cal_numu_bdts();
+    float cal_cosmict_2_4_bdt(float default_val);
+    float cal_cosmict_3_5_bdt(float default_val);
+    float cal_cosmict_6_bdt(float default_val);
+    float cal_cosmict_7_bdt(float default_val);
+    float cal_cosmict_8_bdt(float default_val);
+    float cal_cosmict_10_bdt(float default_val);
+    float cal_numu_1_bdt(float default_val);
+    float cal_numu_2_bdt(float default_val);
+    float cal_numu_3_bdt(float default_val);
+    
+      
     
     float cal_bdts();
     float cal_bdts_xgboost();

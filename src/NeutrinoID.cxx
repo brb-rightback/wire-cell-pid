@@ -30,6 +30,7 @@ using namespace WCP;
 #include "NeutrinoID_nue_functions.h"
 #include "NeutrinoID_pio_tagger.h"
 
+#include "NeutrinoID_numu_bdts.h"
 #include "NeutrinoID_nue_bdts.h"
 #include "NeutrinoID_DL.h"
 
