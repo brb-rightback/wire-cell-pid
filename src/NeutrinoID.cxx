@@ -233,15 +233,19 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     
   }
 
+  if (flag_bdt >0)
+      tagger_info.numu_score = cal_numu_bdts();
   
   if (flag_bdt == 1){
     // Xgboost training ...
     tagger_info.nue_score = cal_bdts_xgboost();
+        
   }else if (flag_bdt == 2){
     // TMVA training ...
     tagger_info.nue_score = cal_bdts();
     // numuCC TMVA training ...
   }
+
 
 
   
