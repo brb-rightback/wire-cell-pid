@@ -872,7 +872,7 @@ namespace WCPPID{
   
   class NeutrinoID{
   public:
-    NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, std::vector<WCPPID::PR3DCluster*>& all_clusters, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis,	WCP::ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double flash_time, double offset_x, int flag_neutrino_id_process=1, int flag_bdt = 0, bool flag_dl_vtx = false, double dl_vtx_cut = 2.0*units::cm);
+    NeutrinoID(WCPPID::PR3DCluster *main_cluster, std::vector<WCPPID::PR3DCluster*>& other_clusters, std::vector<WCPPID::PR3DCluster*>& all_clusters, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis,	WCP::ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const WCP::GeomWire*, WCP::SMGCSelection > >& global_wc_map, double flash_time, double offset_x, int flag_neutrino_id_process=1, int flag_bdt = 0, bool flag_dl_vtx = false, double dl_vtx_cut = 2.0*units::cm, float match_isFC = 0);
     ~NeutrinoID();
 
     // deal with the map ...
@@ -1202,6 +1202,8 @@ namespace WCPPID{
     
     
   protected:
+    float match_isFC;
+      
     int neutrino_type;
     int flag_bdt;
     bool flag_dl_vtx;

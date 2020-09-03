@@ -36,7 +36,7 @@ using namespace WCP;
 
 #include "NeutrinoID_kine.h"
 
-WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<WCPPID::PR3DCluster*>& other_clusters1, std::vector<WCPPID::PR3DCluster*>& all_clusters1, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x, int flag_neutrino_id_process, int flag_bdt, bool flag_dl_vtx, double dl_vtx_cut)
+WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<WCPPID::PR3DCluster*>& other_clusters1, std::vector<WCPPID::PR3DCluster*>& all_clusters1, WCPPID::ToyFiducial* fid, WCPSst::GeomDataSource& gds, int nrebin, int frame_length, float unit_dis, ToyCTPointCloud* ct_point_cloud, std::map<int,std::map<const GeomWire*, SMGCSelection > >& global_wc_map, double flash_time, double offset_x, int flag_neutrino_id_process, int flag_bdt, bool flag_dl_vtx, double dl_vtx_cut, float match_isFC)
   : acc_vertex_id(0)
   , acc_segment_id(0)
   , main_cluster(main_cluster1)
@@ -55,6 +55,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   , flag_bdt(flag_bdt)
   , flag_dl_vtx(flag_dl_vtx)
   , dl_vtx_cut(dl_vtx_cut)
+  , match_isFC(match_isFC)
 {
   bool flag_other_clusters = true;
   bool flag_main_cluster = true;

@@ -202,12 +202,31 @@ int main(int argc, char* argv[])
   std::map<int,std::pair<double,double>> dead_v_index;
   std::map<int,std::pair<double,double>> dead_w_index;
 
+  bool match_isFC = false;
+  TTree *T_eval = (TTree*)file->Get("T_eval");
+  Int_t temp_run_no, temp_subrun_no, temp_event_no;
+  T_eval->SetBranchAddress("match_isFC",&match_isFC);
+  T_eval->SetBranchAddress("run",&temp_run_no);
+  T_eval->SetBranchAddress("subrun",&temp_subrun_no);
+  T_eval->SetBranchAddress("event",&temp_event_no);
+  for (Int_t i = 0; i!= T_eval->GetEntries();i++){
+    T_eval->GetEntry(i);
+    if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) {
+      match_isFC = false;
+      continue;
+    }
+    break;
+  }
+
+  std::cout << "A: " << match_isFC << std::endl;
+  
+  
   TTree *T_flash = (TTree*)file->Get("T_flash");
   Double_t time;
   Double_t low_time, high_time;
   Int_t type;
   Int_t flash_id;
-  Int_t temp_run_no, temp_subrun_no, temp_event_no;
+  //  Int_t temp_run_no, temp_subrun_no, temp_event_no;
   Double_t total_PE;
   Double_t PE[32],PE_err[32];
   // std::vector<int> matched_tpc_ids;
@@ -1307,7 +1326,7 @@ int main(int argc, char* argv[])
     }
 
     double offset_x =     (flash_time - time_offset)*2./nrebin*time_slice_width;
-    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process, flag_bdt, flag_dl_vtx, dl_vtx_cut);
+    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process, flag_bdt, flag_dl_vtx, dl_vtx_cut, match_isFC);
     
     neutrino_vec.push_back(neutrino);
     map_flash_tpc_pair_neutrino_id[std::make_pair(it->first, it->second)] = neutrino;
