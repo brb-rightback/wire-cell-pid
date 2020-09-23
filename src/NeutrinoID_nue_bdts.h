@@ -24,7 +24,10 @@ float WCPPID::NeutrinoID::cal_bdts_xgboost(){
   float default_val = -15;// background like
 
   TMVA::Reader reader;
-
+  
+  reader.AddVariable("match_isFC",&match_isFC);
+  reader.AddVariable("kine_reco_Enu",&kine_info.kine_reco_Enu);
+  
   reader.AddVariable("cme_mu_energy",&tagger_info.cme_mu_energy);
   reader.AddVariable("cme_energy",&tagger_info.cme_energy);
   reader.AddVariable("cme_mu_length",&tagger_info.cme_mu_length);
@@ -282,7 +285,8 @@ float WCPPID::NeutrinoID::cal_bdts_xgboost(){
   reader.AddVariable("tro_3_n_muon_segs",&tagger_info.tro_3_n_muon_segs);
   reader.AddVariable("br4_1_n_main_segs",&tagger_info.br4_1_n_main_segs); // naming issue
   
-  reader.BookMVA( "MyBDT", "./input_data_files/xgboost_set8seed7_kaicheng_0819.xml");
+  //  reader.BookMVA( "MyBDT", "./input_data_files/xgboost_set8seed7_kaicheng_0819.xml");
+  reader.BookMVA( "MyBDT", "./input_data_files/XGB_nue_seed2_0923.xml");
   
 
   if (tagger_info.br_filled==1){

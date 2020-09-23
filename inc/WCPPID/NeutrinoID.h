@@ -1181,8 +1181,10 @@ namespace WCPPID{
     bool low_energy_michel(WCPPID::WCShower*shower, bool flag_print = false, bool flag_fill = false);
 
     void init_tagger_info();
-    TaggerInfo tagger_info; 
-
+    TaggerInfo tagger_info;
+    KineInfo get_kine_info(){return kine_info;};
+    
+    KineInfo kine_info;
     
     float kine_pio_mass; // mass
     int kine_pio_flag; // 0 not filled, 1, with vertex, 2 without vertex

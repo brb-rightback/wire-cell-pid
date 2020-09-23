@@ -2329,7 +2329,8 @@ int main(int argc, char* argv[])
   for (size_t i=0; i!= neutrino_vec.size();i++){
     //    neutrino_vec.at(i)->fill_proto_main_tree(reco_tree);
     neutrino_vec.at(i)->fill_particle_tree(reco_tree );
-    neutrino_vec.at(i)->fill_kine_tree(kine_tree );
+    kine_tree = neutrino_vec.at(i)->get_kine_info();
+    //    neutrino_vec.at(i)->fill_kine_tree(kine_tree );
   }
   TMC->Fill();
   T_kine->Fill();

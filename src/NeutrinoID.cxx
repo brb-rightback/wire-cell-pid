@@ -222,6 +222,9 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   }
 
   if (flag_tagger){
+
+    fill_kine_tree(kine_info);
+    
     bool flag_cosmic = cosmic_tagger();
 
     // set the cosmic flag anyway ...
