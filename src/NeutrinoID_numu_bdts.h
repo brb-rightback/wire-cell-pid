@@ -84,6 +84,10 @@ float WCPPID::NeutrinoID::cal_numu_bdts_xgboost(){
   reader.AddVariable("numu_2_score", &tagger_info.numu_2_score);
 
   reader.BookMVA( "MyBDT", "input_data_files/numu_scalars_scores_0923.xml");
+
+  if (std::isnan(tagger_info.cosmict_4_angle_beam)) tagger_info.cosmict_4_angle_beam = 0;
+
+  
   double val1 = reader.EvaluateMVA("MyBDT");
   
   val = TMath::Log10( (1+val1)/(1-val1) );
