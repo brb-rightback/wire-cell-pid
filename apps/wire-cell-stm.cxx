@@ -664,10 +664,10 @@ int main(int argc, char* argv[])
   
   for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
     flash_time = map_flash_info[it->first]->get_time();
-    if (flag_in_time_only && (flash_time < lowerwindow || flash_time > upperwindow)) continue;
+    if (flag_in_time_only && (flash_time <= lowerwindow || flash_time >= upperwindow)) continue;
 
     event_type = std::get<0>(map_flash_tpc_pair_type[std::make_pair(it->first, it->second)]);
-    if (flash_time < lowerwindow || flash_time > upperwindow)
+    if (flash_time <= lowerwindow || flash_time >= upperwindow)
       event_type |= 1UL << 0;
     
     int flag_tgm = (event_type >> 3) & 1U;

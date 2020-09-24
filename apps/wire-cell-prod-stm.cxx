@@ -726,7 +726,7 @@ int main(int argc, char* argv[])
   for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
     flash_time = map_flash_info[it->first]->get_time();
     //std::cout << flash_time << " " << triggerbits << " " << lowerwindow << " " << upperwindow << std::endl;
-    if (flag_in_time_only && (flash_time < lowerwindow || flash_time > upperwindow)) continue;
+    if (flag_in_time_only && (flash_time <= lowerwindow || flash_time >= upperwindow)) continue;
 
     event_type = std::get<0>(map_flash_tpc_pair_type[std::make_pair(it->first, it->second)]);
     

@@ -608,7 +608,7 @@ int main(int argc, char* argv[])
     if (map_tpc_flash_ids.find(map_cluster_parent_id[live_clusters.at(i)]) == map_tpc_flash_ids.end()) continue;
     double flash_time = map_flash_info[map_tpc_flash_ids[map_cluster_parent_id[live_clusters.at(i)]]].second;
 
-    if (flag_in_time_only && (flash_time < lowerwindow || flash_time > upperwindow)) continue;
+    if (flag_in_time_only && (flash_time <= lowerwindow || flash_time >= upperwindow)) continue;
 
     std::cout << live_clusters.at(i)->get_cluster_id() << " " << map_cluster_parent_id[live_clusters.at(i)] << " " << flash_time << std::endl;
 

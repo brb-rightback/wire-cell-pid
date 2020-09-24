@@ -1284,7 +1284,7 @@ int main(int argc, char* argv[])
   for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
     // double flash_time = map_flash_info[it->first].second;
     double flash_time = map_flash_info[it->first]->get_time();
-    if ( (flash_time < lowerwindow || flash_time > upperwindow)) continue;
+    if ( (flash_time <= lowerwindow || flash_time >= upperwindow)) continue;
     to_be_checked.push_back(std::make_pair(it->second, map_flash_info[it->first]) );
   }
   
@@ -1305,7 +1305,7 @@ int main(int argc, char* argv[])
     //    double flash_time = map_flash_info[it->first].second;
     double flash_time = map_flash_info[it->first]->get_time();
     //std::cout << flash_time << " " << triggerbits << " " << lowerwindow << " " << upperwindow << std::endl;
-    if ( (flash_time < lowerwindow || flash_time > upperwindow)) continue;
+    if ( (flash_time <= lowerwindow || flash_time >= upperwindow)) continue;
     if (map_parentid_clusters.find(it->second) == map_parentid_clusters.end()) continue;
 
     // hack for now ...
