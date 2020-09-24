@@ -87,6 +87,8 @@ float WCPPID::NeutrinoID::cal_numu_bdts_xgboost(){
 
   if (std::isnan(tagger_info.cosmict_4_angle_beam)) tagger_info.cosmict_4_angle_beam = 0;
   if (std::isnan(tagger_info.cosmict_7_angle_beam)) tagger_info.cosmict_7_angle_beam = 0;
+  if (std::isnan(tagger_info.cosmict_7_theta)) tagger_info.cosmict_7_theta = 0;
+  if (std::isnan(tagger_info.cosmict_7_phi)) tagger_info.cosmict_7_phi = 0;
   
   double val1 = reader.EvaluateMVA("MyBDT");
   
