@@ -1,3 +1,96 @@
+float WCPPID::NeutrinoID::cal_numu_bdts_xgboost(){
+  float val = -10;
+  
+  tagger_info.numu_1_score = cal_numu_1_bdt(-0.4);
+  tagger_info.numu_2_score = cal_numu_2_bdt(-0.1);
+  tagger_info.numu_3_score = cal_numu_3_bdt(-0.2);
+  tagger_info.cosmict_10_score = cal_cosmict_10_bdt(0.7);
+
+  TMVA::Reader reader;
+  
+  reader.AddVariable("numu_cc_flag_3", &tagger_info.numu_cc_flag_3);
+  reader.AddVariable("numu_cc_3_particle_type", &tagger_info.numu_cc_3_particle_type);
+  reader.AddVariable("numu_cc_3_max_length", &tagger_info.numu_cc_3_max_length);
+  reader.AddVariable("numu_cc_3_track_length",&tagger_info.numu_cc_3_acc_track_length);
+  reader.AddVariable("numu_cc_3_max_length_all",&tagger_info.numu_cc_3_max_length_all);
+  reader.AddVariable("numu_cc_3_max_muon_length",&tagger_info.numu_cc_3_max_muon_length);
+  reader.AddVariable("numu_cc_3_n_daughter_tracks",&tagger_info.numu_cc_3_n_daughter_tracks);
+  reader.AddVariable("numu_cc_3_n_daughter_all",&tagger_info.numu_cc_3_n_daughter_all);
+  reader.AddVariable("cosmict_flag_2", &tagger_info.cosmict_flag_2);
+  reader.AddVariable("cosmict_2_filled", &tagger_info.cosmict_2_filled);
+  reader.AddVariable("cosmict_2_particle_type",&tagger_info.cosmict_2_particle_type);
+  reader.AddVariable("cosmict_2_n_muon_tracks",&tagger_info.cosmict_2_n_muon_tracks);
+  reader.AddVariable("cosmict_2_total_shower_length",&tagger_info.cosmict_2_total_shower_length);
+  reader.AddVariable("cosmict_2_flag_inside",&tagger_info.cosmict_2_flag_inside);
+  reader.AddVariable("cosmict_2_angle_beam",&tagger_info.cosmict_2_angle_beam);
+  reader.AddVariable("cosmict_2_flag_dir_weak", &tagger_info.cosmict_2_flag_dir_weak);
+  reader.AddVariable("cosmict_2_dQ_dx_end", &tagger_info.cosmict_2_dQ_dx_end);
+  reader.AddVariable("cosmict_2_dQ_dx_front", &tagger_info.cosmict_2_dQ_dx_front);
+  reader.AddVariable("cosmict_2_theta", &tagger_info.cosmict_2_theta);
+  reader.AddVariable("cosmict_2_phi", &tagger_info.cosmict_2_phi);
+  reader.AddVariable("cosmict_2_valid_tracks", &tagger_info.cosmict_2_valid_tracks);
+  reader.AddVariable("cosmict_flag_4", &tagger_info.cosmict_flag_4);
+  reader.AddVariable("cosmict_4_filled", &tagger_info.cosmict_4_filled);
+  reader.AddVariable("cosmict_4_flag_inside", &tagger_info.cosmict_4_flag_inside);
+  reader.AddVariable("cosmict_4_angle_beam", &tagger_info.cosmict_4_angle_beam);
+  reader.AddVariable("cosmict_4_connected_showers", &tagger_info.cosmict_4_connected_showers);
+  reader.AddVariable("cosmict_flag_3", &tagger_info.cosmict_flag_3);
+  reader.AddVariable("cosmict_3_filled", &tagger_info.cosmict_3_filled);
+  reader.AddVariable("cosmict_3_flag_inside", &tagger_info.cosmict_3_flag_inside);
+  reader.AddVariable("cosmict_3_angle_beam", &tagger_info.cosmict_3_angle_beam);
+  reader.AddVariable("cosmict_3_flag_dir_weak", &tagger_info.cosmict_3_flag_dir_weak);
+  reader.AddVariable("cosmict_3_dQ_dx_end", &tagger_info.cosmict_3_dQ_dx_end);
+  reader.AddVariable("cosmict_3_dQ_dx_front", &tagger_info.cosmict_3_dQ_dx_front);
+  reader.AddVariable("cosmict_3_theta", &tagger_info.cosmict_3_theta);
+  reader.AddVariable("cosmict_3_phi", &tagger_info.cosmict_3_phi);
+  reader.AddVariable("cosmict_3_valid_tracks", &tagger_info.cosmict_3_valid_tracks);
+  reader.AddVariable("cosmict_flag_5", &tagger_info.cosmict_flag_5);
+  reader.AddVariable("cosmict_5_filled", &tagger_info.cosmict_5_filled);
+  reader.AddVariable("cosmict_5_flag_inside", &tagger_info.cosmict_5_flag_inside);
+  reader.AddVariable("cosmict_5_angle_beam", &tagger_info.cosmict_5_angle_beam);
+  reader.AddVariable("cosmict_5_connected_showers", &tagger_info.cosmict_5_connected_showers);
+  reader.AddVariable("cosmict_flag_6", &tagger_info.cosmict_flag_6);
+  reader.AddVariable("cosmict_6_filled", &tagger_info.cosmict_6_filled);
+  reader.AddVariable("cosmict_6_flag_dir_weak", &tagger_info.cosmict_6_flag_dir_weak);
+  reader.AddVariable("cosmict_6_flag_inside", &tagger_info.cosmict_6_flag_inside);
+  reader.AddVariable("cosmict_6_angle", &tagger_info.cosmict_6_angle);
+  reader.AddVariable("cosmict_flag_7", &tagger_info.cosmict_flag_7);
+  reader.AddVariable("cosmict_7_filled", &tagger_info.cosmict_7_filled);
+  reader.AddVariable("cosmict_7_flag_sec", &tagger_info.cosmict_7_flag_sec);
+  reader.AddVariable("cosmict_7_n_muon_tracks", &tagger_info.cosmict_7_n_muon_tracks);
+  reader.AddVariable("cosmict_7_total_shower_length", &tagger_info.cosmict_7_total_shower_length);
+  reader.AddVariable("cosmict_7_flag_inside", &tagger_info.cosmict_7_flag_inside);
+  reader.AddVariable("cosmict_7_angle_beam", &tagger_info.cosmict_7_angle_beam);
+  reader.AddVariable("cosmict_7_flag_dir_weak", &tagger_info.cosmict_7_flag_dir_weak);
+  reader.AddVariable("cosmict_7_dQ_dx_end", &tagger_info.cosmict_7_dQ_dx_end);
+  reader.AddVariable("cosmict_7_dQ_dx_front", &tagger_info.cosmict_7_dQ_dx_front);
+  reader.AddVariable("cosmict_7_theta", &tagger_info.cosmict_7_theta);
+  reader.AddVariable("cosmict_7_phi", &tagger_info.cosmict_7_phi);
+  reader.AddVariable("cosmict_flag_8", &tagger_info.cosmict_flag_8);
+  reader.AddVariable("cosmict_8_filled", &tagger_info.cosmict_8_filled);
+  reader.AddVariable("cosmict_8_flag_out", &tagger_info.cosmict_8_flag_out);
+  reader.AddVariable("cosmict_8_muon_length", &tagger_info.cosmict_8_muon_length);
+  reader.AddVariable("cosmict_8_acc_length", &tagger_info.cosmict_8_acc_length);
+  reader.AddVariable("cosmict_flag_9", &tagger_info.cosmict_flag_9);
+  reader.AddVariable("cosmic_flag", &tagger_info.cosmic_flag);
+  reader.AddVariable("cosmic_filled", &tagger_info.cosmic_filled);
+  reader.AddVariable("cosmict_flag", &tagger_info.cosmict_flag);
+  reader.AddVariable("numu_cc_flag", &tagger_info.numu_cc_flag);
+  reader.AddVariable("cosmict_flag_1", &tagger_info.cosmict_flag_1);
+  reader.AddVariable("kine_reco_Enu",&kine_info.kine_reco_Enu);
+  reader.AddVariable("match_isFC",&match_isFC);
+  reader.AddVariable("cosmict_10_score", &tagger_info.cosmict_10_score);
+  reader.AddVariable("numu_1_score", &tagger_info.numu_1_score);
+  reader.AddVariable("numu_2_score", &tagger_info.numu_2_score);
+
+  reader.BookMVA( "MyBDT", "input_data_files/numu_scalars_scores_0923.xml");
+  double val1 = reader.EvaluateMVA("MyBDT");
+  
+  val = TMath::Log10( (1+val1)/(1-val1) );
+  
+  return val;
+}
+
 float WCPPID::NeutrinoID::cal_numu_bdts(){
   float val = -10;
 

@@ -1098,6 +1098,7 @@ namespace WCPPID{
     bool nue_tagger(double muon_kine_energy = 0);
 
     float cal_numu_bdts();
+    float cal_numu_bdts_xgboost();
     float cal_cosmict_2_4_bdt(float default_val);
     float cal_cosmict_3_5_bdt(float default_val);
     float cal_cosmict_6_bdt(float default_val);

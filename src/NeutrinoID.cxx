@@ -238,7 +238,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   }
 
   if (flag_bdt >0)
-      tagger_info.numu_score = cal_numu_bdts();
+      tagger_info.numu_score = cal_numu_bdts_xgboost();
   
   if (flag_bdt == 1){
     // Xgboost training ...
