@@ -102,7 +102,7 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
 
       
     }
-    //    std::cout << "haha2 " << std::endl;
+   
     
     /* for (auto it = map_vertex_segments.begin(); it!=map_vertex_segments.end(); it++){ */
     /*   WCPPID::ProtoVertex *vtx = it->first; */
@@ -111,14 +111,14 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
     /*   } */
     /* } */
 
-    
+    //std::cout << "haha2 " << std::endl;
     
     // find other segments ...
     for (size_t i=0;i!=nrounds_find_other_tracks;i++){
       find_other_segments(temp_cluster, flag_break_track);
     }
 
-
+    
     
     if (temp_cluster == main_cluster){
       // merge two tracks if their angles are consistent
@@ -127,13 +127,13 @@ bool WCPPID::NeutrinoID::find_proto_vertex(WCPPID::PR3DCluster *temp_cluster, bo
       
     }
     
-    
+   
     
     
     // examine the vertices ...
     examine_vertices(temp_cluster);
 
-    
+   
      
     // examine partial identical segments
     examine_partial_identical_segments(temp_cluster);
@@ -967,7 +967,7 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
       
     }
 
-    
+
     
     double length = sqrt(pow(cloud.pts[special_A].x - cloud.pts[special_B].x,2) + pow(cloud.pts[special_A].y - cloud.pts[special_B].y,2) + pow(cloud.pts[special_A].z - cloud.pts[special_B].z,2)); 
     // check ...
@@ -1006,10 +1006,10 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     }
   }
 
-  /* for (auto it = remaining_segments.begin(); it!=remaining_segments.end(); it++){  */
-  /*   std::cout << "jaja1: " << *it << " " << temp_segments.at(*it).number_not_faked << " " << temp_segments.at(*it).number_points << " " <<  temp_segments.at(*it).max_dis_u/units::cm << " " << temp_segments.at(*it).max_dis_v/units::cm << " " << temp_segments.at(*it).max_dis_w/units::cm << " " << temp_segments.at(*it).length/units::cm << std::endl;  */
-  /* }  */
-  // std::cout << remaining_segments.size() << std::endl;
+  /* for (auto it = remaining_segments.begin(); it!=remaining_segments.end(); it++){ */
+  /*   std::cout << "jaja1: " << *it << " " << temp_segments.at(*it).number_not_faked << " " << temp_segments.at(*it).number_points << " " <<  temp_segments.at(*it).max_dis_u/units::cm << " " << temp_segments.at(*it).max_dis_v/units::cm << " " << temp_segments.at(*it).max_dis_w/units::cm << " " << temp_segments.at(*it).length/units::cm << std::endl; */
+  /* } */
+  //  std::cout << remaining_segments.size() << std::endl;
 
   // plan to examine things ... 
   std::vector<int> saved_clusters;
@@ -1042,12 +1042,17 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
   	  max_length = temp_segments.at(*it).length;
   	}
       }
+      //std::cout << "b: " << *it << std::endl;
     }
     // save things ...
     saved_clusters.push_back(max_length_cluster);
     saved_cluster_points.at(max_length_cluster) = std::make_pair(temp_segments.at(max_length_cluster).special_A, temp_segments.at(max_length_cluster).special_B);
     remaining_segments.erase(max_length_cluster);
 
+    /* for (auto it = remaining_segments.begin(); it!=remaining_segments.end(); it++){ */
+    /*   std::cout << "c: " << *it << std::endl; */
+    /* } */
+    
     // form a new segment with this cluster ...
     // good for a new segement ...
     temp_cluster->dijkstra_shortest_paths(cloud.pts[temp_segments.at(max_length_cluster).special_A],2);
@@ -1056,16 +1061,23 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
     temp_segments_1.push_back(tmp_sg);
     temp_segments_2.push_back(tmp_sg);
 
-   
+    //std::cout <<"abc: "<< std::endl;
     
+    std::set<int> tmp_del_set;
     // examine the rest of points ...
     for (auto it = remaining_segments.begin(); it!=remaining_segments.end(); it++){
+
+      //  std::cout << *it << std::endl;
+      // std::cout << " a " << ncounts[*it] << std::endl;
+      
       //reset
       temp_segments.at(*it).number_not_faked = 0;
       temp_segments.at(*it).max_dis_u = 0;
       temp_segments.at(*it).max_dis_v = 0;
       temp_segments.at(*it).max_dis_w = 0;
 
+      
+      
       for (size_t j=0;j!=ncounts[*it];j++){
   	// also judge whether this track is fake ...
   	WCP::Point p(cloud.pts[sep_clusters[*it].at(j)].x, cloud.pts[sep_clusters[*it].at(j)].y, cloud.pts[sep_clusters[*it].at(j)].z);
@@ -1092,10 +1104,13 @@ void WCPPID::NeutrinoID::find_other_segments(WCPPID::PR3DCluster* temp_cluster, 
        	   (temp_segments.at(*it).length < 3.5*units::cm  // very short & fake
        	    || (temp_segments.at(*it).number_not_faked < 0.25 * temp_segments.at(*it).number_points || temp_segments.at(*it).number_not_faked < 0.4 * temp_segments.at(*it).number_points && temp_segments.at(*it).length < 7 * units::cm) && temp_segments.at(*it).max_dis_u/units::cm < 3 && temp_segments.at(*it).max_dis_v/units::cm < 3 && temp_segments.at(*it).max_dis_w/units::cm < 3 && temp_segments.at(*it).max_dis_u + temp_segments.at(*it).max_dis_v + temp_segments.at(*it).max_dis_w < 6*units::cm)  // many fake things and very close to each other ...
        	)
-       	 remaining_segments.erase(*it);
+	 tmp_del_set.insert(*it);
+       //       	 remaining_segments.erase(*it);
       
     }
-
+    for (auto it = tmp_del_set.begin(); it != tmp_del_set.end(); it++){
+      remaining_segments.erase(*it);
+    }
     /* for (auto it = remaining_segments.begin(); it!=remaining_segments.end(); it++){ */
     /*   std::cout << "jaja1: " << *it << " " << temp_segments.at(*it).number_not_faked << " " << temp_segments.at(*it).number_points << " " <<  temp_segments.at(*it).max_dis_u/units::cm << " " << temp_segments.at(*it).max_dis_v/units::cm << " " << temp_segments.at(*it).max_dis_w/units::cm << " " << temp_segments.at(*it).length/units::cm << std::endl; */
     /* } */
