@@ -1308,6 +1308,9 @@ void WCPPID::NeutrinoID::calculate_shower_kinematics(){
 	// long muon ...
 	shower->calculate_kinematics_long_muon(segments_in_long_muon);
 	double kine_charge = cal_kine_charge(shower);
+
+	//std::cout << "haha: " << kine_charge << std::endl;
+	
 	shower->set_kine_charge(kine_charge);
 	shower->set_flag_kinematics(true);
       }

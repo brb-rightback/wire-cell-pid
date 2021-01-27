@@ -89,6 +89,9 @@ double WCPPID::NeutrinoID::cal_kine_charge(WCPPID::WCShower *shower){
     recom_factor = 0.35;
   }
 
+  //std::cout << fudge_factor << " " << recom_factor << std::endl;
+
+  
   double sum_u_charge = 0;
   double sum_v_charge = 0;
   double sum_w_charge = 0;

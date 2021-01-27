@@ -299,9 +299,11 @@ void WCPPID::WCShower::calculate_kinematics_long_muon(std::set<WCPPID::ProtoSegm
    }
    kenergy_range = start_segment->cal_kine_range(L);
    kenergy_dQdx = start_segment->cal_kine_dQdx(vec_dQ, vec_dx);
-   // long muon ...
+   // long muon ... // should be improve in the future using range ...
    kenergy_best = kenergy_dQdx;
 
+   //std::cout << kenergy_range <<  " " << kenergy_dQdx << " " << kenergy_best << std::endl;
+   
    init_dir = start_segment->cal_dir_3vector();
    if (start_segment->get_flag_dir()==1){
      start_point = start_segment->get_point_vec().front();

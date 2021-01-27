@@ -1313,10 +1313,12 @@ double WCPPID::ProtoSegment::cal_kine_dQdx(std::vector<double>& vec_dQ, std::vec
   double kine_energy =0;
   Double_t alpha = 1.0;
   Double_t beta = 0.255;
+  
   for (size_t i=0;i!=vec_dQ.size();i++){
     Double_t dQdx = vec_dQ.at(i)/(vec_dx.at(i) + 1e-9) * units::cm;
     if (dQdx/43e3 > 1000) dQdx = 0;
 
+    
     //std::cout << id << " " << i << " " << dQdx/43e3 << std::endl;
     
     Double_t dEdx = (exp(dQdx * 23.6e-6*beta/1.38/0.273) - alpha)/(beta/1.38/0.273) * units::MeV/units::cm;
