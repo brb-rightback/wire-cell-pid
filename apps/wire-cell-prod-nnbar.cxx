@@ -21,8 +21,8 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-  if (argc < 4) {
-    cerr << "usage: wire-cell-prod-nue /path/to/ChannelWireGeometry.txt /path/to/matching.root #entry -d[data=0, overlay=1, full mc=2]" << endl;
+  if (argc < 5) {
+    cerr << "usage: wire-cell-prod-nue /path/to/ChannelWireGeometry.txt /path/to/matching.root #entry #spec_cluster_id -d[data=0, overlay=1, full mc=2]" << endl;
     return 1;
   }
   TH1::AddDirectory(kFALSE);
@@ -69,6 +69,8 @@ int main(int argc, char* argv[])
   }
   dl_vtx_cut = dl_vtx_cut * units::cm;
 
+  
+  
   int flag_data = 1; // data
   if(datatier==1 || datatier==2) flag_data=0; // overlay, full mc
   bool flag_match_data = true;
@@ -97,6 +99,8 @@ int main(int argc, char* argv[])
 
   TString filename = argv[2];
   int entry_no = atoi(argv[3]);
+  int spec_cluster_id = atoi(argv[4]);
+  std::cout << "Special Cluster ID for nnbar: " << spec_cluster_id << std::endl;
   
   TFile *file = new TFile(filename);
   TTree *Trun = (TTree*)file->Get("Trun");
@@ -1268,6 +1272,9 @@ int main(int argc, char* argv[])
    double first_t_dis = live_clusters.at(0)->get_mcells().front()->GetTimeSlice()*time_slice_width - live_clusters.at(0)->get_mcells().front()->get_sampling_points().front().x;
   double offset_t = first_t_dis/time_slice_width;
 
+
+  // std::cout << "Xin: " << offset_t << std::endl; 
+  
   // test the fiducial volume cut 
   fid->set_offset_t(offset_t);
   
@@ -1281,59 +1288,135 @@ int main(int argc, char* argv[])
   //  ct_point_cloud.UpdateDeadChs();
   ct_point_cloud.build_kdtree_index();
 
-  // examine the clustering ... 
-  std::vector<std::pair<int, Opflash*> > to_be_checked;
+  
+  // find the correct time for the special cluster id ...
+  double spec_cluster_flash_time = -1e9;
   for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
     // double flash_time = map_flash_info[it->first].second;
-    double flash_time = map_flash_info[it->first]->get_time();
-    if ( (flash_time <= lowerwindow || flash_time >= upperwindow)) continue;
-    to_be_checked.push_back(std::make_pair(it->second, map_flash_info[it->first]) );
-  }
-  
-  WCPPID::Protect_Over_Clustering(eventTime,to_be_checked, live_clusters, map_cluster_parent_id, map_parentid_clusters, ct_point_cloud, flag_match_data, run_no, time_offset, nrebin, time_slice_width, flag_timestamp);
-  
-  for (size_t i=0; i!=live_clusters.size();i++){
-    if (live_clusters.at(i)->get_point_cloud()==0){
-      WCPPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
-      live_clusters.at(i)->Create_point_cloud();
-    }
-  }
-  
-  
-  std::vector<WCPPID::NeutrinoID *> neutrino_vec;
-  std::map<std::pair<int, int>, WCPPID::NeutrinoID* > map_flash_tpc_pair_neutrino_id;
-  // Code to select nue ...
-  for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
-    //    double flash_time = map_flash_info[it->first].second;
-    double flash_time = map_flash_info[it->first]->get_time();
-    //std::cout << flash_time << " " << triggerbits << " " << lowerwindow << " " << upperwindow << std::endl;
-    if ( (flash_time <= lowerwindow || flash_time >= upperwindow)) continue;
-    if (map_parentid_clusters.find(it->second) == map_parentid_clusters.end()) continue;
+    spec_cluster_flash_time = map_flash_info[it->first]->get_time();
 
-    // hack for now ...
-    //continue;
-    
+    bool flag_found = false;
+
+    if (it->second == spec_cluster_id) flag_found = true;
+    //std::cout << it->second << std::endl;
     std::vector<WCPPID::PR3DCluster*> temp_clusters = map_parentid_clusters[it->second];
-    WCPPID::PR3DCluster* main_cluster = 0;
-    for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
-      if ((*it1)->get_cluster_id() == it->second){
-  	main_cluster = *it1;
-  	break;
+    for (auto it1 = temp_clusters.begin(); it1!= temp_clusters.end(); it1++){
+      //std::cout << "sub: " << (*it1)->get_cluster_id() << std::endl;
+      if ( (*it1)->get_cluster_id() == spec_cluster_id ) {
+	flag_found = true;
+	break;
       }
     }
-    std::vector<WCPPID::PR3DCluster*> additional_clusters;
-    for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
-      if (*it1 != main_cluster)
-  	additional_clusters.push_back(*it1);
-    }
-
-    double offset_x =     (flash_time - time_offset)*2./nrebin*time_slice_width;
-    WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process, flag_bdt, flag_dl_vtx, dl_vtx_cut, match_isFC);
-    
-    neutrino_vec.push_back(neutrino);
-    map_flash_tpc_pair_neutrino_id[std::make_pair(it->first, it->second)] = neutrino;
+    if (flag_found) break;
   }
 
+  //std::cout << spec_cluster_flash_time << std::endl;
+
+  std::vector<std::pair<int, Opflash*> > to_be_checked;
+  std::vector<WCPPID::NeutrinoID *> neutrino_vec;
+  std::map<std::pair<int, int>, WCPPID::NeutrinoID* > map_flash_tpc_pair_neutrino_id;
+  
+  if (spec_cluster_flash_time == -1e9){
+    // examine the clustering ... 
+    for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
+      // double flash_time = map_flash_info[it->first].second;
+      double flash_time = map_flash_info[it->first]->get_time();
+      if ( (flash_time <= lowerwindow || flash_time >= upperwindow)) continue;
+      to_be_checked.push_back(std::make_pair(it->second, map_flash_info[it->first]) );
+    }
+    
+    WCPPID::Protect_Over_Clustering(eventTime,to_be_checked, live_clusters, map_cluster_parent_id, map_parentid_clusters, ct_point_cloud, flag_match_data, run_no, time_offset, nrebin, time_slice_width, flag_timestamp);
+    
+    for (size_t i=0; i!=live_clusters.size();i++){
+      if (live_clusters.at(i)->get_point_cloud()==0){
+	WCPPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
+	live_clusters.at(i)->Create_point_cloud();
+      }
+    }
+    
+    // Code to select nue ...
+    for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
+      //    double flash_time = map_flash_info[it->first].second;
+      double flash_time = map_flash_info[it->first]->get_time();
+      //std::cout << flash_time << " " << triggerbits << " " << lowerwindow << " " << upperwindow << std::endl;
+      if ( (flash_time <= lowerwindow || flash_time >= upperwindow)) continue;
+      if (map_parentid_clusters.find(it->second) == map_parentid_clusters.end()) continue;  
+      // hack for now ...
+      //continue;
+      
+      std::vector<WCPPID::PR3DCluster*> temp_clusters = map_parentid_clusters[it->second];
+      WCPPID::PR3DCluster* main_cluster = 0;
+      for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
+	if ((*it1)->get_cluster_id() == it->second){
+	  main_cluster = *it1;
+	  break;
+	}
+      }
+      std::vector<WCPPID::PR3DCluster*> additional_clusters;
+      for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
+	if (*it1 != main_cluster)
+	  additional_clusters.push_back(*it1);
+      }
+      
+      double offset_x =     (flash_time - time_offset)*2./nrebin*time_slice_width;
+      WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process, flag_bdt, flag_dl_vtx, dl_vtx_cut, match_isFC);
+      
+      neutrino_vec.push_back(neutrino);
+      map_flash_tpc_pair_neutrino_id[std::make_pair(it->first, it->second)] = neutrino;
+    }
+  }else{
+
+    // examine the clustering ... 
+    for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
+      // double flash_time = map_flash_info[it->first].second;
+      double flash_time = map_flash_info[it->first]->get_time();
+      //      if ( (flash_time <= lowerwindow || flash_time >= upperwindow)) continue;
+      if (flash_time != spec_cluster_flash_time) continue;
+      to_be_checked.push_back(std::make_pair(it->second, map_flash_info[it->first]) );
+    }
+    
+    WCPPID::Protect_Over_Clustering(eventTime,to_be_checked, live_clusters, map_cluster_parent_id, map_parentid_clusters, ct_point_cloud, flag_match_data, run_no, time_offset, nrebin, time_slice_width, flag_timestamp);
+    
+    for (size_t i=0; i!=live_clusters.size();i++){
+      if (live_clusters.at(i)->get_point_cloud()==0){
+	WCPPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
+	live_clusters.at(i)->Create_point_cloud();
+      }
+    }
+    
+    // Code to select nue ...
+    for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
+      //    double flash_time = map_flash_info[it->first].second;
+      double flash_time = map_flash_info[it->first]->get_time();
+      //std::cout << flash_time << " " << triggerbits << " " << lowerwindow << " " << upperwindow << std::endl;
+      if (flash_time != spec_cluster_flash_time) continue;
+      //      if ( (flash_time <= lowerwindow || flash_time >= upperwindow)) continue;
+      if (map_parentid_clusters.find(it->second) == map_parentid_clusters.end()) continue;  
+      // hack for now ...
+      //continue;
+      
+      std::vector<WCPPID::PR3DCluster*> temp_clusters = map_parentid_clusters[it->second];
+      WCPPID::PR3DCluster* main_cluster = 0;
+      for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
+	if ((*it1)->get_cluster_id() == it->second){
+	  main_cluster = *it1;
+	  break;
+	}
+      }
+      std::vector<WCPPID::PR3DCluster*> additional_clusters;
+      for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
+	if (*it1 != main_cluster)
+	  additional_clusters.push_back(*it1);
+      }
+      
+      double offset_x =     (flash_time - time_offset)*2./nrebin*time_slice_width;
+      WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process, flag_bdt, flag_dl_vtx, dl_vtx_cut, match_isFC);
+      
+      neutrino_vec.push_back(neutrino);
+      map_flash_tpc_pair_neutrino_id[std::make_pair(it->first, it->second)] = neutrino;
+    }
+    
+  }
   
   // start saving ...
 
