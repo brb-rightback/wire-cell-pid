@@ -136,7 +136,7 @@ bool WCPPID::NeutrinoID::determine_overall_main_vertex_DL(){
     // hard examination ???
     bool flag_check = examine_direction(main_vertex);
     
-    
+    // std::cout << "Xin: " << map_vertex_segments[main_vertex].size() << std::endl;
     
     // examine track connected to it
     for (auto it = map_vertex_segments[main_vertex].begin(); it!= map_vertex_segments[main_vertex].end();it++){
