@@ -29,6 +29,7 @@ using namespace WCP;
 #include "NeutrinoID_nue_tagger.h"
 #include "NeutrinoID_nue_functions.h"
 #include "NeutrinoID_pio_tagger.h"
+#include "NeutrinoID_singlephoton_tagger.h"
 
 #include "NeutrinoID_numu_bdts.h"
 #include "NeutrinoID_nue_bdts.h"
@@ -235,6 +236,11 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     bool flag_long_muon = results.first;
     
     nue_tagger(results.second);
+
+    bool flag_sp = singlephoton_tagger(results.second);
+    std::cout<<"NeutrinoID.cxx line 241"<<std::endl;
+    if (flag_sp){tagger_info.photon_flag = true;}
+
     
   }
 
@@ -2090,6 +2096,250 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.mip_vec_dQ_dx_17 = 0; 
   tagger_info.mip_vec_dQ_dx_18 = 0; 
   tagger_info.mip_vec_dQ_dx_19 = 0; 
+
+  // single photon shower identification
+  tagger_info.shw_sp_flag = true;
+  tagger_info.shw_sp_num_mip_tracks = 0;
+  tagger_info.shw_sp_num_muons = 0;
+  tagger_info.shw_sp_num_pions = 0;
+  tagger_info.shw_sp_num_protons = 0;
+  tagger_info.shw_sp_proton_length_1 = -1;
+  tagger_info.shw_sp_proton_dqdx_1 = -1;
+  tagger_info.shw_sp_proton_energy_1 = -1;
+  tagger_info.shw_sp_proton_length_2 = -1;
+  tagger_info.shw_sp_proton_dqdx_2 = -1;
+  tagger_info.shw_sp_proton_energy_2 = -1;
+  tagger_info.shw_sp_n_good_showers = 0;
+  tagger_info.shw_sp_n_20mev_showers = 0;
+  tagger_info.shw_sp_n_br1_showers = 0;
+  tagger_info.shw_sp_n_br2_showers = 0;
+  tagger_info.shw_sp_n_br3_showers = 0;
+  tagger_info.shw_sp_n_br4_showers = 0;
+  tagger_info.shw_sp_n_20mev_showers = 0;
+  tagger_info.shw_sp_n_br1_showers = 0;
+  tagger_info.shw_sp_n_br2_showers = 0;
+  tagger_info.shw_sp_n_br3_showers = 0;
+  tagger_info.shw_sp_n_br4_showers = 0;
+  tagger_info.shw_sp_n_20br1_showers = 0;
+  tagger_info.shw_sp_shw_vtx_dis = -1;
+  tagger_info.shw_sp_max_shw_dis = -1;
+  tagger_info.shw_sp_energy = 0;
+  tagger_info.shw_sp_max_dQ_dx_sample = 1;
+  tagger_info.shw_sp_vec_dQ_dx_0 = 1;
+  tagger_info.shw_sp_vec_dQ_dx_1 = 1;
+  tagger_info.shw_sp_n_below_threshold = 19;
+  tagger_info.shw_sp_n_good_tracks = 0;
+  tagger_info.shw_sp_n_vertex = 1;
+  tagger_info.shw_sp_angle_beam = 0;
+  tagger_info.shw_sp_flag_all_above = false;
+  tagger_info.shw_sp_length_main = 1;
+  tagger_info.shw_sp_length_total = 1;
+  tagger_info.shw_sp_min_dQ_dx_5 = 1;
+  tagger_info.shw_sp_lowest_dQ_dx = 1;
+  tagger_info.shw_sp_iso_angle = 0;
+  tagger_info.shw_sp_n_below_zero = 0;
+  tagger_info.shw_sp_highest_dQ_dx = 1;
+  tagger_info.shw_sp_n_lowest = 1;
+  tagger_info.shw_sp_n_highest = 1;
+  tagger_info.shw_sp_stem_length = 1;
+  tagger_info.shw_sp_E_indirect_max_energy = 0;
+  tagger_info.shw_sp_flag_stem_trajectory = 0;
+  tagger_info.shw_sp_min_dis = 0;
+  tagger_info.shw_sp_n_other_vertex = 2;
+  tagger_info.shw_sp_n_stem_size = 20;
+  tagger_info.shw_sp_medium_dQ_dx = 1;
+  tagger_info.shw_sp_filled = 0;
+
+  tagger_info.shw_sp_vec_dQ_dx_2 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_3 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_4 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_5 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_6 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_7 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_8 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_9 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_10 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_11 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_12 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_13 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_14 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_15 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_16 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_17 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_18 = 0;
+  tagger_info.shw_sp_vec_dQ_dx_19 = 0;
+  tagger_info.shw_sp_vec_median_dedx = 0;
+  tagger_info.shw_sp_vec_mean_dedx = 0;
+
+  // shower pi0 identification
+  tagger_info.shw_sp_pio_flag = true;
+  tagger_info.shw_sp_pio_mip_id = 0;
+  tagger_info.shw_sp_pio_filled = 0;
+  tagger_info.shw_sp_pio_flag_pio = 0;
+
+  tagger_info.shw_sp_pio_1_flag = true;
+  tagger_info.shw_sp_pio_1_mass = 0;
+  tagger_info.shw_sp_pio_1_pio_type = 0;
+  tagger_info.shw_sp_pio_1_energy_1 = 0;
+  tagger_info.shw_sp_pio_1_energy_2 = 0;
+  tagger_info.shw_sp_pio_1_dis_1 = 0;
+  tagger_info.shw_sp_pio_1_dis_2 = 0;
+
+  // bad reconstruction
+  tagger_info.shw_sp_br_filled = 0;
+
+  tagger_info.shw_sp_br1_flag = true;
+  // br1_1
+  tagger_info.shw_sp_br1_1_flag = true;
+  tagger_info.shw_sp_br1_1_shower_type = 0;
+  tagger_info.shw_sp_br1_1_vtx_n_segs = 0;
+  tagger_info.shw_sp_br1_1_energy = 0;
+  tagger_info.shw_sp_br1_1_n_segs = 0;
+  tagger_info.shw_sp_br1_1_flag_sg_topology = 0;
+  tagger_info.shw_sp_br1_1_flag_sg_trajectory = 0;
+  tagger_info.shw_sp_br1_1_sg_length = 0;
+
+  //br1_2
+  tagger_info.shw_sp_br1_2_flag = true;
+  tagger_info.shw_sp_br1_2_energy = 0;
+  tagger_info.shw_sp_br1_2_n_connected = 0;
+  tagger_info.shw_sp_br1_2_max_length = 0;
+  tagger_info.shw_sp_br1_2_n_connected_1 = 0;
+  tagger_info.shw_sp_br1_2_vtx_n_segs = 0;
+  tagger_info.shw_sp_br1_2_n_shower_segs = 0;
+  tagger_info.shw_sp_br1_2_max_length_ratio = 1;
+  tagger_info.shw_sp_br1_2_shower_length = 0;
+
+  //br1_3
+  tagger_info.shw_sp_br1_3_flag = true;
+  tagger_info.shw_sp_br1_3_energy = 0;
+  tagger_info.shw_sp_br1_3_n_connected_p = 0;
+  tagger_info.shw_sp_br1_3_max_length_p = 0;
+  tagger_info.shw_sp_br1_3_n_shower_segs = 0;
+  tagger_info.shw_sp_br1_3_flag_sg_topology = 0;
+  tagger_info.shw_sp_br1_3_flag_sg_trajectory = 0;
+  tagger_info.shw_sp_br1_3_n_shower_main_segs = 0;
+  tagger_info.shw_sp_br1_3_sg_length = 0;
+
+  // br2
+  tagger_info.shw_sp_br2_flag = true;
+  tagger_info.shw_sp_br2_flag_single_shower = 0;
+  tagger_info.shw_sp_br2_num_valid_tracks = 0;
+  tagger_info.shw_sp_br2_energy = 0;
+  tagger_info.shw_sp_br2_angle1 = 0;
+  tagger_info.shw_sp_br2_angle2 = 0;
+  tagger_info.shw_sp_br2_angle = 0;
+  tagger_info.shw_sp_br2_angle3 = 0;
+  tagger_info.shw_sp_br2_n_shower_main_segs = 0;
+  tagger_info.shw_sp_br2_max_angle = 0;
+  tagger_info.shw_sp_br2_sg_length = 0;
+  tagger_info.shw_sp_br2_flag_sg_trajectory = 0;
+
+  // low-energy overlap
+  tagger_info.shw_sp_lol_flag = true;
+  tagger_info.shw_sp_lol_3_flag = true;
+  tagger_info.shw_sp_lol_3_angle_beam = 0;
+  tagger_info.shw_sp_lol_3_min_angle = 0;
+  tagger_info.shw_sp_lol_3_n_valid_tracks = 0;
+  tagger_info.shw_sp_lol_3_vtx_n_segs = 0;
+  tagger_info.shw_sp_lol_3_energy = 0;
+  tagger_info.shw_sp_lol_3_shower_main_length = 0;
+  tagger_info.shw_sp_lol_3_n_sum = 0;
+  tagger_info.shw_sp_lol_3_n_out = 0;
+
+
+  // br3
+  tagger_info.shw_sp_br3_1_energy = 0;
+  tagger_info.shw_sp_br3_1_n_shower_segments = 0;
+  tagger_info.shw_sp_br3_1_sg_flag_trajectory = 0;
+  tagger_info.shw_sp_br3_1_sg_direct_length = 0;
+  tagger_info.shw_sp_br3_1_sg_length = 0;
+  tagger_info.shw_sp_br3_1_total_main_length = 0;
+  tagger_info.shw_sp_br3_1_total_length = 0;
+  tagger_info.shw_sp_br3_1_iso_angle = 0;
+  tagger_info.shw_sp_br3_1_sg_flag_topology = 0;
+  tagger_info.shw_sp_br3_1_flag = true;
+
+  tagger_info.shw_sp_br3_2_n_ele = 0;
+  tagger_info.shw_sp_br3_2_n_other = 0;
+  tagger_info.shw_sp_br3_2_energy = 0;
+  tagger_info.shw_sp_br3_2_total_main_length = 0;
+  tagger_info.shw_sp_br3_2_total_length = 0;
+  tagger_info.shw_sp_br3_2_other_fid = 0;
+  tagger_info.shw_sp_br3_2_flag = true;
+
+  tagger_info.shw_sp_br3_4_acc_length = 0;
+  tagger_info.shw_sp_br3_4_total_length = 0;
+  tagger_info.shw_sp_br3_4_energy = 0;
+  tagger_info.shw_sp_br3_4_flag = true;
+
+  tagger_info.shw_sp_br3_7_energy = 0;
+  tagger_info.shw_sp_br3_7_min_angle = 0;
+  tagger_info.shw_sp_br3_7_sg_length = 0;
+  tagger_info.shw_sp_br3_7_shower_main_length = 0;
+  tagger_info.shw_sp_br3_7_flag = true;
+
+  tagger_info.shw_sp_br3_8_max_dQ_dx = 0;
+  tagger_info.shw_sp_br3_8_energy = 0;
+  tagger_info.shw_sp_br3_8_n_main_segs = 0;
+  tagger_info.shw_sp_br3_8_shower_main_length = 0;
+  tagger_info.shw_sp_br3_8_shower_length = 0;
+  tagger_info.shw_sp_br3_8_flag = true;
+
+  tagger_info.shw_sp_br3_flag = true;
+
+
+  tagger_info.shw_sp_br4_1_shower_main_length = 0;
+  tagger_info.shw_sp_br4_1_shower_total_length = 0;
+  tagger_info.shw_sp_br4_1_min_dis = 0;
+  tagger_info.shw_sp_br4_1_energy = 0;
+  tagger_info.shw_sp_br4_1_flag_avoid_muon_check = 0;
+  tagger_info.shw_sp_br4_1_n_vtx_segs = 0;
+  tagger_info.shw_sp_br4_1_n_main_segs = 0;
+  tagger_info.shw_sp_br4_1_flag = true;
+
+  tagger_info.shw_sp_br4_2_ratio_45 = 1;
+  tagger_info.shw_sp_br4_2_ratio_35 = 1;
+  tagger_info.shw_sp_br4_2_ratio_25 = 1;
+  tagger_info.shw_sp_br4_2_ratio_15 = 1;
+  tagger_info.shw_sp_br4_2_energy = 0;
+  tagger_info.shw_sp_br4_2_ratio1_45 = 1;
+  tagger_info.shw_sp_br4_2_ratio1_35 = 1;
+  tagger_info.shw_sp_br4_2_ratio1_25 = 1;
+  tagger_info.shw_sp_br4_2_ratio1_15 = 1;
+  tagger_info.shw_sp_br4_2_iso_angle = 0;
+  tagger_info.shw_sp_br4_2_iso_angle1 = 0;
+  tagger_info.shw_sp_br4_2_angle = 0;
+  tagger_info.shw_sp_br4_2_flag = true;
+
+  tagger_info.shw_sp_br4_flag = true;
+
+
+  tagger_info.shw_sp_hol_1_n_valid_tracks = 0;
+  tagger_info.shw_sp_hol_1_min_angle = 0;
+  tagger_info.shw_sp_hol_1_energy = 0;
+  tagger_info.shw_sp_hol_1_flag_all_shower = 0;
+  tagger_info.shw_sp_hol_1_min_length = 0;
+  tagger_info.shw_sp_hol_1_flag = true;
+
+  tagger_info.shw_sp_hol_2_min_angle = 0;
+  tagger_info.shw_sp_hol_2_medium_dQ_dx = 1;
+  tagger_info.shw_sp_hol_2_ncount = 0;
+  tagger_info.shw_sp_hol_2_energy = 0;
+  tagger_info.shw_sp_hol_2_flag = true;
+
+  tagger_info.shw_sp_hol_flag = true;
+
+  tagger_info.shw_sp_lem_shower_total_length = 0;
+  tagger_info.shw_sp_lem_shower_main_length = 0;
+  tagger_info.shw_sp_lem_n_3seg = 0;
+  tagger_info.shw_sp_lem_e_charge = 0;
+  tagger_info.shw_sp_lem_e_dQdx = 0;
+  tagger_info.shw_sp_lem_shower_num_segs = 0;
+  tagger_info.shw_sp_lem_shower_num_main_segs = 0;
+  tagger_info.shw_sp_lem_flag = true;
+
+
   
   // shower pi0 identification
   tagger_info.pio_flag = true;
@@ -2531,7 +2781,8 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.tro_4_score=0;
   tagger_info.tro_5_score=0;
   tagger_info.nue_score = 0;
-
+  tagger_info.photon_flag=false;
+  
   kine_pio_flag = 0;
   kine_pio_mass = 0;
   kine_pio_vtx_dis = 1000*units::cm; // 10 m

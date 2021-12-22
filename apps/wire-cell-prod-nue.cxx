@@ -1640,6 +1640,296 @@ int main(int argc, char* argv[])
     T_tagger->Branch("mip_min_dis",&tagger_info.mip_min_dis,"mip_min_dis/F");
     T_tagger->Branch("mip_filled",&tagger_info.mip_filled,"mip_filled/F");
 
+        //single photon shower
+    T_tagger->Branch("shw_sp_flag",&tagger_info.shw_sp_flag,"shw_sp_flag/F");
+    T_tagger->Branch("shw_sp_num_mip_tracks",&tagger_info.shw_sp_num_mip_tracks,"shw_sp_num_mip_tracks/F");
+    T_tagger->Branch("shw_sp_num_muons",&tagger_info.shw_sp_num_muons,"shw_sp_num_muons/F");
+    T_tagger->Branch("shw_sp_num_pions",&tagger_info.shw_sp_num_pions,"shw_sp_num_pions/F");
+    T_tagger->Branch("shw_sp_num_protons",&tagger_info.shw_sp_num_protons,"shw_sp_num_protons/F");
+    T_tagger->Branch("shw_sp_proton_length_1",&tagger_info.shw_sp_proton_length_1,"shw_sp_proton_length_1/F");
+    T_tagger->Branch("shw_sp_proton_dqdx_1",&tagger_info.shw_sp_proton_dqdx_1,"shw_sp_proton_dqdx_1/F");
+    T_tagger->Branch("shw_sp_proton_energy_1",&tagger_info.shw_sp_proton_energy_1,"shw_sp_proton_energy_1/F");
+    T_tagger->Branch("shw_sp_proton_length_2",&tagger_info.shw_sp_proton_length_2,"shw_sp_proton_length_2/F");
+    T_tagger->Branch("shw_sp_proton_dqdx_2",&tagger_info.shw_sp_proton_dqdx_2,"shw_sp_proton_dqdx_2/F");
+    T_tagger->Branch("shw_sp_proton_energy_2",&tagger_info.shw_sp_proton_energy_2,"shw_sp_proton_energy_2/F");
+    T_tagger->Branch("shw_sp_n_good_showers",&tagger_info.shw_sp_n_good_showers,"shw_sp_n_good_showers/F");
+    T_tagger->Branch("shw_sp_n_20mev_showers",&tagger_info.shw_sp_n_20mev_showers,"shw_sp_n_20mev_showers/F");
+    T_tagger->Branch("shw_sp_n_br1_showers",&tagger_info.shw_sp_n_br1_showers,"shw_sp_n_br1_showers/F");
+    T_tagger->Branch("shw_sp_n_br2_showers",&tagger_info.shw_sp_n_br2_showers,"shw_sp_n_br2_showers/F");
+    T_tagger->Branch("shw_sp_n_br3_showers",&tagger_info.shw_sp_n_br3_showers,"shw_sp_n_br3_showers/F");
+    T_tagger->Branch("shw_sp_n_br4_showers",&tagger_info.shw_sp_n_br4_showers,"shw_sp_n_br4_showers/F");
+    T_tagger->Branch("shw_sp_n_20mev_showers",&tagger_info.shw_sp_n_20br1_showers,"shw_sp_n_20br1_showers/F");
+    T_tagger->Branch("shw_sp_20mev_showers",&tagger_info.shw_sp_20mev_showers);
+    T_tagger->Branch("shw_sp_br1_showers",&tagger_info.shw_sp_br1_showers);
+    T_tagger->Branch("shw_sp_br2_showers",&tagger_info.shw_sp_br2_showers);
+    T_tagger->Branch("shw_sp_br3_showers",&tagger_info.shw_sp_br3_showers);
+    T_tagger->Branch("shw_sp_br4_showers",&tagger_info.shw_sp_br4_showers);
+    T_tagger->Branch("shw_sp_shw_vtx_dis",&tagger_info.shw_sp_shw_vtx_dis,"shw_sp_shw_vtx_dis/F");
+    T_tagger->Branch("shw_sp_max_shw_dis",&tagger_info.shw_sp_max_shw_dis,"shw_sp_max_shw_dis/F");
+    T_tagger->Branch("shw_sp_energy",&tagger_info.shw_sp_energy,"shw_sp_energy/F");
+
+    T_tagger->Branch("shw_sp_vec_median_dedx",&tagger_info.shw_sp_vec_median_dedx,"shw_sp_vec_median_dedx/F");
+    T_tagger->Branch("shw_sp_vec_median_dedx",&tagger_info.shw_sp_vec_mean_dedx,"shw_sp_vec_mean_dedx/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_0",&tagger_info.shw_sp_vec_dQ_dx_0,"shw_sp_vec_dQ_dx_0/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_1",&tagger_info.shw_sp_vec_dQ_dx_1,"shw_sp_vec_dQ_dx_1/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_2",&tagger_info.shw_sp_vec_dQ_dx_2,"shw_sp_vec_dQ_dx_2/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_3",&tagger_info.shw_sp_vec_dQ_dx_3,"shw_sp_vec_dQ_dx_3/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_4",&tagger_info.shw_sp_vec_dQ_dx_4,"shw_sp_vec_dQ_dx_4/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_5",&tagger_info.shw_sp_vec_dQ_dx_5,"shw_sp_vec_dQ_dx_5/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_6",&tagger_info.shw_sp_vec_dQ_dx_6,"shw_sp_vec_dQ_dx_6/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_7",&tagger_info.shw_sp_vec_dQ_dx_7,"shw_sp_vec_dQ_dx_7/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_8",&tagger_info.shw_sp_vec_dQ_dx_8,"shw_sp_vec_dQ_dx_8/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_9",&tagger_info.shw_sp_vec_dQ_dx_9,"shw_sp_vec_dQ_dx_9/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_10",&tagger_info.shw_sp_vec_dQ_dx_10,"shw_sp_vec_dQ_dx_10/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_11",&tagger_info.shw_sp_vec_dQ_dx_11,"shw_sp_vec_dQ_dx_11/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_12",&tagger_info.shw_sp_vec_dQ_dx_12,"shw_sp_vec_dQ_dx_12/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_13",&tagger_info.shw_sp_vec_dQ_dx_13,"shw_sp_vec_dQ_dx_13/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_14",&tagger_info.shw_sp_vec_dQ_dx_14,"shw_sp_vec_dQ_dx_14/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_15",&tagger_info.shw_sp_vec_dQ_dx_15,"shw_sp_vec_dQ_dx_15/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_16",&tagger_info.shw_sp_vec_dQ_dx_16,"shw_sp_vec_dQ_dx_16/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_17",&tagger_info.shw_sp_vec_dQ_dx_17,"shw_sp_vec_dQ_dx_17/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_18",&tagger_info.shw_sp_vec_dQ_dx_18,"shw_sp_vec_dQ_dx_18/F");
+    T_tagger->Branch("shw_sp_vec_dQ_dx_19",&tagger_info.shw_sp_vec_dQ_dx_19,"shw_sp_vec_dQ_dx_19/F");
+
+    T_tagger->Branch("shw_sp_max_dQ_dx_sample",&tagger_info.shw_sp_max_dQ_dx_sample,"shw_sp_max_dQ_dx_sample/F");
+    T_tagger->Branch("shw_sp_n_below_threshold",&tagger_info.shw_sp_n_below_threshold,"shw_sp_n_below_threshold/F");
+    T_tagger->Branch("shw_sp_n_below_zero",&tagger_info.shw_sp_n_below_zero,"shw_sp_n_below_zero/F");
+    T_tagger->Branch("shw_sp_n_lowest",&tagger_info.shw_sp_n_lowest,"shw_sp_n_lowest/F");
+    T_tagger->Branch("shw_sp_n_highest",&tagger_info.shw_sp_n_highest,"shw_sp_n_highest/F");
+
+    T_tagger->Branch("shw_sp_lowest_dQ_dx",&tagger_info.shw_sp_lowest_dQ_dx,"shw_sp_lowest_dQ_dx/F");
+    T_tagger->Branch("shw_sp_highest_dQ_dx",&tagger_info.shw_sp_highest_dQ_dx,"shw_sp_highest_dQ_dx/F");
+    T_tagger->Branch("shw_sp_medium_dQ_dx",&tagger_info.shw_sp_medium_dQ_dx,"shw_sp_medium_dQ_dx/F");
+    T_tagger->Branch("shw_sp_stem_length",&tagger_info.shw_sp_stem_length,"shw_sp_stem_length/F");
+    T_tagger->Branch("shw_sp_length_main",&tagger_info.shw_sp_length_main,"shw_sp_length_main/F");
+    T_tagger->Branch("shw_sp_length_total",&tagger_info.shw_sp_length_total,"shw_sp_length_total/F");
+    T_tagger->Branch("shw_sp_angle_beam",&tagger_info.shw_sp_angle_beam,"shw_sp_angle_beam/F");
+    T_tagger->Branch("shw_sp_iso_angle",&tagger_info.shw_sp_iso_angle,"shw_sp_iso_angle/F");
+
+    T_tagger->Branch("shw_sp_n_vertex",&tagger_info.shw_sp_n_vertex,"shw_sp_n_vertex/F");
+    T_tagger->Branch("shw_sp_n_good_tracks",&tagger_info.shw_sp_n_good_tracks,"shw_sp_n_good_tracks/F");
+    T_tagger->Branch("shw_sp_E_indirect_max_energy",&tagger_info.shw_sp_E_indirect_max_energy,"shw_sp_E_indirect_max_energy/F");
+    T_tagger->Branch("shw_sp_flag_all_above",&tagger_info.shw_sp_flag_all_above,"shw_sp_flag_all_above/F");
+    T_tagger->Branch("shw_sp_min_dQ_dx_5",&tagger_info.shw_sp_min_dQ_dx_5,"shw_sp_min_dQ_dx_5/F");
+    T_tagger->Branch("shw_sp_n_other_vertex",&tagger_info.shw_sp_n_other_vertex,"shw_sp_n_other_vertex/F");
+    T_tagger->Branch("shw_sp_n_stem_size",&tagger_info.shw_sp_n_stem_size,"shw_sp_n_stem_size/F");
+    T_tagger->Branch("shw_sp_flag_stem_trajectory",&tagger_info.shw_sp_flag_stem_trajectory,"shw_sp_flag_stem_trajectory/F");
+    T_tagger->Branch("shw_sp_min_dis",&tagger_info.shw_sp_min_dis,"shw_sp_min_dis/F");
+    T_tagger->Branch("shw_sp_filled",&tagger_info.shw_sp_filled,"shw_sp_filled/F");
+    // pio ...
+    T_tagger->Branch("shw_sp_pio_flag",&tagger_info.shw_sp_pio_flag,"shw_sp_pio_flag/F");
+    T_tagger->Branch("shw_sp_pio_mip_id",&tagger_info.shw_sp_pio_mip_id,"shw_sp_pio_mip_id/F");
+    T_tagger->Branch("shw_sp_pio_filled",&tagger_info.shw_sp_pio_filled,"shw_sp_pio_filled/F");
+    T_tagger->Branch("shw_sp_pio_flag_pio",&tagger_info.shw_sp_pio_flag_pio,"shw_sp_pio_flag_pio/F");
+
+    T_tagger->Branch("shw_sp_pio_1_flag",&tagger_info.shw_sp_pio_1_flag,"shw_sp_pio_1_flag/F");
+    T_tagger->Branch("shw_sp_pio_1_mass",&tagger_info.shw_sp_pio_1_mass,"shw_sp_pio_1_mass/F");
+    T_tagger->Branch("shw_sp_pio_1_pio_type",&tagger_info.shw_sp_pio_1_pio_type,"shw_sp_pio_1_pio_type/F");
+    T_tagger->Branch("shw_sp_pio_1_energy_1",&tagger_info.shw_sp_pio_1_energy_1,"shw_sp_pio_1_energy_1/F");
+    T_tagger->Branch("shw_sp_pio_1_energy_2",&tagger_info.shw_sp_pio_1_energy_2,"shw_sp_pio_1_energy_2/F");
+    T_tagger->Branch("shw_sp_pio_1_dis_1",&tagger_info.shw_sp_pio_1_dis_1,"shw_sp_pio_1_dis_1/F");
+    T_tagger->Branch("shw_sp_pio_1_dis_2",&tagger_info.shw_sp_pio_1_dis_2,"shw_sp_pio_1_dis_2/F");
+
+    T_tagger->Branch("shw_sp_pio_2_v_dis2",&tagger_info.shw_sp_pio_2_v_dis2);
+    T_tagger->Branch("shw_sp_pio_2_v_angle2",&tagger_info.shw_sp_pio_2_v_angle2);
+    T_tagger->Branch("shw_sp_pio_2_v_acc_length",&tagger_info.shw_sp_pio_2_v_acc_length);
+    T_tagger->Branch("shw_sp_pio_2_v_flag",&tagger_info.shw_sp_pio_2_v_flag);
+
+    T_tagger->Branch("shw_sp_br_filled",&tagger_info.shw_sp_br_filled,"shw_sp_br_filled/F");
+
+    T_tagger->Branch("shw_sp_br1_flag",&tagger_info.shw_sp_br1_flag,"shw_sp_br1_flag/F");
+
+    T_tagger->Branch("shw_sp_br1_1_flag",&tagger_info.shw_sp_br1_1_flag,"shw_sp_br1_1_flag/F");
+    T_tagger->Branch("shw_sp_br1_1_shower_type",&tagger_info.shw_sp_br1_1_shower_type,"shw_sp_br1_1_shower_type/F");
+    T_tagger->Branch("shw_sp_br1_1_vtx_n_segs",&tagger_info.shw_sp_br1_1_vtx_n_segs,"shw_sp_br1_1_vtx_n_segs/F");
+    T_tagger->Branch("shw_sp_br1_1_energy",&tagger_info.shw_sp_br1_1_energy,"shw_sp_br1_1_energy/F");
+    T_tagger->Branch("shw_sp_br1_1_n_segs",&tagger_info.shw_sp_br1_1_n_segs,"shw_sp_br1_1_n_segs/F");
+    T_tagger->Branch("shw_sp_br1_1_flag_sg_topology",&tagger_info.shw_sp_br1_1_flag_sg_topology,"shw_sp_br1_1_flag_sg_topology/F");
+    T_tagger->Branch("shw_sp_br1_1_flag_sg_trajectory",&tagger_info.shw_sp_br1_1_flag_sg_trajectory,"shw_sp_br1_1_flag_sg_trajectory/F");
+    T_tagger->Branch("shw_sp_br1_1_sg_length",&tagger_info.shw_sp_br1_1_sg_length,"shw_sp_br1_1_sg_length/F");
+
+    T_tagger->Branch("shw_sp_br1_2_flag",&tagger_info.shw_sp_br1_2_flag,"shw_sp_br1_2_flag/F");
+    T_tagger->Branch("shw_sp_br1_2_energy",&tagger_info.shw_sp_br1_2_energy,"shw_sp_br1_2_energy/F");
+    T_tagger->Branch("shw_sp_br1_2_n_connected",&tagger_info.shw_sp_br1_2_n_connected,"shw_sp_br1_2_n_connected/F");
+    T_tagger->Branch("shw_sp_br1_2_max_length",&tagger_info.shw_sp_br1_2_max_length,"shw_sp_br1_2_max_length/F");
+    T_tagger->Branch("shw_sp_br1_2_n_connected_1",&tagger_info.shw_sp_br1_2_n_connected_1,"shw_sp_br1_2_n_connected_1/F");
+    T_tagger->Branch("shw_sp_br1_2_vtx_n_segs",&tagger_info.shw_sp_br1_2_vtx_n_segs,"shw_sp_br1_2_vtx_n_segs/F");
+    T_tagger->Branch("shw_sp_br1_2_n_shower_segs",&tagger_info.shw_sp_br1_2_n_shower_segs,"shw_sp_br1_2_n_shower_segs/F");
+    T_tagger->Branch("shw_sp_br1_2_max_length_ratio",&tagger_info.shw_sp_br1_2_max_length_ratio,"shw_sp_br1_2_max_length_ratio/F");
+    T_tagger->Branch("shw_sp_br1_2_shower_length",&tagger_info.shw_sp_br1_2_shower_length,"shw_sp_br1_2_shower_length/F");
+
+    T_tagger->Branch("shw_sp_br1_3_flag",&tagger_info.shw_sp_br1_3_flag,"shw_sp_br1_3_flag/F");
+    T_tagger->Branch("shw_sp_br1_3_energy",&tagger_info.shw_sp_br1_3_energy,"shw_sp_br1_3_energy/F");
+    T_tagger->Branch("shw_sp_br1_3_n_connected_p",&tagger_info.shw_sp_br1_3_n_connected_p,"shw_sp_br1_3_n_connected_p/F");
+    T_tagger->Branch("shw_sp_br1_3_max_length_p",&tagger_info.shw_sp_br1_3_max_length_p,"shw_sp_br1_3_max_length_p/F");
+    T_tagger->Branch("shw_sp_br1_3_n_shower_segs",&tagger_info.shw_sp_br1_3_n_shower_segs,"shw_sp_br1_3_n_shower_segs/F");
+    T_tagger->Branch("shw_sp_br1_3_flag_sg_topology",&tagger_info.shw_sp_br1_3_flag_sg_topology,"shw_sp_br1_3_flag_sg_topology/F");
+    T_tagger->Branch("shw_sp_br1_3_flag_sg_trajectory",&tagger_info.shw_sp_br1_3_flag_sg_trajectory,"shw_sp_br1_3_flag_sg_trajectory/F");
+    T_tagger->Branch("shw_sp_br1_3_n_shower_main_segs",&tagger_info.shw_sp_br1_3_n_shower_main_segs,"shw_sp_br1_3_n_shower_main_segs/F");
+    T_tagger->Branch("shw_sp_br1_3_sg_length",&tagger_info.shw_sp_br1_3_sg_length,"shw_sp_br1_3_sg_length/F");
+
+    T_tagger->Branch("shw_sp_br2_flag",&tagger_info.shw_sp_br2_flag,"shw_sp_br2_flag/F");
+    T_tagger->Branch("shw_sp_br2_flag_single_shower",&tagger_info.shw_sp_br2_flag_single_shower,"shw_sp_br2_flag_single_shower/F");
+    T_tagger->Branch("shw_sp_br2_num_valid_tracks",&tagger_info.shw_sp_br2_num_valid_tracks,"shw_sp_br2_num_valid_tracks/F");
+    T_tagger->Branch("shw_sp_br2_energy",&tagger_info.shw_sp_br2_energy,"shw_sp_br2_energy/F");
+    T_tagger->Branch("shw_sp_br2_angle1",&tagger_info.shw_sp_br2_angle1,"shw_sp_br2_angle1/F");
+    T_tagger->Branch("shw_sp_br2_angle2",&tagger_info.shw_sp_br2_angle2,"shw_sp_br2_angle2/F");
+    T_tagger->Branch("shw_sp_br2_angle",&tagger_info.shw_sp_br2_angle,"shw_sp_br2_angle/F");
+    T_tagger->Branch("shw_sp_br2_angle3",&tagger_info.shw_sp_br2_angle3,"shw_sp_br2_angle3/F");
+    T_tagger->Branch("shw_sp_br2_n_shower_main_segs",&tagger_info.shw_sp_br2_n_shower_main_segs,"shw_sp_br2_n_shower_main_segs/F");
+    T_tagger->Branch("shw_sp_br2_max_angle",&tagger_info.shw_sp_br2_max_angle,"shw_sp_br2_max_angle/F");
+    T_tagger->Branch("shw_sp_br2_sg_length",&tagger_info.shw_sp_br2_sg_length,"shw_sp_br2_sg_length/F");
+    T_tagger->Branch("shw_sp_br2_flag_sg_trajectory",&tagger_info.shw_sp_br2_flag_sg_trajectory,"shw_sp_br2_flag_sg_trajectory/F");
+
+
+    T_tagger->Branch("shw_sp_lol_flag",&tagger_info.shw_sp_lol_flag,"shw_sp_lol_flag/F");
+
+    T_tagger->Branch("shw_sp_lol_1_v_energy",&tagger_info.shw_sp_lol_1_v_energy);
+    T_tagger->Branch("shw_sp_lol_1_v_vtx_n_segs",&tagger_info.shw_sp_lol_1_v_vtx_n_segs);
+    T_tagger->Branch("shw_sp_lol_1_v_nseg",&tagger_info.shw_sp_lol_1_v_nseg);
+    T_tagger->Branch("shw_sp_lol_1_v_angle",&tagger_info.shw_sp_lol_1_v_angle);
+    T_tagger->Branch("shw_sp_lol_1_v_flag",&tagger_info.shw_sp_lol_1_v_flag);
+
+    T_tagger->Branch("shw_sp_lol_2_v_length",&tagger_info.shw_sp_lol_2_v_length);
+    T_tagger->Branch("shw_sp_lol_2_v_angle",&tagger_info.shw_sp_lol_2_v_angle);
+    T_tagger->Branch("shw_sp_lol_2_v_type",&tagger_info.shw_sp_lol_2_v_type);
+    T_tagger->Branch("shw_sp_lol_2_v_vtx_n_segs",&tagger_info.shw_sp_lol_2_v_vtx_n_segs);
+    T_tagger->Branch("shw_sp_lol_2_v_energy",&tagger_info.shw_sp_lol_2_v_energy);
+    T_tagger->Branch("shw_sp_lol_2_v_shower_main_length",&tagger_info.shw_sp_lol_2_v_shower_main_length);
+    T_tagger->Branch("shw_sp_lol_2_v_flag_dir_weak",&tagger_info.shw_sp_lol_2_v_flag_dir_weak);
+    T_tagger->Branch("shw_sp_lol_2_v_flag",&tagger_info.shw_sp_lol_2_v_flag);
+
+    T_tagger->Branch("shw_sp_lol_3_angle_beam",&tagger_info.shw_sp_lol_3_angle_beam,"shw_sp_lol_3_angle_beam/F");
+    T_tagger->Branch("shw_sp_lol_3_n_valid_tracks",&tagger_info.shw_sp_lol_3_n_valid_tracks,"shw_sp_lol_3_n_valid_tracks/F");
+    T_tagger->Branch("shw_sp_lol_3_min_angle",&tagger_info.shw_sp_lol_3_min_angle,"shw_sp_lol_3_min_angle/F");
+    T_tagger->Branch("shw_sp_lol_3_vtx_n_segs",&tagger_info.shw_sp_lol_3_vtx_n_segs,"shw_sp_lol_3_vtx_n_segs/F");
+    T_tagger->Branch("shw_sp_lol_3_energy",&tagger_info.shw_sp_lol_3_energy,"shw_sp_lol_3_energy/F");
+    T_tagger->Branch("shw_sp_lol_3_shower_main_length",&tagger_info.shw_sp_lol_3_shower_main_length,"shw_sp_lol_3_shower_main_length/F");
+    T_tagger->Branch("shw_sp_lol_3_n_out",&tagger_info.shw_sp_lol_3_n_out,"shw_sp_lol_3_n_out/F");
+    T_tagger->Branch("shw_sp_lol_3_n_sum",&tagger_info.shw_sp_lol_3_n_sum,"shw_sp_lol_3_n_sum/F");
+    T_tagger->Branch("shw_sp_lol_3_flag",&tagger_info.shw_sp_lol_3_flag,"shw_sp_lol_3_flag/F");
+
+    T_tagger->Branch("shw_sp_br3_1_energy",&tagger_info.shw_sp_br3_1_energy,"shw_sp_br3_1_energy/F");
+    T_tagger->Branch("shw_sp_br3_1_n_shower_segments",&tagger_info.shw_sp_br3_1_n_shower_segments,"shw_sp_br3_1_n_shower_segments/F");
+    T_tagger->Branch("shw_sp_br3_1_sg_flag_trajectory",&tagger_info.shw_sp_br3_1_sg_flag_trajectory,"shw_sp_br3_1_sg_flag_trajectory/F");
+    T_tagger->Branch("shw_sp_br3_1_sg_direct_length",&tagger_info.shw_sp_br3_1_sg_direct_length,"shw_sp_br3_1_sg_direct_length/F");
+    T_tagger->Branch("shw_sp_br3_1_sg_length",&tagger_info.shw_sp_br3_1_sg_length,"shw_sp_br3_1_sg_length/F");
+    T_tagger->Branch("shw_sp_br3_1_total_main_length",&tagger_info.shw_sp_br3_1_total_main_length,"shw_sp_br3_1_total_main_length/F");
+    T_tagger->Branch("shw_sp_br3_1_total_length",&tagger_info.shw_sp_br3_1_total_length,"shw_sp_br3_1_total_length/F");
+    T_tagger->Branch("shw_sp_br3_1_iso_angle",&tagger_info.shw_sp_br3_1_iso_angle,"shw_sp_br3_1_iso_angle/F");
+    T_tagger->Branch("shw_sp_br3_1_sg_flag_topology",&tagger_info.shw_sp_br3_1_sg_flag_topology,"shw_sp_br3_1_sg_flag_topology/F");
+    T_tagger->Branch("shw_sp_br3_1_flag",&tagger_info.shw_sp_br3_1_flag,"shw_sp_br3_1_flag/F");
+
+    T_tagger->Branch("shw_sp_br3_2_n_ele",&tagger_info.shw_sp_br3_2_n_ele,"shw_sp_br3_2_n_ele/F");
+    T_tagger->Branch("shw_sp_br3_2_n_other",&tagger_info.shw_sp_br3_2_n_other,"shw_sp_br3_2_n_other/F");
+    T_tagger->Branch("shw_sp_br3_2_energy",&tagger_info.shw_sp_br3_2_energy,"shw_sp_br3_2_energy/F");
+    T_tagger->Branch("shw_sp_br3_2_total_main_length",&tagger_info.shw_sp_br3_2_total_main_length,"shw_sp_br3_2_total_main_length/F");
+    T_tagger->Branch("shw_sp_br3_2_total_length",&tagger_info.shw_sp_br3_2_total_length,"shw_sp_br3_2_total_length/F");
+    T_tagger->Branch("shw_sp_br3_2_other_fid",&tagger_info.shw_sp_br3_2_other_fid,"shw_sp_br3_2_other_fid/F");
+    T_tagger->Branch("shw_sp_br3_2_flag",&tagger_info.shw_sp_br3_2_flag,"shw_sp_br3_2_flag/F");
+
+    T_tagger->Branch("shw_sp_br3_3_v_energy",&tagger_info.shw_sp_br3_3_v_energy);
+    T_tagger->Branch("shw_sp_br3_3_v_angle",&tagger_info.shw_sp_br3_3_v_angle);
+    T_tagger->Branch("shw_sp_br3_3_v_dir_length",&tagger_info.shw_sp_br3_3_v_dir_length);
+    T_tagger->Branch("shw_sp_br3_3_v_length",&tagger_info.shw_sp_br3_3_v_length);
+    T_tagger->Branch("shw_sp_br3_3_v_flag",&tagger_info.shw_sp_br3_3_v_flag);
+
+    T_tagger->Branch("shw_sp_br3_4_acc_length", &tagger_info.shw_sp_br3_4_acc_length, "br3_4_acc_length/F");
+    T_tagger->Branch("shw_sp_br3_4_total_length", &tagger_info.shw_sp_br3_4_total_length, "br3_4_total_length/F");
+    T_tagger->Branch("shw_sp_br3_4_energy", &tagger_info.shw_sp_br3_4_energy, "br3_4_energy/F");
+    T_tagger->Branch("shw_sp_br3_4_flag", &tagger_info.shw_sp_br3_4_flag, "br3_4_flag/F");
+
+    T_tagger->Branch("shw_sp_br3_5_v_dir_length", &tagger_info.shw_sp_br3_5_v_dir_length);
+    T_tagger->Branch("shw_sp_br3_5_v_total_length", &tagger_info.shw_sp_br3_5_v_total_length);
+    T_tagger->Branch("shw_sp_br3_5_v_flag_avoid_muon_check", &tagger_info.shw_sp_br3_5_v_flag_avoid_muon_check);
+    T_tagger->Branch("shw_sp_br3_5_v_n_seg", &tagger_info.shw_sp_br3_5_v_n_seg);
+    T_tagger->Branch("shw_sp_br3_5_v_angle", &tagger_info.shw_sp_br3_5_v_angle);
+    T_tagger->Branch("shw_sp_br3_5_v_sg_length", &tagger_info.shw_sp_br3_5_v_sg_length);
+    T_tagger->Branch("shw_sp_br3_5_v_energy", &tagger_info.shw_sp_br3_5_v_energy);
+    T_tagger->Branch("shw_sp_br3_5_v_n_main_segs", &tagger_info.shw_sp_br3_5_v_n_main_segs);
+    T_tagger->Branch("shw_sp_br3_5_v_n_segs", &tagger_info.shw_sp_br3_5_v_n_segs);
+    T_tagger->Branch("shw_sp_br3_5_v_shower_main_length", &tagger_info.shw_sp_br3_5_v_shower_main_length);
+    T_tagger->Branch("shw_sp_br3_5_v_shower_total_length", &tagger_info.shw_sp_br3_5_v_shower_total_length);
+    T_tagger->Branch("shw_sp_br3_5_v_flag", &tagger_info.shw_sp_br3_5_v_flag);
+
+    T_tagger->Branch("shw_sp_br3_6_v_angle",&tagger_info.shw_sp_br3_6_v_angle);
+    T_tagger->Branch("shw_sp_br3_6_v_angle1",&tagger_info.shw_sp_br3_6_v_angle1);
+    T_tagger->Branch("shw_sp_br3_6_v_flag_shower_trajectory",&tagger_info.shw_sp_br3_6_v_flag_shower_trajectory);
+    T_tagger->Branch("shw_sp_br3_6_v_direct_length",&tagger_info.shw_sp_br3_6_v_direct_length);
+    T_tagger->Branch("shw_sp_br3_6_v_length",&tagger_info.shw_sp_br3_6_v_length);
+    T_tagger->Branch("shw_sp_br3_6_v_n_other_vtx_segs",&tagger_info.shw_sp_br3_6_v_n_other_vtx_segs);
+    T_tagger->Branch("shw_sp_br3_6_v_energy",&tagger_info.shw_sp_br3_6_v_energy);
+    T_tagger->Branch("shw_sp_br3_6_v_flag",&tagger_info.shw_sp_br3_6_v_flag);
+
+    T_tagger->Branch("shw_sp_br3_7_energy",&tagger_info.shw_sp_br3_7_energy,"shw_sp_br3_7_energy/F");
+    T_tagger->Branch("shw_sp_br3_7_min_angle",&tagger_info.shw_sp_br3_7_min_angle,"shw_sp_br3_7_min_angle/F");
+    T_tagger->Branch("shw_sp_br3_7_sg_length",&tagger_info.shw_sp_br3_7_sg_length,"shw_sp_br3_7_sg_length/F");
+    T_tagger->Branch("shw_sp_br3_7_main_length",&tagger_info.shw_sp_br3_7_shower_main_length,"shw_sp_br3_7_shower_main_length/F");
+    T_tagger->Branch("shw_sp_br3_7_flag",&tagger_info.shw_sp_br3_7_flag,"shw_sp_br3_7_flag/F");
+
+    T_tagger->Branch("shw_sp_br3_8_max_dQ_dx",&tagger_info.shw_sp_br3_8_max_dQ_dx,"shw_sp_br3_8_max_dQ_dx/F");
+    T_tagger->Branch("shw_sp_br3_8_energy",&tagger_info.shw_sp_br3_8_energy,"shw_sp_br3_8_energy/F");
+    T_tagger->Branch("shw_sp_br3_8_n_main_segs",&tagger_info.shw_sp_br3_8_n_main_segs,"shw_sp_br3_8_n_main_segs/F");
+    T_tagger->Branch("shw_sp_br3_8_shower_main_length",&tagger_info.shw_sp_br3_8_shower_main_length,"shw_sp_br3_8_shower_main_length/F");
+    T_tagger->Branch("shw_sp_br3_8_shower_length",&tagger_info.shw_sp_br3_8_shower_length,"shw_sp_br3_8_shower_length/F");
+    T_tagger->Branch("shw_sp_br3_8_flag",&tagger_info.shw_sp_br3_8_flag,"shw_sp_br3_8_flag/F");
+
+    T_tagger->Branch("shw_sp_br3_flag",&tagger_info.shw_sp_br3_flag,"shw_sp_br3_flag/F");
+
+
+    T_tagger->Branch("shw_sp_br4_1_shower_main_length", &tagger_info.shw_sp_br4_1_shower_main_length, "br4_1_shower_main_length/F");
+    T_tagger->Branch("shw_sp_br4_1_shower_total_length", &tagger_info.shw_sp_br4_1_shower_total_length, "br4_1_shower_total_length/F");
+    T_tagger->Branch("shw_sp_br4_1_min_dis", &tagger_info.shw_sp_br4_1_min_dis, "br4_1_min_dis/F");
+    T_tagger->Branch("shw_sp_br4_1_energy", &tagger_info.shw_sp_br4_1_energy, "br4_1_energy/F");
+    T_tagger->Branch("shw_sp_br4_1_flag_avoid_muon_check", &tagger_info.shw_sp_br4_1_flag_avoid_muon_check, "br4_1_flag_avoid_muon_check/F");
+    T_tagger->Branch("shw_sp_br4_1_n_vtx_segs", &tagger_info.shw_sp_br4_1_n_vtx_segs, "br4_1_n_vtx_segs/F");
+    T_tagger->Branch("shw_sp_br4_1_n_main_segs", &tagger_info.shw_sp_br4_1_n_main_segs, "br4_1_n_main_segs/F");
+    T_tagger->Branch("shw_sp_br4_1_flag", &tagger_info.shw_sp_br4_1_flag, "br4_1_flag/F");
+
+    T_tagger->Branch("shw_sp_br4_2_ratio_45", &tagger_info.shw_sp_br4_2_ratio_45, "br4_2_ratio_45/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio_35", &tagger_info.shw_sp_br4_2_ratio_35, "br4_2_ratio_35/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio_25", &tagger_info.shw_sp_br4_2_ratio_25, "br4_2_ratio_25/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio_15", &tagger_info.shw_sp_br4_2_ratio_15, "br4_2_ratio_15/F");
+    T_tagger->Branch("shw_sp_br4_2_energy",   &tagger_info.shw_sp_br4_2_energy, "br4_2_energy/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio1_45", &tagger_info.shw_sp_br4_2_ratio1_45, "br4_2_ratio1_45/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio1_35", &tagger_info.shw_sp_br4_2_ratio1_35, "br4_2_ratio1_35/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio1_25", &tagger_info.shw_sp_br4_2_ratio1_25, "br4_2_ratio1_25/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio1_15", &tagger_info.shw_sp_br4_2_ratio1_15, "br4_2_ratio1_15/F");
+    T_tagger->Branch("shw_sp_br4_2_iso_angle", &tagger_info.shw_sp_br4_2_iso_angle, "br4_2_iso_angle/F");
+    T_tagger->Branch("shw_sp_br4_2_iso_angle1", &tagger_info.shw_sp_br4_2_iso_angle1, "br4_2_iso_angle1/F");
+    T_tagger->Branch("shw_sp_br4_2_angle", &tagger_info.shw_sp_br4_2_angle, "br4_2_angle/F");
+    T_tagger->Branch("shw_sp_br4_2_flag", &tagger_info.shw_sp_br4_2_flag, "br4_2_flag/F");
+
+    T_tagger->Branch("shw_sp_br4_flag", &tagger_info.shw_sp_br4_flag, "br4_flag/F");
+
+
+    T_tagger->Branch("shw_sp_hol_1_n_valid_tracks", &tagger_info.shw_sp_hol_1_n_valid_tracks,"shw_sp_hol_1_n_valid_tracks/F");
+    T_tagger->Branch("shw_sp_hol_1_min_angle", &tagger_info.shw_sp_hol_1_min_angle,"shw_sp_hol_1_min_angle/F");
+    T_tagger->Branch("shw_sp_hol_1_energy", &tagger_info.shw_sp_hol_1_energy,"shw_sp_hol_1_energy/F");
+    T_tagger->Branch("shw_sp_hol_1_flag_all_shower", &tagger_info.shw_sp_hol_1_flag_all_shower,"shw_sp_hol_1_flag_all_shower/F");
+    T_tagger->Branch("shw_sp_hol_1_min_length", &tagger_info.shw_sp_hol_1_min_length,"shw_sp_hol_1_min_length/F");
+    T_tagger->Branch("shw_sp_hol_1_flag", &tagger_info.shw_sp_hol_1_flag,"shw_sp_hol_1_flag/F");
+
+    T_tagger->Branch("shw_sp_hol_2_min_angle", &tagger_info.shw_sp_hol_2_min_angle,"shw_sp_hol_2_min_angle/F");
+    T_tagger->Branch("shw_sp_hol_2_medium_dQ_dx", &tagger_info.shw_sp_hol_2_medium_dQ_dx,"shw_sp_hol_2_medium_dQ_dx/F");
+    T_tagger->Branch("shw_sp_hol_2_ncount", &tagger_info.shw_sp_hol_2_ncount,"shw_sp_hol_2_ncount/F");
+    T_tagger->Branch("shw_sp_hol_2_energy", &tagger_info.shw_sp_hol_2_energy,"shw_sp_hol_2_energy/F");
+    T_tagger->Branch("shw_sp_hol_2_flag", &tagger_info.shw_sp_hol_2_flag,"shw_sp_hol_2_flag/F");
+
+    T_tagger->Branch("shw_sp_hol_flag", &tagger_info.shw_sp_hol_flag,"shw_sp_hol_flag/F");
+
+    T_tagger->Branch("shw_sp_lem_shower_total_length",&tagger_info.shw_sp_lem_shower_total_length,"shw_sp_lem_shower_total_length/F");
+    T_tagger->Branch("shw_sp_lem_shower_main_length",&tagger_info.shw_sp_lem_shower_main_length,"shw_sp_lem_shower_main_length/F");
+    T_tagger->Branch("shw_sp_lem_n_3seg",&tagger_info.shw_sp_lem_n_3seg,"shw_sp_lem_n_3seg/F");
+    T_tagger->Branch("shw_sp_lem_e_charge",&tagger_info.shw_sp_lem_e_charge,"shw_sp_lem_e_charge/F");
+    T_tagger->Branch("shw_sp_lem_e_dQdx",&tagger_info.shw_sp_lem_e_dQdx,"shw_sp_lem_e_dQdx/F");
+    T_tagger->Branch("shw_sp_lem_shower_num_segs",&tagger_info.shw_sp_lem_shower_num_segs,"shw_sp_lem_shower_num_segs/F");
+    T_tagger->Branch("shw_sp_lem_shower_num_main_segs",&tagger_info.shw_sp_lem_shower_num_main_segs,"shw_sp_lem_shower_num_main_segs/F");
+    T_tagger->Branch("shw_sp_lem_flag",&tagger_info.shw_sp_lem_flag,"shw_sp_lem_flag/F");
+
+
+
+    
     // pio ...
     T_tagger->Branch("pio_flag",&tagger_info.pio_flag,"pio_flag/F");
     T_tagger->Branch("pio_mip_id",&tagger_info.pio_mip_id,"pio_mip_id/F");

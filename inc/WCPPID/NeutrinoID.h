@@ -205,6 +205,307 @@ namespace WCPPID{
     float mip_vec_dQ_dx_17;
     float mip_vec_dQ_dx_18;
     float mip_vec_dQ_dx_19;
+
+       //single photon shower id
+    float shw_sp_flag;
+    float shw_sp_filled;
+    // variables
+    float shw_sp_num_mip_tracks;
+    float shw_sp_num_muons;
+    float shw_sp_num_pions;
+    float shw_sp_num_protons;
+    float shw_sp_proton_length_1;
+    float shw_sp_proton_dqdx_1;
+    float shw_sp_proton_energy_1;
+    float shw_sp_proton_length_2;
+    float shw_sp_proton_dqdx_2;
+    float shw_sp_proton_energy_2;
+    float shw_sp_n_good_showers;
+    float shw_sp_n_20mev_showers;
+    float shw_sp_n_br1_showers;
+    float shw_sp_n_br2_showers;
+    float shw_sp_n_br3_showers;
+    float shw_sp_n_br4_showers;
+    float shw_sp_n_20br1_showers;
+    std::vector<int> shw_sp_20mev_showers;
+    std::vector<int> shw_sp_br1_showers;
+    std::vector<int> shw_sp_br2_showers;
+    std::vector<int> shw_sp_br3_showers;
+    std::vector<int> shw_sp_br4_showers;
+    float shw_sp_shw_vtx_dis;
+    float shw_sp_max_shw_dis;
+    float shw_sp_energy;
+    //float shw_sp_n_end_reduction;
+    //float shw_sp_n_first_mip;
+    //float shw_sp_n_first_non_mip;
+    //float shw_sp_n_first_non_mip_1;
+    //float shw_sp_n_first_non_mip_2;
+    float shw_sp_vec_dQ_dx_0;
+    float shw_sp_vec_dQ_dx_1;
+    float shw_sp_max_dQ_dx_sample;
+    float shw_sp_n_below_threshold;
+    float shw_sp_n_below_zero;
+    float shw_sp_n_lowest;
+    float shw_sp_n_highest;
+    float shw_sp_lowest_dQ_dx;
+    float shw_sp_highest_dQ_dx;
+    float shw_sp_medium_dQ_dx;
+    float shw_sp_stem_length;
+    float shw_sp_length_main;
+    float shw_sp_length_total;
+    float shw_sp_angle_beam;
+    float shw_sp_iso_angle;
+    float shw_sp_n_vertex;
+    float shw_sp_n_good_tracks;
+    float shw_sp_E_indirect_max_energy;
+    float shw_sp_flag_all_above;
+    float shw_sp_min_dQ_dx_5;
+    float shw_sp_n_other_vertex;
+    float shw_sp_n_stem_size;
+    float shw_sp_flag_stem_trajectory;
+    float shw_sp_min_dis;
+
+
+    // extra
+    float shw_sp_vec_dQ_dx_2;
+    float shw_sp_vec_dQ_dx_3;
+    float shw_sp_vec_dQ_dx_4;
+    float shw_sp_vec_dQ_dx_5;
+    float shw_sp_vec_dQ_dx_6;
+    float shw_sp_vec_dQ_dx_7;
+    float shw_sp_vec_dQ_dx_8;
+    float shw_sp_vec_dQ_dx_9;
+    float shw_sp_vec_dQ_dx_10;
+    float shw_sp_vec_dQ_dx_11;
+    float shw_sp_vec_dQ_dx_12;
+    float shw_sp_vec_dQ_dx_13;
+    float shw_sp_vec_dQ_dx_14;
+    float shw_sp_vec_dQ_dx_15;
+    float shw_sp_vec_dQ_dx_16;
+    float shw_sp_vec_dQ_dx_17;
+    float shw_sp_vec_dQ_dx_18;
+    float shw_sp_vec_dQ_dx_19;
+    float shw_sp_vec_median_dedx;
+    float shw_sp_vec_mean_dedx;
+
+    // photon shower pi0 identification
+    float shw_sp_pio_flag;
+    float shw_sp_pio_mip_id;    // pre-condition to run this tagger
+    float shw_sp_pio_filled;
+    float shw_sp_pio_flag_pio;  // only when this is true, we run the first part of tagger ...
+    // first part of tagger ...
+    float shw_sp_pio_1_flag;
+    float shw_sp_pio_1_mass;
+    float shw_sp_pio_1_pio_type;
+    float shw_sp_pio_1_energy_1;
+    float shw_sp_pio_1_energy_2;
+    float shw_sp_pio_1_dis_1;
+    float shw_sp_pio_1_dis_2;
+    // second part of tagger
+    std::vector<float> shw_sp_pio_2_v_dis2;
+    std::vector<float> shw_sp_pio_2_v_angle2;
+    std::vector<float> shw_sp_pio_2_v_acc_length;
+    std::vector<float> shw_sp_pio_2_v_flag;
+
+    // single photon low-energy michel
+    float shw_sp_lem_shower_total_length;
+    float shw_sp_lem_shower_main_length;
+    float shw_sp_lem_n_3seg;
+    float shw_sp_lem_e_charge;
+    float shw_sp_lem_e_dQdx;
+    float shw_sp_lem_shower_num_segs;
+    float shw_sp_lem_shower_num_main_segs;
+    float shw_sp_lem_flag;
+
+    // bad reconstruction_1
+    float shw_sp_br_filled;
+    float shw_sp_br1_flag;
+
+    //bad reconstruction 1_1
+    float shw_sp_br1_1_flag;
+    float shw_sp_br1_1_shower_type;
+    float shw_sp_br1_1_vtx_n_segs;
+    float shw_sp_br1_1_energy;
+    float shw_sp_br1_1_n_segs;
+    float shw_sp_br1_1_flag_sg_topology;
+    float shw_sp_br1_1_flag_sg_trajectory;
+    float shw_sp_br1_1_sg_length;
+
+    // bad reconstruction 1_2
+    float shw_sp_br1_2_flag;
+    float shw_sp_br1_2_energy;
+    float shw_sp_br1_2_n_connected;
+    float shw_sp_br1_2_max_length;
+    float shw_sp_br1_2_n_connected_1;
+    float shw_sp_br1_2_vtx_n_segs;
+    float shw_sp_br1_2_n_shower_segs;
+    float shw_sp_br1_2_max_length_ratio;
+    float shw_sp_br1_2_shower_length;
+
+    // bad_reconstruction 1_3
+    float shw_sp_br1_3_flag;
+    float shw_sp_br1_3_energy;
+    float shw_sp_br1_3_n_connected_p;
+    float shw_sp_br1_3_max_length_p;
+    float shw_sp_br1_3_n_shower_segs;
+    float shw_sp_br1_3_flag_sg_topology;
+    float shw_sp_br1_3_flag_sg_trajectory;
+    float shw_sp_br1_3_n_shower_main_segs;
+    float shw_sp_br1_3_sg_length;
+
+
+    // bad reconstruction 2
+    float shw_sp_br2_flag;
+    float shw_sp_br2_flag_single_shower;
+    float shw_sp_br2_num_valid_tracks;
+    float shw_sp_br2_energy;
+    float shw_sp_br2_angle1;
+    float shw_sp_br2_angle2;
+    float shw_sp_br2_angle;
+    float shw_sp_br2_angle3;
+    float shw_sp_br2_n_shower_main_segs;
+    float shw_sp_br2_max_angle;
+    float shw_sp_br2_sg_length;
+    float shw_sp_br2_flag_sg_trajectory;
+
+
+     //bad reconstruction 3
+    float shw_sp_br3_1_energy;
+    float shw_sp_br3_1_n_shower_segments;
+    float shw_sp_br3_1_sg_flag_trajectory;
+    float shw_sp_br3_1_sg_direct_length;
+    float shw_sp_br3_1_sg_length;
+    float shw_sp_br3_1_total_main_length;
+    float shw_sp_br3_1_total_length;
+    float shw_sp_br3_1_iso_angle;
+    float shw_sp_br3_1_sg_flag_topology;
+    float shw_sp_br3_1_flag;
+
+    float shw_sp_br3_2_n_ele;
+    float shw_sp_br3_2_n_other;
+    float shw_sp_br3_2_energy;
+    float shw_sp_br3_2_total_main_length;
+    float shw_sp_br3_2_total_length;
+    float shw_sp_br3_2_other_fid;
+    float shw_sp_br3_2_flag;
+
+    std::vector<float> shw_sp_br3_3_v_energy;
+    std::vector<float> shw_sp_br3_3_v_angle;
+    std::vector<float> shw_sp_br3_3_v_dir_length;
+    std::vector<float> shw_sp_br3_3_v_length;
+    std::vector<float> shw_sp_br3_3_v_flag;
+
+    float shw_sp_br3_4_acc_length;
+    float shw_sp_br3_4_total_length;
+    float shw_sp_br3_4_energy;
+    float shw_sp_br3_4_flag;
+
+    std::vector<float> shw_sp_br3_5_v_dir_length;
+    std::vector<float> shw_sp_br3_5_v_total_length;
+    std::vector<float> shw_sp_br3_5_v_flag_avoid_muon_check;
+    std::vector<float> shw_sp_br3_5_v_n_seg;
+    std::vector<float> shw_sp_br3_5_v_angle;
+    std::vector<float> shw_sp_br3_5_v_sg_length;
+    std::vector<float> shw_sp_br3_5_v_energy;
+    std::vector<float> shw_sp_br3_5_v_n_main_segs;
+    std::vector<float> shw_sp_br3_5_v_n_segs;
+    std::vector<float> shw_sp_br3_5_v_shower_main_length;
+    std::vector<float> shw_sp_br3_5_v_shower_total_length;
+    std::vector<float> shw_sp_br3_5_v_flag;
+
+    std::vector<float> shw_sp_br3_6_v_angle;
+    std::vector<float> shw_sp_br3_6_v_angle1;
+    std::vector<float> shw_sp_br3_6_v_flag_shower_trajectory;
+    std::vector<float> shw_sp_br3_6_v_direct_length;
+    std::vector<float> shw_sp_br3_6_v_length;
+    std::vector<float> shw_sp_br3_6_v_n_other_vtx_segs;
+    std::vector<float> shw_sp_br3_6_v_energy;
+    std::vector<float> shw_sp_br3_6_v_flag;
+
+    float shw_sp_br3_7_energy;
+    float shw_sp_br3_7_min_angle;
+    float shw_sp_br3_7_sg_length;
+    float shw_sp_br3_7_shower_main_length;
+    float shw_sp_br3_7_flag;
+
+    float shw_sp_br3_8_max_dQ_dx;
+    float shw_sp_br3_8_energy;
+    float shw_sp_br3_8_n_main_segs;
+    float shw_sp_br3_8_shower_main_length;
+    float shw_sp_br3_8_shower_length;
+    float shw_sp_br3_8_flag;
+
+    float shw_sp_br3_flag;
+
+    // BR 4
+    float shw_sp_br4_1_shower_main_length;
+    float shw_sp_br4_1_shower_total_length;
+    float shw_sp_br4_1_min_dis;
+    float shw_sp_br4_1_energy;
+    float shw_sp_br4_1_flag_avoid_muon_check;
+    float shw_sp_br4_1_n_vtx_segs;
+    float shw_sp_br4_1_n_main_segs;
+    float shw_sp_br4_1_flag;
+
+    float shw_sp_br4_2_ratio_45;
+    float shw_sp_br4_2_ratio_35;
+    float shw_sp_br4_2_ratio_25;
+    float shw_sp_br4_2_ratio_15;
+    float shw_sp_br4_2_energy;
+    float shw_sp_br4_2_ratio1_45;
+    float shw_sp_br4_2_ratio1_35;
+    float shw_sp_br4_2_ratio1_25;
+    float shw_sp_br4_2_ratio1_15;
+    float shw_sp_br4_2_iso_angle;
+    float shw_sp_br4_2_iso_angle1;
+    float shw_sp_br4_2_angle;
+    float shw_sp_br4_2_flag;
+
+    float shw_sp_br4_flag;
+
+    // high energy overlap
+    float shw_sp_hol_1_n_valid_tracks;
+    float shw_sp_hol_1_min_angle;
+    float shw_sp_hol_1_energy;
+    float shw_sp_hol_1_flag_all_shower;
+    float shw_sp_hol_1_min_length;
+    float shw_sp_hol_1_flag;
+
+    float shw_sp_hol_2_min_angle;
+    float shw_sp_hol_2_medium_dQ_dx;
+    float shw_sp_hol_2_ncount;
+    float shw_sp_hol_2_energy;
+    float shw_sp_hol_2_flag;
+
+    float shw_sp_hol_flag;
+
+    // low-energy overlap ...
+    float shw_sp_lol_flag;
+
+    std::vector<float> shw_sp_lol_1_v_energy;
+    std::vector<float> shw_sp_lol_1_v_vtx_n_segs;
+    std::vector<float> shw_sp_lol_1_v_nseg;
+    std::vector<float> shw_sp_lol_1_v_angle;
+    std::vector<float> shw_sp_lol_1_v_flag;
+
+    std::vector<float> shw_sp_lol_2_v_length;
+    std::vector<float> shw_sp_lol_2_v_angle;
+    std::vector<float> shw_sp_lol_2_v_type;
+    std::vector<float> shw_sp_lol_2_v_vtx_n_segs;
+    std::vector<float> shw_sp_lol_2_v_energy;
+    std::vector<float> shw_sp_lol_2_v_shower_main_length;
+    std::vector<float> shw_sp_lol_2_v_flag_dir_weak;
+    std::vector<float> shw_sp_lol_2_v_flag;
+
+    float shw_sp_lol_3_angle_beam;
+    float shw_sp_lol_3_n_valid_tracks;
+    float shw_sp_lol_3_min_angle;
+    float shw_sp_lol_3_vtx_n_segs;
+    float shw_sp_lol_3_energy;
+    float shw_sp_lol_3_shower_main_length;
+    float shw_sp_lol_3_n_out;
+    float shw_sp_lol_3_n_sum;
+    float shw_sp_lol_3_flag;
     
     // shower pi0 identification
     float pio_flag;
@@ -815,6 +1116,9 @@ namespace WCPPID{
     float tro_4_score;
     float tro_5_score;
     float nue_score;
+
+    float photon_flag;
+
     
   };
 
@@ -1096,7 +1400,10 @@ namespace WCPPID{
     std::pair<int, int> count_daughters(WCPPID::WCShower *max_long_muon);
     
     bool nue_tagger(double muon_kine_energy = 0);
+    bool singlephoton_tagger(double muon_kine_energy = 0);
+     
 
+    
     float cal_numu_bdts();
     float cal_numu_bdts_xgboost();
     float cal_cosmict_2_4_bdt(float default_val);
@@ -1181,6 +1488,19 @@ namespace WCPPID{
 
     bool low_energy_michel(WCPPID::WCShower*shower, bool flag_print = false, bool flag_fill = false);
 
+      //single photon
+
+    int mip_identification_sp(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, bool flag_single_shower, bool flag_strong_check = false, bool flag_print = false, bool flag_fill = false);
+    bool pi0_identification_sp(WCPPID::ProtoVertex* vertex, WCPPID::ProtoSegment *sg, WCPPID::WCShower *shower, double threshild  = 0, bool flag_fill = false);
+    bool bad_reconstruction_sp(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
+    bool bad_reconstruction_1_sp(WCPPID::WCShower* shower, bool flag_single_shower, int num_valid_tracks, bool flag_fill = false);
+    bool low_energy_overlapping_sp(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill =false);
+    bool bad_reconstruction_2_sp(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
+    // main shower stem separated from the other parts
+    bool bad_reconstruction_3_sp(WCPPID::ProtoVertex *vertex, WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
+    bool high_energy_overlapping_sp(WCPPID::WCShower* shower, bool flag_print = false, bool flag_fill = false);
+    bool low_energy_michel_sp(WCPPID::WCShower*shower, bool flag_print = false, bool flag_fill = false);
+    
     void init_tagger_info();
     TaggerInfo tagger_info;
     KineInfo get_kine_info(){return kine_info;};
