@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     return 1;
   }
   TH1::AddDirectory(kFALSE);
-  
+
 
   bool flag_debug_output = true; // output
   int datatier = 0; // data=0, overlay=1, full mc=2
@@ -36,9 +36,9 @@ int main(int argc, char* argv[])
   bool flag_dl_vtx = true;
   bool flag_PosEfield_corr = false;// Position and E-field correction for SCE
   bool flag_timestamp = false;
-  
+
   float dl_vtx_cut = 2.0;
-  
+
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
     case 'd':
@@ -73,10 +73,10 @@ int main(int argc, char* argv[])
   if(datatier==1 || datatier==2) flag_data=0; // overlay, full mc
   bool flag_match_data = true;
   if (datatier == 2) flag_match_data = false; // if MC we do not take into account the dead PMT
-  
+
   WCPPID::ExecMon em("starting");
   cout << em("load geometry") << endl;
-  
+
   WCPSst::GeomDataSource gds(argv[1]);
   std::vector<double> ex = gds.extent();
   cout << "Extent: "
@@ -84,12 +84,12 @@ int main(int argc, char* argv[])
        << " y:" << ex[1]/units::m << " m"
        << " z:" << ex[2]/units::m << " m"
        << endl;
-  cout << "Pitch: " << gds.pitch(WirePlaneType_t(0)) 
-       << " " << gds.pitch(WirePlaneType_t(1)) 
+  cout << "Pitch: " << gds.pitch(WirePlaneType_t(0))
+       << " " << gds.pitch(WirePlaneType_t(1))
        << " " << gds.pitch(WirePlaneType_t(2))
        << endl;
-  cout << "Angle: " << gds.angle(WirePlaneType_t(0)) 
-       << " " << gds.angle(WirePlaneType_t(1)) 
+  cout << "Angle: " << gds.angle(WirePlaneType_t(0))
+       << " " << gds.angle(WirePlaneType_t(1))
        << " " << gds.angle(WirePlaneType_t(2))
        << endl;
   std::cout << argv[2] << " " << argv[3] << std::endl;
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 
   TString filename = argv[2];
   int entry_no = atoi(argv[3]);
-  
+
   TFile *file = new TFile(filename);
   TTree *Trun = (TTree*)file->Get("Trun");
 
@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
   std::vector<std::vector<int>> *timesliceChannel = new std::vector<std::vector<int>>;
   std::vector<std::vector<int>> *raw_charge = new std::vector<std::vector<int>>;
   std::vector<std::vector<int>> *raw_charge_err = new std::vector<std::vector<int>>;
-  
+
   Trun->SetBranchAddress("eventNo",&event_no);
   Trun->SetBranchAddress("runNo",&run_no);
   Trun->SetBranchAddress("subRunNo",&subrun_no);
@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
     flag_timestamp = false;
   }
 
- 
+
 
   unsigned int triggerbits;
   Trun->SetBranchAddress("triggerBits",&triggerbits);
@@ -135,27 +135,27 @@ int main(int argc, char* argv[])
   Trun->SetBranchAddress("eve_num",&eve_num);
   Trun->SetBranchAddress("nrebin",&nrebin);
   Trun->SetBranchAddress("time_offset",&time_offset);
-  
+
   Trun->SetBranchAddress("timesliceId",&timesliceId);
   Trun->SetBranchAddress("timesliceChannel",&timesliceChannel);
   Trun->SetBranchAddress("raw_charge",&raw_charge);
   Trun->SetBranchAddress("raw_charge_err",&raw_charge_err);
-    
+
   Trun->GetEntry(entry_no);
 
-  
-  
+
+
   double lowerwindow = 0;
   double upperwindow = 0;
   if((triggerbits>>11) & 1U) { lowerwindow=3.1875; upperwindow=4.96876;} // bnb
   if(((triggerbits>>12) & 1U)){ lowerwindow=4.9295; upperwindow=16.6483; } // NUMI
   if(((triggerbits>>9) & 1U) && time_offset != 5) { lowerwindow=3.5625; upperwindow=5.34376; } // extbnb
   if (((triggerbits>>9) & 1U) && time_offset == 5){ lowerwindow=5.3045; upperwindow=17.0233;}
-  
-  
-   // define singleton ... 
+
+
+   // define singleton ...
   TPCParams& mp = Singleton<TPCParams>::Instance();
-  
+
   double pitch_u = gds.pitch(WirePlaneType_t(0));
   double pitch_v = gds.pitch(WirePlaneType_t(1));
   double pitch_w = gds.pitch(WirePlaneType_t(2));
@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
   double angle_u = gds.angle(WirePlaneType_t(0));
   double angle_v = gds.angle(WirePlaneType_t(1));
   double angle_w = gds.angle(WirePlaneType_t(2));
-  
+
   mp.set_pitch_u(pitch_u);
   mp.set_pitch_v(pitch_v);
   mp.set_pitch_w(pitch_w);
@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
   mp.set_ts_width(time_slice_width);
   if (flag_calib_corr==1)
     mp.init_corr_files();
-  mp.init_PID_dq_dx();   // default 
+  mp.init_PID_dq_dx();   // default
   //mp.init_PID_dq_dx("input_data_files/stopping_ave_dQ_dx_v2.root");
 
   mp.init_Pos_Efield_SCE_correction();
@@ -194,8 +194,8 @@ int main(int argc, char* argv[])
   const GeomWire *wwire = gds.by_planeindex(WirePlaneType_t(2),0);
   double first_u_dis = gds.wire_dist(*uwire) ; // first U wire center ...
   double first_v_dis = gds.wire_dist(*vwire) ; // first V wire center ...
-  double first_w_dis = gds.wire_dist(*wwire) ; // first W wire center ... 
-  
+  double first_w_dis = gds.wire_dist(*wwire) ; // first W wire center ...
+
   mp.set_first_u_dis(first_u_dis);
   mp.set_first_v_dis(first_v_dis);
   mp.set_first_w_dis(first_w_dis);
@@ -221,8 +221,8 @@ int main(int argc, char* argv[])
   }
 
   std::cout << "A: " << match_isFC << std::endl;
-  
-  
+
+
   TTree *T_flash = (TTree*)file->Get("T_flash");
   Double_t time;
   Double_t low_time, high_time;
@@ -232,7 +232,7 @@ int main(int argc, char* argv[])
   Double_t total_PE;
   Double_t PE[32],PE_err[32];
   // std::vector<int> matched_tpc_ids;
-  
+
   T_flash->SetBranchAddress("runNo",&temp_run_no);
   T_flash->SetBranchAddress("subRunNo",&temp_subrun_no);
   T_flash->SetBranchAddress("eventNo",&temp_event_no);
@@ -250,7 +250,7 @@ int main(int argc, char* argv[])
   T_flash->SetBranchAddress("fired_channels",&fired_channels);
   T_flash->SetBranchAddress("l1_fired_time",&l1_fired_time);
   T_flash->SetBranchAddress("l1_fired_pe",&l1_fired_pe);
-  
+
   TTree *T_match = (TTree*)file->Get("T_match");
   T_match->SetBranchAddress("runNo",&temp_run_no);
   T_match->SetBranchAddress("subRunNo",&temp_subrun_no);
@@ -258,7 +258,7 @@ int main(int argc, char* argv[])
   Int_t tpc_cluster_id;
   Int_t event_type;
   T_match->SetBranchAddress("tpc_cluster_id",&tpc_cluster_id); // parent cluster id
-  T_match->SetBranchAddress("flash_id",&flash_id);  // flash id 
+  T_match->SetBranchAddress("flash_id",&flash_id);  // flash id
   T_match->SetBranchAddress("event_type",&event_type);
 
   Double_t strength;
@@ -276,19 +276,19 @@ int main(int argc, char* argv[])
   double chi2;
   int ndf;
   double cluster_length;
-  
+
   T_match->SetBranchAddress("ks_dis",&ks_dis);
   T_match->SetBranchAddress("chi2",&chi2);
   T_match->SetBranchAddress("ndf",&ndf);
   T_match->SetBranchAddress("cluster_length",&cluster_length);
-  
-  
+
+
   //  std::map<int, std::pair<int, double> > map_flash_info;
   std::map<int, Opflash* > map_flash_info;
   std::map<int, int> map_flash_tpc_ids;
   std::map<int, int> map_tpc_flash_ids;
   std::map<std::pair<int, int>, int> map_flash_tpc_pair_type;
-  
+
   OpflashSelection flashes;
   for (int i=0;i!=T_flash->GetEntries();i++){
     T_flash->GetEntry(i);
@@ -306,7 +306,7 @@ int main(int argc, char* argv[])
     map_flash_tpc_pair_type[std::make_pair(flash_id, tpc_cluster_id)] = event_type;
   }
   // no need to reconstruct flash ...
-  
+
 
   // load mcell
   TTree *TC = (TTree*)file->Get("TC");
@@ -337,7 +337,7 @@ int main(int argc, char* argv[])
   std::vector<std::vector<double>> *wire_charge_err_u_vec = new std::vector<std::vector<double>>;
   std::vector<std::vector<double>> *wire_charge_err_v_vec = new std::vector<std::vector<double>>;
   std::vector<std::vector<double>> *wire_charge_err_w_vec = new std::vector<std::vector<double>>;
-  
+
   TC->SetBranchAddress("cluster_id",&cluster_id_vec);
   TC->SetBranchAddress("parent_cluster_id",&parent_cluster_id);
   TC->SetBranchAddress("time_slice",&time_slice_vec);
@@ -386,8 +386,8 @@ int main(int argc, char* argv[])
 								   1./time_slice_width, 1./pitch_u, 1./pitch_v, 1./pitch_w, // slope
 								   angle_u,angle_v,angle_w,// angle
 								   3*units::cm, 117*units::cm, -116*units::cm, 0*units::cm, 1037*units::cm, 0*units::cm, 256*units::cm, flag_data);
-  
-  // load cells ... 
+
+  // load cells ...
   GeomCellSelection mcells;
   //  CellIndexMap map_mcell_cluster_id;
   WCPPID::PR3DClusterSelection live_clusters;
@@ -411,21 +411,21 @@ int main(int argc, char* argv[])
     std::vector<double> wire_charge_err_u = wire_charge_err_u_vec->at(i);
     std::vector<double> wire_charge_err_v = wire_charge_err_v_vec->at(i);
     std::vector<double> wire_charge_err_w = wire_charge_err_w_vec->at(i);
-    
+
     mcell->SetTimeSlice(time_slice);
-    
+
     mcell->set_uq(uq_vec->at(i));
     mcell->set_vq(vq_vec->at(i));
     mcell->set_wq(wq_vec->at(i));
-    
+
     mcell->set_udq(udq_vec->at(i));
     mcell->set_vdq(vdq_vec->at(i));
     mcell->set_wdq(wdq_vec->at(i));
-    
+
     mcell->set_q(q_vec->at(i));
-    
+
     double temp_x = (time_slice*nrebin/2.*unit_dis/10. - frame_length/2.*unit_dis/10.) * units::cm;
-    
+
     if (flag_u_vec->at(i)==0){
       mcell->add_bad_planes(WirePlaneType_t(0));
       for (int j=0;j!=nwire_u_vec->at(i);j++){
@@ -438,7 +438,7 @@ int main(int argc, char* argv[])
 	    dead_u_index[wire_index_u.at(j)].second = temp_x + 0.1*units::cm;
 	  }
 	}
-	
+
       }
     }
     if (flag_v_vec->at(i)==0){
@@ -482,7 +482,7 @@ int main(int argc, char* argv[])
       mcell->AddWire(wire,WirePlaneType_t(2),wire_charge_w.at(j),wire_charge_err_w.at(j));
     }
     mcells.push_back(mcell);
-    
+
     if (cluster_id != prev_cluster_id){
       cluster = new WCPPID::PR3DCluster(cluster_id);
       map_cluster_parent_id[cluster] = parent_cluster_id->at(i);
@@ -496,11 +496,11 @@ int main(int argc, char* argv[])
       }
     }
     cluster->AddCell(mcell,time_slice);
-    
+
     prev_cluster_id = cluster_id;
     ident++;
   }
-  
+
   prev_cluster_id = -1;
   cluster_id_vec->clear();
   wire_index_u_vec->clear();
@@ -513,7 +513,7 @@ int main(int argc, char* argv[])
   flag_v_vec->clear();
   flag_w_vec->clear();
 
-  
+
   TDC->GetEntry(entry_no);
   for (int i=0;i!=cluster_id_vec->size();i++){
     int cluster_id = cluster_id_vec->at(i);
@@ -524,10 +524,10 @@ int main(int argc, char* argv[])
     std::vector<int> wire_index_w = wire_index_w_vec->at(i);
 
     mcell->SetTimeSlice(time_slices.at(0));
-    
+
     double temp_x1 = (time_slices.front()*nrebin/2.*unit_dis/10. - frame_length/2.*unit_dis/10.) * units::cm;
     double temp_x2 = (time_slices.back()*nrebin/2.*unit_dis/10. - frame_length/2.*unit_dis/10.) * units::cm;
-    
+
     if (flag_u_vec->at(i)==0){
       mcell->add_bad_planes(WirePlaneType_t(0));
       for (int j=0;j!=nwire_u_vec->at(i);j++){
@@ -602,7 +602,7 @@ int main(int argc, char* argv[])
 
       std::vector<Vector> pcross(4);
       bool flag1 = gds.crossing_point(dis_u[0],dis_v[0],kUwire,kVwire, pcross[0]); // check the inner point
-      
+
       if (flag1){
 	// fill the outer point
   	pcell.push_back(pcross[0]);
@@ -620,7 +620,7 @@ int main(int argc, char* argv[])
 		break;
 	      }
 	    }
-	    
+
 	    if (flag_qx == 1)
 	      pcell.push_back(pcross[0]);
 	    break;
@@ -646,7 +646,7 @@ int main(int argc, char* argv[])
 	}
       }
 
-      bool flag2 = gds.crossing_point(dis_u[0],dis_v[1],kUwire,kVwire, pcross[1]); 
+      bool flag2 = gds.crossing_point(dis_u[0],dis_v[1],kUwire,kVwire, pcross[1]);
       if (flag2){
   	pcell.push_back(pcross[1]);
       }else{
@@ -687,8 +687,8 @@ int main(int argc, char* argv[])
 	  }
 	}
       }
-      
-      bool flag3 = gds.crossing_point(dis_u[1],dis_v[0],kUwire,kVwire, pcross[2]); 
+
+      bool flag3 = gds.crossing_point(dis_u[1],dis_v[0],kUwire,kVwire, pcross[2]);
       if (flag3){
   	pcell.push_back(pcross[2]);
       }else{
@@ -727,7 +727,7 @@ int main(int argc, char* argv[])
 	  }
 	}
       }
-      
+
       bool flag4 = gds.crossing_point(dis_u[1],dis_v[1],kUwire,kVwire, pcross[3]);
       if (flag4){
   	pcell.push_back(pcross[3]);
@@ -767,9 +767,9 @@ int main(int argc, char* argv[])
 	  }
 	}
       }
-      
+
       mcell->AddBoundary(pcell);
-      
+
     }else if (flag_u_vec->at(i)==0 && flag_w_vec->at(i)==0){
       const GeomWire *uwire_1 = gds.by_planeindex(WirePlaneType_t(0),wire_index_u.front());
       const GeomWire *uwire_2 = gds.by_planeindex(WirePlaneType_t(0),wire_index_u.back());
@@ -787,7 +787,7 @@ int main(int argc, char* argv[])
 
       std::vector<Vector> pcross(4);
 
-      bool flag1 = gds.crossing_point(dis_u[0],dis_w[0],kUwire,kYwire, pcross[0]); 
+      bool flag1 = gds.crossing_point(dis_u[0],dis_w[0],kUwire,kYwire, pcross[0]);
       if (flag1){
   	pcell.push_back(pcross[0]);
       }else{
@@ -803,7 +803,7 @@ int main(int argc, char* argv[])
 		break;
 	      }
 	    }
-	    
+
 	    if (flag_qx == 1)
 	      pcell.push_back(pcross[0]);
 	    break;
@@ -829,7 +829,7 @@ int main(int argc, char* argv[])
 	}
       }
 
-      bool flag2 = gds.crossing_point(dis_u[0],dis_w[1],kUwire,kYwire, pcross[1]); 
+      bool flag2 = gds.crossing_point(dis_u[0],dis_w[1],kUwire,kYwire, pcross[1]);
       if (flag2){
   	pcell.push_back(pcross[1]);
       }else{
@@ -870,8 +870,8 @@ int main(int argc, char* argv[])
 	  }
 	}
       }
-      
-      bool flag3 = gds.crossing_point(dis_u[1],dis_w[0],kUwire,kYwire, pcross[2]); 
+
+      bool flag3 = gds.crossing_point(dis_u[1],dis_w[0],kUwire,kYwire, pcross[2]);
       if (flag3){
   	pcell.push_back(pcross[2]);
       }else{
@@ -910,7 +910,7 @@ int main(int argc, char* argv[])
 	  }
 	}
       }
-      
+
       bool flag4 = gds.crossing_point(dis_u[1],dis_w[1],kUwire,kYwire, pcross[3]);
       if (flag4){
   	pcell.push_back(pcross[3]);
@@ -951,7 +951,7 @@ int main(int argc, char* argv[])
 	}
       }
       mcell->AddBoundary(pcell);
-      
+
     }else if (flag_v_vec->at(i)==0 && flag_w_vec->at(i)==0){
       const GeomWire *wwire_1 = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.front());
       const GeomWire *wwire_2 = gds.by_planeindex(WirePlaneType_t(2),wire_index_w.back());
@@ -959,17 +959,17 @@ int main(int argc, char* argv[])
       float w_pitch = gds.pitch(kYwire);
       dis_w[0] = gds.wire_dist(*wwire_1) - w_pitch/2.;
       dis_w[1] = gds.wire_dist(*wwire_2) + w_pitch/2.;
-      
+
       const GeomWire *vwire_1 = gds.by_planeindex(WirePlaneType_t(1),wire_index_v.front());
       const GeomWire *vwire_2 = gds.by_planeindex(WirePlaneType_t(1),wire_index_v.back());
       float dis_v[2];
       float v_pitch = gds.pitch(kVwire);
       dis_v[0] = gds.wire_dist(*vwire_1) - v_pitch/2.;
       dis_v[1] = gds.wire_dist(*vwire_2) + v_pitch/2.;
-      
+
       std::vector<Vector> pcross(4);
 
-       bool flag1 = gds.crossing_point(dis_w[0],dis_v[0],kYwire,kVwire, pcross[0]); 
+       bool flag1 = gds.crossing_point(dis_w[0],dis_v[0],kYwire,kVwire, pcross[0]);
       if (flag1){
   	pcell.push_back(pcross[0]);
       }else{
@@ -985,7 +985,7 @@ int main(int argc, char* argv[])
 		break;
 	      }
 	    }
-	    
+
 	    if (flag_qx == 1)
 	      pcell.push_back(pcross[0]);
 	    break;
@@ -1011,7 +1011,7 @@ int main(int argc, char* argv[])
 	}
       }
 
-      bool flag2 = gds.crossing_point(dis_w[0],dis_v[1],kYwire,kVwire, pcross[1]); 
+      bool flag2 = gds.crossing_point(dis_w[0],dis_v[1],kYwire,kVwire, pcross[1]);
       if (flag2){
   	pcell.push_back(pcross[1]);
       }else{
@@ -1052,8 +1052,8 @@ int main(int argc, char* argv[])
 	  }
 	}
       }
-      
-      bool flag3 = gds.crossing_point(dis_w[1],dis_v[0],kYwire,kVwire, pcross[2]); 
+
+      bool flag3 = gds.crossing_point(dis_w[1],dis_v[0],kYwire,kVwire, pcross[2]);
       if (flag3){
   	pcell.push_back(pcross[2]);
       }else{
@@ -1092,7 +1092,7 @@ int main(int argc, char* argv[])
 	  }
 	}
       }
-      
+
       bool flag4 = gds.crossing_point(dis_w[1],dis_v[1],kYwire,kVwire, pcross[3]);
       if (flag4){
   	pcell.push_back(pcross[3]);
@@ -1135,12 +1135,12 @@ int main(int argc, char* argv[])
       mcell->AddBoundary(pcell);
     }
     // figure out the boundary ...
-    
+
     fid->AddDeadRegion(mcell,time_slices);
     ident++;
   }
-  
-  
+
+
   // Load T_ch_bad tree ...
   TTree *T_bad_ch = (TTree*)file->Get("T_bad_ch");
   if (T_bad_ch!=0){
@@ -1154,11 +1154,11 @@ int main(int argc, char* argv[])
     T_bad_ch->SetBranchAddress("runNo",&temp_run_no);
     T_bad_ch->SetBranchAddress("subRunNo",&temp_subrun_no);
     T_bad_ch->SetBranchAddress("eventNo",&temp_event_no);
-    
+
     for (int i=0;i!=T_bad_ch->GetEntries();i++){
       T_bad_ch->GetEntry(i);
       if (temp_run_no != run_no || temp_subrun_no!=subrun_no || temp_event_no!=event_no) continue;
-	  
+
       double temp_x1 = (start_time/2.*unit_dis/10. - frame_length/2.*unit_dis/10.) * units::cm;
       double temp_x2 = (end_time/2.*unit_dis/10. - frame_length/2.*unit_dis/10.) * units::cm;
       if (plane==1){
@@ -1200,7 +1200,7 @@ int main(int argc, char* argv[])
     }
   }
   cout << em("load clusters from file") << endl;
-  
+
   // form a global map with the current map information
   std::map<int,std::map<const GeomWire*, SMGCSelection > > global_wc_map;
   for (size_t i=0; i!=live_clusters.size();i++){
@@ -1214,7 +1214,7 @@ int main(int argc, char* argv[])
 	global_wc_map[time_slice] = temp_wc_map;
       }
       std::map<const GeomWire*, SMGCSelection>& timeslice_wc_map = global_wc_map[time_slice];
-      
+
       GeomWireSelection& uwires = mcell->get_uwires();
       GeomWireSelection& vwires = mcell->get_vwires();
       GeomWireSelection& wwires = mcell->get_wwires();
@@ -1257,7 +1257,7 @@ int main(int argc, char* argv[])
       }
     }
   }
-  
+
   // replace by the new sampling points ...
   for (size_t i=0; i!=live_clusters.size();i++){
     WCPPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
@@ -1268,9 +1268,9 @@ int main(int argc, char* argv[])
    double first_t_dis = live_clusters.at(0)->get_mcells().front()->GetTimeSlice()*time_slice_width - live_clusters.at(0)->get_mcells().front()->get_sampling_points().front().x;
   double offset_t = first_t_dis/time_slice_width;
 
-  // test the fiducial volume cut 
+  // test the fiducial volume cut
   fid->set_offset_t(offset_t);
-  
+
   ToyCTPointCloud ct_point_cloud(0,2399,2400,4799,4800,8255, // channel range
 				 offset_t, -first_u_dis/pitch_u, -first_v_dis/pitch_v, -first_w_dis/pitch_w, // offset
 				 1./time_slice_width, 1./pitch_u, 1./pitch_v, 1./pitch_w, // slope
@@ -1281,7 +1281,7 @@ int main(int argc, char* argv[])
   //  ct_point_cloud.UpdateDeadChs();
   ct_point_cloud.build_kdtree_index();
 
-  // examine the clustering ... 
+  // examine the clustering ...
   std::vector<std::pair<int, Opflash*> > to_be_checked;
   for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
     // double flash_time = map_flash_info[it->first].second;
@@ -1289,17 +1289,17 @@ int main(int argc, char* argv[])
     if ( (flash_time <= lowerwindow || flash_time >= upperwindow)) continue;
     to_be_checked.push_back(std::make_pair(it->second, map_flash_info[it->first]) );
   }
-  
+
   WCPPID::Protect_Over_Clustering(eventTime,to_be_checked, live_clusters, map_cluster_parent_id, map_parentid_clusters, ct_point_cloud, flag_match_data, run_no, time_offset, nrebin, time_slice_width, flag_timestamp);
-  
+
   for (size_t i=0; i!=live_clusters.size();i++){
     if (live_clusters.at(i)->get_point_cloud()==0){
       WCPPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
       live_clusters.at(i)->Create_point_cloud();
     }
   }
-  
-  
+
+
   std::vector<WCPPID::NeutrinoID *> neutrino_vec;
   std::map<std::pair<int, int>, WCPPID::NeutrinoID* > map_flash_tpc_pair_neutrino_id;
   // Code to select nue ...
@@ -1312,7 +1312,7 @@ int main(int argc, char* argv[])
 
     // hack for now ...
     //continue;
-    
+
     std::vector<WCPPID::PR3DCluster*> temp_clusters = map_parentid_clusters[it->second];
     WCPPID::PR3DCluster* main_cluster = 0;
     for (auto it1 = temp_clusters.begin(); it1!=temp_clusters.end();it1++){
@@ -1329,15 +1329,15 @@ int main(int argc, char* argv[])
 
     double offset_x =     (flash_time - time_offset)*2./nrebin*time_slice_width;
     WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process, flag_bdt, flag_dl_vtx, dl_vtx_cut, match_isFC);
-    
+
     neutrino_vec.push_back(neutrino);
     map_flash_tpc_pair_neutrino_id[std::make_pair(it->first, it->second)] = neutrino;
   }
 
-  
+
   // start saving ...
 
-  
+
 
   TFile *file1 = new TFile(Form("nue_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
   TTree *Trun1 = new TTree("Trun","Trun");
@@ -1346,7 +1346,7 @@ int main(int argc, char* argv[])
   Trun1->Branch("runNo",&run_no,"runNo/I");
   Trun1->Branch("subRunNo",&subrun_no,"subRunNo/I");
   Trun1->Branch("eventTime",&eventTime,"eventTime/D");
-  
+
   Trun1->Branch("triggerBits",&triggerbits,"triggerBits/i");
   Trun1->Branch("unit_dis",&unit_dis,"unit_dis/F");
   Trun1->Branch("frame_length",&frame_length,"frame_length/I");
@@ -1364,7 +1364,7 @@ int main(int argc, char* argv[])
   Trun1->Branch("dQdx_scale",&dQdx_scale,"dQdx_scale/D");
   Double_t dQdx_offset = -1000;
   Trun1->Branch("dQdx_offset",&dQdx_offset,"dQdx_offset/D");
-  
+
   Trun1->Fill();
 
   if (T_bad_ch!=0){
@@ -1379,7 +1379,7 @@ int main(int argc, char* argv[])
     T_bad_ch->SetBranchAddress("runNo",&temp_run_no);
     T_bad_ch->SetBranchAddress("subRunNo",&temp_subrun_no);
     T_bad_ch->SetBranchAddress("eventNo",&temp_event_no);
-    
+
     TTree *T_bad_ch1 = new TTree("T_bad_ch","T_bad_ch");
     T_bad_ch1->SetDirectory(file1);
     T_bad_ch1->Branch("chid",&chid,"chid/I");
@@ -1389,17 +1389,17 @@ int main(int argc, char* argv[])
     T_bad_ch1->Branch("runNo",&temp_run_no,"runNo/I");
     T_bad_ch1->Branch("subRunNo",&temp_subrun_no,"subRunNo/I");
     T_bad_ch1->Branch("eventNo",&temp_event_no,"eventNo/I");
-    
+
     for (int i=0;i!=T_bad_ch->GetEntries();i++){
       T_bad_ch->GetEntry(i);
       if (temp_run_no != run_no || temp_subrun_no!=subrun_no || temp_event_no!=event_no) continue;
       T_bad_ch1->Fill();
     }
-    
+
   }
 
 
-  
+
   TTree *T_flash1 = new TTree("T_flash","T_flash");
   T_flash1->SetDirectory(file1);
   T_flash1->Branch("type",&type);
@@ -1419,13 +1419,13 @@ int main(int argc, char* argv[])
     T_flash1->Fill();
   }
 
-  
-  
+
+
   TTree *T_match1 = new TTree("T_match","T_match");
   T_match1->SetDirectory(file1);
   T_match1->Branch("tpc_cluster_id",&tpc_cluster_id,"tpc_cluster_id/I"); // parent cluster id
-  T_match1->Branch("flash_id",&flash_id,"flash_id/I");  // flash id 
-  
+  T_match1->Branch("flash_id",&flash_id,"flash_id/I");  // flash id
+
   T_match1->Branch("strength",&strength,"strength/D");
   T_match1->Branch("pe_pred",pe_pred,"pe_pred[32]/D");
   T_match1->Branch("pe_meas",pe_meas,"pe_meas[32]/D");
@@ -1439,20 +1439,20 @@ int main(int argc, char* argv[])
   T_match1->Branch("neutrino_type",&neutrino_type,"neutrino_type/I");
   Double_t flash_time;
   T_match1->Branch("flash_time",&flash_time,"flash_time/D");
-  
+
   for (int i=0;i!=T_match->GetEntries();i++){
     T_match->GetEntry(i);
     if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
     neutrino_type = 0;
-    
+
     bool flag_flash = map_flash_info.find(flash_id) != map_flash_info.end() ;
     flash_time = -1000;
 
     if (flag_flash){
       flash_time =  map_flash_info[flash_id]->get_time();
     }
-    //    std::cout << flash_id << " " << flag << std::endl; 
-    
+    //    std::cout << flash_id << " " << flag << std::endl;
+
     auto it = map_flash_tpc_pair_neutrino_id.find(std::make_pair(flash_id, tpc_cluster_id));
     if (it != map_flash_tpc_pair_neutrino_id.end()){
       neutrino_type = it->second->get_neutrino_type();
@@ -1472,7 +1472,7 @@ int main(int argc, char* argv[])
   Int_t flag_main_vtx=0; // main vertex or not
   Int_t cluster_id_vtx=-1; // -1 if not belonging to any cluster ...
   std::vector<int> *sub_cluster_ids_vtx = new std::vector<int>;
-  
+
   T_vtx->Branch("x",&x_vtx,"x/D");
   T_vtx->Branch("y",&y_vtx,"y/D");
   T_vtx->Branch("z",&z_vtx,"z/D");
@@ -1480,7 +1480,7 @@ int main(int argc, char* argv[])
   T_vtx->Branch("flag_main",&flag_main_vtx,"flag_main/I");
   T_vtx->Branch("cluster_id",&cluster_id_vtx,"cluster_id/I");
   T_vtx->Branch("sub_cluster_ids",&sub_cluster_ids_vtx);
-  
+
   for (size_t i=0;i!=neutrino_vec.size();i++){
     std::map<WCPPID::PR3DCluster*, WCPPID::ProtoVertex* >& map_cluster_vertex = neutrino_vec.at(i)->get_map_cluster_vertex();
     WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();
@@ -1509,10 +1509,10 @@ int main(int argc, char* argv[])
       WCPPID::ProtoVertex *vtx = it->first;
       auto it1 = map_vertex_segments.find(vtx);
       Point vertex_point;
-      
+
       if (it1 != map_vertex_segments.end() && it1->second.size()>0){
 	WCPPID::ProtoSegment *sg = *map_vertex_segments[vtx].begin();
-	
+
 	if (vtx->get_wcpt().index == sg->get_wcpt_vec().front().index){
 	  vertex_point = sg->get_point_vec().front();
 	}else{
@@ -1524,13 +1524,13 @@ int main(int argc, char* argv[])
       x_vtx = vertex_point.x/units::cm;
       y_vtx = vertex_point.y/units::cm;
       z_vtx = vertex_point.z/units::cm;
-      
+
       type_vtx = it->second;
       if (vtx ==  neutrino_vec.at(i)->get_main_vertex())
 	flag_main_vtx = 1;
       else
 	flag_main_vtx = 0;
-      
+
       cluster_id_vtx = vtx->get_cluster_id();
       sub_cluster_ids_vtx->clear();
       //     for (auto it1 = it->second.begin(); it1!=it->second.end(); it1++){
@@ -1556,7 +1556,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("cosmic_n_indirect_showers",&tagger_info.cosmic_n_indirect_showers,"cosmic_n_indirect_showers/F");
     T_tagger->Branch("cosmic_n_main_showers",&tagger_info.cosmic_n_main_showers,"cosmic_n_main_showers/F");
     T_tagger->Branch("cosmic_filled",&tagger_info.cosmic_filled,"cosmic_filled/F");
-    
+
     // gap tagger
     T_tagger->Branch("gap_flag",&tagger_info.gap_flag,"gap_flag/F");
     T_tagger->Branch("gap_flag_prolong_u",&tagger_info.gap_flag_prolong_u,"gap_flag_prolong_u/F");
@@ -1640,7 +1640,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("mip_min_dis",&tagger_info.mip_min_dis,"mip_min_dis/F");
     T_tagger->Branch("mip_filled",&tagger_info.mip_filled,"mip_filled/F");
 
-        //single photon shower
+    //single photon shower
     T_tagger->Branch("shw_sp_flag",&tagger_info.shw_sp_flag,"shw_sp_flag/F");
     T_tagger->Branch("shw_sp_num_mip_tracks",&tagger_info.shw_sp_num_mip_tracks,"shw_sp_num_mip_tracks/F");
     T_tagger->Branch("shw_sp_num_muons",&tagger_info.shw_sp_num_muons,"shw_sp_num_muons/F");
@@ -1658,7 +1658,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("shw_sp_n_br2_showers",&tagger_info.shw_sp_n_br2_showers,"shw_sp_n_br2_showers/F");
     T_tagger->Branch("shw_sp_n_br3_showers",&tagger_info.shw_sp_n_br3_showers,"shw_sp_n_br3_showers/F");
     T_tagger->Branch("shw_sp_n_br4_showers",&tagger_info.shw_sp_n_br4_showers,"shw_sp_n_br4_showers/F");
-    T_tagger->Branch("shw_sp_n_20mev_showers",&tagger_info.shw_sp_n_20br1_showers,"shw_sp_n_20br1_showers/F");
+    T_tagger->Branch("shw_sp_n_20br1_showers",&tagger_info.shw_sp_n_20br1_showers,"shw_sp_n_20br1_showers/F");
     T_tagger->Branch("shw_sp_20mev_showers",&tagger_info.shw_sp_20mev_showers);
     T_tagger->Branch("shw_sp_br1_showers",&tagger_info.shw_sp_br1_showers);
     T_tagger->Branch("shw_sp_br2_showers",&tagger_info.shw_sp_br2_showers);
@@ -1669,7 +1669,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("shw_sp_energy",&tagger_info.shw_sp_energy,"shw_sp_energy/F");
 
     T_tagger->Branch("shw_sp_vec_median_dedx",&tagger_info.shw_sp_vec_median_dedx,"shw_sp_vec_median_dedx/F");
-    T_tagger->Branch("shw_sp_vec_median_dedx",&tagger_info.shw_sp_vec_mean_dedx,"shw_sp_vec_mean_dedx/F");
+    T_tagger->Branch("shw_sp_vec_mean_dedx",&tagger_info.shw_sp_vec_mean_dedx,"shw_sp_vec_mean_dedx/F");
     T_tagger->Branch("shw_sp_vec_dQ_dx_0",&tagger_info.shw_sp_vec_dQ_dx_0,"shw_sp_vec_dQ_dx_0/F");
     T_tagger->Branch("shw_sp_vec_dQ_dx_1",&tagger_info.shw_sp_vec_dQ_dx_1,"shw_sp_vec_dQ_dx_1/F");
     T_tagger->Branch("shw_sp_vec_dQ_dx_2",&tagger_info.shw_sp_vec_dQ_dx_2,"shw_sp_vec_dQ_dx_2/F");
@@ -1834,10 +1834,10 @@ int main(int argc, char* argv[])
     T_tagger->Branch("shw_sp_br3_3_v_length",&tagger_info.shw_sp_br3_3_v_length);
     T_tagger->Branch("shw_sp_br3_3_v_flag",&tagger_info.shw_sp_br3_3_v_flag);
 
-    T_tagger->Branch("shw_sp_br3_4_acc_length", &tagger_info.shw_sp_br3_4_acc_length, "br3_4_acc_length/F");
-    T_tagger->Branch("shw_sp_br3_4_total_length", &tagger_info.shw_sp_br3_4_total_length, "br3_4_total_length/F");
-    T_tagger->Branch("shw_sp_br3_4_energy", &tagger_info.shw_sp_br3_4_energy, "br3_4_energy/F");
-    T_tagger->Branch("shw_sp_br3_4_flag", &tagger_info.shw_sp_br3_4_flag, "br3_4_flag/F");
+    T_tagger->Branch("shw_sp_br3_4_acc_length", &tagger_info.shw_sp_br3_4_acc_length, "shw_sp_br3_4_acc_length/F");
+    T_tagger->Branch("shw_sp_br3_4_total_length", &tagger_info.shw_sp_br3_4_total_length, "shw_sp_br3_4_total_length/F");
+    T_tagger->Branch("shw_sp_br3_4_energy", &tagger_info.shw_sp_br3_4_energy, "shw_sp_br3_4_energy/F");
+    T_tagger->Branch("shw_sp_br3_4_flag", &tagger_info.shw_sp_br3_4_flag, "shw_sp_br3_4_flag/F");
 
     T_tagger->Branch("shw_sp_br3_5_v_dir_length", &tagger_info.shw_sp_br3_5_v_dir_length);
     T_tagger->Branch("shw_sp_br3_5_v_total_length", &tagger_info.shw_sp_br3_5_v_total_length);
@@ -1877,30 +1877,30 @@ int main(int argc, char* argv[])
     T_tagger->Branch("shw_sp_br3_flag",&tagger_info.shw_sp_br3_flag,"shw_sp_br3_flag/F");
 
 
-    T_tagger->Branch("shw_sp_br4_1_shower_main_length", &tagger_info.shw_sp_br4_1_shower_main_length, "br4_1_shower_main_length/F");
-    T_tagger->Branch("shw_sp_br4_1_shower_total_length", &tagger_info.shw_sp_br4_1_shower_total_length, "br4_1_shower_total_length/F");
-    T_tagger->Branch("shw_sp_br4_1_min_dis", &tagger_info.shw_sp_br4_1_min_dis, "br4_1_min_dis/F");
-    T_tagger->Branch("shw_sp_br4_1_energy", &tagger_info.shw_sp_br4_1_energy, "br4_1_energy/F");
-    T_tagger->Branch("shw_sp_br4_1_flag_avoid_muon_check", &tagger_info.shw_sp_br4_1_flag_avoid_muon_check, "br4_1_flag_avoid_muon_check/F");
-    T_tagger->Branch("shw_sp_br4_1_n_vtx_segs", &tagger_info.shw_sp_br4_1_n_vtx_segs, "br4_1_n_vtx_segs/F");
-    T_tagger->Branch("shw_sp_br4_1_n_main_segs", &tagger_info.shw_sp_br4_1_n_main_segs, "br4_1_n_main_segs/F");
-    T_tagger->Branch("shw_sp_br4_1_flag", &tagger_info.shw_sp_br4_1_flag, "br4_1_flag/F");
+    T_tagger->Branch("shw_sp_br4_1_shower_main_length", &tagger_info.shw_sp_br4_1_shower_main_length, "shw_sp_br4_1_shower_main_length/F");
+    T_tagger->Branch("shw_sp_br4_1_shower_total_length", &tagger_info.shw_sp_br4_1_shower_total_length, "shw_sp_br4_1_shower_total_length/F");
+    T_tagger->Branch("shw_sp_br4_1_min_dis", &tagger_info.shw_sp_br4_1_min_dis, "shw_sp_br4_1_min_dis/F");
+    T_tagger->Branch("shw_sp_br4_1_energy", &tagger_info.shw_sp_br4_1_energy, "shw_sp_br4_1_energy/F");
+    T_tagger->Branch("shw_sp_br4_1_flag_avoid_muon_check", &tagger_info.shw_sp_br4_1_flag_avoid_muon_check, "shw_sp_br4_1_flag_avoid_muon_check/F");
+    T_tagger->Branch("shw_sp_br4_1_n_vtx_segs", &tagger_info.shw_sp_br4_1_n_vtx_segs, "shw_sp_br4_1_n_vtx_segs/F");
+    T_tagger->Branch("shw_sp_br4_1_n_main_segs", &tagger_info.shw_sp_br4_1_n_main_segs, "shw_sp_br4_1_n_main_segs/F");
+    T_tagger->Branch("shw_sp_br4_1_flag", &tagger_info.shw_sp_br4_1_flag, "shw_sp_br4_1_flag/F");
 
-    T_tagger->Branch("shw_sp_br4_2_ratio_45", &tagger_info.shw_sp_br4_2_ratio_45, "br4_2_ratio_45/F");
-    T_tagger->Branch("shw_sp_br4_2_ratio_35", &tagger_info.shw_sp_br4_2_ratio_35, "br4_2_ratio_35/F");
-    T_tagger->Branch("shw_sp_br4_2_ratio_25", &tagger_info.shw_sp_br4_2_ratio_25, "br4_2_ratio_25/F");
-    T_tagger->Branch("shw_sp_br4_2_ratio_15", &tagger_info.shw_sp_br4_2_ratio_15, "br4_2_ratio_15/F");
-    T_tagger->Branch("shw_sp_br4_2_energy",   &tagger_info.shw_sp_br4_2_energy, "br4_2_energy/F");
-    T_tagger->Branch("shw_sp_br4_2_ratio1_45", &tagger_info.shw_sp_br4_2_ratio1_45, "br4_2_ratio1_45/F");
-    T_tagger->Branch("shw_sp_br4_2_ratio1_35", &tagger_info.shw_sp_br4_2_ratio1_35, "br4_2_ratio1_35/F");
-    T_tagger->Branch("shw_sp_br4_2_ratio1_25", &tagger_info.shw_sp_br4_2_ratio1_25, "br4_2_ratio1_25/F");
-    T_tagger->Branch("shw_sp_br4_2_ratio1_15", &tagger_info.shw_sp_br4_2_ratio1_15, "br4_2_ratio1_15/F");
-    T_tagger->Branch("shw_sp_br4_2_iso_angle", &tagger_info.shw_sp_br4_2_iso_angle, "br4_2_iso_angle/F");
-    T_tagger->Branch("shw_sp_br4_2_iso_angle1", &tagger_info.shw_sp_br4_2_iso_angle1, "br4_2_iso_angle1/F");
-    T_tagger->Branch("shw_sp_br4_2_angle", &tagger_info.shw_sp_br4_2_angle, "br4_2_angle/F");
-    T_tagger->Branch("shw_sp_br4_2_flag", &tagger_info.shw_sp_br4_2_flag, "br4_2_flag/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio_45", &tagger_info.shw_sp_br4_2_ratio_45, "shw_sp_br4_2_ratio_45/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio_35", &tagger_info.shw_sp_br4_2_ratio_35, "shw_sp_br4_2_ratio_35/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio_25", &tagger_info.shw_sp_br4_2_ratio_25, "shw_sp_br4_2_ratio_25/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio_15", &tagger_info.shw_sp_br4_2_ratio_15, "shw_sp_br4_2_ratio_15/F");
+    T_tagger->Branch("shw_sp_br4_2_energy",   &tagger_info.shw_sp_br4_2_energy, "shw_sp_br4_2_energy/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio1_45", &tagger_info.shw_sp_br4_2_ratio1_45, "shw_sp_br4_2_ratio1_45/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio1_35", &tagger_info.shw_sp_br4_2_ratio1_35, "shw_sp_br4_2_ratio1_35/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio1_25", &tagger_info.shw_sp_br4_2_ratio1_25, "shw_sp_br4_2_ratio1_25/F");
+    T_tagger->Branch("shw_sp_br4_2_ratio1_15", &tagger_info.shw_sp_br4_2_ratio1_15, "shw_sp_br4_2_ratio1_15/F");
+    T_tagger->Branch("shw_sp_br4_2_iso_angle", &tagger_info.shw_sp_br4_2_iso_angle, "shw_sp_br4_2_iso_angle/F");
+    T_tagger->Branch("shw_sp_br4_2_iso_angle1", &tagger_info.shw_sp_br4_2_iso_angle1, "shw_sp_br4_2_iso_angle1/F");
+    T_tagger->Branch("shw_sp_br4_2_angle", &tagger_info.shw_sp_br4_2_angle, "shw_sp_br4_2_angle/F");
+    T_tagger->Branch("shw_sp_br4_2_flag", &tagger_info.shw_sp_br4_2_flag, "shw_sp_br4_2_flag/F");
 
-    T_tagger->Branch("shw_sp_br4_flag", &tagger_info.shw_sp_br4_flag, "br4_flag/F");
+    T_tagger->Branch("shw_sp_br4_flag", &tagger_info.shw_sp_br4_flag, "shw_sp_br4_flag/F");
 
 
     T_tagger->Branch("shw_sp_hol_1_n_valid_tracks", &tagger_info.shw_sp_hol_1_n_valid_tracks,"shw_sp_hol_1_n_valid_tracks/F");
@@ -1929,13 +1929,17 @@ int main(int argc, char* argv[])
 
 
 
-    
+<<<<<<< HEAD
+
+=======
+
+>>>>>>> 7d5e6121272e6c1558b468ccbe9cdec237a6e73d
     // pio ...
     T_tagger->Branch("pio_flag",&tagger_info.pio_flag,"pio_flag/F");
     T_tagger->Branch("pio_mip_id",&tagger_info.pio_mip_id,"pio_mip_id/F");
     T_tagger->Branch("pio_filled",&tagger_info.pio_filled,"pio_filled/F");
     T_tagger->Branch("pio_flag_pio",&tagger_info.pio_flag_pio,"pio_flag_pio/F");
-    
+
     T_tagger->Branch("pio_1_flag",&tagger_info.pio_1_flag,"pio_1_flag/F");
     T_tagger->Branch("pio_1_mass",&tagger_info.pio_1_mass,"pio_1_mass/F");
     T_tagger->Branch("pio_1_pio_type",&tagger_info.pio_1_pio_type,"pio_1_pio_type/F");
@@ -1943,15 +1947,14 @@ int main(int argc, char* argv[])
     T_tagger->Branch("pio_1_energy_2",&tagger_info.pio_1_energy_2,"pio_1_energy_2/F");
     T_tagger->Branch("pio_1_dis_1",&tagger_info.pio_1_dis_1,"pio_1_dis_1/F");
     T_tagger->Branch("pio_1_dis_2",&tagger_info.pio_1_dis_2,"pio_1_dis_2/F");
-    
+
     T_tagger->Branch("pio_2_v_dis2",&tagger_info.pio_2_v_dis2);
     T_tagger->Branch("pio_2_v_angle2",&tagger_info.pio_2_v_angle2);
     T_tagger->Branch("pio_2_v_acc_length",&tagger_info.pio_2_v_acc_length);
     T_tagger->Branch("pio_2_v_flag",&tagger_info.pio_2_v_flag);
 
-    
-    
-    
+
+
     // bad reconstruction ...
     T_tagger->Branch("stem_dir_flag",&tagger_info.stem_dir_flag,"stem_dir_flag/F");
     T_tagger->Branch("stem_dir_flag_single_shower",&tagger_info.stem_dir_flag_single_shower,"stem_dir_flag_single_shower/F");
@@ -1964,9 +1967,9 @@ int main(int argc, char* argv[])
     T_tagger->Branch("stem_dir_ratio",&tagger_info.stem_dir_ratio,"stem_dir_ratio/F");
 
     T_tagger->Branch("br_filled",&tagger_info.br_filled,"br_filled/F");
-    
+
     T_tagger->Branch("br1_flag",&tagger_info.br1_flag,"br1_flag/F");
-    
+
     T_tagger->Branch("br1_1_flag",&tagger_info.br1_1_flag,"br1_1_flag/F");
     T_tagger->Branch("br1_1_shower_type",&tagger_info.br1_1_shower_type,"br1_1_shower_type/F");
     T_tagger->Branch("br1_1_vtx_n_segs",&tagger_info.br1_1_vtx_n_segs,"br1_1_vtx_n_segs/F");
@@ -1995,7 +1998,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("br1_3_flag_sg_trajectory",&tagger_info.br1_3_flag_sg_trajectory,"br1_3_flag_sg_trajectory/F");
     T_tagger->Branch("br1_3_n_shower_main_segs",&tagger_info.br1_3_n_shower_main_segs,"br1_3_n_shower_main_segs/F");
     T_tagger->Branch("br1_3_sg_length",&tagger_info.br1_3_sg_length,"br1_3_sg_length/F");
-    
+
     T_tagger->Branch("br2_flag",&tagger_info.br2_flag,"br2_flag/F");
     T_tagger->Branch("br2_flag_single_shower",&tagger_info.br2_flag_single_shower,"br2_flag_single_shower/F");
     T_tagger->Branch("br2_num_valid_tracks",&tagger_info.br2_num_valid_tracks,"br2_num_valid_tracks/F");
@@ -2036,7 +2039,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("lol_3_n_out",&tagger_info.lol_3_n_out,"lol_3_n_out/F");
     T_tagger->Branch("lol_3_n_sum",&tagger_info.lol_3_n_sum,"lol_3_n_sum/F");
     T_tagger->Branch("lol_3_flag",&tagger_info.lol_3_flag,"lol_3_flag/F");
-    
+
     T_tagger->Branch("br3_1_energy",&tagger_info.br3_1_energy,"br3_1_energy/F");
     T_tagger->Branch("br3_1_n_shower_segments",&tagger_info.br3_1_n_shower_segments,"br3_1_n_shower_segments/F");
     T_tagger->Branch("br3_1_sg_flag_trajectory",&tagger_info.br3_1_sg_flag_trajectory,"br3_1_sg_flag_trajectory/F");
@@ -2066,7 +2069,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("br3_4_total_length", &tagger_info.br3_4_total_length, "br3_4_total_length/F");
     T_tagger->Branch("br3_4_energy", &tagger_info.br3_4_energy, "br3_4_energy/F");
     T_tagger->Branch("br3_4_flag", &tagger_info.br3_4_flag, "br3_4_flag/F");
-    
+
     T_tagger->Branch("br3_5_v_dir_length", &tagger_info.br3_5_v_dir_length);
     T_tagger->Branch("br3_5_v_total_length", &tagger_info.br3_5_v_total_length);
     T_tagger->Branch("br3_5_v_flag_avoid_muon_check", &tagger_info.br3_5_v_flag_avoid_muon_check);
@@ -2129,7 +2132,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("br4_2_flag", &tagger_info.br4_2_flag, "br4_2_flag/F");
 
     T_tagger->Branch("br4_flag", &tagger_info.br4_flag, "br4_flag/F");
-    
+
 
     T_tagger->Branch("hol_1_n_valid_tracks", &tagger_info.hol_1_n_valid_tracks,"hol_1_n_valid_tracks/F");
     T_tagger->Branch("hol_1_min_angle", &tagger_info.hol_1_min_angle,"hol_1_min_angle/F");
@@ -2145,7 +2148,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("hol_2_flag", &tagger_info.hol_2_flag,"hol_2_flag/F");
 
     T_tagger->Branch("hol_flag", &tagger_info.hol_flag,"hol_flag/F");
-    
+
 
     T_tagger->Branch("vis_1_filled",&tagger_info.vis_1_filled,"vis_1_filled/F");
     T_tagger->Branch("vis_1_n_vtx_segs",&tagger_info.vis_1_n_vtx_segs,"vis_1_n_vtx_segs/F");
@@ -2173,7 +2176,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("vis_2_flag",&tagger_info.vis_2_flag,"vis_2_flag/F");
 
     T_tagger->Branch("vis_flag",&tagger_info.vis_flag,"vis_flag/F");
-    
+
 
     T_tagger->Branch("stem_len_energy", &tagger_info.stem_len_energy, "stem_len_energy/F");
     T_tagger->Branch("stem_len_length", &tagger_info.stem_len_length, "stem_len_length/F");
@@ -2229,7 +2232,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("stw_1_n_pi0",&tagger_info.stw_1_n_pi0,"stw_1_n_pi0/F");
     T_tagger->Branch("stw_1_num_valid_tracks",&tagger_info.stw_1_num_valid_tracks,"stw_1_num_valid_tracks/F");
     T_tagger->Branch("stw_1_flag",&tagger_info.stw_1_flag,"stw_1_flag/F");
-    
+
     T_tagger->Branch("stw_2_v_medium_dQ_dx", &tagger_info.stw_2_v_medium_dQ_dx);
     T_tagger->Branch("stw_2_v_energy", &tagger_info.stw_2_v_energy);
     T_tagger->Branch("stw_2_v_angle", &tagger_info.stw_2_v_angle);
@@ -2247,7 +2250,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("stw_4_v_dis",&tagger_info.stw_4_v_dis);
     T_tagger->Branch("stw_4_v_energy",&tagger_info.stw_4_v_energy);
     T_tagger->Branch("stw_4_v_flag",&tagger_info.stw_4_v_flag);
-    
+
     T_tagger->Branch("stw_flag", &tagger_info.stw_flag,"stw_flag/F");
 
     T_tagger->Branch("spt_flag_single_shower", &tagger_info.spt_flag_single_shower, "spt_flag_single_shower/F");
@@ -2275,7 +2278,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("mgo_n_total_showers",&tagger_info.mgo_n_total_showers,"mgo_n_total_showers/F");
     T_tagger->Branch("mgo_total_other_energy_1",&tagger_info.mgo_total_other_energy_1,"mgo_total_other_energy_1/F");
     T_tagger->Branch("mgo_flag",&tagger_info.mgo_flag,"mgo_flag/F");
-    
+
     T_tagger->Branch("mgt_flag_single_shower",&tagger_info.mgt_flag_single_shower,"mgt_flag_single_shower/F");
     T_tagger->Branch("mgt_max_energy",&tagger_info.mgt_max_energy,"mgt_max_energy/F");
     T_tagger->Branch("mgt_energy",&tagger_info.mgt_energy,"mgt_energy/F");
@@ -2288,7 +2291,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("mgt_flag_indirect_max_pio",&tagger_info.mgt_flag_indirect_max_pio,"mgt_flag_indirect_max_pio/F");
     T_tagger->Branch("mgt_e_indirect_total_energy",&tagger_info.mgt_e_indirect_total_energy,"mgt_e_indirect_total_energy/F");
     T_tagger->Branch("mgt_flag",&tagger_info.mgt_flag,"mgt_flag/F");
-    
+
     T_tagger->Branch("sig_1_v_angle",&tagger_info.sig_1_v_angle);
     T_tagger->Branch("sig_1_v_flag_single_shower",&tagger_info.sig_1_v_flag_single_shower);
     T_tagger->Branch("sig_1_v_energy",&tagger_info.sig_1_v_energy);
@@ -2389,7 +2392,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("cosmict_3_theta",&tagger_info.cosmict_3_theta,"cosmict_3_theta/F");
     T_tagger->Branch("cosmict_3_phi",&tagger_info.cosmict_3_phi,"cosmict_3_phi/F");
     T_tagger->Branch("cosmict_3_valid_tracks",&tagger_info.cosmict_3_valid_tracks,"cosmict_3_valid_tracks/F");
-    
+
     T_tagger->Branch("cosmict_4_filled",&tagger_info.cosmict_4_filled,"cosmict_4_filled/F");
     T_tagger->Branch("cosmict_4_flag_inside",&tagger_info.cosmict_4_flag_inside,"cosmict_4_flag_inside/F");
     T_tagger->Branch("cosmict_4_angle_beam",&tagger_info.cosmict_4_angle_beam,"cosmict_4_angle_beam/F");
@@ -2404,7 +2407,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("cosmict_6_flag_dir_weak",&tagger_info.cosmict_6_flag_dir_weak,"cosmict_6_flag_dir_weak/F");
     T_tagger->Branch("cosmict_6_flag_inside",&tagger_info.cosmict_6_flag_inside,"cosmict_6_flag_inside/F");
     T_tagger->Branch("cosmict_6_angle",&tagger_info.cosmict_6_angle,"cosmict_6_angle/F");
-    
+
 
     T_tagger->Branch("cosmict_7_filled",&tagger_info.cosmict_7_filled,"cosmict_7_filled/F");
     T_tagger->Branch("cosmict_7_flag_sec",&tagger_info.cosmict_7_flag_sec,"cosmict_7_flag_sec/F");
@@ -2429,7 +2432,7 @@ int main(int argc, char* argv[])
     T_tagger->Branch("cosmict_10_flag_dir_weak",&tagger_info.cosmict_10_flag_dir_weak);
     T_tagger->Branch("cosmict_10_angle_beam",&tagger_info.cosmict_10_angle_beam);
     T_tagger->Branch("cosmict_10_length",&tagger_info.cosmict_10_length);
-    
+
     T_tagger->Branch("numu_cc_flag",&tagger_info.numu_cc_flag,"numu_cc_flag/F");
 
     T_tagger->Branch("numu_cc_flag_1",&tagger_info.numu_cc_flag_1);
@@ -2470,30 +2473,30 @@ int main(int argc, char* argv[])
 
     T_tagger->Branch("cosmict_score",&tagger_info.cosmict_score,"cosmict_score/F");
     T_tagger->Branch("numu_score",&tagger_info.numu_score,"numu_score/F");
-    
-    
+
+
     // BDTs ...
     T_tagger->Branch("mipid_score",&tagger_info.mipid_score,"mipid_score/F");
     T_tagger->Branch("gap_score",&tagger_info.gap_score,"gap_score/F");
     T_tagger->Branch("hol_lol_score",&tagger_info.hol_lol_score,"hol_lol_score/F");
-    T_tagger->Branch("cme_anc_score",&tagger_info.cme_anc_score,"cme_anc_score/F"); 
+    T_tagger->Branch("cme_anc_score",&tagger_info.cme_anc_score,"cme_anc_score/F");
     T_tagger->Branch("mgo_mgt_score",&tagger_info.mgo_mgt_score,"mgo_mgt_score/F");
     T_tagger->Branch("br1_score",&tagger_info.br1_score,"br1_score/F");
-    
+
     T_tagger->Branch("br3_score",&tagger_info.br3_score,"br3_score/F");
     T_tagger->Branch("br3_3_score",&tagger_info.br3_3_score,"br3_3_score/F");
     T_tagger->Branch("br3_5_score",&tagger_info.br3_5_score,"br3_5_score/F");
     T_tagger->Branch("br3_6_score",&tagger_info.br3_6_score,"br3_6_score/F");
     T_tagger->Branch("stemdir_br2_score",&tagger_info.stemdir_br2_score,"stemdir_br2_score/F");
     T_tagger->Branch("trimuon_score",&tagger_info.trimuon_score,"trimuon_score/F");
-    
+
     T_tagger->Branch("br4_tro_score",&tagger_info.br4_tro_score,"br4_tro_score/F");
     T_tagger->Branch("mipquality_score",&tagger_info.mipquality_score,"mipquality_score/F");
     T_tagger->Branch("pio_1_score",&tagger_info.pio_1_score,"pio_1_score/F");
     T_tagger->Branch("pio_2_score",&tagger_info.pio_2_score,"pio_2_score/F");
     T_tagger->Branch("stw_spt_score",&tagger_info.stw_spt_score,"stw_spt_score/F");
     T_tagger->Branch("vis_1_score",&tagger_info.vis_1_score,"vis_1_score/F");
-    
+
     T_tagger->Branch("vis_2_score",&tagger_info.vis_2_score,"vis_2_score/F");
     T_tagger->Branch("stw_2_score",&tagger_info.stw_2_score,"stw_2_score/F");
     T_tagger->Branch("stw_3_score",&tagger_info.stw_3_score,"stw_3_score/F");
@@ -2508,14 +2511,16 @@ int main(int argc, char* argv[])
     T_tagger->Branch("tro_4_score",&tagger_info.tro_4_score,"tro_4_score/F");
     T_tagger->Branch("tro_5_score",&tagger_info.tro_5_score,"tro_5_score/F");
     T_tagger->Branch("nue_score",&tagger_info.nue_score,"nue_score/F");
-    
+
+    T_tagger->Branch("photon_flag", &tagger_info.photon_flag, "photon_flag/F");
+
     for (size_t i=0;i!=neutrino_vec.size();i++){
       WCPPID::Map_Proto_Vertex_Segments& map_vertex_segments = neutrino_vec.at(i)->get_map_vertex_segments();
       WCPPID::ProtoVertex *nu_vtx =  neutrino_vec.at(i)->get_main_vertex();
-      
+
       auto it1 = map_vertex_segments.find(nu_vtx);
       Point vertex_point;
-      
+
       if (it1 != map_vertex_segments.end() && it1->second.size()>0){
 	WCPPID::ProtoSegment *sg = *map_vertex_segments[nu_vtx].begin();
 	if (nu_vtx->get_wcpt().index == sg->get_wcpt_vec().front().index){
@@ -2532,11 +2537,11 @@ int main(int argc, char* argv[])
       tagger_info = neutrino_vec.at(i)->tagger_info;
 
       //      std::cout << tagger_info.cosmic_flag << " " << neutrino_vec.at(i)->tagger_info.cosmic_flag << std::endl;
-      
+
       T_tagger->Fill();
     }
-    
-    
+
+
     // for (auto it = map_cluster_vertex.begin(); it!= map_cluster_vertex.end(); it++){
     //   WCPPID::ProtoVertex *vtx = it->second;
     //   x_vtx = vtx->get_fit_pt().x/units::cm;
@@ -2557,19 +2562,19 @@ int main(int argc, char* argv[])
 
 
   TTree *TMC = new TTree("TMC","TMC");
-  
+
   WCPPID::WCRecoTree reco_tree;
   reco_tree.mc_daughters = new std::vector<std::vector<int> >;
   reco_tree.mc_daughters->clear();
   reco_tree.mc_Ntrack = 0;
-  
+
   TMC->Branch("mc_Ntrack", &reco_tree.mc_Ntrack);  // number of tracks in MC
   TMC->Branch("mc_id", &reco_tree.mc_id, "mc_id[mc_Ntrack]/I");  // track id; size == mc_Ntrack
   TMC->Branch("mc_pdg", &reco_tree.mc_pdg, "mc_pdg[mc_Ntrack]/I");  // track particle pdg; size == mc_Ntrack
   TMC->Branch("mc_process", &reco_tree.mc_process, "mc_process[mc_Ntrack]/I");  // track generation process code; size == mc_Ntrack
   TMC->Branch("mc_mother", &reco_tree.mc_mother, "mc_mother[mc_Ntrack]/I");  // mother id of this track; size == mc_Ntrack
   TMC->Branch("mc_included",&reco_tree.mc_included, "mc_included[mc_Ntrack]/I"); // flat labeling if this should be added to the neutrino energy ...
-  
+
   TMC->Branch("mc_dir_weak",&reco_tree.mc_dir_weak,"mc_dir_weak[mc_Ntrack]/I");
   TMC->Branch("mc_kine_range",&reco_tree.mc_kine_range,"mc_kine_range[mc_Ntrack]/F");
   TMC->Branch("mc_kine_dQdx",&reco_tree.mc_kine_dQdx,"mc_kine_dQdx[mc_Ntrack]/F");
@@ -2577,13 +2582,13 @@ int main(int argc, char* argv[])
 
   TMC->Branch("mc_length",&reco_tree.mc_length,"mc_length[mc_Ntrack]/F");
   TMC->Branch("mc_stopped",&reco_tree.mc_stopped,"mc_stopped[mc_Ntrack]/I");
-  
+
   TMC->Branch("mc_daughters", reco_tree.mc_daughters);  // daughters id of this track; vector
   TMC->Branch("mc_startXYZT", &reco_tree.mc_startXYZT, "mc_startXYZT[mc_Ntrack][4]/F");  // start position of this track; size == mc_Ntrack
   TMC->Branch("mc_endXYZT", &reco_tree.mc_endXYZT, "mc_endXYZT[mc_Ntrack][4]/F");  // start position of this track; size == mc_Ntrack
   TMC->Branch("mc_startMomentum", &reco_tree.mc_startMomentum, "mc_startMomentum[mc_Ntrack][4]/F");  // start momentum of this track; size == mc_Ntrack
   TMC->Branch("mc_endMomentum", &reco_tree.mc_endMomentum, "mc_endMomentum[mc_Ntrack][4]/F");  // start momentum of this track; size == mc_Ntrack
-  
+
   TMC->SetDirectory(file1);
 
   WCPPID::KineInfo kine_tree;
@@ -2605,7 +2610,7 @@ int main(int argc, char* argv[])
   T_kine->Branch("kine_pio_mass",&kine_tree.kine_pio_mass,"kine_pio_mass/F");
   T_kine->Branch("kine_pio_flag",&kine_tree.kine_pio_flag,"kine_pio_flag/I");
   T_kine->Branch("kine_pio_vtx_dis",&kine_tree.kine_pio_vtx_dis,"kine_pio_vtx_dis/F");
-  
+
   T_kine->Branch("kine_pio_energy_1",&kine_tree.kine_pio_energy_1,"kine_pio_energy_1/F");
   T_kine->Branch("kine_pio_theta_1",&kine_tree.kine_pio_theta_1,"kine_pio_theta_1/F");
   T_kine->Branch("kine_pio_phi_1",&kine_tree.kine_pio_phi_1,"kine_pio_phi_1/F");
@@ -2617,7 +2622,7 @@ int main(int argc, char* argv[])
   T_kine->Branch("kine_pio_dis_2",&kine_tree.kine_pio_dis_2,"kine_pio_dis_2/F");
 
   T_kine->Branch("kine_pio_angle",&kine_tree.kine_pio_angle,"kine_pio_angle/F");
-  
+
   for (size_t i=0; i!= neutrino_vec.size();i++){
     //    neutrino_vec.at(i)->fill_proto_main_tree(reco_tree);
     neutrino_vec.at(i)->fill_particle_tree(reco_tree );
@@ -2628,9 +2633,9 @@ int main(int argc, char* argv[])
   T_kine->Fill();
 
 
-  
 
-  
+
+
   TTree *T_cluster ;
   Double_t x,y,z,q,nq;
   Int_t ncluster;
@@ -2652,10 +2657,10 @@ int main(int argc, char* argv[])
   T_cluster->Branch("ch_w",&ch_w,"ch_w/I");
   T_cluster->SetDirectory(file1);
 
-  
+
   // save all the points, points are grouped by proto clusters ...
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
-    WCPPID::PR3DCluster* new_cluster = *it;  
+    WCPPID::PR3DCluster* new_cluster = *it;
     ncluster = map_cluster_parent_id[new_cluster];
     real_cluster_id = new_cluster->get_cluster_id(); // for all other clusters ....
     ToyPointCloud *pcloud = new_cluster->get_point_cloud();
@@ -2666,7 +2671,7 @@ int main(int argc, char* argv[])
 	x = cloud.pts[i].x/units::cm;
 	y = cloud.pts[i].y/units::cm;
 	z = cloud.pts[i].z/units::cm;
-	
+
 	if (point_sub_cluster_ids.size() == cloud.pts.size()){
 	  if (point_sub_cluster_ids.at(i)==-1){
 	    real_cluster_id = -1;
@@ -2675,12 +2680,12 @@ int main(int argc, char* argv[])
 	  }
 	}
 	sub_cluster_id =  new_cluster->get_cluster_id();
-	
+
 	SlimMergeGeomCell *mcell = cloud.pts[i].mcell;
 	ch_u = cloud.pts[i].index_u;
 	ch_v = cloud.pts[i].index_v;
 	ch_w = cloud.pts[i].index_w;
-	
+
 	if (mcell==0){
 	  temp_time_slice = -1;
 	  q = 1;
@@ -2701,7 +2706,7 @@ int main(int argc, char* argv[])
 
 
 
-  // also all points, charge can be used to save the track shower 
+  // also all points, charge can be used to save the track shower
   WCPPID::WCPointTree point_tree;
   TTree *t_rec_simple = new TTree("T_rec","T_rec");
   t_rec_simple->SetDirectory(file1);
@@ -2735,11 +2740,11 @@ int main(int argc, char* argv[])
   t_rec_charge->Branch("reduced_chi2",&point_tree.reco_reduced_chi2,"reduced_chi2/D");
   t_rec_charge->Branch("flag_vertex",&point_tree.reco_flag_vertex,"flag_vertex/I");
   t_rec_charge->Branch("flag_shower",&point_tree.reco_flag_track_shower,"flag_shower/I");
-  t_rec_charge->Branch("rr",&point_tree.reco_rr,"rr/D"); 
+  t_rec_charge->Branch("rr",&point_tree.reco_rr,"rr/D");
   t_rec_charge->Branch("cluster_id",&point_tree.reco_mother_cluster_id,"cluster_id/I");
   t_rec_charge->Branch("real_cluster_id",&point_tree.reco_proto_cluster_id,"real_cluster_id/I");
   t_rec_charge->Branch("sub_cluster_id",&point_tree.reco_proto_cluster_id,"sub_cluster_id/I");
-  
+
   // save skeleton informatio  ...
   TTree *t_rec_deblob = new TTree("T_rec_charge_blob","T_rec_charge_blob");
   t_rec_deblob->SetDirectory(file1);
@@ -2754,21 +2759,21 @@ int main(int argc, char* argv[])
   t_rec_deblob->Branch("cluster_id",&point_tree.reco_mother_cluster_id,"cluster_id/I");
   t_rec_deblob->Branch("real_cluster_id",&point_tree.reco_particle_id,"real_cluster_id/I");
   t_rec_deblob->Branch("sub_cluster_id",&point_tree.reco_cluster_id,"sub_cluster_id/I");
-  
 
 
-  
+
+
   for (size_t i=0; i!= neutrino_vec.size();i++){
     int mother_cluster_id = neutrino_vec.at(i)->get_main_cluster()->get_cluster_id();
     neutrino_vec.at(i)->fill_skeleton_info_magnify(mother_cluster_id, point_tree, t_rec_charge, dQdx_scale, dQdx_offset);
     neutrino_vec.at(i)->fill_skeleton_info(mother_cluster_id, point_tree, t_rec_deblob, dQdx_scale, dQdx_offset, true);
     neutrino_vec.at(i)->fill_point_info(mother_cluster_id, point_tree, t_rec_simple);
   }
-  
 
-  
-  
-  
+
+
+
+
   TTree *T_proj_data = new TTree("T_proj_data","T_proj_data");
   std::vector<int> *proj_data_cluster_id = new std::vector<int>;
   std::vector<std::vector<int>> *proj_data_cluster_channel = new std::vector<std::vector<int>>;
@@ -2776,7 +2781,7 @@ int main(int argc, char* argv[])
   std::vector<std::vector<int>> *proj_data_cluster_charge= new std::vector<std::vector<int>>;
   std::vector<std::vector<int>> *proj_data_cluster_charge_err= new std::vector<std::vector<int>>;
   std::vector<std::vector<int>> *proj_data_cluster_charge_pred= new std::vector<std::vector<int>>;
-  
+
   T_proj_data->Branch("cluster_id",&proj_data_cluster_id);
   T_proj_data->Branch("channel",&proj_data_cluster_channel);
   T_proj_data->Branch("time_slice",&proj_data_cluster_timeslice);
@@ -2790,16 +2795,16 @@ int main(int argc, char* argv[])
 
 
 
-  
+
   // original save ...
   for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
     WCPPID::PR3DCluster* cluster = *it;
-    int ndf_save= cluster->get_cluster_id(); 
+    int ndf_save= cluster->get_cluster_id();
 
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_u_map = cluster->get_proj_data_u_map();
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_v_map = cluster->get_proj_data_v_map();
     std::map<std::pair<int,int>, std::tuple<double,double,double> > & proj_data_w_map = cluster->get_proj_data_w_map();
-    
+
     proj_data_cluster_id->push_back(ndf_save);
     std::vector<int> temp_channel;
     std::vector<int> temp_timeslice;
@@ -2817,7 +2822,7 @@ int main(int argc, char* argv[])
     }
     for (auto it = proj_data_v_map.begin(); it!=proj_data_v_map.end(); it++){
       // if (it->first.first > 8256) std::cout << cluster->get_cluster_id() << " V " << it->first.first << std::endl;
-      
+
       temp_channel.push_back(it->first.first);
       temp_timeslice.push_back(it->first.second);
       temp_charge.push_back(std::get<0>(it->second));
@@ -2826,7 +2831,7 @@ int main(int argc, char* argv[])
     }
     for (auto it = proj_data_w_map.begin(); it!=proj_data_w_map.end(); it++){
       //  if (it->first.first > 8256) std::cout << cluster->get_cluster_id() << " W " << it->first.first << std::endl;
-      
+
       temp_channel.push_back(it->first.first);
       temp_timeslice.push_back(it->first.second);
       temp_charge.push_back(std::get<0>(it->second));
@@ -2838,11 +2843,11 @@ int main(int argc, char* argv[])
     proj_data_cluster_charge->push_back(temp_charge);
     proj_data_cluster_charge_err->push_back(temp_charge_err);
     proj_data_cluster_charge_pred->push_back(temp_charge_pred);
-    
+
   }
   T_proj_data->Fill();
 
-  
+
   // now save the original projected charge information
   // fill the bad channels ...
   TTree *T_proj = new TTree("T_proj","T_proj");
@@ -2857,7 +2862,7 @@ int main(int argc, char* argv[])
   T_proj->Branch("charge",&proj_cluster_charge);
   T_proj->Branch("charge_err",&proj_cluster_charge_err);
   T_proj->SetDirectory(file1);
-  
+
   for (auto it = map_parentid_clusters.begin(); it!=map_parentid_clusters.end(); it++){
     int cluster_id = it->first;
     std::vector<int> proj_channel;
@@ -2876,8 +2881,8 @@ int main(int argc, char* argv[])
     proj_cluster_charge_err->push_back(proj_charge_err);
   }
   T_proj->Fill();
-  
-  
+
+
   TTree *t_bad = new TTree("T_bad","T_bad");
   t_bad->SetDirectory(file1);
   Int_t bad_npoints;
@@ -2898,10 +2903,10 @@ int main(int argc, char* argv[])
     }
     t_bad->Fill();
   }
-  
+
   file1->Write();
   file1->Close();
-  
-  
+
+
   return 0;
 }
