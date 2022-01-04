@@ -1928,12 +1928,6 @@ int main(int argc, char* argv[])
     T_tagger->Branch("shw_sp_lem_flag",&tagger_info.shw_sp_lem_flag,"shw_sp_lem_flag/F");
 
 
-
-<<<<<<< HEAD
-
-=======
-
->>>>>>> 7d5e6121272e6c1558b468ccbe9cdec237a6e73d
     // pio ...
     T_tagger->Branch("pio_flag",&tagger_info.pio_flag,"pio_flag/F");
     T_tagger->Branch("pio_mip_id",&tagger_info.pio_mip_id,"pio_mip_id/F");
