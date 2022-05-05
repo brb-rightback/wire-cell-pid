@@ -11,12 +11,12 @@ bool sortbysec1(const std::pair<WCPPID::ProtoSegment*,double> &a,
 }
 
 void WCPPID::NeutrinoID::deghosting(){
-  //std::cout << "B " << std::endl;
+  // std::cout << "B " << std::endl;
   deghost_clusters();
 
-  //  std::cout << "A " << std::endl;
+  //std::cout << "A " << std::endl;
   deghost_segments();
-
+  //std::cout << "C " << std::endl;
   std::set<WCPPID::PR3DCluster*> temp_clusters;
   for (auto it = map_cluster_main_vertices.begin(); it!= map_cluster_main_vertices.end(); it++){
     WCPPID::PR3DCluster *cluster = it->first;
@@ -52,10 +52,14 @@ void WCPPID::NeutrinoID::deghost_segments(){
   WCPPID::PR3DClusterSelection ordered_clusters;
   order_clusters(ordered_clusters, map_cluster_id_segments, cluster_length_map);
 
+
+  // std::cout << all_clusters.size() << std::endl;
   for (size_t i=0;i!=all_clusters.size();i++){
     if (cluster_length_map.find(all_clusters.at(i)) != cluster_length_map.end()) continue;
-    global_point_cloud.AddPoints(all_clusters.at(i)->get_point_cloud());
+    global_point_cloud.AddPoints(all_clusters.at(i)->get_point_cloud());    
   }
+  if (global_point_cloud.get_num_points() ==0) return;
+  //  std::cout << global_point_cloud.get_num_points() << std::endl;
   // dist cut ...
   double dis_cut = 1.2*units::cm;
   
@@ -86,10 +90,19 @@ void WCPPID::NeutrinoID::deghost_segments(){
 	
 	for (size_t k=0;k!=pts.size();k++){
 	  Point test_point = pts.at(k);
+
+	  
+	  
 	  bool flag_dead = ct_point_cloud->get_closest_dead_chs(test_point,0);
+	  
+	  
 	  if (!flag_dead){
 	    bool flag_in = false;
+	    
 	    std::tuple<double, WCP::PR3DCluster*, size_t> results = global_point_cloud.get_closest_2d_point_info(test_point, 0);
+	    
+	   
+	    
 	    if (std::get<0>(results)<=dis_cut*2./3.) flag_in = true;
 	    if (global_steiner_point_cloud.get_num_points()!=0){
 	      results = global_steiner_point_cloud.get_closest_2d_point_info(test_point, 0);
@@ -183,6 +196,8 @@ void WCPPID::NeutrinoID::deghost_segments(){
     global_point_cloud.AddPoints(ordered_clusters.at(i)->get_point_cloud());
     global_steiner_point_cloud.AddPoints(ordered_clusters.at(i)->get_point_cloud_steiner());
   }
+
+
   
   // remove vertices ...
   WCPPID::ProtoVertexSelection tmp_vertices;

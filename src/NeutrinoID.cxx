@@ -112,6 +112,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     
     // find the proto vertex ...
     find_proto_vertex(main_cluster, true, 2);
+
     
     // deal with shower ...
     clustering_points(main_cluster);
@@ -123,7 +124,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     determine_main_vertex(main_cluster);
     //improve_vertex(main_cluster, false); // do not search for vertex activities ...
 
-    
+   
     if (main_vertex !=0){
       map_cluster_main_vertices[main_cluster] = main_vertex;
       main_vertex = 0;
@@ -173,12 +174,13 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
       }
      
     }
-    
+
     
     //  deghost ...
     deghosting();
   }
-
+ 
+  
   if (flag_main_cluster){
     if (flag_dl_vtx){
       bool flag_change = determine_overall_main_vertex_DL();
