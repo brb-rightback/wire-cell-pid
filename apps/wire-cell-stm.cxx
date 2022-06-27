@@ -36,9 +36,14 @@ int main(int argc, char* argv[])
   bool flag_debug_output = true; // output
   int datatier = 0; // data=0, overlay=1, full mc=2
   int flag_calib_corr = 1;
+
+  bool flag_lifetime_corr = false;
   
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
+    case 'a':
+      flag_lifetime_corr = atoi(&argv[i][2]);
+      break;
     case 't':
       flag_in_time_only = atoi(&argv[i][2]); 
       break;

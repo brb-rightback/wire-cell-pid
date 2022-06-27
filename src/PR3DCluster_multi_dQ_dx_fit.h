@@ -827,6 +827,11 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
 	corr = mp.get_corr_factor(p, offset_u,  slope_yu,  slope_zu,  offset_v,  slope_yv,  slope_zv,  offset_w,  slope_yw,  slope_zw);
       }
       
+      // correction electron lifetime attenuation
+      double elifetime_ratio =  mp.get_attenuation_ratio((p.x/time_slice_width * nrebin * 0.5*units::microsecond  - flash_time)/units::millisecond);
+      //    std::cout << p.at(i).x << " " << (p.x/time_slice_width * nrebin * 0.5*units::microsecond  - flash_time)/units::millisecond << " " << elifetime_ratio << std::endl;
+      corr /= elifetime_ratio ; 
+      
       int index = vtx->get_fit_index();
       double tmp_dQ = pos_3D(index) * corr;
       double tmp_dx = vtx->get_dx();
@@ -849,6 +854,12 @@ void WCPPID::PR3DCluster::dQ_dx_multi_fit(WCPPID::Map_Proto_Vertex_Segments& map
       if (mp.get_flag_corr()){
 	corr = mp.get_corr_factor(pts.at(i), offset_u,  slope_yu,  slope_zu,  offset_v,  slope_yv,  slope_zv,  offset_w,  slope_yw,  slope_zw);
       }
+      // correction electron lifetime attenuation
+      double elifetime_ratio =  mp.get_attenuation_ratio((pts.at(i).x/time_slice_width * nrebin * 0.5*units::microsecond  - flash_time)/units::millisecond);
+      //    std::cout << pts.at(i).x << " " << (pts.at(i).x/time_slice_width * nrebin * 0.5*units::microsecond  - flash_time)/units::millisecond << " " << elifetime_ratio << std::endl;
+      corr /= elifetime_ratio ; 
+
+      
       dQ_vec.at(i) = pos_3D(indices.at(i)) * corr;
       reduced_chi2_vec.at(i) = traj_reduced_chi2.at(indices.at(i));
 

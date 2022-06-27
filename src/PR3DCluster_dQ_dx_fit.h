@@ -852,6 +852,7 @@ void WCPPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WCP::GeomWire*, 
     pos_3D = solver.solve(b);
   }
 
+    
   double sum = 0 ;
   for (int i=0;i!=n_3D_pos;i++){
     /* std::cout << i << " "<< pos_3D(i) << " " << dx.at(i)/units::cm << " " << pos_3D(i)/dx.at(i)*units::cm << std::endl; */
@@ -859,6 +860,12 @@ void WCPPID::PR3DCluster::dQ_dx_fit(std::map<int,std::map<const WCP::GeomWire*, 
     if (mp.get_flag_corr()){
       corr = mp.get_corr_factor(fine_tracking_path.at(i), offset_u,  slope_yu,  slope_zu,  offset_v,  slope_yv,  slope_zv,  offset_w,  slope_yw,  slope_zw);
     }
+    
+    // correction electron lifetime attenuation
+    double elifetime_ratio =  mp.get_attenuation_ratio((fine_tracking_path.at(i).x/time_slice_width * nrebin * 0.5*units::microsecond  - flash_time)/units::millisecond);
+    //    std::cout << fine_tracking_path.at(i).x << " " << (fine_tracking_path.at(i).x/time_slice_width * nrebin * 0.5*units::microsecond  - flash_time)/units::millisecond << " " << elifetime_ratio << std::endl;
+    
+    corr /= elifetime_ratio ; 
     
     double central_U = offset_u + (slope_yu * fine_tracking_path.at(i).y + slope_zu * fine_tracking_path.at(i).z);
     if (central_U >=296 && central_U <=327 ||
