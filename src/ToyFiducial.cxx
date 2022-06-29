@@ -729,6 +729,11 @@ bool WCPPID::ToyFiducial::check_stm(WCPPID::PR3DCluster* main_cluster, std::vect
     WCP::PointVector& pts = main_cluster->get_fine_tracking_path();
     std::vector<double>& dQ = main_cluster->get_dQ();
     std::vector<double>& dx = main_cluster->get_dx();
+
+    // for (auto it = dQ.begin(); it!= dQ.end(); it++){
+    //   std::cout << " " << (*it) << std::endl;
+    // }
+    
     
     int kink_num = find_first_kink(main_cluster);
     

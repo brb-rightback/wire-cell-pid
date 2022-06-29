@@ -30,8 +30,13 @@ int main(int argc, char* argv[])
   bool flag_main_cluster_only = true; // default to run only on the main cluster
   bool flag_bee_output = true; // default save 
   int flag_calib_corr = 0;
+
+   bool flag_lifetime_corr = true;
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
+    case 'a':
+      flag_lifetime_corr = atoi(&argv[i][2]);
+      break;
     case 't':
       flag_in_time_only = atoi(&argv[i][2]); 
       break;
@@ -78,6 +83,11 @@ int main(int argc, char* argv[])
   int eve_num;
   float unit_dis;
 
+  Float_t elifetime = 1000; // large number 
+  if (Trun->GetBranch("elifetime") && flag_lifetime_corr){
+    Trun->SetBranchAddress("elifetime",&elifetime);
+  }
+  
   std::vector<int> *timesliceId = new std::vector<int>;
   std::vector<std::vector<int>> *timesliceChannel = new std::vector<std::vector<int>>;
   std::vector<std::vector<int>> *raw_charge = new std::vector<std::vector<int>>;
@@ -141,6 +151,13 @@ int main(int argc, char* argv[])
   mp.set_first_v_dis(first_v_dis);
   mp.set_first_w_dis(first_w_dis);
 
+  if (elifetime < 1000){
+    // read the variable from the Trun tree ...
+    mp.set_electron_lifetime(elifetime);
+
+    std::cout << "Electron Lifetime Read in: " << elifetime << " ms" << std::endl;
+  }
+  
   std::map<int,std::pair<double,double>> dead_u_index;
   std::map<int,std::pair<double,double>> dead_v_index;
   std::map<int,std::pair<double,double>> dead_w_index;
