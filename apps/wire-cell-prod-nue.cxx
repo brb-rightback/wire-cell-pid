@@ -1381,11 +1381,17 @@ int main(int argc, char* argv[])
   // Trun1->Branch("raw_charge",&raw_charge);
   // Trun1->Branch("raw_charge_err",&raw_charge_err);
 
+  
+  
   Double_t dQdx_scale = 0.1;
   Trun1->Branch("dQdx_scale",&dQdx_scale,"dQdx_scale/D");
   Double_t dQdx_offset = -1000;
   Trun1->Branch("dQdx_offset",&dQdx_offset,"dQdx_offset/D");
 
+  if (elifetime < 1000){
+    Trun1->Branch("elifetime",&elifetime,"elifetime/F");
+  }
+  
   Trun1->Fill();
 
   if (T_bad_ch!=0){

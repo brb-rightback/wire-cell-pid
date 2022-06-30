@@ -725,6 +725,11 @@ int main(int argc, char* argv[])
   Trun1->Branch("timesliceChannel",&timesliceChannel);
   Trun1->Branch("raw_charge",&raw_charge);
   Trun1->Branch("raw_charge_err",&raw_charge_err);
+
+  if (elifetime < 1000){
+    Trun1->Branch("elifetime",&elifetime,"elifetime/F");
+  }
+  
   Trun1->Fill();
   // Trun->CloneTree(-1,"fast");
   //if (T_bad_ch!=0){
