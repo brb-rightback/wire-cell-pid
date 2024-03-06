@@ -89,7 +89,9 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
       (*it)->create_steiner_graph(*ct_point_cloud, gds, nrebin, frame_length, unit_dis);
       std::pair<WCP::WCPointCloud<double>::WCPoint,WCP::WCPointCloud<double>::WCPoint> two_wcps = (*it)->get_two_boundary_wcps();
       double length = sqrt(pow(two_wcps.first.x - two_wcps.second.x, 2) + pow(two_wcps.first.y - two_wcps.second.y, 2) + pow(two_wcps.first.z - two_wcps.second.z, 2));
-      map_cluster_length[*it] = length;    
+      map_cluster_length[*it] = length;
+
+      //      std::cout << (*it)->get_cluster_id() << " " << length/units::cm << std::endl;
     }
   }
   
@@ -104,9 +106,13 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
   //   other_clusters.push_back(main_cluster);
   //   main_cluster = max_length_cluster;
   // }
- 
+
+  //std::cout << "haha " << " " << map_cluster_length[main_cluster]/units::cm << std::endl;
+  
   if (map_cluster_length[main_cluster] < 3*units::cm) return;
 
+
+  
   
   if (flag_main_cluster){
     
@@ -144,6 +150,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
       //std::cout << (*it)->get_cluster_id() << " " << map_cluster_length[*it]/units::cm << std::endl;
       
       if (map_cluster_length[*it] > 6*units::cm){
+	//if (map_cluster_length[*it] > 4*units::cm){
 	// find the proto vertex ...
 	find_proto_vertex(*it, true, 2);
 	// deal with shower ...

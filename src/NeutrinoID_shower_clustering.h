@@ -72,7 +72,7 @@ void WCPPID::NeutrinoID::shower_determing_in_main_cluster(WCPPID::PR3DCluster *t
   examine_all_showers(temp_cluster);
   
   
-  //  print_segs_info(main_cluster->get_cluster_id());
+  /* print_segs_info(main_cluster->get_cluster_id()); */
   /* std::cout << std::endl << std::endl; */
   /* for (auto it = map_segment_vertices.begin(); it!=map_segment_vertices.end(); it++){ */
   /*   WCPPID::ProtoSegment *sg = it->first; */
@@ -1184,7 +1184,7 @@ void WCPPID::NeutrinoID::shower_clustering_with_nv_from_vertices(){
       double close_shower_dis = shower->get_closest_dis(seg1); 
       
       
-      //  std::cout << seg1->get_cluster_id() << " " << seg1->get_id() << " " << angle1/3.1415926*180. << " " << angle/3.1415926*180. << " " << dis1/units::cm <<" " << pair_dis_point.first/units::cm << " " << tmp_shower_dis/units::cm << " " << close_shower_dis/units::cm << std::endl;
+      //std::cout << seg1->get_cluster_id() << " " << seg1->get_id() << " " << angle1/3.1415926*180. << " " << angle/3.1415926*180. << " " << dis1/units::cm <<" " << pair_dis_point.first/units::cm << " " << tmp_shower_dis/units::cm << " " << close_shower_dis/units::cm << std::endl;
       
       if (angle1/3.1415926*180. > 30) continue;
       
@@ -1309,7 +1309,7 @@ void WCPPID::NeutrinoID::calculate_shower_kinematics(){
 	shower->calculate_kinematics_long_muon(segments_in_long_muon);
 	double kine_charge = cal_kine_charge(shower);
 
-	//std::cout << "haha: " << kine_charge << std::endl;
+	//	std::cout << "haha: " << kine_charge << std::endl;
 	
 	shower->set_kine_charge(kine_charge);
 	shower->set_flag_kinematics(true);
