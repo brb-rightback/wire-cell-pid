@@ -31,6 +31,8 @@ using namespace WCP;
 #include "NeutrinoID_pio_tagger.h"
 #include "NeutrinoID_singlephoton_tagger.h"
 
+#include "NeutrinoID_ssm_tagger.h"
+
 #include "NeutrinoID_numu_bdts.h"
 #include "NeutrinoID_nue_bdts.h"
 #include "NeutrinoID_DL.h"
@@ -238,12 +240,16 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
     
     bool flag_cosmic = cosmic_tagger();
 
+
     // set the cosmic flag anyway ...
     // if (flag_cosmic) tagger_info.cosmic_flag = false;
     
     auto results = numu_tagger();
     bool flag_long_muon = results.first;
-    
+
+    bool flag_ssm = ssm_tagger(); 
+    if(flag_ssm) std::cout<<"SSM Spotted"<<std::endl;
+
     nue_tagger(results.second);
 
     bool flag_sp = singlephoton_tagger(results.second);
@@ -2105,6 +2111,318 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.mip_vec_dQ_dx_17 = 0; 
   tagger_info.mip_vec_dQ_dx_18 = 0; 
   tagger_info.mip_vec_dQ_dx_19 = 0; 
+
+  //single track kdar tagger
+  tagger_info.ssm_flag_st_kdar = false;
+  tagger_info.ssm_Nsm = -999;//number of short straight muons
+  tagger_info.ssm_Nsm_wivtx = -999;//number of short straight muons with vertex activity
+  //tagger_info.n_prim_tracks_1 = 0;
+  //tagger_info.n_prim_tracks_3 = 0;
+  //tagger_info.n_prim_tracks_5 = 0;
+  tagger_info.ssm_dq_dx_fwd_1 = -999;
+  tagger_info.ssm_dq_dx_fwd_2 = -999;
+  tagger_info.ssm_dq_dx_fwd_3 = -999;
+  tagger_info.ssm_dq_dx_fwd_4 = -999;
+  tagger_info.ssm_dq_dx_fwd_5 = -999;
+  tagger_info.ssm_dq_dx_bck_1 = -999;
+  tagger_info.ssm_dq_dx_bck_2 = -999;
+  tagger_info.ssm_dq_dx_bck_3 = -999;
+  tagger_info.ssm_dq_dx_bck_4 = -999;
+  tagger_info.ssm_dq_dx_bck_5 = -999;
+  tagger_info.ssm_d_dq_dx_fwd_12 = -999;
+  tagger_info.ssm_d_dq_dx_fwd_23 = -999;
+  tagger_info.ssm_d_dq_dx_fwd_34 = -999;
+  tagger_info.ssm_d_dq_dx_fwd_45 = -999;
+  tagger_info.ssm_d_dq_dx_bck_12 = -999;
+  tagger_info.ssm_d_dq_dx_bck_23 = -999;
+  tagger_info.ssm_d_dq_dx_bck_34 = -999;
+  tagger_info.ssm_d_dq_dx_bck_45 = -999;
+  tagger_info.ssm_max_dq_dx_fwd_3 = -999;
+  tagger_info.ssm_max_dq_dx_fwd_5 = -999;
+  tagger_info.ssm_max_dq_dx_bck_3 = -999;
+  tagger_info.ssm_max_dq_dx_bck_5 = -999;
+  tagger_info.ssm_max_d_dq_dx_fwd_3 = -999;
+  tagger_info.ssm_max_d_dq_dx_fwd_5 = -999;
+  tagger_info.ssm_max_d_dq_dx_bck_3 = -999;
+  tagger_info.ssm_max_d_dq_dx_bck_5 = -999;
+  tagger_info.ssm_medium_dq_dx = -999;
+  tagger_info.ssm_medium_dq_dx_bp = -999;
+      //angluar info
+  tagger_info.ssm_angle_to_z = -999;
+  tagger_info.ssm_angle_to_target = -999;
+  tagger_info.ssm_angle_to_absorber = -999;
+  tagger_info.ssm_angle_to_vertical = -999;
+      //directional info
+  tagger_info.ssm_x_dir = -999;
+  tagger_info.ssm_y_dir = -999;
+  tagger_info.ssm_z_dir = -999;
+      //energy info
+  tagger_info.ssm_kine_energy = -999;
+  tagger_info.ssm_kine_energy_reduced = -999;
+      //general properties
+  tagger_info.ssm_vtx_activity = -999;
+  tagger_info.ssm_pdg = -999;
+  tagger_info.ssm_dQ_dx_cut = -999;
+  tagger_info.ssm_score_mu_fwd = -999;
+  tagger_info.ssm_score_p_fwd = -999;
+  tagger_info.ssm_score_e_fwd = -999;
+  tagger_info.ssm_score_mu_bck = -999;
+  tagger_info.ssm_score_p_bck = -999;
+  tagger_info.ssm_score_e_bck = -999;
+  tagger_info.ssm_score_mu_fwd_bp = -999;
+  tagger_info.ssm_score_p_fwd_bp = -999;
+  tagger_info.ssm_score_e_fwd_bp = -999;
+      //track "straighness"
+  tagger_info.ssm_length = -999;
+  tagger_info.ssm_direct_length = -999;
+  tagger_info.ssm_length_ratio = -999;
+  tagger_info.ssm_max_dev = -999;
+    //number of other particles
+  tagger_info.ssm_n_prim_tracks_1 = -999;
+  tagger_info.ssm_n_prim_tracks_3 = -999;
+  tagger_info.ssm_n_prim_tracks_5 = -999;
+  tagger_info.ssm_n_prim_tracks_8 = -999;
+  tagger_info.ssm_n_prim_tracks_11 = -999;
+  tagger_info.ssm_n_all_tracks_1 = -999;
+  tagger_info.ssm_n_all_tracks_3 = -999;
+  tagger_info.ssm_n_all_tracks_5 = -999;
+  tagger_info.ssm_n_all_tracks_8 = -999;
+  tagger_info.ssm_n_all_tracks_11 = -999;
+  tagger_info.ssm_n_daughter_tracks_1 = -999;
+  tagger_info.ssm_n_daughter_tracks_3 = -999;
+  tagger_info.ssm_n_daughter_tracks_5 = -999;
+  tagger_info.ssm_n_daughter_tracks_8 = -999;
+  tagger_info.ssm_n_daughter_tracks_11 = -999;
+  tagger_info.ssm_n_daughter_all_1 = -999;
+  tagger_info.ssm_n_daughter_all_3 = -999;
+  tagger_info.ssm_n_daughter_all_5 = -999;
+  tagger_info.ssm_n_daughter_all_8 = -999;
+  tagger_info.ssm_n_daughter_all_11 = -999;
+    //properties of leading other primary track
+  tagger_info.ssm_prim_track1_pdg = -999;
+  tagger_info.ssm_prim_track1_score_mu_fwd = -999;
+  tagger_info.ssm_prim_track1_score_p_fwd = -999;
+  tagger_info.ssm_prim_track1_score_e_fwd = -999;
+  tagger_info.ssm_prim_track1_score_mu_bck = -999;
+  tagger_info.ssm_prim_track1_score_p_bck = -999;
+  tagger_info.ssm_prim_track1_score_e_bck = -999;
+  tagger_info.ssm_prim_track1_length = -999;
+  tagger_info.ssm_prim_track1_direct_length = -999;
+  tagger_info.ssm_prim_track1_length_ratio = -999;
+  tagger_info.ssm_prim_track1_max_dev = -999;
+  tagger_info.ssm_prim_track1_kine_energy_range = -999;
+  tagger_info.ssm_prim_track1_kine_energy_range_mu = -999;
+  tagger_info.ssm_prim_track1_kine_energy_range_p = -999;
+  tagger_info.ssm_prim_track1_kine_energy_range_e = -999;
+  tagger_info.ssm_prim_track1_kine_energy_cal = -999;
+  tagger_info.ssm_prim_track1_medium_dq_dx = -999;
+  tagger_info.ssm_prim_track1_x_dir = -999;
+  tagger_info.ssm_prim_track1_y_dir = -999;
+  tagger_info.ssm_prim_track1_z_dir = -999;
+  tagger_info.ssm_prim_track1_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_prim_track1_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_prim_track1_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_prim_track1_add_daught_all_counts_5 = -999; 
+  tagger_info.ssm_prim_track1_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_prim_track1_add_daught_all_counts_11 = -999;
+  //properties of sub-leading other primary track
+  tagger_info.ssm_prim_track2_pdg = -999;
+  tagger_info.ssm_prim_track2_score_mu_fwd = -999;
+  tagger_info.ssm_prim_track2_score_p_fwd = -999;
+  tagger_info.ssm_prim_track2_score_e_fwd = -999;
+  tagger_info.ssm_prim_track2_score_mu_bck = -999;
+  tagger_info.ssm_prim_track2_score_p_bck = -999;
+  tagger_info.ssm_prim_track2_score_e_bck = -999;
+  tagger_info.ssm_prim_track2_length = -999;
+  tagger_info.ssm_prim_track2_direct_length = -999;
+  tagger_info.ssm_prim_track2_length_ratio = -999;
+  tagger_info.ssm_prim_track2_max_dev = -999;
+  tagger_info.ssm_prim_track2_kine_energy_range = -999;
+  tagger_info.ssm_prim_track2_kine_energy_range_mu = -999;
+  tagger_info.ssm_prim_track2_kine_energy_range_p = -999;
+  tagger_info.ssm_prim_track2_kine_energy_range_e = -999;
+  tagger_info.ssm_prim_track2_kine_energy_cal = -999;
+  tagger_info.ssm_prim_track2_medium_dq_dx = -999;
+  tagger_info.ssm_prim_track2_x_dir = -999;
+  tagger_info.ssm_prim_track2_y_dir = -999;
+  tagger_info.ssm_prim_track2_z_dir = -999;
+  tagger_info.ssm_prim_track2_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_prim_track2_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_prim_track2_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_prim_track2_add_daught_all_counts_5 = -999;
+  tagger_info.ssm_prim_track2_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_prim_track2_add_daught_all_counts_11 = -999;
+  //properties of leading daughter track
+  tagger_info.ssm_daught_track1_pdg = -999;
+  tagger_info.ssm_daught_track1_score_mu_fwd = -999;
+  tagger_info.ssm_daught_track1_score_p_fwd = -999;
+  tagger_info.ssm_daught_track1_score_e_fwd = -999;
+  tagger_info.ssm_daught_track1_score_mu_bck = -999;
+  tagger_info.ssm_daught_track1_score_p_bck = -999;
+  tagger_info.ssm_daught_track1_score_e_bck = -999;
+  tagger_info.ssm_daught_track1_length = -999;
+  tagger_info.ssm_daught_track1_direct_length = -999;
+  tagger_info.ssm_daught_track1_length_ratio = -999;
+  tagger_info.ssm_daught_track1_max_dev = -999;
+  tagger_info.ssm_daught_track1_kine_energy_range = -999;
+  tagger_info.ssm_daught_track1_kine_energy_range_mu = -999;
+  tagger_info.ssm_daught_track1_kine_energy_range_p = -999;
+  tagger_info.ssm_daught_track1_kine_energy_range_e = -999;
+  tagger_info.ssm_daught_track1_kine_energy_cal = -999;
+  tagger_info.ssm_daught_track1_medium_dq_dx = -999;
+  tagger_info.ssm_daught_track1_x_dir = -999;
+  tagger_info.ssm_daught_track1_y_dir = -999;
+  tagger_info.ssm_daught_track1_z_dir = -999;
+  tagger_info.ssm_daught_track1_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_daught_track1_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_daught_track1_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_daught_track1_add_daught_all_counts_5 = -999;
+  tagger_info.ssm_daught_track1_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_daught_track1_add_daught_all_counts_11 = -999;
+  //properties of sub-leading daughter track
+  tagger_info.ssm_daught_track2_pdg = -999;
+  tagger_info.ssm_daught_track2_score_mu_fwd = -999;
+  tagger_info.ssm_daught_track2_score_p_fwd = -999;
+  tagger_info.ssm_daught_track2_score_e_fwd = -999;
+  tagger_info.ssm_daught_track2_score_mu_bck = -999;
+  tagger_info.ssm_daught_track2_score_p_bck = -999;
+  tagger_info.ssm_daught_track2_score_e_bck = -999;
+  tagger_info.ssm_daught_track2_length = -999;
+  tagger_info.ssm_daught_track2_direct_length = -999;
+  tagger_info.ssm_daught_track2_length_ratio = -999;
+  tagger_info.ssm_daught_track2_max_dev = -999;
+  tagger_info.ssm_daught_track2_kine_energy_range = -999;
+  tagger_info.ssm_daught_track2_kine_energy_range_mu = -999;
+  tagger_info.ssm_daught_track2_kine_energy_range_p = -999;
+  tagger_info.ssm_daught_track2_kine_energy_range_e = -999;
+  tagger_info.ssm_daught_track2_kine_energy_cal = -999;
+  tagger_info.ssm_daught_track2_medium_dq_dx = -999;
+  tagger_info.ssm_daught_track2_x_dir = -999;
+  tagger_info.ssm_daught_track2_y_dir = -999;
+  tagger_info.ssm_daught_track2_z_dir = -999;
+  tagger_info.ssm_daught_track2_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_daught_track2_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_daught_track2_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_daught_track2_add_daught_all_counts_5 = -999;
+  tagger_info.ssm_daught_track2_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_daught_track2_add_daught_all_counts_11 = -999;
+  //properties of leading other primary shower
+  tagger_info.ssm_prim_shw1_pdg = -999;
+  tagger_info.ssm_prim_shw1_score_mu_fwd = -999;
+  tagger_info.ssm_prim_shw1_score_p_fwd = -999;
+  tagger_info.ssm_prim_shw1_score_e_fwd = -999;
+  tagger_info.ssm_prim_shw1_score_mu_bck = -999;
+  tagger_info.ssm_prim_shw1_score_p_bck = -999;
+  tagger_info.ssm_prim_shw1_score_e_bck = -999;
+  tagger_info.ssm_prim_shw1_length = -999;
+  tagger_info.ssm_prim_shw1_direct_length = -999;
+  tagger_info.ssm_prim_shw1_length_ratio = -999;
+  tagger_info.ssm_prim_shw1_max_dev = -999;
+  tagger_info.ssm_prim_shw1_kine_energy_range = -999;
+  tagger_info.ssm_prim_shw1_kine_energy_range_mu = -999;
+  tagger_info.ssm_prim_shw1_kine_energy_range_p = -999;
+  tagger_info.ssm_prim_shw1_kine_energy_range_e = -999;
+  tagger_info.ssm_prim_shw1_kine_energy_cal = -999;
+  tagger_info.ssm_prim_shw1_medium_dq_dx = -999;
+  tagger_info.ssm_prim_shw1_x_dir = -999;
+  tagger_info.ssm_prim_shw1_y_dir = -999;
+  tagger_info.ssm_prim_shw1_z_dir = -999;
+  tagger_info.ssm_prim_shw1_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_prim_shw1_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_prim_shw1_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_prim_shw1_add_daught_all_counts_5 = -999;
+  tagger_info.ssm_prim_shw1_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_prim_shw1_add_daught_all_counts_11 = -999;
+    //properties of sub-leading other primary shower
+  tagger_info.ssm_prim_shw2_pdg = -999;
+  tagger_info.ssm_prim_shw2_score_mu_fwd = -999;
+  tagger_info.ssm_prim_shw2_score_p_fwd = -999;
+  tagger_info.ssm_prim_shw2_score_e_fwd = -999;
+  tagger_info.ssm_prim_shw2_score_mu_bck = -999;
+  tagger_info.ssm_prim_shw2_score_p_bck = -999;
+  tagger_info.ssm_prim_shw2_score_e_bck = -999;
+  tagger_info.ssm_prim_shw2_length = -999;
+  tagger_info.ssm_prim_shw2_direct_length = -999;
+  tagger_info.ssm_prim_shw2_length_ratio = -999;
+  tagger_info.ssm_prim_shw2_max_dev = -999;
+  tagger_info.ssm_prim_shw2_kine_energy_range = -999;
+  tagger_info.ssm_prim_shw2_kine_energy_range_mu = -999;
+  tagger_info.ssm_prim_shw2_kine_energy_range_p = -999;
+  tagger_info.ssm_prim_shw2_kine_energy_range_e = -999;
+  tagger_info.ssm_prim_shw2_kine_energy_cal = -999;
+  tagger_info.ssm_prim_shw2_medium_dq_dx = -999;
+  tagger_info.ssm_prim_shw2_x_dir = -999;
+  tagger_info.ssm_prim_shw2_y_dir = -999;
+  tagger_info.ssm_prim_shw2_z_dir = -999;
+  tagger_info.ssm_prim_shw2_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_prim_shw2_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_prim_shw2_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_prim_shw2_add_daught_all_counts_5 = -999;
+  tagger_info.ssm_prim_shw2_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_prim_shw2_add_daught_all_counts_11 = -999;
+  //properties of leading daughter shower
+  tagger_info.ssm_daught_shw1_pdg = -999;
+  tagger_info.ssm_daught_shw1_score_mu_fwd = -999;
+  tagger_info.ssm_daught_shw1_score_p_fwd = -999;
+  tagger_info.ssm_daught_shw1_score_e_fwd = -999;
+  tagger_info.ssm_daught_shw1_score_mu_bck = -999;
+  tagger_info.ssm_daught_shw1_score_p_bck = -999;
+  tagger_info.ssm_daught_shw1_score_e_bck = -999;
+  tagger_info.ssm_daught_shw1_length = -999;
+  tagger_info.ssm_daught_shw1_direct_length = -999;
+  tagger_info.ssm_daught_shw1_length_ratio = -999;
+  tagger_info.ssm_daught_shw1_max_dev = -999;
+  tagger_info.ssm_daught_shw1_kine_energy_range = -999;
+  tagger_info.ssm_daught_shw1_kine_energy_range_mu = -999;
+  tagger_info.ssm_daught_shw1_kine_energy_range_p = -999;
+  tagger_info.ssm_daught_shw1_kine_energy_range_e = -999;
+  tagger_info.ssm_daught_shw1_kine_energy_cal = -999;
+  tagger_info.ssm_daught_shw1_medium_dq_dx = -999;
+  tagger_info.ssm_daught_shw1_x_dir = -999;
+  tagger_info.ssm_daught_shw1_y_dir = -999;
+  tagger_info.ssm_daught_shw1_z_dir = -999;
+  tagger_info.ssm_daught_shw1_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_daught_shw1_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_daught_shw1_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_daught_shw1_add_daught_all_counts_5 = -999;
+  tagger_info.ssm_daught_shw1_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_daught_shw1_add_daught_all_counts_11 = -999;
+    //properties of sub-leading daughter shower
+  tagger_info.ssm_daught_shw2_pdg = -999;
+  tagger_info.ssm_daught_shw2_score_mu_fwd = -999;
+  tagger_info.ssm_daught_shw2_score_p_fwd = -999;
+  tagger_info.ssm_daught_shw2_score_e_fwd = -999;
+  tagger_info.ssm_daught_shw2_score_mu_bck = -999;
+  tagger_info.ssm_daught_shw2_score_p_bck = -999;
+  tagger_info.ssm_daught_shw2_score_e_bck = -999;
+  tagger_info.ssm_daught_shw2_length = -999;
+  tagger_info.ssm_daught_shw2_direct_length = -999;
+  tagger_info.ssm_daught_shw2_length_ratio = -999;
+  tagger_info.ssm_daught_shw2_max_dev = -999;
+  tagger_info.ssm_daught_shw2_kine_energy_range = -999;
+  tagger_info.ssm_daught_shw2_kine_energy_range_mu = -999;
+  tagger_info.ssm_daught_shw2_kine_energy_range_p = -999;
+  tagger_info.ssm_daught_shw2_kine_energy_range_e = -999;
+  tagger_info.ssm_daught_shw2_kine_energy_cal = -999;
+  tagger_info.ssm_daught_shw2_medium_dq_dx = -999;
+  tagger_info.ssm_daught_shw2_x_dir = -999;
+  tagger_info.ssm_daught_shw2_y_dir = -999;
+  tagger_info.ssm_daught_shw2_z_dir = -999;
+  tagger_info.ssm_daught_shw2_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_daught_shw2_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_daught_shw2_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_daught_shw2_add_daught_all_counts_5 = -999;
+  tagger_info.ssm_daught_shw2_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_daught_shw2_add_daught_all_counts_11 = -999;
+  //event level properties
+  tagger_info.ssm_nu_angle_z = -999;
+  tagger_info.ssm_nu_angle_target = -999;
+  tagger_info.ssm_nu_angle_absorber = -999;
+  tagger_info.ssm_nu_angle_vertical = -999;
+  tagger_info.ssm_track_angle_z = -999;
+  tagger_info.ssm_track_angle_target = -999;
+  tagger_info.ssm_track_angle_absorber = -999;
+  tagger_info.ssm_track_angle_vertical = -999;
 
   // single photon shower identification
   tagger_info.shw_sp_flag = true;

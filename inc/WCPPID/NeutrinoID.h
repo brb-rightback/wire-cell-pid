@@ -12,6 +12,7 @@
 
 #include "WCPPID/Map_Proto_Vertex_Segment.h"
 
+//#include "WCPPID/ProtoVertex.h"
 //#include "Minuit2/FCNBase.h"
 
 namespace WCPPID{
@@ -205,6 +206,322 @@ namespace WCPPID{
     float mip_vec_dQ_dx_17;
     float mip_vec_dQ_dx_18;
     float mip_vec_dQ_dx_19;
+
+
+  float ssm_flag_st_kdar;
+    //float n_prim_tracks_1;
+    //float n_prim_tracks_3;
+    //float n_prim_tracks_5;
+
+  float ssm_Nsm;
+  float ssm_Nsm_wivtx;
+
+  float ssm_dq_dx_fwd_1;
+  float ssm_dq_dx_fwd_2;
+  float ssm_dq_dx_fwd_3;
+  float ssm_dq_dx_fwd_4;
+  float ssm_dq_dx_fwd_5;
+  float ssm_dq_dx_bck_1;
+  float ssm_dq_dx_bck_2;
+  float ssm_dq_dx_bck_3;
+  float ssm_dq_dx_bck_4;
+  float ssm_dq_dx_bck_5;
+  float ssm_d_dq_dx_fwd_12;
+  float ssm_d_dq_dx_fwd_23;
+  float ssm_d_dq_dx_fwd_34;
+  float ssm_d_dq_dx_fwd_45;
+  float ssm_d_dq_dx_bck_12;
+  float ssm_d_dq_dx_bck_23;
+  float ssm_d_dq_dx_bck_34;
+  float ssm_d_dq_dx_bck_45;
+  float ssm_max_dq_dx_fwd_3;
+  float ssm_max_dq_dx_fwd_5;
+  float ssm_max_dq_dx_bck_3;
+  float ssm_max_dq_dx_bck_5;
+  float ssm_max_d_dq_dx_fwd_3;
+  float ssm_max_d_dq_dx_fwd_5;
+  float ssm_max_d_dq_dx_bck_3;
+  float ssm_max_d_dq_dx_bck_5;
+  float ssm_medium_dq_dx;
+  float ssm_medium_dq_dx_bp;
+      //angluar info
+  float ssm_angle_to_z;
+  float ssm_angle_to_target;
+  float ssm_angle_to_absorber;
+  float ssm_angle_to_vertical;
+      //directional info
+  float ssm_x_dir;
+  float ssm_y_dir;
+  float ssm_z_dir;
+      //energy info
+  float ssm_kine_energy;
+  float ssm_kine_energy_reduced;
+      //general properties
+  float ssm_vtx_activity;
+  float ssm_pdg;
+  float ssm_dQ_dx_cut;
+  float ssm_score_mu_fwd;
+  float ssm_score_p_fwd;
+  float ssm_score_e_fwd;
+  float ssm_score_mu_bck;
+  float ssm_score_p_bck;
+  float ssm_score_e_bck;
+  float ssm_score_mu_fwd_bp;
+  float ssm_score_p_fwd_bp;
+  float ssm_score_e_fwd_bp;
+      //track "straighness"
+  float ssm_length;
+  float ssm_direct_length;
+  float ssm_length_ratio;
+  float ssm_max_dev;
+    //number of other particles
+  float ssm_n_prim_tracks_1;
+  float ssm_n_prim_tracks_3;
+  float ssm_n_prim_tracks_5;
+  float ssm_n_prim_tracks_8;
+  float ssm_n_prim_tracks_11;
+  float ssm_n_all_tracks_1;
+  float ssm_n_all_tracks_3;
+  float ssm_n_all_tracks_5;
+  float ssm_n_all_tracks_8;
+  float ssm_n_all_tracks_11;
+  float ssm_n_daughter_tracks_1;
+  float ssm_n_daughter_tracks_3;
+  float ssm_n_daughter_tracks_5;
+  float ssm_n_daughter_tracks_8;
+  float ssm_n_daughter_tracks_11;
+  float ssm_n_daughter_all_1;
+  float ssm_n_daughter_all_3;
+  float ssm_n_daughter_all_5;
+  float ssm_n_daughter_all_8;
+  float ssm_n_daughter_all_11;
+    //properties of leading other primary track
+  float ssm_prim_track1_pdg;
+  float ssm_prim_track1_score_mu_fwd;
+  float ssm_prim_track1_score_p_fwd;
+  float ssm_prim_track1_score_e_fwd;
+  float ssm_prim_track1_score_mu_bck;
+  float ssm_prim_track1_score_p_bck;
+  float ssm_prim_track1_score_e_bck;
+  float ssm_prim_track1_length;
+  float ssm_prim_track1_direct_length;
+  float ssm_prim_track1_length_ratio;
+  float ssm_prim_track1_max_dev;
+  float ssm_prim_track1_kine_energy_range;
+  float ssm_prim_track1_kine_energy_range_mu;
+  float ssm_prim_track1_kine_energy_range_p;
+  float ssm_prim_track1_kine_energy_range_e;
+  float ssm_prim_track1_kine_energy_cal;
+  float ssm_prim_track1_medium_dq_dx;
+  float ssm_prim_track1_x_dir;
+  float ssm_prim_track1_y_dir;
+  float ssm_prim_track1_z_dir;
+  float ssm_prim_track1_add_daught_track_counts_1;
+  float ssm_prim_track1_add_daught_all_counts_1;
+  float ssm_prim_track1_add_daught_track_counts_5;
+  float ssm_prim_track1_add_daught_all_counts_5;
+  float ssm_prim_track1_add_daught_track_counts_11;
+  float ssm_prim_track1_add_daught_all_counts_11;
+  //properties of sub-leading other primary track
+  float ssm_prim_track2_pdg;
+  float ssm_prim_track2_score_mu_fwd;
+  float ssm_prim_track2_score_p_fwd;
+  float ssm_prim_track2_score_e_fwd;
+  float ssm_prim_track2_score_mu_bck;
+  float ssm_prim_track2_score_p_bck;
+  float ssm_prim_track2_score_e_bck;
+  float ssm_prim_track2_length;
+  float ssm_prim_track2_direct_length;
+  float ssm_prim_track2_length_ratio;
+  float ssm_prim_track2_max_dev;
+  float ssm_prim_track2_kine_energy_range;
+  float ssm_prim_track2_kine_energy_range_mu;
+  float ssm_prim_track2_kine_energy_range_p;
+  float ssm_prim_track2_kine_energy_range_e;
+  float ssm_prim_track2_kine_energy_cal;
+  float ssm_prim_track2_medium_dq_dx;
+  float ssm_prim_track2_x_dir;
+  float ssm_prim_track2_y_dir;
+  float ssm_prim_track2_z_dir;
+  float ssm_prim_track2_add_daught_track_counts_1;
+  float ssm_prim_track2_add_daught_all_counts_1;
+  float ssm_prim_track2_add_daught_track_counts_5;
+  float ssm_prim_track2_add_daught_all_counts_5;
+  float ssm_prim_track2_add_daught_track_counts_11;
+  float ssm_prim_track2_add_daught_all_counts_11;
+  //properties of leading daughter track
+  float ssm_daught_track1_pdg;
+  float ssm_daught_track1_score_mu_fwd;
+  float ssm_daught_track1_score_p_fwd;
+  float ssm_daught_track1_score_e_fwd;
+  float ssm_daught_track1_score_mu_bck;
+  float ssm_daught_track1_score_p_bck;
+  float ssm_daught_track1_score_e_bck;
+  float ssm_daught_track1_length;
+  float ssm_daught_track1_direct_length;
+  float ssm_daught_track1_length_ratio;
+  float ssm_daught_track1_max_dev;
+  float ssm_daught_track1_kine_energy_range;
+  float ssm_daught_track1_kine_energy_range_mu;
+  float ssm_daught_track1_kine_energy_range_p;
+  float ssm_daught_track1_kine_energy_range_e;
+  float ssm_daught_track1_kine_energy_cal;
+  float ssm_daught_track1_medium_dq_dx;
+  float ssm_daught_track1_x_dir;
+  float ssm_daught_track1_y_dir;
+  float ssm_daught_track1_z_dir;
+  float ssm_daught_track1_add_daught_track_counts_1;
+  float ssm_daught_track1_add_daught_all_counts_1;
+  float ssm_daught_track1_add_daught_track_counts_5;
+  float ssm_daught_track1_add_daught_all_counts_5;
+  float ssm_daught_track1_add_daught_track_counts_11;
+  float ssm_daught_track1_add_daught_all_counts_11;
+    //properties of sub-leading daughter track
+  float ssm_daught_track2_pdg;
+  float ssm_daught_track2_score_mu_fwd;
+  float ssm_daught_track2_score_p_fwd;
+  float ssm_daught_track2_score_e_fwd;
+  float ssm_daught_track2_score_mu_bck;
+  float ssm_daught_track2_score_p_bck;
+  float ssm_daught_track2_score_e_bck;
+  float ssm_daught_track2_length;
+  float ssm_daught_track2_direct_length;
+  float ssm_daught_track2_length_ratio;
+  float ssm_daught_track2_max_dev;
+  float ssm_daught_track2_kine_energy_range;
+  float ssm_daught_track2_kine_energy_range_mu;
+  float ssm_daught_track2_kine_energy_range_p;
+  float ssm_daught_track2_kine_energy_range_e;
+  float ssm_daught_track2_kine_energy_cal;
+  float ssm_daught_track2_medium_dq_dx;
+  float ssm_daught_track2_x_dir;
+  float ssm_daught_track2_y_dir;
+  float ssm_daught_track2_z_dir;
+  float ssm_daught_track2_add_daught_track_counts_1;
+  float ssm_daught_track2_add_daught_all_counts_1;
+  float ssm_daught_track2_add_daught_track_counts_5;
+  float ssm_daught_track2_add_daught_all_counts_5;
+  float ssm_daught_track2_add_daught_track_counts_11;
+  float ssm_daught_track2_add_daught_all_counts_11;
+  //properties of leading other primary shower
+  float ssm_prim_shw1_pdg;
+  float ssm_prim_shw1_score_mu_fwd;
+  float ssm_prim_shw1_score_p_fwd;
+  float ssm_prim_shw1_score_e_fwd;
+  float ssm_prim_shw1_score_mu_bck;
+  float ssm_prim_shw1_score_p_bck;
+  float ssm_prim_shw1_score_e_bck;
+  float ssm_prim_shw1_length;
+  float ssm_prim_shw1_direct_length;
+  float ssm_prim_shw1_length_ratio;
+  float ssm_prim_shw1_max_dev;
+  float ssm_prim_shw1_kine_energy_range;
+  float ssm_prim_shw1_kine_energy_range_mu;
+  float ssm_prim_shw1_kine_energy_range_p;
+  float ssm_prim_shw1_kine_energy_range_e;
+  float ssm_prim_shw1_kine_energy_cal;
+  float ssm_prim_shw1_medium_dq_dx;
+  float ssm_prim_shw1_x_dir;
+  float ssm_prim_shw1_y_dir;
+  float ssm_prim_shw1_z_dir;
+  float ssm_prim_shw1_add_daught_track_counts_1;
+  float ssm_prim_shw1_add_daught_all_counts_1;
+  float ssm_prim_shw1_add_daught_track_counts_5;
+  float ssm_prim_shw1_add_daught_all_counts_5;
+  float ssm_prim_shw1_add_daught_track_counts_11;
+  float ssm_prim_shw1_add_daught_all_counts_11;
+    //properties of sub-leading other primary shower
+  float ssm_prim_shw2_pdg;
+  float ssm_prim_shw2_score_mu_fwd;
+  float ssm_prim_shw2_score_p_fwd;
+  float ssm_prim_shw2_score_e_fwd;
+  float ssm_prim_shw2_score_mu_bck;
+  float ssm_prim_shw2_score_p_bck;
+  float ssm_prim_shw2_score_e_bck; 
+  float ssm_prim_shw2_length;
+  float ssm_prim_shw2_direct_length;
+  float ssm_prim_shw2_length_ratio;
+  float ssm_prim_shw2_max_dev;
+  float ssm_prim_shw2_kine_energy_range;
+  float ssm_prim_shw2_kine_energy_range_mu;
+  float ssm_prim_shw2_kine_energy_range_p;
+  float ssm_prim_shw2_kine_energy_range_e;
+  float ssm_prim_shw2_kine_energy_cal;
+  float ssm_prim_shw2_medium_dq_dx;
+  float ssm_prim_shw2_x_dir;
+  float ssm_prim_shw2_y_dir;
+  float ssm_prim_shw2_z_dir;
+  float ssm_prim_shw2_add_daught_track_counts_1;
+  float ssm_prim_shw2_add_daught_all_counts_1;
+  float ssm_prim_shw2_add_daught_track_counts_5;
+  float ssm_prim_shw2_add_daught_all_counts_5;
+  float ssm_prim_shw2_add_daught_track_counts_11;
+  float ssm_prim_shw2_add_daught_all_counts_11;
+  //properties of leading daughter shower
+  float ssm_daught_shw1_pdg;
+  float ssm_daught_shw1_score_mu_fwd;
+  float ssm_daught_shw1_score_p_fwd;
+  float ssm_daught_shw1_score_e_fwd;
+  float ssm_daught_shw1_score_mu_bck;
+  float ssm_daught_shw1_score_p_bck;
+  float ssm_daught_shw1_score_e_bck;
+  float ssm_daught_shw1_length;
+  float ssm_daught_shw1_direct_length;
+  float ssm_daught_shw1_length_ratio;
+  float ssm_daught_shw1_max_dev;
+  float ssm_daught_shw1_kine_energy_range;
+  float ssm_daught_shw1_kine_energy_range_mu;
+  float ssm_daught_shw1_kine_energy_range_p;
+  float ssm_daught_shw1_kine_energy_range_e;
+  float ssm_daught_shw1_kine_energy_cal;
+  float ssm_daught_shw1_medium_dq_dx;
+  float ssm_daught_shw1_x_dir;
+  float ssm_daught_shw1_y_dir;
+  float ssm_daught_shw1_z_dir;
+  float ssm_daught_shw1_add_daught_track_counts_1;
+  float ssm_daught_shw1_add_daught_all_counts_1;
+  float ssm_daught_shw1_add_daught_track_counts_5;
+  float ssm_daught_shw1_add_daught_all_counts_5;
+  float ssm_daught_shw1_add_daught_track_counts_11;
+  float ssm_daught_shw1_add_daught_all_counts_11;
+  //properties of sub-leading daughter shower
+  float ssm_daught_shw2_pdg;
+  float ssm_daught_shw2_score_mu_fwd;
+  float ssm_daught_shw2_score_p_fwd;
+  float ssm_daught_shw2_score_e_fwd;
+  float ssm_daught_shw2_score_mu_bck;
+  float ssm_daught_shw2_score_p_bck;
+  float ssm_daught_shw2_score_e_bck;
+  float ssm_daught_shw2_length;
+  float ssm_daught_shw2_direct_length;
+  float ssm_daught_shw2_length_ratio;
+  float ssm_daught_shw2_max_dev;
+  float ssm_daught_shw2_kine_energy_range;
+  float ssm_daught_shw2_kine_energy_range_mu;
+  float ssm_daught_shw2_kine_energy_range_p;
+  float ssm_daught_shw2_kine_energy_range_e;
+  float ssm_daught_shw2_kine_energy_cal;
+  float ssm_daught_shw2_medium_dq_dx;
+  float ssm_daught_shw2_x_dir;
+  float ssm_daught_shw2_y_dir;
+  float ssm_daught_shw2_z_dir;
+  float ssm_daught_shw2_add_daught_track_counts_1;
+  float ssm_daught_shw2_add_daught_all_counts_1;
+  float ssm_daught_shw2_add_daught_track_counts_5;
+  float ssm_daught_shw2_add_daught_all_counts_5;
+  float ssm_daught_shw2_add_daught_track_counts_11;
+  float ssm_daught_shw2_add_daught_all_counts_11;
+    //event level properties
+  float ssm_nu_angle_z;
+  float ssm_nu_angle_target;
+  float ssm_nu_angle_absorber;
+  float ssm_nu_angle_vertical;
+  float ssm_track_angle_z;
+  float ssm_track_angle_target;
+  float ssm_track_angle_absorber;
+  float ssm_track_angle_vertical;
+
+
 
        //single photon shower id
     float shw_sp_flag;
@@ -1398,11 +1715,17 @@ namespace WCPPID{
     std::pair<bool, double> numu_tagger();
     std::pair<int, int> count_daughters(WCPPID::ProtoSegment *max_muon);
     std::pair<int, int> count_daughters(WCPPID::WCShower *max_long_muon);
-    
+ 
     bool nue_tagger(double muon_kine_energy = 0);
     bool singlephoton_tagger(double muon_kine_energy = 0);
      
-
+    bool ssm_tagger();
+    std::vector<double> get_scores(WCPPID::ProtoSegment *sg);
+    std::vector<double> get_scores(WCPPID::ProtoSegment *sg, int break_point, bool dir);
+    std::vector<double> calc_kine_range_multi_pdg(double length);
+    std::pair< std::pair<int, int>,std::pair<int, int> >count_daughters(WCPPID::ProtoSegment *max_muon, double length_cut);
+    bool exit_ssm_tagger();
+    void print_ssm_tagger();
     
     float cal_numu_bdts();
     float cal_numu_bdts_xgboost();

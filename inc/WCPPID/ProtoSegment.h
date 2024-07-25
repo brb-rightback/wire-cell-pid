@@ -117,12 +117,15 @@ namespace WCPPID{
     void cal_4mom();
     TVector3 cal_dir_3vector();
     TVector3 cal_dir_3vector(WCP::Point& p, double dis_cut);
-    
+    TVector3 cal_dir_3vector(int direction, int num_points, int start = 1);   
+ 
     double cal_kine_range();
     double cal_kine_dQdx();
     
     double cal_kine_range(double length);
     double cal_kine_dQdx(std::vector<double>& vec_dQ, std::vector<double>& vec_dx);
+
+    double cal_kine_range(int pdg);
 
     double get_kine_best(){return kenergy_best;};
     

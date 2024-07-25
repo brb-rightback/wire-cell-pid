@@ -1399,6 +1399,18 @@ double WCPPID::ProtoSegment::cal_kine_range(){
   return kine_energy;
 }
 
+double WCPPID::ProtoSegment::cal_kine_range(int pdg){
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  TGraph *g_range = mp.get_muon_r2ke();
+  if (fabs(pdg)==11)    g_range = mp.get_electron_r2ke();
+  else if (fabs(pdg)==13) g_range = mp.get_muon_r2ke();
+  else if (fabs(pdg)==211) g_range = mp.get_pion_r2ke();
+  else if (fabs(pdg)==321) g_range = mp.get_kaon_r2ke();
+  else if (fabs(pdg)==2212) g_range = mp.get_proton_r2ke();
+  double kine_energy = g_range->Eval(get_length()/units::cm) * units::MeV;
+  return kine_energy;
+}
+
 void WCPPID::ProtoSegment::cal_4mom(){
  
   double length = get_length();
@@ -1467,6 +1479,33 @@ TVector3 WCPPID::ProtoSegment::cal_dir_3vector(){
   v1 = v1.Unit();
   return v1;
 }
+
+TVector3 WCPPID::ProtoSegment::cal_dir_3vector(int direction, int num_points, int start){
+  WCP::Point p(0,0,0); 
+  if (start>= fit_pt_vec.size() || start<=0){ std::cout<<"bad start point in TVector3 WCPPID::ProtoSegment::cal_dir_3vector"<<std::endl; TVector3 v1(p.x, p.y, p.z);  return v1;} 
+  if (direction == 1){
+    for (size_t i=start;i<start+num_points-1;i++){
+      if (i>= fit_pt_vec.size()) break;
+      p.x += fit_pt_vec.at(i).x - fit_pt_vec.at(start-1).x;
+      p.y += fit_pt_vec.at(i).y - fit_pt_vec.at(start-1).y;
+      p.z += fit_pt_vec.at(i).z - fit_pt_vec.at(start-1).z;
+    }
+  }else if (direction == -1){
+    for (size_t i=start;i<start+num_points-1;i++){
+      if (i+1 > fit_pt_vec.size()) break;
+      //p.x += fit_pt_vec.at(fit_pt_vec.size()-i-1).x - fit_pt_vec.back().x;
+      //p.y += fit_pt_vec.at(fit_pt_vec.size()-i-1).y - fit_pt_vec.back().y;
+      //p.z += fit_pt_vec.at(fit_pt_vec.size()-i-1).z - fit_pt_vec.back().z;
+      p.x += fit_pt_vec.at(fit_pt_vec.size()-i-1).x - fit_pt_vec.at(fit_pt_vec.size()-start).x;
+      p.y += fit_pt_vec.at(fit_pt_vec.size()-i-1).y - fit_pt_vec.at(fit_pt_vec.size()-start).y;
+      p.z += fit_pt_vec.at(fit_pt_vec.size()-i-1).z - fit_pt_vec.at(fit_pt_vec.size()-start).z;
+    }
+  }
+  TVector3 v1(p.x, p.y, p.z);
+  v1 = v1.Unit();
+  return v1;
+}
+
 
 
 void WCPPID::ProtoSegment::determine_dir_track(int start_n, int end_n, bool flag_print){
