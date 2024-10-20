@@ -9,6 +9,7 @@ bool WCPPID::NeutrinoID::examine_structure_final(WCPPID::PR3DCluster* temp_clust
 
   
   examine_structure_final_3(temp_cluster);
+  return true;
 }
 
 bool WCPPID::NeutrinoID::examine_structure_final_3(WCPPID::PR3DCluster* temp_cluster){
