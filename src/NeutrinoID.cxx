@@ -150,7 +150,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
       //std::cout << (*it)->get_cluster_id() << " " << map_cluster_length[*it]/units::cm << std::endl;
       
       if (map_cluster_length[*it] > 6*units::cm){
-	//if (map_cluster_length[*it] > 4*units::cm){
+      //if (map_cluster_length[*it] > 4*units::cm){
 	// find the proto vertex ...
 	find_proto_vertex(*it, true, 2);
 	// deal with shower ...
