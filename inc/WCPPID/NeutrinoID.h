@@ -209,9 +209,6 @@ namespace WCPPID{
 
 
   float ssm_flag_st_kdar;
-    //float n_prim_tracks_1;
-    //float n_prim_tracks_3;
-    //float n_prim_tracks_5;
 
   float ssm_Nsm;
   float ssm_Nsm_wivtx;
@@ -420,6 +417,7 @@ namespace WCPPID{
   float ssm_prim_shw1_kine_energy_range_p;
   float ssm_prim_shw1_kine_energy_range_e;
   float ssm_prim_shw1_kine_energy_cal;
+  float ssm_prim_shw1_kine_energy_best;
   float ssm_prim_shw1_medium_dq_dx;
   float ssm_prim_shw1_x_dir;
   float ssm_prim_shw1_y_dir;
@@ -447,6 +445,7 @@ namespace WCPPID{
   float ssm_prim_shw2_kine_energy_range_p;
   float ssm_prim_shw2_kine_energy_range_e;
   float ssm_prim_shw2_kine_energy_cal;
+  float ssm_prim_shw2_kine_energy_best;
   float ssm_prim_shw2_medium_dq_dx;
   float ssm_prim_shw2_x_dir;
   float ssm_prim_shw2_y_dir;
@@ -474,6 +473,7 @@ namespace WCPPID{
   float ssm_daught_shw1_kine_energy_range_p;
   float ssm_daught_shw1_kine_energy_range_e;
   float ssm_daught_shw1_kine_energy_cal;
+  float ssm_daught_shw1_kine_energy_best;
   float ssm_daught_shw1_medium_dq_dx;
   float ssm_daught_shw1_x_dir;
   float ssm_daught_shw1_y_dir;
@@ -501,6 +501,7 @@ namespace WCPPID{
   float ssm_daught_shw2_kine_energy_range_p;
   float ssm_daught_shw2_kine_energy_range_e;
   float ssm_daught_shw2_kine_energy_cal;
+  float ssm_daught_shw2_kine_energy_best;
   float ssm_daught_shw2_medium_dq_dx;
   float ssm_daught_shw2_x_dir;
   float ssm_daught_shw2_y_dir;
@@ -516,14 +517,96 @@ namespace WCPPID{
   float ssm_nu_angle_target;
   float ssm_nu_angle_absorber;
   float ssm_nu_angle_vertical;
+  float ssm_con_nu_angle_z;
+  float ssm_con_nu_angle_target;
+  float ssm_con_nu_angle_absorber;
+  float ssm_con_nu_angle_vertical;
+  float ssm_prim_nu_angle_z;
+  float ssm_prim_nu_angle_target;
+  float ssm_prim_nu_angle_absorber;
+  float ssm_prim_nu_angle_vertical;
   float ssm_track_angle_z;
   float ssm_track_angle_target;
   float ssm_track_angle_absorber;
   float ssm_track_angle_vertical;
+  float ssm_vtxX;
+  float ssm_vtxY;
+  float ssm_vtxZ;
+    //off vertex stuff
+  float ssm_offvtx_length;
+  float ssm_offvtx_energy;
+  float ssm_n_offvtx_tracks_1;
+  float ssm_n_offvtx_tracks_3;
+  float ssm_n_offvtx_tracks_5;
+  float ssm_n_offvtx_tracks_8;
+  float ssm_n_offvtx_tracks_11;
+  float ssm_n_offvtx_showers_1;
+  float ssm_n_offvtx_showers_3;
+  float ssm_n_offvtx_showers_5;
+  float ssm_n_offvtx_showers_8;
+  float ssm_n_offvtx_showers_11;
+   //properties of leading off vertex track
+  float ssm_offvtx_track1_pdg;
+  float ssm_offvtx_track1_score_mu_fwd;
+  float ssm_offvtx_track1_score_p_fwd;
+  float ssm_offvtx_track1_score_e_fwd;
+  float ssm_offvtx_track1_score_mu_bck;
+  float ssm_offvtx_track1_score_p_bck;
+  float ssm_offvtx_track1_score_e_bck;
+  float ssm_offvtx_track1_length;
+  float ssm_offvtx_track1_direct_length;
+  float ssm_offvtx_track1_max_dev;
+  float ssm_offvtx_track1_kine_energy_range;
+  float ssm_offvtx_track1_kine_energy_range_mu;
+  float ssm_offvtx_track1_kine_energy_range_p;
+  float ssm_offvtx_track1_kine_energy_range_e;
+  float ssm_offvtx_track1_kine_energy_cal;
+  float ssm_offvtx_track1_medium_dq_dx;
+  float ssm_offvtx_track1_x_dir;
+  float ssm_offvtx_track1_y_dir;
+  float ssm_offvtx_track1_z_dir;
+  float ssm_offvtx_track1_dist_mainvtx;
+   //properties of leading off vertex shower
+  float ssm_offvtx_shw1_pdg_offvtx;
+  float ssm_offvtx_shw1_score_mu_fwd;
+  float ssm_offvtx_shw1_score_p_fwd;
+  float ssm_offvtx_shw1_score_e_fwd;
+  float ssm_offvtx_shw1_score_mu_bck;
+  float ssm_offvtx_shw1_score_p_bck;
+  float ssm_offvtx_shw1_score_e_bck;
+  float ssm_offvtx_shw1_length;
+  float ssm_offvtx_shw1_direct_length;
+  float ssm_offvtx_shw1_max_dev;
+  float ssm_offvtx_shw1_kine_energy_best;
+  float ssm_offvtx_shw1_kine_energy_range;
+  float ssm_offvtx_shw1_kine_energy_range_mu;
+  float ssm_offvtx_shw1_kine_energy_range_p;
+  float ssm_offvtx_shw1_kine_energy_range_e;
+  float ssm_offvtx_shw1_kine_energy_cal;
+  float ssm_offvtx_shw1_medium_dq_dx;
+  float ssm_offvtx_shw1_x_dir;
+  float ssm_offvtx_shw1_y_dir;
+  float ssm_offvtx_shw1_z_dir;
+  float ssm_offvtx_shw1_dist_mainvtx;
 
+  // Spacepoints
+  int ssmsp_Ntrack;
+  std::vector<int> ssmsp_Nsp;
+  int ssmsp_Nsp_tot;
+  std::vector<int> ssmsp_pdg;
+  std::vector<int> ssmsp_id;
+  std::vector<int> ssmsp_mother;
+  std::vector<float> ssmsp_x;
+  std::vector<float> ssmsp_y;
+  std::vector<float> ssmsp_z;
+  std::vector<float> ssmsp_dx;
+  std::vector<float> ssmsp_dQ;
+  std::vector<float> ssmsp_KE;
+  std::vector<float> ssmsp_containing_shower_id;
+  std::vector<float> ssmsp_containing_shower_ke;
+  std::vector<float> ssmsp_containing_shower_flag;
 
-
-       //single photon shower id
+    //single photon shower id
     float shw_sp_flag;
     float shw_sp_filled;
     // variables
@@ -1720,10 +1803,18 @@ namespace WCPPID{
     bool singlephoton_tagger(double muon_kine_energy = 0);
      
     bool ssm_tagger();
+    void set_save_ssmsp(int save_ssmsp){flag_ssmsp = save_ssmsp;};
     std::vector<double> get_scores(WCPPID::ProtoSegment *sg);
-    std::vector<double> get_scores(WCPPID::ProtoSegment *sg, int break_point, bool dir);
+    std::vector<double> get_scores(WCPPID::ProtoSegment *sg, int break_point, int dir);
     std::vector<double> calc_kine_range_multi_pdg(double length);
+    double calc_kine_range_pdg(double length, int pdg);
     std::pair< std::pair<int, int>,std::pair<int, int> >count_daughters(WCPPID::ProtoSegment *max_muon, double length_cut);
+    void fill_ssmsp(WCPPID::ProtoSegment* sg, int pdg, int mother, int dir);
+    int  fill_ssmsp_psuedo(WCPPID::WCShower* daught_shower, int mother, int acc_id);
+    int fill_ssmsp_psuedo(WCPPID::WCShower* shower, WCPPID::ProtoSegment* sg, int mother, int acc_id);
+    int fill_ssmsp_psuedo(WCPPID::WCShower* daught_shower, WCPPID::ProtoSegment* mother_sg, int acc_id);
+    int get_containing_shower_id(WCPPID::ProtoSegment* seg);
+    WCPPID::WCShower* get_containing_shower(WCPPID::ProtoSegment* seg);
     bool exit_ssm_tagger();
     void print_ssm_tagger();
     
@@ -1922,7 +2013,8 @@ namespace WCPPID{
     std::set<WCPPID::ProtoSegment*> segments_in_long_muon;
     std::set<WCPPID::ProtoVertex*> vertices_in_long_muon;
     
-    
+    //ssm sapcepoints flag, 0 save spacepoints when tagged, 1 always save spacepoints, -1 never save space points
+    int flag_ssmsp=-1;
   };
 
   struct Res_proto_segment

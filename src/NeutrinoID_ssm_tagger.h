@@ -1,11 +1,15 @@
 bool WCPPID::NeutrinoID::ssm_tagger(){
 
+  tagger_info.ssmsp_Ntrack = 0;
+  tagger_info.ssmsp_Nsp_tot = 0;
+
   TVector3 dir_beam(0,0,1);
   TVector3 dir_drift(1,0,0);
   TVector3 dir_vertical(0,1,0);
   TVector3 target_dir(0.46, 0.05, 0.885);
   TVector3 absorber_dir(0.33, 0.75, -0.59);  
 
+  std::cout<<std::endl;
   std::cout<<"Starting SSM tagger"<<std::endl;
   int  Nsm = 0; //Number of Short Muons
   int  Nsm_wivtx = 0; //Number of Short Muons wi vertex activity
@@ -230,6 +234,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
   double length_prim_shw1 = -999;//length of shw direct caluclated from point to point
   double direct_length_prim_shw1 = -999;//length of shw direct from end to end
   double max_dev_prim_shw1 = -999;//furthest distance from shw's primary axis along the shw
+  double kine_energy_best_prim_shw1 = -999;//best esitmate of the shower KE
   double kine_energy_range_prim_shw1 = -999;//KE of the muon with range
   double kine_energy_range_mu_prim_shw1 = -999;
   double kine_energy_range_p_prim_shw1 = -999;
@@ -256,6 +261,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
   double length_prim_shw2 = -999;//length of shw direct caluclated from point to point
   double direct_length_prim_shw2 = -999;//length of shw direct from end to end
   double max_dev_prim_shw2 = -999;//furthest distance from shw's primary axis along the shw
+  double kine_energy_best_prim_shw2 = -999;//best esitmate of the shower KE
   double kine_energy_range_prim_shw2 = -999;//KE of the shower with range
   double kine_energy_range_mu_prim_shw2 = -999;
   double kine_energy_range_p_prim_shw2 = -999;
@@ -282,6 +288,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
   double length_daught_shw1 = -999;//length of shw direct caluclated from point to point
   double direct_length_daught_shw1 = -999;//length of shw direct from end to end
   double max_dev_daught_shw1 = -999;//furthest distance from shw's daughtary axis along the shw
+  double kine_energy_best_daught_shw1 = -999;//best esitmate of the shower KE
   double kine_energy_range_daught_shw1 = -999;//KE of the shower with range
   double kine_energy_range_mu_daught_shw1 = -999;
   double kine_energy_range_p_daught_shw1 = -999;
@@ -308,6 +315,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
   double length_daught_shw2 = -999;//length of shw direct caluclated from point to point
   double direct_length_daught_shw2 = -999;//length of shw direct from end to end
   double max_dev_daught_shw2 = -999;//furthest distance from shw's daughtary axis along the shw
+  double kine_energy_best_daught_shw2 = -999;//best esitmate of the shower KE
   double kine_energy_range_daught_shw2 = -999;//KE of the shower with range
   double kine_energy_range_mu_daught_shw2 = -999;
   double kine_energy_range_p_daught_shw2 = -999;
@@ -328,12 +336,77 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
   double nu_angle_to_target = -999;
   double nu_angle_to_absorber = -999;
   double nu_angle_to_vertical = -999;
+  double con_nu_angle_to_z = -999;//angle to the z det cord
+  double con_nu_angle_to_target = -999;
+  double con_nu_angle_to_absorber = -999;
+  double con_nu_angle_to_vertical = -999;
+  double prim_nu_angle_to_z = -999;//angle to the z det cord
+  double prim_nu_angle_to_target = -999;
+  double prim_nu_angle_to_absorber = -999;
+  double prim_nu_angle_to_vertical = -999;
   double track_angle_to_z = -999;//angle to the z det cord
   double track_angle_to_target = -999;
   double track_angle_to_absorber = -999;
   double track_angle_to_vertical = -999;
 
-  //saves all smm, if they have vtx activity, if they are backwards and their length
+  //off vertex stuff
+  double off_vtx_length = 0;//total length of off vertex segments
+  double off_vtx_energy = 0;//total energy of off vertex activity
+  double n_offvtx_tracks_1 = 0;//number of other daughter tracks greater than 1 cm
+  double n_offvtx_tracks_3 = 0;//number of other daughter tracks greater than 3 cm
+  double n_offvtx_tracks_5 = 0;//number of other daughter tracks greater than 5 cm
+  double n_offvtx_tracks_8 = 0;//number of other daughter tracks greater than 8 cm
+  double n_offvtx_tracks_11 = 0;//number of other daughter tracks greater than 11 cm
+  double n_offvtx_showers_1 = 0;//number of other daughter tracks and showers greater than 1 cm
+  double n_offvtx_showers_3 = 0;//number of other daughter tracks and showers greater than 3 cm
+  double n_offvtx_showers_5 = 0;//number of other daughter tracks and showers greater than 5 cm
+  double n_offvtx_showers_8 = 0;//number of other daughter tracks and showers greater than 8 cm
+  double n_offvtx_showers_11 = 0;//number of other daughter tracks and showers greater than 11 cm
+   //properties of leading off vertex track
+  double pdg_offvtx_track1 = -999;//initial pdg assigned to the track
+  double score_mu_fwd_offvtx_track1 = -999;//ID score normally normally used to choose muons
+  double score_p_fwd_offvtx_track1 = -999;//ID score normally normally used to choose protons
+  double score_e_fwd_offvtx_track1 = -999;//ID score normally normally used to choose e
+  double score_mu_bck_offvtx_track1 = -999;//ID score normally normally used to choose muons but calculated backwards
+  double score_p_bck_offvtx_track1 = -999;//ID score normally normally used to choose protons but calculated backwards
+  double score_e_bck_offvtx_track1 = -999;//ID score normally normally used to choose e but calculated backwards
+  double length_offvtx_track1 = -999;//length of track direct calculated from point to point
+  double direct_length_offvtx_track1 = -999;//length of track direct from end to end
+  double max_dev_offvtx_track1 = -999;//furthest distance from track's primary axis along the track
+  double kine_energy_range_offvtx_track1 = -999;//KE of the track with range
+  double kine_energy_range_mu_offvtx_track1 = -999;
+  double kine_energy_range_p_offvtx_track1 = -999;
+  double kine_energy_range_e_offvtx_track1 = -999;
+  double kine_energy_cal_offvtx_track1 = -999;//KE of the shower with dq/dx
+  double medium_dq_dx_offvtx_track1 = -999;//medium dq/dx over the entire track 
+  double x_dir_offvtx_track1 = -999;//x dir det cord
+  double y_dir_offvtx_track1 = -999;//y dir det cord
+  double z_dir_offvtx_track1 = -999;//z dir det cord
+  double dist_mainvtx_offvtx_track1 = -999; //distance from the main vertex
+   //properties of leading off vertex shower
+  double pdg_offvtx_shw1 = -999;//initial pdg assigned to the shw
+  double score_mu_fwd_offvtx_shw1 = -999;//ID score normally normally used to choose muons
+  double score_p_fwd_offvtx_shw1 = -999;//ID score normally normally used to choose protons
+  double score_e_fwd_offvtx_shw1 = -999;//ID score normally normally used to choose e
+  double score_mu_bck_offvtx_shw1 = -999;//ID score normally normally used to choose muons but calculated backwards
+  double score_p_bck_offvtx_shw1 = -999;//ID score normally normally used to choose protons but calculated backwards
+  double score_e_bck_offvtx_shw1 = -999;//ID score normally normally used to choose e but calculated backwards
+  double length_offvtx_shw1 = -999;//length of shw direct calculated from point to point
+  double direct_length_offvtx_shw1 = -999;//length of shw direct from end to end
+  double max_dev_offvtx_shw1 = -999;//furthest distance from shw's primary axis along the shw
+  double kine_energy_best_offvtx_shw1 = -999;//best esitmate of the shower KE
+  double kine_energy_range_offvtx_shw1 = -999;//KE of the shower with range
+  double kine_energy_range_mu_offvtx_shw1 = -999;
+  double kine_energy_range_p_offvtx_shw1 = -999;
+  double kine_energy_range_e_offvtx_shw1 = -999;
+  double kine_energy_cal_offvtx_shw1 = -999;//KE of the shower with dq/dx
+  double medium_dq_dx_offvtx_shw1 = -999;//medium dq/dx over the entire shw 
+  double x_dir_offvtx_shw1 = -999;//x dir det cord
+  double y_dir_offvtx_shw1 = -999;//y dir det cord
+  double z_dir_offvtx_shw1 = -999;//z dir det cord
+  double dist_mainvtx_offvtx_shw1 = -999; //distance from the main vertex
+
+  //saves all ssm, if they have vtx activity, if they are backwards and their length
   std::map<WCPPID::ProtoSegment*, std::tuple<bool,bool,double> > all_ssm_sg;
   //saves the main ssm
   WCPPID::ProtoSegment* ssm_sg;
@@ -342,19 +415,13 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
     WCPPID::ProtoSegment *sg = *it;
     double sg_length = sg->get_length()/units::cm;
     double sg_direct_length = sg->get_direct_length()/units::cm;
-    std::cout<<"length check "<<sg_length<<"  dq/dx check "<<sg->get_medium_dQ_dx()/(43e3/units::cm)<<std::endl;
     bool sg_flag_backwards_muon = false;
     bool sg_flag_vtx_activity = false;
-    //if( (length <= 31*units::cm && length >= 11*units::cm && abs(sg->get_particle_type())==13) || (direct_length > 0.9 * length && length <= 31*units::cm && length >= 11*units::cm && abs(sg->get_particle_type())==11)){
-    //if( (sg_length <= 32 && sg_length >= 5 && abs(sg->get_particle_type())==13) || (sg_direct_length > 0.9 * sg_length && sg_length <= 32 && sg_length >= 5 && abs(sg->get_particle_type())==11)){
     if( (sg_length <= 34 && sg_length >= 1 && abs(sg->get_particle_type())==13) || (sg_direct_length > 0.9 * sg_length && sg_length <= 32 && sg_length >= 1 && abs(sg->get_particle_type())==11)){
     //veto stuff we still dont want
       if(sg_length<1) {std::cout<<"\n too short"<<std::endl; continue;}//prviously was 5
-      //if(sg->get_medium_dQ_dx()/(43e3/units::cm)<1.1){ std::cout<<"\n bad dq/dx"<<std::endl; continue;}//make more conservative?
       if(sg->get_medium_dQ_dx()/(43e3/units::cm)<0.95){ std::cout<<"\n bad dq/dx"<<std::endl; continue;}//make more conservative?, prviously was 1
       Nsm+=1;
-      if(abs(sg->get_particle_type())==13){ std::cout<<"Short Muon"<<std::endl;}
-      else if(abs(sg->get_particle_type())==11){ std::cout<<"Short Straight Electron"<<std::endl;}
 
       //make the d dq/dx vector
       std::vector<double>& vec_dQ = sg->get_dQ_vec();
@@ -364,35 +431,43 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
       bool vtx_activity_bck = false;
       double sg_max_d_dq_dx_fwd_5 = 0;
       double sg_max_d_dq_dx_bck_5 = 0;
-      std::cout<<std::endl;
+      double sg_max_d_dq_dx_fwd_3 = 0;//used as the "tiebreaker"
+      double sg_max_d_dq_dx_bck_3 = 0;//used as the "tiebreaker"
       double last_dq_dx = vec_dQ.at(0)/vec_dx.at(0)/(43e3/units::cm);
       for (int point = 1; point<vec_dQ.size(); point++){
         double dq_dx = vec_dQ.at(point)/vec_dx.at(point)/(43e3/units::cm);
         vec_d_dq_dx.push_back( dq_dx - last_dq_dx  );
-        std::cout<<dq_dx - last_dq_dx<<", ";
         last_dq_dx = dq_dx;
       }
-      std::cout<<std::endl;
+
       //check the first 5 points for a large change in dq/dx
       int end = 4;
-      if(end>vec_d_dq_dx.size()) end=vec_d_dq_dx.size();
-      std::cout<<"end "<<end<<std::endl;
+      int end_3 = 2;
+      if(end>vec_d_dq_dx.size()){end=vec_d_dq_dx.size();}
+      if(end_3>vec_d_dq_dx.size()){end_3=vec_d_dq_dx.size();}
       for (int point = 0; point<end; point++){
         if(abs(vec_d_dq_dx.at(point))>0.7 && abs(vec_d_dq_dx.at(point))>sg_max_d_dq_dx_fwd_5){
           vtx_activity_fwd = true;
           sg_max_d_dq_dx_fwd_5 = abs(vec_d_dq_dx.at(point));
+	}
+	if(abs(vec_d_dq_dx.at(point))>0.7 && abs(vec_d_dq_dx.at(point))>sg_max_d_dq_dx_fwd_3 && point<end_3){
+	  sg_max_d_dq_dx_fwd_3 = abs(vec_d_dq_dx.at(point));
         }
       }
 
       //check the last 5 points for a large change in dq/dx
       int start=vec_d_dq_dx.size()-4;
-      if(start<0) start=0;
-      std::cout<<"start: "<<start<<std::endl;
+      int start_3=vec_d_dq_dx.size()-2;
+      if(start<0) {start=0;}
+      if(start_3<0) {start_3=0;}
       for (int point = start; point<vec_d_dq_dx.size(); point++){
         if(abs(vec_d_dq_dx.at(point))>0.7 && abs(vec_d_dq_dx.at(point))>max_d_dq_dx_bck_5){
           vtx_activity_bck = true;
-          max_d_dq_dx_bck_5 = abs(vec_d_dq_dx.at(point));
+          sg_max_d_dq_dx_bck_5 = abs(vec_d_dq_dx.at(point));
         }
+        if(abs(vec_d_dq_dx.at(point))>0.7 && abs(vec_d_dq_dx.at(point))>sg_max_d_dq_dx_bck_3 && point>=start_3){
+          sg_max_d_dq_dx_bck_3 = abs(vec_d_dq_dx.at(point));
+        }	
       }
 
       //decide which direction has vertex activity 
@@ -400,18 +475,29 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
         if(sg_max_d_dq_dx_fwd_5<1.0) vtx_activity_fwd = false;
         if(sg_max_d_dq_dx_bck_5<1.0) vtx_activity_bck = false;
         if(!vtx_activity_bck && !vtx_activity_fwd){
-          if(sg_max_d_dq_dx_fwd_5>max_d_dq_dx_bck_5){
+          if(sg_max_d_dq_dx_fwd_5>sg_max_d_dq_dx_bck_5){
             vtx_activity_fwd = true;
             vtx_activity_bck = false;
           }else{
             vtx_activity_fwd = false;
             vtx_activity_bck = true;
-          }   
+          } 
+	}else if(sg_max_d_dq_dx_bck_5==sg_max_d_dq_dx_fwd_5){
+            if(sg_max_d_dq_dx_fwd_3==sg_max_d_dq_dx_bck_3){
+	      vtx_activity_fwd = false;
+              vtx_activity_bck = false;
+	    }else if(sg_max_d_dq_dx_fwd_3>sg_max_d_dq_dx_bck_3){
+              vtx_activity_fwd = true;
+              vtx_activity_bck = false;
+            }else{
+              vtx_activity_fwd = false;
+              vtx_activity_bck = true;
+	    }
         }else if(vtx_activity_bck && vtx_activity_fwd){
           if(sg_max_d_dq_dx_fwd_5<1.3) vtx_activity_fwd = false;
           if(sg_max_d_dq_dx_bck_5<1.3) vtx_activity_bck = false;
           if(!vtx_activity_bck && !vtx_activity_fwd){
-            if(sg_max_d_dq_dx_fwd_5>max_d_dq_dx_bck_5){
+            if(sg_max_d_dq_dx_fwd_5>sg_max_d_dq_dx_bck_5){
               vtx_activity_fwd = true;
               vtx_activity_bck = false;
             }else{
@@ -419,7 +505,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
               vtx_activity_bck = true;
             }
           }else if(vtx_activity_bck && vtx_activity_fwd){
-            if(sg_max_d_dq_dx_fwd_5>max_d_dq_dx_bck_5){
+            if(sg_max_d_dq_dx_fwd_5>sg_max_d_dq_dx_bck_5){
               vtx_activity_fwd = true;
               vtx_activity_bck = false;
             }else{
@@ -433,18 +519,17 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
       //flag the muon as backwards if the direction with vertex activity does not match where the start of the muon is
       if(vtx_activity_bck){
         Nsm_wivtx+=1;
-        if(sg->get_flag_dir()==1) sg_flag_backwards_muon=true;
+        if(sg->get_flag_dir()==1) {sg_flag_backwards_muon=true;}
         sg_flag_vtx_activity = true;
         ssm_sg = sg;
       }else if(vtx_activity_fwd){
         Nsm_wivtx+=1;
-        if(sg->get_flag_dir()==-1) sg_flag_backwards_muon=true;
+        if(sg->get_flag_dir()==-1) {sg_flag_backwards_muon=true;}
         sg_flag_vtx_activity = true;
       }
-std::cout<<"sg_flag_backwards_muon "<<sg_flag_backwards_muon<<std::endl;
-if(sg_flag_backwards_muon) std::cout<<"backwards_muon "<<std::endl;
-      std::tuple<bool,bool,double> ssm_info = {sg_flag_vtx_activity,sg_flag_backwards_muon,sg_length};
-      all_ssm_sg.insert(std::pair<WCPPID::ProtoSegment*, std::tuple<bool,bool,double>>(sg,ssm_info));
+      std::cout<<"sg_flag_backwards_muon "<<sg_flag_backwards_muon<<std::endl;
+      std::tuple<bool,bool,double> temp_ssm_info = {sg_flag_vtx_activity,sg_flag_backwards_muon,sg_length};
+      all_ssm_sg.insert(std::pair<WCPPID::ProtoSegment*, std::tuple<bool,bool,double>>(sg,temp_ssm_info));
     }
 
   }//end loop over all segments connected to the vertex to determine if we have an ssm
@@ -454,13 +539,12 @@ if(sg_flag_backwards_muon) std::cout<<"backwards_muon "<<std::endl;
   tagger_info.ssm_Nsm_wivtx = Nsm_wivtx;//number of short straight muons with vertex activity
 
   std::cout<<"tagger_info.ssm_Nsm "<<tagger_info.ssm_Nsm<<"  tagger_info.ssm_Nsm_wivtx "<<tagger_info.ssm_Nsm_wivtx<<std::endl;
-  if( Nsm ==0 ){ std::cout<<"Exit Tagger"<<std::endl; return exit_ssm_tagger(); }
+  if( Nsm==0 ){ std::cout<<"Exit Tagger"<<std::endl; return exit_ssm_tagger(); }
 
-  //decision on which muon is the ssmi
-  if(all_ssm_sg.begin()==all_ssm_sg.end()) std::cout<<"problem"<<std::endl;
+  //decision on which muon is the ssm
+  //Pick the longest with vtx activity, if none of these just pick the longest
   for (auto it = all_ssm_sg.begin(); it!=all_ssm_sg.end(); it++){
     std::tuple<bool,bool,double> ssm_info = it->second;
-    std::cout<<"  get<0>(ssm_info) "<<get<0>(ssm_info)<<"  get<1>(ssm_info) "<<get<1>(ssm_info)<<"  get<2>(ssm_info) "<<get<2>(ssm_info)<<std::endl;
     if( get<0>(ssm_info)==true && ( get<2>(ssm_info) > length || vtx_activity==false ) ){      
       ssm_sg = it->first;
       length = get<2>(ssm_info);
@@ -475,16 +559,12 @@ if(sg_flag_backwards_muon) std::cout<<"backwards_muon "<<std::endl;
     } 
   }
 
-  std::cout<<"abs(ssm_sg->get_particle_type() "<<ssm_sg->get_particle_type()<<std::endl;
   pdg = abs(ssm_sg->get_particle_type());
   direct_length = ssm_sg->get_direct_length()/units::cm;
 
-  std::cout<<"Direction"<<std::endl;
   //get the direction and angle of the muon
   int dir = ssm_sg->get_flag_dir();
-  std::cout<<"dir "<<dir<<std::endl;
-  if(backwards_muon) dir=dir*-1;
-  std::cout<<"dir "<<dir<<std::endl;
+  if(backwards_muon) {dir=dir*-1;}
   init_dir = ssm_sg->cal_dir_3vector(dir,5);
   init_dir_10 = ssm_sg->cal_dir_3vector(dir,10);
   init_dir_15 = ssm_sg->cal_dir_3vector(dir,15);
@@ -496,77 +576,9 @@ if(sg_flag_backwards_muon) std::cout<<"backwards_muon "<<std::endl;
   x_dir = init_dir_10[0];
   y_dir = init_dir_10[1];
   z_dir = init_dir_10[2];
-/*	
-// old way, weird cases where I do not understand the output	
-	std::cout<<"Counting Daughters and prims"<<std::endl;
-	  //count our daughter and primary particles
-  std::pair< std::pair<int, int>,std::pair<int, int> > pair_result_1 = count_daughters(ssm_sg,1.0);
-  n_prim_tracks_1 = pair_result_1.first.first;
-  n_prim_all_1 = pair_result_1.first.second;
-  n_daughter_tracks_1 = pair_result_1.second.first;
-  n_daughter_all_1 = pair_result_1.second.second;
-  std::pair< std::pair<int, int>,std::pair<int, int> > pair_result_3 = count_daughters(ssm_sg,3.0);
-  n_prim_tracks_3 = pair_result_3.first.first;
-  n_prim_all_3 = pair_result_3.first.second;
-  n_daughter_tracks_3 = pair_result_3.second.first;
-  n_daughter_all_3 = pair_result_3.second.second;  
-  std::pair< std::pair<int, int>,std::pair<int, int> > pair_result_5 = count_daughters(ssm_sg,5.0);
-  n_prim_tracks_5 = pair_result_5.first.first;
-  n_prim_all_5 = pair_result_5.first.second;
-  n_daughter_tracks_5 = pair_result_5.second.first;
-  n_daughter_all_5 = pair_result_5.second.second;
-  std::pair< std::pair<int, int>,std::pair<int, int> > pair_result_8 = count_daughters(ssm_sg,8.0);
-  n_prim_tracks_8 = pair_result_8.first.first;
-  n_prim_all_8 = pair_result_8.first.second;
-  n_daughter_tracks_8 = pair_result_8.second.first;
-  n_daughter_all_8 = pair_result_8.second.second;
-  std::pair< std::pair<int, int>,std::pair<int, int> > pair_result_11 = count_daughters(ssm_sg,11.0);
-  n_prim_tracks_11 = pair_result_11.first.first;
-  n_prim_all_11 = pair_result_11.first.second;
-  n_daughter_tracks_11 = pair_result_11.second.first;
-  n_daughter_all_11 = pair_result_11.second.second;
-std::cout<<"backwards_muon "<<backwards_muon<<" dir "<<dir<<std::endl;
-  if(backwards_muon){
-  //if(dir==-1){
-std::cout<<"backwards_muon "<<std::endl;
-    n_prim_tracks_1 = pair_result_1.second.first;
-    n_prim_all_1 = pair_result_1.second.second;
-    n_daughter_tracks_1 = pair_result_1.first.first;
-    n_daughter_all_1 = pair_result_1.first.second;
-    n_prim_tracks_3 = pair_result_3.second.first;
-    n_prim_all_3 = pair_result_3.second.second;
-    n_daughter_tracks_3 = pair_result_3.first.first;
-    n_daughter_all_3 = pair_result_3.first.second;
-    n_prim_tracks_5 = pair_result_5.second.first;
-    n_prim_all_5 = pair_result_5.second.second;
-    n_daughter_tracks_5 = pair_result_5.first.first;
-    n_daughter_all_5 = pair_result_5.first.second;
-    n_prim_tracks_8 = pair_result_8.second.first;
-    n_prim_all_8 = pair_result_8.second.second;
-    n_daughter_tracks_8 = pair_result_8.first.first;
-    n_daughter_all_8 = pair_result_8.first.second;
-    n_prim_tracks_11 = pair_result_11.second.first;
-    n_prim_all_11 = pair_result_11.second.second;
-    n_daughter_tracks_11 = pair_result_11.first.first;
-    n_daughter_all_11 = pair_result_11.first.second;
-  }
-*/
+  
   max_dev = ssm_sg->get_max_deviation(int(0),int(ssm_sg->get_point_vec().size()))/units::cm;
-/*
-std::cout<<"Direction"<<std::endl;
-  //get the direction and angle of the muon
-  int dir = ssm_sg->get_flag_dir();
-  if(backwards_muon) dir=dir*-1;
-  init_dir = ssm_sg->cal_dir_3vector(dir,5);
-  init_dir_10 = ssm_sg->cal_dir_3vector(dir,10);
-  init_dir_15 = ssm_sg->cal_dir_3vector(dir,15);
-  init_dir_20 = ssm_sg->cal_dir_3vector(dir,20);
-  init_dir = init_dir.Unit();
-  init_dir_10 = init_dir_10.Unit();
-  init_dir_15 = init_dir_15.Unit();
-  init_dir_20 = init_dir_20.Unit();
-*/
-    std::cout<<"Angle"<<std::endl;
+    
   angle_to_z = acos( init_dir[0]*dir_beam[0] + init_dir[1]*dir_beam[1] + init_dir[2]*dir_beam[2] );
   angle_to_z_10 = acos( init_dir_10[0]*dir_beam[0] + init_dir_10[1]*dir_beam[1] + init_dir_10[2]*dir_beam[2] );
   angle_to_z_15 = acos( init_dir_15[0]*dir_beam[0] + init_dir_15[1]*dir_beam[1] + init_dir_15[2]*dir_beam[2] );
@@ -587,7 +599,6 @@ std::cout<<"Direction"<<std::endl;
   angle_to_vertical_15 = acos( init_dir_15[0]*dir_vertical[0] + init_dir_15[1]*dir_vertical[1] + init_dir_15[2]*dir_vertical[2] );    
   angle_to_vertical_20 = acos( init_dir_20[0]*dir_vertical[0] + init_dir_20[1]*dir_vertical[1] + init_dir_20[2]*dir_vertical[2] );
 
-std::cout<<"dqdx info"<<std::endl;
   //add dq/dx info
   int break_point_fwd = -1;
   int break_point_bck = -1;
@@ -602,40 +613,23 @@ std::cout<<"dqdx info"<<std::endl;
   for (int point = 0; point<vec_dQ.size(); point++){
     double dq_dx = vec_dQ.at(point)/vec_dx.at(point)/(43e3/units::cm);
     vec_dq_dx.push_back( dq_dx  );
-    std::cout<<dq_dx<<", ";
     if (point>0) {vec_d_dq_dx.push_back( dq_dx - last_dq_dx  ); vec_abs_d_dq_dx.push_back( abs(dq_dx - last_dq_dx)  );}
     last_dq_dx = dq_dx;
   }
-std::cout<<std::endl;
-std::cout<<"fwd vtx"<<std::endl;
+
   //check the first 5 points for a large change in dq/dx
   int end = 4;
-  if(vec_d_dq_dx.size()<end) end = vec_d_dq_dx.size();
+  bool fwd_vtx_activity = false;
+  if(vec_d_dq_dx.size()<end){end = vec_d_dq_dx.size();}
   for (int point = 0; point<end; point++){
     if(fabs(vec_d_dq_dx.at(point))>0.7){
-      vtx_activity = true;
+      fwd_vtx_activity = true;
       break_point_fwd = point+1;
     }
-/*
-    if(abs(vec_d_dq_dx.at(point))>max_d_dq_dx_fwd_5){
-      max_d_dq_dx_fwd_5 = abs(vec_d_dq_dx.at(point));
-    }
-    if(abs(vec_dq_dx.at(point))>max_dq_dx_fwd_5){
-      max_dq_dx_fwd_5 = abs(vec_dq_dx.at(point));
-    }
-    if(point>2) continue;
-    if(abs(vec_d_dq_dx.at(point))>max_d_dq_dx_fwd_3){
-      max_d_dq_dx_fwd_3 = abs(vec_d_dq_dx.at(point));
-    }
-    if(abs(vec_dq_dx.at(point))>max_dq_dx_fwd_3){
-      max_dq_dx_fwd_3 = abs(vec_dq_dx.at(point));
-    }
-*/
   }
-  if(dir==1 && vtx_activity == true){
+  if(dir==1 && fwd_vtx_activity == true){
     for (int point = 0; point<break_point_fwd; point++){
       reduced_muon_length-=abs(vec_dx.at(point)/units::cm);
-      std::cout<<"fwd subtracting "<<abs(vec_dx.at(point)/units::cm)<<std::endl;
     }
     break_point = break_point_fwd;
   }
@@ -644,38 +638,14 @@ std::cout<<"fwd vtx"<<std::endl;
   max_d_dq_dx_fwd_3 = *std::max_element(vec_abs_d_dq_dx.begin(), vec_abs_d_dq_dx.begin()+std::min(int(vec_abs_d_dq_dx.size()),2));
   max_d_dq_dx_fwd_5 = *std::max_element(vec_abs_d_dq_dx.begin(), vec_abs_d_dq_dx.begin()+std::min(int(vec_abs_d_dq_dx.size()),4));
 
-  //std::cout<<"max_dq_dx_fwd_5 old: "<<max_dq_dx_fwd_5<<"  new: "<<*std::max_element(vec_dq_dx.begin(), vec_dq_dx.begin()+std::min(int(vec_dq_dx.size()),5))<<std::endl;  
-  //std::cout<<"max_dq_dx_fwd_3 old: "<<max_dq_dx_fwd_3<<"  new: "<<*std::max_element(vec_dq_dx.begin(), vec_dq_dx.begin()+std::min(int(vec_dq_dx.size()),3))<<std::endl;
-
-  //std::cout<<"max_d_dq_dx_fwd_5 old: "<<max_d_dq_dx_fwd_5<<"  new: "<<*std::max_element(vec_abs_d_dq_dx.begin(), vec_abs_d_dq_dx.begin()+std::min(int(vec_abs_d_dq_dx.size()),4))<<std::endl;
-  //std::cout<<"max_d_dq_dx_fwd_3 old: "<<max_d_dq_dx_fwd_3<<"  new: "<<*std::max_element(vec_abs_d_dq_dx.begin(), vec_abs_d_dq_dx.begin()+std::min(int(vec_abs_d_dq_dx.size()),2))<<std::endl;
-  
-
-  std::cout<<"bck vtx"<<std::endl;
-  bool back_vtx_activity = false;
   //check the last 5 points for a large change in dq/dx
   int start = vec_d_dq_dx.size()-4;
-  if(start<0) start=0;
+  bool bck_vtx_activity = false;
+  if(start<0){start=0;}
   for (int point = start; point<vec_d_dq_dx.size(); point++){
     if(fabs(vec_d_dq_dx.at(point))>0.7){
-      vtx_activity = true;
-      if(back_vtx_activity==false) break_point_bck = point; back_vtx_activity = true;
+      if(bck_vtx_activity==false){break_point_bck = point; bck_vtx_activity = true;}
     }
-/* 
-    if(abs(vec_d_dq_dx.at(point))>max_d_dq_dx_bck_5){
-      max_d_dq_dx_bck_5 = abs(vec_d_dq_dx.at(point));
-    }
-    if(abs(vec_dq_dx.at(point))>max_dq_dx_bck_5){
-      max_dq_dx_bck_5 = abs(vec_dq_dx.at(point));
-    }
-    if(point<vec_d_dq_dx.size()-3) continue;
-    if(abs(vec_d_dq_dx.at(point))>max_d_dq_dx_bck_3){
-      max_d_dq_dx_bck_3 = abs(vec_d_dq_dx.at(point));
-    }
-    if(abs(vec_dq_dx.at(point))>max_dq_dx_bck_3){
-      max_dq_dx_bck_3 = abs(vec_dq_dx.at(point));
-    }
-  */
   }
 
   max_dq_dx_bck_3 = *std::max_element(vec_dq_dx.begin()+ std::max(int(vec_dq_dx.size()-3),0), vec_dq_dx.end());
@@ -683,41 +653,13 @@ std::cout<<"fwd vtx"<<std::endl;
   max_d_dq_dx_bck_3 = *std::max_element(vec_abs_d_dq_dx.begin()+ std::max(int(vec_abs_d_dq_dx.size()-2),0), vec_abs_d_dq_dx.end());
   max_d_dq_dx_bck_5 = *std::max_element(vec_abs_d_dq_dx.begin()+ std::max(int(vec_abs_d_dq_dx.size()-4),0), vec_abs_d_dq_dx.end());
 
-  //start = vec_dq_dx.size()-5;
-  //if(start<0) start=0;
-  //std::cout<<"max_dq_dx_bck_5 old: "<<max_dq_dx_bck_5<<"  new: "<<*std::max_element(vec_dq_dx.begin()+start, vec_dq_dx.end())<<std::endl;
-  //std::cout<<"max_dq_dx_bck_5 old: "<<max_dq_dx_bck_5<<"  new: "<<*std::max_element(vec_dq_dx.begin()+ std::max(int(vec_dq_dx.size()-5),0), vec_dq_dx.end())<<std::endl;
-  //start = vec_dq_dx.size()-3;
-  //if(start<0) start=0;
-  //std::cout<<"max_dq_dx_bck_3 old: "<<max_dq_dx_bck_3<<"  new: "<<*std::max_element(vec_dq_dx.begin()+start, vec_dq_dx.end())<<std::endl;
-  //std::cout<<"max_dq_dx_bck_3 old: "<<max_dq_dx_bck_3<<"  new: "<<*std::max_element(vec_dq_dx.begin()+ std::max(int(vec_dq_dx.size()-3),0), vec_dq_dx.end())<<std::endl;
-
-  //start = vec_d_dq_dx.size()-4;
-  //if(start<0) start=0;
-  //std::cout<<"max_d_dq_dx_bck_5 old: "<<max_d_dq_dx_bck_5<<"  new: "<<*std::max_element(vec_abs_d_dq_dx.begin()+start, vec_abs_d_dq_dx.end())<<std::endl;
-  //std::cout<<"max_d_dq_dx_bck_5 old: "<<max_d_dq_dx_bck_5<<"  new: "<<*std::max_element(vec_abs_d_dq_dx.begin()+ std::max(int(vec_abs_d_dq_dx.size()-4),0), vec_abs_d_dq_dx.end())<<std::endl;
-  //start = vec_d_dq_dx.size()-2;
-  //if(start<0) start=0;
-  //std::cout<<"max_d_dq_dx_bck_3 old: "<<max_d_dq_dx_bck_3<<"  new: "<<*std::max_element(vec_abs_d_dq_dx.begin()+start, vec_abs_d_dq_dx.end())<<std::endl;
-  //std::cout<<"max_d_dq_dx_bck_3 old: "<<max_d_dq_dx_bck_3<<"  new: "<<*std::max_element(vec_abs_d_dq_dx.begin()+ std::max(int(vec_abs_d_dq_dx.size()-2),0), vec_abs_d_dq_dx.end())<<std::endl;
-  if(dir==-1 && vtx_activity == true){
+  if(dir==-1 && bck_vtx_activity == true){
     for (int point = break_point_bck; point<vec_dx.size(); point++){
       reduced_muon_length-=abs(vec_dx.at(point)/units::cm);
-      std::cout<<"bck subtracting "<<abs(vec_dx.at(point)/units::cm)<<std::endl;
     }
     break_point = break_point_bck;
   }
-/*
-  //for short stuff, put the empty values on the front for backwards, and the back for forwards
-  while(vec_dq_dx.size()<5){
-	  if(dir==-1) {vec_dq_dx.insert(vec_dq_dx.begin(), 0);}
-          else {vec_dq_dx.push_back(0);}
-  }
-  while(vec_d_dq_dx.size()<4){
-	  if(dir==-1) {vec_d_dq_dx.insert(vec_d_dq_dx.begin(), 0);}
-	  else{ vec_d_dq_dx.push_back(0);}
-  }
-*/
+  
   if(vec_dq_dx.size()<1){dq_dx_fwd_1=0;}
   else {dq_dx_fwd_1 = vec_dq_dx.at(0);}
   if(vec_dq_dx.size()<2){dq_dx_fwd_2=0;}
@@ -773,7 +715,7 @@ std::cout<<"fwd vtx"<<std::endl;
     std::swap(max_d_dq_dx_fwd_3,max_d_dq_dx_bck_5);
     std::swap(max_d_dq_dx_fwd_5,max_d_dq_dx_bck_5);
   }
-  std::cout<<"Scores"<<std::endl;
+
   std::vector<double> scores = get_scores(ssm_sg);
   score_mu_fwd = scores.at(0);
   score_p_fwd = scores.at(1);
@@ -781,17 +723,15 @@ std::cout<<"fwd vtx"<<std::endl;
   score_mu_bck = scores.at(3);
   score_p_bck = scores.at(4);
   score_e_bck = scores.at(5);
-  std::cout<<score_mu_bck<<" "<<score_p_bck<<std::endl;
   if(dir==-1){
     std::swap(score_mu_fwd,score_mu_bck);
     std::swap(score_p_fwd,score_p_bck);
     std::swap(score_e_fwd,score_e_bck);
   }
-  std::cout<<score_mu_bck<<" "<<score_p_bck<<std::endl;
+
   score_mu_fwd_bp = score_mu_fwd;
   score_p_fwd_bp = score_p_fwd;
   score_e_fwd_bp = score_e_fwd;
-  std::cout<<"BP Scores"<<std::endl;
   if(vtx_activity == true){
     std::vector<double> bp_scores = get_scores(ssm_sg,break_point,dir);
     score_mu_fwd_bp = bp_scores.at(1);
@@ -799,7 +739,6 @@ std::cout<<"fwd vtx"<<std::endl;
     score_e_fwd_bp = bp_scores.at(3);
   }
 
-  std::cout<<"dqdx"<<std::endl;
   dQ_dx_cut = 0.8866+0.9533 *pow(18/length/units::cm, 0.4234);
   medium_dq_dx = ssm_sg->get_medium_dQ_dx()/(43e3/units::cm);
   medium_dq_dx_bp = medium_dq_dx;
@@ -807,9 +746,7 @@ std::cout<<"fwd vtx"<<std::endl;
   else if(vtx_activity == true){medium_dq_dx_bp = ssm_sg->get_medium_dQ_dx(0,ssm_sg->get_dQ_vec().size()-break_point)/(43e3/units::cm);}
 
   //catch and fix cases where we have a large d(dq/dx) for all points
-  //if(reduced_muon_length<=0){
   if(break_point==vec_d_dq_dx.size()){
-    std::cout<<"false break point"<<std::endl;
     reduced_muon_length = length;
     score_mu_fwd_bp = score_mu_fwd;
     score_p_fwd_bp = score_p_fwd;
@@ -823,8 +760,6 @@ std::cout<<"fwd vtx"<<std::endl;
   g_range = mp.get_muon_r2ke();
   kine_energy = g_range->Eval(length) * units::MeV;
   kine_energy_reduced = g_range->Eval(reduced_muon_length) * units::MeV;
-
-
 
 
   WCPPID::ProtoSegment *prim_track1_sg;
@@ -854,7 +789,6 @@ std::cout<<"fwd vtx"<<std::endl;
   TVector3 mom_daught_shw1(0,0,0);
   TVector3 mom_daught_shw2(0,0,0);
 
-std::cout<<"Other particles"<<std::endl;
   //add another loop to fill the prim and duaghter stuff
   for (auto it = map_vertex_segments[main_vertex].begin(); it!= map_vertex_segments[main_vertex].end(); it++){
     WCPPID::ProtoSegment *sg = *it;
@@ -890,7 +824,6 @@ std::cout<<"Other particles"<<std::endl;
         n_prim_tracks_11 +=1;
       }
     }
-    std::cout<<"sg_length "<<"sg->get_flag_shower() "<<sg->get_flag_shower()<<std::endl;
     double sg_direct_length = sg->get_direct_length()/units::cm;
     double sg_pdg = abs(sg->get_particle_type()); 
     double sg_medium_dq_dx =  sg->get_medium_dQ_dx()/(43e3/units::cm);
@@ -1008,6 +941,13 @@ std::cout<<"Other particles"<<std::endl;
         kine_energy_range_mu_prim_shw2 = sg_kine_energy_range_pdg.at(0);
         kine_energy_range_p_prim_shw2 = sg_kine_energy_range_pdg.at(1);
         kine_energy_range_e_prim_shw2 = sg_kine_energy_range_pdg.at(2);
+        kine_energy_best_prim_shw2 = kine_energy_range_prim_shw2;
+        auto it_shower = map_segment_in_shower.find(sg);
+        if (it_shower!=map_segment_in_shower.end()){
+          WCPPID::WCShower *shower = it_shower->second;
+          kine_energy_best_prim_shw2 = shower->get_kine_best();
+          if (kine_energy_best_prim_shw2==0 ) {kine_energy_best_prim_shw2 = shower->get_kine_charge();}
+        }
 	dir_prim_shw2 = sg_dir;
 	add_daught_track_counts_1_prim_shw2 = sg_add_daught_track_counts_1;
         add_daught_all_counts_1_prim_shw2 = sg_add_daught_all_counts_1;
@@ -1028,6 +968,7 @@ std::cout<<"Other particles"<<std::endl;
         kine_energy_range_mu_prim_shw2 = kine_energy_range_mu_prim_shw1;
         kine_energy_range_p_prim_shw2 = kine_energy_range_p_prim_shw1;
         kine_energy_range_e_prim_shw2 = kine_energy_range_e_prim_shw1;
+        kine_energy_best_prim_shw2 = kine_energy_best_prim_shw1;
 	dir_prim_shw2 = dir_prim_shw1;
 	add_daught_track_counts_1_prim_shw2 = add_daught_track_counts_1_prim_shw1;
         add_daught_all_counts_1_prim_shw2 = add_daught_all_counts_1_prim_shw1;
@@ -1046,6 +987,13 @@ std::cout<<"Other particles"<<std::endl;
         kine_energy_range_mu_prim_shw1 = sg_kine_energy_range_pdg.at(0);
         kine_energy_range_p_prim_shw1 = sg_kine_energy_range_pdg.at(1);
         kine_energy_range_e_prim_shw1 = sg_kine_energy_range_pdg.at(2);
+        kine_energy_best_prim_shw1 = sg_kine_energy_range;
+        auto it_shower = map_segment_in_shower.find(sg);
+        if (it_shower!=map_segment_in_shower.end()){
+          WCPPID::WCShower *shower = it_shower->second;
+          kine_energy_best_prim_shw1 = shower->get_kine_best();
+          if (kine_energy_best_prim_shw1==0 ){ kine_energy_best_prim_shw1 = shower->get_kine_charge();}
+        }
 	dir_prim_shw1 = sg_dir;
 	add_daught_track_counts_1_prim_shw1 = sg_add_daught_track_counts_1;
         add_daught_all_counts_1_prim_shw1 = sg_add_daught_all_counts_1;
@@ -1056,7 +1004,7 @@ std::cout<<"Other particles"<<std::endl;
       }
     }
   }
-std::cout<<"Other particles at the butt"<<std::endl;
+
   //loop the vertex corresponding to the muon butt
   WCPPID::ProtoVertex* second_vtx = find_other_vertex(ssm_sg,main_vertex);
   for (auto it = map_vertex_segments[second_vtx].begin(); it!= map_vertex_segments[second_vtx].end(); it++){
@@ -1093,7 +1041,6 @@ std::cout<<"Other particles at the butt"<<std::endl;
         n_daughter_tracks_11 +=1;
       }
     }
-std::cout<<"sg_length "<<"sg->get_flag_shower() "<<sg->get_flag_shower()<<std::endl;
     double sg_direct_length = sg->get_direct_length()/units::cm;
     double sg_pdg = abs(sg->get_particle_type());
     double sg_medium_dq_dx =  sg->get_medium_dQ_dx()/(43e3/units::cm);
@@ -1211,6 +1158,13 @@ std::cout<<"sg_length "<<"sg->get_flag_shower() "<<sg->get_flag_shower()<<std::e
 	kine_energy_range_mu_daught_shw2 = sg_kine_energy_range_pdg.at(0);
         kine_energy_range_p_daught_shw2 = sg_kine_energy_range_pdg.at(1);
         kine_energy_range_e_daught_shw2 = sg_kine_energy_range_pdg.at(2);
+        kine_energy_best_daught_shw2 = sg_kine_energy_range;
+        auto it_shower = map_segment_in_shower.find(sg);
+        if (it_shower!=map_segment_in_shower.end()){
+          WCPPID::WCShower *shower = it_shower->second;
+          kine_energy_best_daught_shw2 = shower->get_kine_best();
+          if (kine_energy_best_daught_shw2==0 ) kine_energy_best_daught_shw2 = shower->get_kine_charge();
+        }
         dir_daught_shw2 = sg_dir;
 	add_daught_track_counts_1_daught_shw2 = sg_add_daught_track_counts_1;
         add_daught_all_counts_1_daught_shw2 = sg_add_daught_all_counts_1;
@@ -1231,6 +1185,7 @@ std::cout<<"sg_length "<<"sg->get_flag_shower() "<<sg->get_flag_shower()<<std::e
 	kine_energy_range_mu_daught_shw2 = kine_energy_range_mu_daught_shw1;
         kine_energy_range_p_daught_shw2 = kine_energy_range_p_daught_shw1;
         kine_energy_range_e_daught_shw2 = kine_energy_range_e_daught_shw1;
+        kine_energy_best_daught_shw2 = kine_energy_best_daught_shw1;
         dir_daught_shw2 = dir_daught_shw1;
 	add_daught_track_counts_1_daught_shw2 = add_daught_track_counts_1_daught_shw1;
         add_daught_all_counts_1_daught_shw2 = add_daught_all_counts_1_daught_shw1;
@@ -1249,6 +1204,13 @@ std::cout<<"sg_length "<<"sg->get_flag_shower() "<<sg->get_flag_shower()<<std::e
         kine_energy_range_mu_daught_shw1 = sg_kine_energy_range_pdg.at(0);
         kine_energy_range_p_daught_shw1 = sg_kine_energy_range_pdg.at(1);
         kine_energy_range_e_daught_shw1 = sg_kine_energy_range_pdg.at(2);
+        kine_energy_best_daught_shw1 = sg_kine_energy_range;
+        auto it_shower = map_segment_in_shower.find(sg);
+        if (it_shower!=map_segment_in_shower.end()){
+          WCPPID::WCShower *shower = it_shower->second;
+          kine_energy_best_daught_shw1 = shower->get_kine_best();
+          if (kine_energy_best_daught_shw1==0 ) kine_energy_best_daught_shw1 = shower->get_kine_charge();
+        }
 	dir_daught_shw1 = sg_dir;
 	add_daught_track_counts_1_daught_shw1 = sg_add_daught_track_counts_1;
         add_daught_all_counts_1_daught_shw1 = sg_add_daught_all_counts_1;
@@ -1259,7 +1221,7 @@ std::cout<<"sg_length "<<"sg->get_flag_shower() "<<sg->get_flag_shower()<<std::e
       }
     }
   }
-    std::cout<<"Other particles scores"<<std::endl;
+
   if(length_prim_track1>0){
     std::vector<double> scores_prim_track1 = get_scores(prim_track1_sg);
     score_mu_fwd_prim_track1 = scores_prim_track1.at(0);
@@ -1287,15 +1249,14 @@ std::cout<<"sg_length "<<"sg->get_flag_shower() "<<sg->get_flag_shower()<<std::e
     score_p_bck_daught_track1 = scores_daught_track1.at(4);
     score_e_bck_daught_track1 = scores_daught_track1.at(5);
   }
-  std::cout<<"daught track2"<<std::endl;
   if(length_daught_track2>0){
-  std::vector<double> scores_daught_track2 = get_scores(daught_track2_sg);
-  score_mu_fwd_daught_track2 = scores_daught_track2.at(0);
-  score_p_fwd_daught_track2 = scores_daught_track2.at(1);
-  score_e_fwd_daught_track2 = scores_daught_track2.at(2);
-  score_mu_bck_daught_track2 = scores_daught_track2.at(3);
-  score_p_bck_daught_track2 = scores_daught_track2.at(4);
-  score_e_bck_daught_track2 = scores_daught_track2.at(5);
+    std::vector<double> scores_daught_track2 = get_scores(daught_track2_sg);
+    score_mu_fwd_daught_track2 = scores_daught_track2.at(0);
+    score_p_fwd_daught_track2 = scores_daught_track2.at(1);
+    score_e_fwd_daught_track2 = scores_daught_track2.at(2);
+    score_mu_bck_daught_track2 = scores_daught_track2.at(3);
+    score_p_bck_daught_track2 = scores_daught_track2.at(4);
+    score_e_bck_daught_track2 = scores_daught_track2.at(5);
   }
   if(length_prim_shw1>0){
     std::vector<double> scores_prim_shw1 = get_scores(prim_shw1_sg);
@@ -1336,22 +1297,8 @@ std::cout<<"sg_length "<<"sg->get_flag_shower() "<<sg->get_flag_shower()<<std::e
 
     //figure our condition needed to swap, for now just daught and prim if muon is backwards
     //will be more complex if we look for off vertex stuff, here fwd/bckg may als switch if the muon in non-prim
-std::cout<<"backwards_muon "<<backwards_muon<<"dir "<<dir<<std::endl;
   if(backwards_muon){
-  //if(dir==-1){
-  std::cout<<"backwards_muon "<<std::endl;
-     std::swap(pdg_prim_track1, pdg_daught_track1);
-     std::swap(length_prim_track1, length_daught_track1);
-     std::swap(direct_length_prim_track1, direct_length_daught_track1);
-     std::swap(max_dev_prim_track1, max_dev_daught_track1);
-     std::swap(kine_energy_range_prim_track1, kine_energy_range_daught_track1);
-     std::swap(kine_energy_range_mu_prim_track1, kine_energy_range_mu_daught_track1);
-     std::swap(kine_energy_range_p_prim_track1, kine_energy_range_p_daught_track1);
-     std::swap(kine_energy_range_e_prim_track1, kine_energy_range_e_daught_track1);
-     std::swap(kine_energy_cal_prim_track1, kine_energy_cal_daught_track1);
-     std::swap(medium_dq_dx_prim_track1, medium_dq_dx_daught_track1);
-     std::swap(dir_prim_track1, dir_daught_track1);
-  std::cout<<"1"<<std::endl;
+
     std::swap(n_prim_all_1, n_daughter_all_1);
     std::swap(n_prim_tracks_1, n_daughter_tracks_1);
     std::swap(n_prim_all_3, n_daughter_all_3);
@@ -1362,7 +1309,7 @@ std::cout<<"backwards_muon "<<backwards_muon<<"dir "<<dir<<std::endl;
     std::swap(n_prim_tracks_8, n_daughter_tracks_8);
     std::swap(n_prim_all_11, n_daughter_all_11);
     std::swap(n_prim_tracks_11, n_daughter_tracks_11);
-  std::cout<<"2"<<std::endl;
+
     std::swap(add_daught_track_counts_1_prim_track1, add_daught_track_counts_1_daught_track1);
     std::swap(add_daught_all_counts_1_prim_track1, add_daught_all_counts_1_daught_track1);
     std::swap(add_daught_track_counts_1_prim_track2, add_daught_track_counts_1_daught_track2);
@@ -1371,7 +1318,7 @@ std::cout<<"backwards_muon "<<backwards_muon<<"dir "<<dir<<std::endl;
     std::swap(add_daught_all_counts_1_prim_shw1, add_daught_all_counts_1_daught_shw1);
     std::swap(add_daught_track_counts_1_prim_shw2, add_daught_track_counts_1_daught_shw2);
     std::swap(add_daught_all_counts_1_prim_shw2, add_daught_all_counts_1_daught_shw2);
-  std::cout<<"3"<<std::endl;
+
     std::swap(add_daught_track_counts_5_prim_track1, add_daught_track_counts_5_daught_track1);
     std::swap(add_daught_all_counts_5_prim_track1, add_daught_all_counts_5_daught_track1);
     std::swap(add_daught_track_counts_5_prim_track2, add_daught_track_counts_5_daught_track2);
@@ -1380,7 +1327,7 @@ std::cout<<"backwards_muon "<<backwards_muon<<"dir "<<dir<<std::endl;
     std::swap(add_daught_all_counts_5_prim_shw1, add_daught_all_counts_5_daught_shw1);
     std::swap(add_daught_track_counts_5_prim_shw2, add_daught_track_counts_5_daught_shw2);
     std::swap(add_daught_all_counts_5_prim_shw2, add_daught_all_counts_5_daught_shw2);
-  std::cout<<"4"<<std::endl;
+
     std::swap(add_daught_track_counts_11_prim_track1, add_daught_track_counts_11_daught_track1);
     std::swap(add_daught_all_counts_11_prim_track1, add_daught_all_counts_11_daught_track1);
     std::swap(add_daught_track_counts_11_prim_track2, add_daught_track_counts_11_daught_track2);
@@ -1389,189 +1336,364 @@ std::cout<<"backwards_muon "<<backwards_muon<<"dir "<<dir<<std::endl;
     std::swap(add_daught_all_counts_11_prim_shw1, add_daught_all_counts_11_daught_shw1);
     std::swap(add_daught_track_counts_11_prim_shw2, add_daught_track_counts_11_daught_shw2);
     std::swap(add_daught_all_counts_11_prim_shw2, add_daught_all_counts_11_daught_shw2);
-  std::cout<<"5"<<std::endl;
-     std::swap(pdg_prim_track2, pdg_daught_track2);
-     std::swap(length_prim_track2, length_daught_track2);
-     std::swap(direct_length_prim_track2, direct_length_daught_track2);
-     std::swap(max_dev_prim_track2, max_dev_daught_track2);
-     std::swap(kine_energy_range_prim_track2, kine_energy_range_daught_track2);
-     std::swap(kine_energy_range_mu_prim_track2, kine_energy_range_mu_daught_track2);
-     std::swap(kine_energy_range_p_prim_track2, kine_energy_range_p_daught_track2);
-     std::swap(kine_energy_range_e_prim_track2, kine_energy_range_e_daught_track2);
-     std::swap(kine_energy_cal_prim_track2, kine_energy_cal_daught_track2);
-     std::swap(medium_dq_dx_prim_track2, medium_dq_dx_daught_track2);
-     std::swap(dir_prim_track2, dir_daught_track2);
-  std::cout<<"6"<<std::endl;
-     std::swap(pdg_prim_shw1, pdg_daught_shw1);
-     std::swap(length_prim_shw1, length_daught_shw1);
-     std::swap(direct_length_prim_shw1, direct_length_daught_shw1);
-     std::swap(max_dev_prim_shw1, max_dev_daught_shw1);
-     std::swap(kine_energy_range_prim_shw1, kine_energy_range_daught_shw1);
-     std::swap(kine_energy_range_mu_prim_shw1, kine_energy_range_mu_daught_shw1);
-     std::swap(kine_energy_range_p_prim_shw1, kine_energy_range_p_daught_shw1);
-     std::swap(kine_energy_range_e_prim_shw1, kine_energy_range_e_daught_shw1);
-     std::swap(kine_energy_cal_prim_shw1, kine_energy_cal_daught_shw1);
-     std::swap(medium_dq_dx_prim_shw1, medium_dq_dx_daught_shw1);
-     std::swap(dir_prim_shw1, dir_daught_shw1);
-  std::cout<<"7"<<std::endl;
-     std::swap(pdg_prim_shw2, pdg_daught_shw2);
-     std::swap(length_prim_shw2, length_daught_shw2);
-     std::swap(direct_length_prim_shw2, direct_length_daught_shw2);
-     std::swap(max_dev_prim_shw2, max_dev_daught_shw2);
-     std::swap(kine_energy_range_prim_shw2, kine_energy_range_daught_shw2);
-     std::swap(kine_energy_range_mu_prim_shw2, kine_energy_range_mu_daught_shw2);
-     std::swap(kine_energy_range_p_prim_shw2, kine_energy_range_p_daught_shw2);
-     std::swap(kine_energy_range_e_prim_shw2, kine_energy_range_e_daught_shw2);
-     std::swap(kine_energy_cal_prim_shw2, kine_energy_cal_daught_shw2);
-     std::swap(medium_dq_dx_prim_shw2, medium_dq_dx_daught_shw2);
-     std::swap(dir_prim_shw2, dir_daught_shw2);
-  std::cout<<"8"<<std::endl;
+
+    std::swap(pdg_prim_track1, pdg_daught_track1);
+    std::swap(length_prim_track1, length_daught_track1);
+    std::swap(direct_length_prim_track1, direct_length_daught_track1);
+    std::swap(max_dev_prim_track1, max_dev_daught_track1);
+    std::swap(kine_energy_range_prim_track1, kine_energy_range_daught_track1);
+    std::swap(kine_energy_range_mu_prim_track1, kine_energy_range_mu_daught_track1);
+    std::swap(kine_energy_range_p_prim_track1, kine_energy_range_p_daught_track1);
+    std::swap(kine_energy_range_e_prim_track1, kine_energy_range_e_daught_track1);
+    std::swap(kine_energy_cal_prim_track1, kine_energy_cal_daught_track1);
+    std::swap(medium_dq_dx_prim_track1, medium_dq_dx_daught_track1);
+    std::swap(dir_prim_track1, dir_daught_track1);
+
+    std::swap(pdg_prim_track2, pdg_daught_track2);
+    std::swap(length_prim_track2, length_daught_track2);
+    std::swap(direct_length_prim_track2, direct_length_daught_track2);
+    std::swap(max_dev_prim_track2, max_dev_daught_track2);
+    std::swap(kine_energy_range_prim_track2, kine_energy_range_daught_track2);
+    std::swap(kine_energy_range_mu_prim_track2, kine_energy_range_mu_daught_track2);
+    std::swap(kine_energy_range_p_prim_track2, kine_energy_range_p_daught_track2);
+    std::swap(kine_energy_range_e_prim_track2, kine_energy_range_e_daught_track2);
+    std::swap(kine_energy_cal_prim_track2, kine_energy_cal_daught_track2);
+    std::swap(medium_dq_dx_prim_track2, medium_dq_dx_daught_track2);
+    std::swap(dir_prim_track2, dir_daught_track2);
+
+    std::swap(pdg_prim_shw1, pdg_daught_shw1);
+    std::swap(length_prim_shw1, length_daught_shw1);
+    std::swap(direct_length_prim_shw1, direct_length_daught_shw1);
+    std::swap(max_dev_prim_shw1, max_dev_daught_shw1);
+    std::swap(kine_energy_range_prim_shw1, kine_energy_range_daught_shw1);
+    std::swap(kine_energy_range_mu_prim_shw1, kine_energy_range_mu_daught_shw1);
+    std::swap(kine_energy_range_p_prim_shw1, kine_energy_range_p_daught_shw1);
+    std::swap(kine_energy_range_e_prim_shw1, kine_energy_range_e_daught_shw1);
+    std::swap(kine_energy_cal_prim_shw1, kine_energy_cal_daught_shw1);
+    std::swap(kine_energy_best_prim_shw1, kine_energy_best_daught_shw1);
+    std::swap(medium_dq_dx_prim_shw1, medium_dq_dx_daught_shw1);
+    std::swap(dir_prim_shw1, dir_daught_shw1);
+
+    std::swap(pdg_prim_shw2, pdg_daught_shw2);
+    std::swap(length_prim_shw2, length_daught_shw2);
+    std::swap(direct_length_prim_shw2, direct_length_daught_shw2);
+    std::swap(max_dev_prim_shw2, max_dev_daught_shw2);
+    std::swap(kine_energy_range_prim_shw2, kine_energy_range_daught_shw2);
+    std::swap(kine_energy_range_mu_prim_shw2, kine_energy_range_mu_daught_shw2);
+    std::swap(kine_energy_range_p_prim_shw2, kine_energy_range_p_daught_shw2);
+    std::swap(kine_energy_range_e_prim_shw2, kine_energy_range_e_daught_shw2);
+    std::swap(kine_energy_cal_prim_shw2, kine_energy_cal_daught_shw2);
+    std::swap(kine_energy_best_prim_shw2, kine_energy_best_daught_shw2);
+    std::swap(medium_dq_dx_prim_shw2, medium_dq_dx_daught_shw2);
+    std::swap(dir_prim_shw2, dir_daught_shw2);
+
     std::swap(score_mu_fwd_prim_track1, score_mu_fwd_daught_track1);  
     std::swap(score_p_fwd_prim_track1, score_p_fwd_daught_track1); 
     std::swap(score_e_fwd_prim_track1, score_e_fwd_daught_track1);
     std::swap(score_mu_bck_prim_track1, score_mu_bck_daught_track1); 
     std::swap(score_p_bck_prim_track1, score_p_bck_daught_track1);
     std::swap(score_e_bck_prim_track1, score_e_bck_daught_track1);
-  std::cout<<"9"<<std::endl;
+
     std::swap(score_mu_fwd_prim_track2, score_mu_fwd_daught_track2); 
     std::swap(score_p_fwd_prim_track2, score_p_fwd_daught_track2); 
     std::swap(score_e_fwd_prim_track2, score_e_fwd_daught_track2);
     std::swap(score_mu_bck_prim_track2, score_mu_bck_daught_track2); 
     std::swap(score_p_bck_prim_track2, score_p_bck_daught_track2);
     std::swap(score_e_bck_prim_track2, score_e_bck_daught_track2);
-  std::cout<<"10"<<std::endl;
+
     std::swap(score_mu_fwd_prim_shw1, score_mu_fwd_daught_shw1);
     std::swap(score_p_fwd_prim_shw1, score_p_fwd_daught_shw1);
     std::swap(score_e_fwd_prim_shw1, score_e_fwd_daught_shw1);
     std::swap(score_mu_bck_prim_shw1, score_mu_bck_daught_shw1);
     std::swap(score_p_bck_prim_shw1, score_p_bck_daught_shw1); 
     std::swap(score_e_bck_prim_shw1, score_e_bck_daught_shw1);
-  std::cout<<"11"<<std::endl;
+
     std::swap(score_mu_fwd_prim_shw2, score_mu_fwd_daught_shw2);
     std::swap(score_p_fwd_prim_shw2, score_p_fwd_daught_shw2);
     std::swap(score_e_fwd_prim_shw2, score_e_fwd_daught_shw2);
     std::swap(score_mu_bck_prim_shw2, score_mu_bck_daught_shw2);
     std::swap(score_p_bck_prim_shw2, score_p_bck_daught_shw2);
     std::swap(score_e_bck_prim_shw2, score_e_bck_daught_shw2);
-  std::cout<<"12"<<std::endl;
-  std::swap(prim_track1_sg,daught_track1_sg);
-  std::swap(prim_track2_sg,daught_track2_sg);
-  std::swap(prim_shw1_sg,daught_shw1_sg);
-  std::swap(prim_shw2_sg,daught_shw2_sg);
-  std::cout<<"13"<<std::endl;
+
+    std::swap(prim_track1_sg,daught_track1_sg);
+    std::swap(prim_track2_sg,daught_track2_sg);
+    std::swap(prim_shw1_sg,daught_shw1_sg);
+    std::swap(prim_shw2_sg,daught_shw2_sg);
   }
 
   if(length_prim_track1>0){
-  std::cout<<"length_prim_track1 "<<length_prim_track1<<std::endl;
-  double mass_prim_track1 = prim_track1_sg->get_particle_mass();
-  std::cout<<"mass_prim_track1 "<<mass_prim_track1<<std::endl;
-  double mom_mag_prim_track1 = sqrt(pow(kine_energy_range_prim_track1,2) + 2*kine_energy_range_prim_track1*mass_prim_track1);
-  std::cout<<"mom_mag_prim_track1 "<<mom_mag_prim_track1<<std::endl;
-  x_dir_prim_track1 = dir_prim_track1[0];
-  y_dir_prim_track1 = dir_prim_track1[1];
-  z_dir_prim_track1 = dir_prim_track1[2];
-  mom_prim_track1[0] = dir_prim_track1[0]*mom_mag_prim_track1;
-  mom_prim_track1[1] = dir_prim_track1[1]*mom_mag_prim_track1;
-  mom_prim_track1[2] = dir_prim_track1[2]*mom_mag_prim_track1;
+    double mass_prim_track1 = prim_track1_sg->get_particle_mass();
+    if(mass_prim_track1<0){mass_prim_track1=0;}
+    double mom_mag_prim_track1 = sqrt(pow(kine_energy_range_prim_track1,2) + 2*kine_energy_range_prim_track1*mass_prim_track1);
+    x_dir_prim_track1 = dir_prim_track1[0];
+    y_dir_prim_track1 = dir_prim_track1[1];
+    z_dir_prim_track1 = dir_prim_track1[2];
+    mom_prim_track1[0] = dir_prim_track1[0]*mom_mag_prim_track1;
+    mom_prim_track1[1] = dir_prim_track1[1]*mom_mag_prim_track1;
+    mom_prim_track1[2] = dir_prim_track1[2]*mom_mag_prim_track1;
   }
   if(length_prim_track2>0){
-  double mass_prim_track2 = prim_track2_sg->get_particle_mass();
-  std::cout<<"mass_prim_track2 "<<mass_prim_track2<<std::endl;
-  double mom_mag_prim_track2 = sqrt(pow(kine_energy_range_prim_track2,2) + 2*kine_energy_range_prim_track2*mass_prim_track2);
-  x_dir_prim_track2 = dir_prim_track2[0];
-  y_dir_prim_track2 = dir_prim_track2[1];
-  z_dir_prim_track2 = dir_prim_track2[2];
-  mom_prim_track2[0] = dir_prim_track2[0]*mom_mag_prim_track2;
-  mom_prim_track2[1] = dir_prim_track2[1]*mom_mag_prim_track2;
-  mom_prim_track2[2] = dir_prim_track2[2]*mom_mag_prim_track2;
+    double mass_prim_track2 = prim_track2_sg->get_particle_mass();
+    if(mass_prim_track2<0){mass_prim_track2=0;}
+    double mom_mag_prim_track2 = sqrt(pow(kine_energy_range_prim_track2,2) + 2*kine_energy_range_prim_track2*mass_prim_track2);
+    x_dir_prim_track2 = dir_prim_track2[0];
+    y_dir_prim_track2 = dir_prim_track2[1];
+    z_dir_prim_track2 = dir_prim_track2[2];
+    mom_prim_track2[0] = dir_prim_track2[0]*mom_mag_prim_track2;
+    mom_prim_track2[1] = dir_prim_track2[1]*mom_mag_prim_track2;
+    mom_prim_track2[2] = dir_prim_track2[2]*mom_mag_prim_track2;
   }
   if(length_daught_track1>0){
-  double mass_daught_track1 = daught_track1_sg->get_particle_mass();
-  std::cout<<"mass_daught_track1 "<<mass_daught_track1<<std::endl;
-  double mom_mag_daught_track1 = sqrt(pow(kine_energy_range_daught_track1,2) + 2*kine_energy_range_daught_track1*mass_daught_track1);
-  x_dir_daught_track1 = dir_prim_track1[0];
-  y_dir_daught_track1 = dir_prim_track1[1];
-  z_dir_daught_track1 = dir_prim_track1[2];
-  mom_daught_track1[0] = dir_daught_track1[0]*mom_mag_daught_track1;
-  mom_daught_track1[1] = dir_daught_track1[1]*mom_mag_daught_track1;
-  mom_daught_track1[2] = dir_daught_track1[2]*mom_mag_daught_track1;
+    double mass_daught_track1 = daught_track1_sg->get_particle_mass();
+    if(mass_daught_track1<0){mass_daught_track1=0;}
+    double mom_mag_daught_track1 = sqrt(pow(kine_energy_range_daught_track1,2) + 2*kine_energy_range_daught_track1*mass_daught_track1);
+    x_dir_daught_track1 = dir_prim_track1[0];
+    y_dir_daught_track1 = dir_prim_track1[1];
+    z_dir_daught_track1 = dir_prim_track1[2];
+    mom_daught_track1[0] = dir_daught_track1[0]*mom_mag_daught_track1;
+    mom_daught_track1[1] = dir_daught_track1[1]*mom_mag_daught_track1;
+    mom_daught_track1[2] = dir_daught_track1[2]*mom_mag_daught_track1;
   }
   if(length_daught_track2>0){
-  double mass_daught_track2 = daught_track2_sg->get_particle_mass();
-  std::cout<<"mass_daught_track2 "<<mass_daught_track2<<std::endl;
-  double mom_mag_daught_track2 = sqrt(pow(kine_energy_range_daught_track2,2) + 2*kine_energy_range_daught_track2*mass_daught_track2);
-  x_dir_daught_track2 = dir_daught_track2[0];
-  y_dir_daught_track2 = dir_daught_track2[1];
-  z_dir_daught_track2 = dir_daught_track2[2];
-  mom_daught_track2[0] = dir_daught_track2[0]*mom_mag_daught_track2;
-  mom_daught_track2[1] = dir_daught_track2[1]*mom_mag_daught_track2;
-  mom_daught_track2[2] = dir_daught_track2[2]*mom_mag_daught_track2;
+    double mass_daught_track2 = daught_track2_sg->get_particle_mass();
+    if(mass_daught_track2<0){mass_daught_track2=0;}
+    double mom_mag_daught_track2 = sqrt(pow(kine_energy_range_daught_track2,2) + 2*kine_energy_range_daught_track2*mass_daught_track2);
+    x_dir_daught_track2 = dir_daught_track2[0];
+    y_dir_daught_track2 = dir_daught_track2[1];
+    z_dir_daught_track2 = dir_daught_track2[2];
+    mom_daught_track2[0] = dir_daught_track2[0]*mom_mag_daught_track2;
+    mom_daught_track2[1] = dir_daught_track2[1]*mom_mag_daught_track2;
+    mom_daught_track2[2] = dir_daught_track2[2]*mom_mag_daught_track2;
   }
   if(length_prim_shw1>0){
-  double mass_prim_shw1 = prim_shw1_sg->get_particle_mass();
-  std::cout<<"mass_prim_shw1 "<<mass_prim_shw1<<std::endl; 
- double mom_mag_prim_shw1 = sqrt(pow(kine_energy_range_prim_shw1,2) + 2*kine_energy_range_prim_shw1*mass_prim_shw1);
-  x_dir_prim_shw1 = dir_prim_shw1[0];
-  y_dir_prim_shw1 = dir_prim_shw1[1];
-  z_dir_prim_shw1 = dir_prim_shw1[2];
-  mom_prim_shw1[0] = dir_prim_shw1[0]*mom_mag_prim_shw1;
-  mom_prim_shw1[1] = dir_prim_shw1[1]*mom_mag_prim_shw1;
-  mom_prim_shw1[2] = dir_prim_shw1[2]*mom_mag_prim_shw1;
+    double mass_prim_shw1 = prim_shw1_sg->get_particle_mass();
+    if(mass_prim_shw1<0){mass_prim_shw1=0;}
+    double mom_mag_prim_shw1 = sqrt(pow(kine_energy_range_prim_shw1,2) + 2*kine_energy_range_prim_shw1*mass_prim_shw1);
+    x_dir_prim_shw1 = dir_prim_shw1[0];
+    y_dir_prim_shw1 = dir_prim_shw1[1];
+    z_dir_prim_shw1 = dir_prim_shw1[2];
+    mom_prim_shw1[0] = dir_prim_shw1[0]*mom_mag_prim_shw1;
+    mom_prim_shw1[1] = dir_prim_shw1[1]*mom_mag_prim_shw1;
+    mom_prim_shw1[2] = dir_prim_shw1[2]*mom_mag_prim_shw1;
   }
   if(length_prim_shw2>0){
-  double mass_prim_shw2 = prim_shw2_sg->get_particle_mass();
-  std::cout<<"mass_prim_shw2 "<<mass_prim_shw2<<std::endl;
-  double mom_mag_prim_shw2 = sqrt(pow(kine_energy_range_prim_shw2,2) + 2*kine_energy_range_prim_shw2*mass_prim_shw2);
-  x_dir_prim_shw2 = dir_prim_shw2[0];
-  y_dir_prim_shw2 = dir_prim_shw2[1];
-  z_dir_prim_shw2 = dir_prim_shw2[2];
-  mom_prim_shw2[0] = dir_prim_shw2[0]*mom_mag_prim_shw2;
-  mom_prim_shw2[1] = dir_prim_shw2[1]*mom_mag_prim_shw2;
-  mom_prim_shw2[2] = dir_prim_shw2[2]*mom_mag_prim_shw2;
+    double mass_prim_shw2 = prim_shw2_sg->get_particle_mass();
+    if(mass_prim_shw2<0){mass_prim_shw2=0;}
+    double mom_mag_prim_shw2 = sqrt(pow(kine_energy_range_prim_shw2,2) + 2*kine_energy_range_prim_shw2*mass_prim_shw2);
+    x_dir_prim_shw2 = dir_prim_shw2[0];
+    y_dir_prim_shw2 = dir_prim_shw2[1];
+    z_dir_prim_shw2 = dir_prim_shw2[2];
+    mom_prim_shw2[0] = dir_prim_shw2[0]*mom_mag_prim_shw2;
+    mom_prim_shw2[1] = dir_prim_shw2[1]*mom_mag_prim_shw2;
+    mom_prim_shw2[2] = dir_prim_shw2[2]*mom_mag_prim_shw2;
   }
+  //daugher showers we will use best instead of range
   if(length_daught_shw1>0){
-  double mass_daught_shw1 = daught_shw1_sg->get_particle_mass();
-  std::cout<<"mass_daught_shw1 "<<mass_daught_shw1<<std::endl;
-  double mom_mag_daught_shw1 = sqrt(pow(kine_energy_range_daught_shw1,2) + 2*kine_energy_range_daught_shw1*mass_daught_shw1);
-  x_dir_daught_shw1 = dir_daught_shw1[0];
-  y_dir_daught_shw1 = dir_daught_shw1[1];
-  z_dir_daught_shw1 = dir_daught_shw1[2];
-  mom_daught_shw1[0] = dir_daught_shw1[0]*mom_mag_daught_shw1;
-  mom_daught_shw1[1] = dir_daught_shw1[1]*mom_mag_daught_shw1;
-  mom_daught_shw1[2] = dir_daught_shw1[2]*mom_mag_daught_shw1;
+    double mass_daught_shw1 = daught_shw1_sg->get_particle_mass();
+    if(mass_daught_shw1<0){mass_daught_shw1=0;}
+    double mom_mag_daught_shw1 = sqrt(pow(kine_energy_best_daught_shw1,2) + 2*kine_energy_best_daught_shw1*mass_daught_shw1);
+    x_dir_daught_shw1 = dir_daught_shw1[0];
+    y_dir_daught_shw1 = dir_daught_shw1[1];
+    z_dir_daught_shw1 = dir_daught_shw1[2];
+    mom_daught_shw1[0] = dir_daught_shw1[0]*mom_mag_daught_shw1;
+    mom_daught_shw1[1] = dir_daught_shw1[1]*mom_mag_daught_shw1;
+    mom_daught_shw1[2] = dir_daught_shw1[2]*mom_mag_daught_shw1;
   }
   if(length_daught_shw2>0){
-  std::cout<<"length_daught_shw2 "<<length_daught_shw2<<std::endl;
-  double mass_daught_shw2 = daught_shw2_sg->get_particle_mass();
-  std::cout<<"mass_daught_shw2 "<<mass_daught_shw2<<std::endl;
-  double mom_mag_daught_shw2 = sqrt(pow(kine_energy_range_daught_shw2,2) + 2*kine_energy_range_daught_shw2*mass_daught_shw2);
-  std::cout<<"mom_mag_daught_shw2 "<<mom_mag_daught_shw2<<std::endl;
-  x_dir_daught_shw2 = dir_daught_shw2[0];
-  y_dir_daught_shw2 = dir_daught_shw2[1];
-  z_dir_daught_shw2 = dir_daught_shw2[2];
-  mom_daught_shw2[0] = dir_daught_shw2[0]*mom_mag_daught_shw2;
-  mom_daught_shw2[1] = dir_daught_shw2[1]*mom_mag_daught_shw2;
-  mom_daught_shw2[2] = dir_daught_shw2[2]*mom_mag_daught_shw2;
+    double mass_daught_shw2 = daught_shw2_sg->get_particle_mass();
+    if(mass_daught_shw2<0){mass_daught_shw2=0;}
+    double mom_mag_daught_shw2 = sqrt(pow(kine_energy_best_daught_shw2,2) + 2*kine_energy_best_daught_shw2*mass_daught_shw2);
+    x_dir_daught_shw2 = dir_daught_shw2[0];
+    y_dir_daught_shw2 = dir_daught_shw2[1];
+    z_dir_daught_shw2 = dir_daught_shw2[2];
+    mom_daught_shw2[0] = dir_daught_shw2[0]*mom_mag_daught_shw2;
+    mom_daught_shw2[1] = dir_daught_shw2[1]*mom_mag_daught_shw2;
+    mom_daught_shw2[2] = dir_daught_shw2[2]*mom_mag_daught_shw2;
   }
 
-  std::cout<<"14"<<std::endl;
-  std::cout<<"nu dir"<<std::endl;
-  //need to think about how to account for momentum here
+  // Set the main vertex
+  WCPPID::ProtoVertex* ssm_main_vtx = main_vertex;
+  WCPPID::ProtoVertex* ssm_second_vtx = find_other_vertex(ssm_sg,main_vertex);
+  if(backwards_muon){
+    ssm_main_vtx = ssm_second_vtx;
+    ssm_second_vtx = main_vertex;
+  }
+
+  //now take a look at the off vertex stuff via the shower object
+  WCPPID::ProtoSegment *offvtx_track1_sg;
+  WCPPID::ProtoSegment *offvtx_shw1_sg;
+  TVector3 dir_offvtx_track1(0,0,0);
+  TVector3 dir_offvtx_shw1(0,0,0);
+  TVector3 mom_offvtx_track1(0,0,0);
+  TVector3 mom_offvtx_shw1(0,0,0);
+
+  for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
+    WCPPID::ProtoSegment *sg = it->first;
+    if( (map_vertex_segments[ssm_main_vtx].find(sg) != map_vertex_segments[ssm_main_vtx].end()) || (map_vertex_segments[ssm_second_vtx].find(sg) != map_vertex_segments[ssm_second_vtx].end()) ){
+    // not connected to either vertex and not in the same cluster
+     continue; 
+    }
+    //auto it_shower = map_segment_in_shower.find(sg);
+    //if (it_shower!=map_segment_in_shower.end()){
+    //  WCPPID::WCShower *shower = it_shower->second;
+    //  if (pi0_showers.find(shower)!=pi0_showers.end()){ continue; }//in a pi0, will be accounted for later
+    //}
+
+    double sg_length = sg->get_length()/units::cm;
+    double sg_pdg = abs(sg->get_particle_type());
+    double dx = sg->get_point_vec().front().x/units::cm - ssm_main_vtx->get_fit_pt().x/units::cm;
+    double dy = sg->get_point_vec().front().y/units::cm - ssm_main_vtx->get_fit_pt().y/units::cm;
+    double dz = sg->get_point_vec().front().z/units::cm - ssm_main_vtx->get_fit_pt().z/units::cm;
+    double sep_dist = sqrt(dx*dx+dy*dy+dz*dz);
+    double sg_kine_energy_cal = sg->cal_kine_dQdx();
+    if(sep_dist>80){
+      continue;
+    }
+    off_vtx_length += sg_length;
+    off_vtx_energy += sg_kine_energy_cal;
+    if(sg_length>1){
+      if (sg_pdg!=22 && sg_pdg!=11){
+        n_offvtx_tracks_1 +=1;
+      } else{ n_offvtx_showers_1 +=1;}
+    }
+    if(sg_length>3){
+      if (sg_pdg!=22 && sg_pdg!=11){
+        n_offvtx_tracks_3 +=1;
+      } else{ n_offvtx_showers_3 +=1;}
+    }
+    if(sg_length>5){
+      if (sg_pdg!=22 && sg_pdg!=11){
+        n_offvtx_tracks_5 +=1;
+      } else{ n_offvtx_showers_5 +=1;}
+    }
+    if(sg_length>8){
+      if (sg_pdg!=22 && sg_pdg!=11){
+        n_offvtx_tracks_8 +=1;
+      } else{ n_offvtx_showers_8 +=1;}
+    }
+    if(sg_length>11){
+      if (sg_pdg!=22 && sg_pdg!=11){
+        n_offvtx_tracks_11 +=1;
+      } else{ n_offvtx_showers_11 +=1;}
+    }
+    double sg_direct_length = sg->get_direct_length()/units::cm;
+    double sg_medium_dq_dx =  sg->get_medium_dQ_dx()/(43e3/units::cm);
+    double sg_max_dev = sg->get_max_deviation(int(0),int(sg->get_point_vec().size()))/units::cm;
+    double sg_kine_energy_range = sg->cal_kine_range();
+    std::vector<double> sg_kine_energy_range_pdg = calc_kine_range_multi_pdg(sg_length);
+    TVector3 sg_dir = sg->cal_dir_3vector();
+    if(sg_length>length_offvtx_track1 && sg_pdg!=22 && sg_pdg!=11){//this is the longest off vertex track
+        length_offvtx_track1 = sg_length;
+        direct_length_offvtx_track1 = sg_direct_length;
+        pdg_offvtx_track1 = sg_pdg;
+        medium_dq_dx_offvtx_track1 = sg_medium_dq_dx;
+        max_dev_offvtx_track1 = sg_max_dev;
+        kine_energy_cal_offvtx_track1 = sg_kine_energy_cal;
+        kine_energy_range_offvtx_track1 = sg_kine_energy_range;
+        kine_energy_range_mu_offvtx_track1 = sg_kine_energy_range_pdg.at(0);
+        kine_energy_range_p_offvtx_track1 = sg_kine_energy_range_pdg.at(1);
+        kine_energy_range_e_offvtx_track1 = sg_kine_energy_range_pdg.at(2);
+        dir_offvtx_track1 = sg_dir;
+        std::vector<double> scores_offvtx_track1 = get_scores(sg);
+        score_mu_fwd_offvtx_track1 = scores_offvtx_track1.at(0);
+        score_p_fwd_offvtx_track1 = scores_offvtx_track1.at(1);
+        score_e_fwd_offvtx_track1 = scores_offvtx_track1.at(2);
+        score_mu_bck_offvtx_track1 = scores_offvtx_track1.at(3);
+        score_p_bck_offvtx_track1 = scores_offvtx_track1.at(4);
+        score_e_bck_offvtx_track1 = scores_offvtx_track1.at(5);
+	dist_mainvtx_offvtx_track1 = sep_dist;
+        offvtx_track1_sg = sg;
+    }
+    else if(sg_length>length_offvtx_shw1 && (sg_pdg==22 || sg_pdg==11) ){//this is the longest off vertex shower
+        length_offvtx_shw1 = sg_length;
+        direct_length_offvtx_shw1 = sg_direct_length;
+        pdg_offvtx_shw1 = sg_pdg;
+        medium_dq_dx_offvtx_shw1 = sg_medium_dq_dx;
+        max_dev_offvtx_shw1 = sg_max_dev;
+        kine_energy_cal_offvtx_shw1 = sg_kine_energy_cal;
+        kine_energy_range_offvtx_shw1 = sg_kine_energy_range;
+        kine_energy_best_offvtx_shw1 = sg_kine_energy_range;
+        auto it_shower = map_segment_in_shower.find(sg);
+        if (it_shower!=map_segment_in_shower.end()){
+          WCPPID::WCShower *shower = it_shower->second;
+          kine_energy_best_offvtx_shw1 = shower->get_kine_best();
+          if (kine_energy_best_offvtx_shw1==0 ) kine_energy_best_offvtx_shw1 = shower->get_kine_charge();
+        }
+        kine_energy_range_mu_offvtx_shw1 = sg_kine_energy_range_pdg.at(0);
+        kine_energy_range_p_offvtx_shw1 = sg_kine_energy_range_pdg.at(1);
+        kine_energy_range_e_offvtx_shw1 = sg_kine_energy_range_pdg.at(2);
+        dir_offvtx_shw1 = sg_dir;
+        std::vector<double> scores_offvtx_shw1 = get_scores(sg);
+        score_mu_fwd_offvtx_shw1 = scores_offvtx_shw1.at(0);
+        score_p_fwd_offvtx_shw1 = scores_offvtx_shw1.at(1);
+        score_e_fwd_offvtx_shw1 = scores_offvtx_shw1.at(2);
+        score_mu_bck_offvtx_shw1 = scores_offvtx_shw1.at(3);
+        score_p_bck_offvtx_shw1 = scores_offvtx_shw1.at(4);
+        score_e_bck_offvtx_shw1 = scores_offvtx_shw1.at(5);
+        dist_mainvtx_offvtx_shw1 = sep_dist;
+	offvtx_shw1_sg = sg;
+    }
+
+  }
+  if(length_offvtx_track1>0){
+    double mass_offvtx_track1 = offvtx_track1_sg->get_particle_mass();
+    if(mass_offvtx_track1<0){mass_offvtx_track1=0;}
+    double mom_mag_offvtx_track1 = sqrt(pow(kine_energy_range_offvtx_track1,2) + 2*kine_energy_range_offvtx_track1*mass_offvtx_track1);
+    x_dir_offvtx_track1 = dir_offvtx_track1[0];
+    y_dir_offvtx_track1 = dir_offvtx_track1[1];
+    z_dir_offvtx_track1 = dir_offvtx_track1[2];
+    mom_offvtx_track1[0] = dir_offvtx_track1[0]*mom_mag_offvtx_track1;
+    mom_offvtx_track1[1] = dir_offvtx_track1[1]*mom_mag_offvtx_track1;
+    mom_offvtx_track1[2] = dir_offvtx_track1[2]*mom_mag_offvtx_track1;
+  }
+  if(length_offvtx_shw1>0){
+    double mass_offvtx_shw1 = offvtx_shw1_sg->get_particle_mass();
+    if(mass_offvtx_shw1<0){mass_offvtx_shw1=0;}
+    double mom_mag_offvtx_shw1 = sqrt(pow(kine_energy_best_offvtx_shw1,2) + 2*kine_energy_best_offvtx_shw1*mass_offvtx_shw1);
+    x_dir_offvtx_shw1 = dir_offvtx_shw1[0];
+    y_dir_offvtx_shw1 = dir_offvtx_shw1[1];
+    z_dir_offvtx_shw1 = dir_offvtx_shw1[2];
+    mom_offvtx_shw1[0] = dir_offvtx_shw1[0]*mom_mag_offvtx_shw1;
+    mom_offvtx_shw1[1] = dir_offvtx_shw1[1]*mom_mag_offvtx_shw1;
+    mom_offvtx_shw1[2] = dir_offvtx_shw1[2]*mom_mag_offvtx_shw1;
+  }
+
+  //if there is a pi0 take a look at that too, this may be somewhat incorrect if the vertex is redefined
+  TVector3 dir_pi0(0,0,0);
+  TVector3 mom_pi0(0,0,0);
+  if(kine_pio_mass>0){
+    TVector3 p1(kine_pio_energy_1*TMath::Sin(kine_pio_theta_1/180.*3.1415926)*TMath::Cos(kine_pio_phi_1/180.*3.1415926), kine_pio_energy_1*TMath::Sin(kine_pio_theta_1/180.*3.1415926)*TMath::Sin(kine_pio_phi_1/180.*3.1415926), kine_pio_energy_1*TMath::Cos(kine_pio_theta_1/180.*3.1415926));
+    TVector3 p2(kine_pio_energy_2*TMath::Sin(kine_pio_theta_2/180.*3.1415926)*TMath::Cos(kine_pio_phi_2/180.*3.1415926), kine_pio_energy_2*TMath::Sin(kine_pio_theta_2/180.*3.1415926)*TMath::Sin(kine_pio_phi_2/180.*3.1415926), kine_pio_energy_2*TMath::Cos(kine_pio_theta_2/180.*3.1415926));
+    mom_pi0 = p1 + p2;
+    dir_pi0 = mom_pi0.Unit();
+  }
+
   double mom_mag = sqrt(pow(kine_energy,2) + 2*kine_energy*105.66);
-  std::cout<<"mom_mag "<<mom_mag<<std::endl;
   mom[0] = init_dir_10[0]*mom_mag;
   mom[1] = init_dir_10[1]*mom_mag;
   mom[2] = init_dir_10[2]*mom_mag;
-  std::cout<<"mom "<<mom[0]<<", "<<mom[1]<<", "<<mom[2]<<std::endl;
-  TVector3 nu_dir = mom+mom_prim_track1+mom_prim_track2+mom_prim_shw1+mom_prim_shw2;
+
+  TVector3 nu_dir = mom+mom_prim_track1+mom_prim_track2+mom_prim_shw1+mom_prim_shw2 + mom_daught_track1+mom_daught_track2+mom_daught_shw1+mom_daught_shw2 + mom_offvtx_track1+mom_offvtx_shw1;
   nu_dir = nu_dir.Unit();
-  std::cout<<"mom "<<nu_dir[0]<<", "<<nu_dir[1]<<", "<<nu_dir[2]<<std::endl;
   nu_angle_to_z = acos( nu_dir[0]*dir_beam[0] + nu_dir[1]*dir_beam[1] + nu_dir[2]*dir_beam[2] );
   nu_angle_to_target = acos( nu_dir[0]*target_dir[0] + nu_dir[1]*target_dir[1] + nu_dir[2]*target_dir[2] );
   nu_angle_to_absorber = acos( nu_dir[0]*absorber_dir[0] + nu_dir[1]*absorber_dir[1] + nu_dir[2]*absorber_dir[2] );
   nu_angle_to_vertical = acos( nu_dir[0]*dir_vertical[0] + nu_dir[1]*dir_vertical[1] + nu_dir[2]*dir_vertical[2] );
 
-  //need to think about how to account for momentum here
+  TVector3 con_nu_dir = mom+mom_prim_track1+mom_prim_track2+mom_prim_shw1+mom_prim_shw2 + mom_daught_track1+mom_daught_track2+mom_daught_shw1+mom_daught_shw2;
+  con_nu_dir = con_nu_dir.Unit();
+  con_nu_angle_to_z = acos( con_nu_dir[0]*dir_beam[0] + con_nu_dir[1]*dir_beam[1] + con_nu_dir[2]*dir_beam[2] );
+  con_nu_angle_to_target = acos( con_nu_dir[0]*target_dir[0] + con_nu_dir[1]*target_dir[1] + con_nu_dir[2]*target_dir[2] );
+  con_nu_angle_to_absorber = acos( con_nu_dir[0]*absorber_dir[0] + con_nu_dir[1]*absorber_dir[1] + con_nu_dir[2]*absorber_dir[2] );
+  con_nu_angle_to_vertical = acos( con_nu_dir[0]*dir_vertical[0] + con_nu_dir[1]*dir_vertical[1] + con_nu_dir[2]*dir_vertical[2] );
+
+  TVector3 prim_nu_dir = mom+mom_prim_track1+mom_prim_track2+mom_prim_shw1+mom_prim_shw2;
+  prim_nu_dir = prim_nu_dir.Unit();
+  prim_nu_angle_to_z = acos( prim_nu_dir[0]*dir_beam[0] + prim_nu_dir[1]*dir_beam[1] + prim_nu_dir[2]*dir_beam[2] );
+  prim_nu_angle_to_target = acos( prim_nu_dir[0]*target_dir[0] + prim_nu_dir[1]*target_dir[1] + prim_nu_dir[2]*target_dir[2] );
+  prim_nu_angle_to_absorber = acos( prim_nu_dir[0]*absorber_dir[0] + prim_nu_dir[1]*absorber_dir[1] + prim_nu_dir[2]*absorber_dir[2] );
+  prim_nu_angle_to_vertical = acos( prim_nu_dir[0]*dir_vertical[0] + prim_nu_dir[1]*dir_vertical[1] + prim_nu_dir[2]*dir_vertical[2] );
+
   TVector3 track_dir = mom+mom_prim_track1+mom_prim_track2;
   track_dir = track_dir.Unit();
   track_angle_to_z = acos( track_dir[0]*dir_beam[0] + track_dir[1]*dir_beam[1] + track_dir[2]*dir_beam[2] );
@@ -1579,18 +1701,134 @@ std::cout<<"backwards_muon "<<backwards_muon<<"dir "<<dir<<std::endl;
   track_angle_to_absorber = acos( track_dir[0]*absorber_dir[0] + track_dir[1]*absorber_dir[1] + track_dir[2]*absorber_dir[2] );
   track_angle_to_vertical = acos( track_dir[0]*dir_vertical[0] + track_dir[1]*dir_vertical[1] + track_dir[2]*dir_vertical[2] );
 
-  //reset if we have too long of adaughter and or prim
-  //if( length_prim_track1>11 || kine_energy_cal_daught_track1>70 || length_prim_track2>5 || kine_energy_cal_daught_track1>60 ||kine_energy_cal_daught_shw1>70 || kine_energy_cal_prim_shw1>100 || kine_energy_cal_daught_shw2>60 || kine_energy_cal_prim_shw2>60){ tagger_info.ssm_flag_st_kdar = exit_ssm_tagger();}
+  if(flag_ssmsp>=0){
+    // Stuff for bookeeping
+    std::set<WCPPID::ProtoVertex* > used_vertices;
+    std::set<WCPPID::ProtoSegment* > used_segments;
+    std::vector<std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> > segments_to_be_examined;
+    int temp_acc_segment_id = acc_segment_id;
+
+    //first add the ssm
+    fill_ssmsp(ssm_sg, 13, 0, dir);
+    segments_to_be_examined.push_back(std::make_pair(ssm_second_vtx,ssm_sg ));
+    used_segments.insert(ssm_sg);
+
+    //now all other tracks connected to the ssm main vertex
+    for (auto it = map_vertex_segments[ssm_main_vtx].begin(); it != map_vertex_segments[ssm_main_vtx].end(); it++){
+      if(*it==ssm_sg) continue; // We already did the ssm, so skip it
+      fill_ssmsp(*it, 2212, 0, (*it)->get_flag_dir()); // Assume everything connected to the ssm is a proton
+      used_segments.insert(*it);
+      WCPPID::ProtoVertex *other_vertex = find_other_vertex(*it, ssm_main_vtx);
+      segments_to_be_examined.push_back(std::make_pair(other_vertex, *it));
+    }
+    used_vertices.insert(ssm_main_vtx);
+  
+    // now all the daughters
+    while(segments_to_be_examined.size()>0){
+      std::vector<std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> > temp_segments;
+      for (auto it = segments_to_be_examined.begin(); it!= segments_to_be_examined.end(); it++){
+        WCPPID::ProtoVertex *curr_vtx = it->first;
+        WCPPID::ProtoSegment *prev_sg = it->second;
+        if (used_vertices.find(curr_vtx)!=used_vertices.end()) continue;
+
+        for (auto it1 = map_vertex_segments[curr_vtx].begin(); it1!=map_vertex_segments[curr_vtx].end(); it1++){
+	  WCPPID::ProtoSegment *curr_sg = *it1;
+
+	  if (used_segments.find(curr_sg)!=used_segments.end()) continue;
+	  used_segments.insert(curr_sg);
+
+          // fill the tree, we will trust the nominal PID for daughters
+          fill_ssmsp(curr_sg, curr_sg->get_particle_type(), prev_sg->get_id()+prev_sg->get_cluster_id()*1000, curr_sg->get_flag_dir());
+
+          used_segments.insert(curr_sg);
+	  WCPPID::ProtoVertex *other_vertex = find_other_vertex(curr_sg, curr_vtx);
+	  if (used_vertices.find(other_vertex) == used_vertices.end())
+	    temp_segments.push_back(std::make_pair(other_vertex, curr_sg));
+        }
+        used_vertices.insert(curr_vtx);
+      }
+      segments_to_be_examined = temp_segments;
+    }
+
+    //check for other showers which may not be in the same cluster
+    for (auto it = showers.begin(); it!= showers.end(); it++){
+      WCPPID::WCShower *shower = *it;
+      WCPPID::ProtoSegment* curr_sg = shower->get_start_segment();
+      std::pair<ProtoVertex*, int> pair_vertex = shower->get_start_vertex();
+      int temp_mother_id = 0;
+      double kine_best = shower->get_kine_best();
+      if (kine_best ==0 ) kine_best = shower->get_kine_charge();
+      if (pair_vertex.second == 1){ // direct connection
+        WCPPID::ProtoSegment* curr_sg = shower->get_start_segment();
+        if (used_segments.find(curr_sg)!=used_segments.end()) {std::cout<<"Shower "<<curr_sg->get_id()+curr_sg->get_cluster_id()*1000 <<" already added"<<std::endl; temp_mother_id = 0;}
+        else if (pair_vertex.first == ssm_main_vtx){
+          std::cout<<"pair_vertex.first == main_vertex but sg not in used_segments"<<std::endl;
+          used_segments.insert(curr_sg);
+          temp_mother_id = 0;
+
+        }else{
+          WCPPID::ProtoSegment* prev_sg = 0;
+          if (map_vertex_in_shower.find(pair_vertex.first) != map_vertex_in_shower.end()){
+            prev_sg = map_vertex_in_shower[pair_vertex.first]->get_start_segment();
+          }else{
+            prev_sg = find_incoming_segment(pair_vertex.first);
+          }
+          temp_mother_id = prev_sg->get_id()+prev_sg->get_cluster_id()*1000;
+          // fill the tree, we will trust the nominal PID for daughters
+          fill_ssmsp(curr_sg, shower->get_particle_type(), temp_mother_id, curr_sg->get_flag_dir());
+        }
+      }else if (pair_vertex.second == 2 || pair_vertex.second == 3){
+        if (pair_vertex.first == ssm_main_vtx){
+          temp_mother_id = fill_ssmsp_psuedo(shower,0,temp_acc_segment_id);//daughter, mother, id
+          temp_acc_segment_id++;
+          fill_ssmsp(curr_sg, curr_sg->get_particle_type(), temp_mother_id, curr_sg->get_flag_dir());
+        }else{
+          WCPPID::ProtoSegment* prev_sg = 0;
+          if (map_vertex_in_shower.find(pair_vertex.first) != map_vertex_in_shower.end()){
+            prev_sg = map_vertex_in_shower[pair_vertex.first]->get_start_segment();
+          }else{
+            prev_sg = find_incoming_segment(pair_vertex.first);
+          }
+          if(prev_sg==0){
+            std::cout<<"Missed Prev Seg, Setting to ssm "<<std::endl;
+            temp_mother_id = fill_ssmsp_psuedo(shower,ssm_sg->get_cluster_id()*1000+ssm_sg->get_id(),temp_acc_segment_id);//daughter, mother, id
+          }
+          else{
+            temp_mother_id= fill_ssmsp_psuedo(shower, prev_sg, temp_acc_segment_id);
+          }
+          // fill the tree, we will trust the nominal PID for daughters
+          temp_acc_segment_id++;
+          fill_ssmsp(curr_sg, curr_sg->get_particle_type(), temp_mother_id, curr_sg->get_flag_dir());
+        }
+      }else{std::cout<<curr_sg->get_id()+curr_sg->get_cluster_id()*1000<<" has pair vertex "<<pair_vertex.second<<std::endl; continue;}//missing case is 4, really far away so do not save
+      used_segments.insert(curr_sg);
+      // Filling in the other space points?
+      std::cout<<std::endl;
+      std::cout<<"Checking for other Shower spacepoints in "<<curr_sg->get_id()+curr_sg->get_cluster_id()*1000<<std::endl;
+      Map_Proto_Segment_Vertices& tmp_map_seg_vtxs = shower->get_map_seg_vtxs();
+      for (auto it = tmp_map_seg_vtxs.begin(); it!= tmp_map_seg_vtxs.end(); it++){
+        WCPPID::ProtoSegment *shower_sg = it->first;
+        if (used_segments.find(shower_sg)!=used_segments.end()) {std::cout<<"Shower segment "<<shower_sg->get_id()+shower_sg->get_cluster_id()*1000<<" already added"<<std::endl; continue;}
+          //put a gamma between here and the start of the shower. Appreoximation for now, could maybe make this better
+          std::cout<<"Adding segment and sudo segment"<<std::endl;
+          if(temp_mother_id==0 && ssm_main_vtx!=main_vertex){std::cout<<"Flipping mother"<<std::endl; temp_mother_id=ssm_sg->get_cluster_id()*1000+ssm_sg->get_id();}
+          int psuedo_particle_id = fill_ssmsp_psuedo(shower,shower_sg,temp_mother_id,temp_acc_segment_id);
+          temp_acc_segment_id++;
+          fill_ssmsp(shower_sg, shower_sg->get_particle_type(), psuedo_particle_id, shower_sg->get_flag_dir());
+          used_segments.insert(shower_sg);
+      }
+      std::cout<<"Check completed"<<std::endl;
+      std::cout<<std::endl;
+    }
+  }
 
     bool flag_st_kdar = false;
     if(n_prim_tracks_1==0 && n_prim_all_3==0 && n_daughter_tracks_5==0 && n_daughter_all_5<2 && Nsm_wivtx==1 && !(kine_pio_mass>70 && kine_pio_mass<200)){
-    //if(n_prim_tracks_1==0 && n_prim_tracks_3==0 && n_daughter_tracks_5==0 && n_daughter_tracks_5<2 && Nsm_wivtx==1 && kine_pio_flag==0){
-      std::cout<<"Pass KDAR Tagger"<<std::endl;
+      std::cout<<"Pass KDAR Cutbased"<<std::endl;
       flag_st_kdar = true;
     }
     else if(Nsm_wivtx!=1){std::cout<<"Fail: no short muons with vertex activity"<<std::endl;}
-    //else if(kine_pio_flag!=0){std::cout<<"Fail: pi0 spotted"<<std::endl;}
-    else if(kine_pio_mass>70 && kine_pio_mass<200){std::cout<<"Fail: pi0 spotted"<<std::endl;}
+    else if(kine_pio_mass>70 && kine_pio_mass<20){std::cout<<"Fail: pi0 spotted"<<std::endl;}
     else if(n_daughter_all_5>=2){std::cout<<"Fail: too many daughter showers"<<std::endl;}
     else if(n_daughter_tracks_5!=0){std::cout<<"Fail: long daughter track"<<std::endl;}
     else if(n_prim_tracks_1!=0){std::cout<<"Fail: other primary track"<<std::endl;}
@@ -1599,9 +1837,6 @@ std::cout<<"backwards_muon "<<backwards_muon<<"dir "<<dir<<std::endl;
 
 
   tagger_info.ssm_flag_st_kdar = flag_st_kdar; //pass cutbased
-
-  //tagger_info.ssm_Nsm = Nsm;//number of short straight muons
-  //tagger_info.ssm_Nsm_wivtx = Nsm_wivtx;//number of short straight muons with vertex activity
 
   //only filled if there is one ssm
     //properties of the ssm
@@ -1817,6 +2052,7 @@ std::cout<<"backwards_muon "<<backwards_muon<<"dir "<<dir<<std::endl;
   if(direct_length_prim_shw1>0 && length_prim_shw1>0) length_ratio_prim_shw1 = direct_length_prim_shw1/length_prim_shw1;
   tagger_info.ssm_prim_shw1_length_ratio = length_ratio_prim_shw1;
   tagger_info.ssm_prim_shw1_max_dev = max_dev_prim_shw1;//furthest distance from shw's primary axis along the shw
+  tagger_info.ssm_prim_shw1_kine_energy_best  =  kine_energy_best_prim_shw1;//best estimate of the KE of the shower
   tagger_info.ssm_prim_shw1_kine_energy_range = kine_energy_range_prim_shw1;//KE of the muon with range
   tagger_info.ssm_prim_shw1_kine_energy_range_mu = kine_energy_range_mu_prim_shw1;
   tagger_info.ssm_prim_shw1_kine_energy_range_p = kine_energy_range_p_prim_shw1;
@@ -1846,6 +2082,7 @@ std::cout<<"backwards_muon "<<backwards_muon<<"dir "<<dir<<std::endl;
   if(direct_length_prim_shw2>0 && length_prim_shw2>0) length_ratio_prim_shw2 = direct_length_prim_shw2/length_prim_shw2;
   tagger_info.ssm_prim_shw2_length_ratio = length_ratio_prim_shw2;
   tagger_info.ssm_prim_shw2_max_dev = max_dev_prim_shw2;//furthest distance from shw's primary axis along the shw
+  tagger_info.ssm_prim_shw2_kine_energy_best  =  kine_energy_best_prim_shw2;//best estimate of the KE of the shower
   tagger_info.ssm_prim_shw2_kine_energy_range = kine_energy_range_prim_shw2;//KE of the shower with range
   tagger_info.ssm_prim_shw2_kine_energy_range_mu = kine_energy_range_mu_prim_shw2;
   tagger_info.ssm_prim_shw2_kine_energy_range_p = kine_energy_range_p_prim_shw2;
@@ -1875,6 +2112,7 @@ std::cout<<"backwards_muon "<<backwards_muon<<"dir "<<dir<<std::endl;
   if(direct_length_daught_shw1>0 && length_daught_shw1>0) length_ratio_daught_shw1 = direct_length_daught_shw1/length_daught_shw1;
   tagger_info.ssm_daught_shw1_length_ratio = length_ratio_daught_shw1;
   tagger_info.ssm_daught_shw1_max_dev = max_dev_daught_shw1;//furthest distance from shw's daughtary axis along the shw
+  tagger_info.ssm_daught_shw1_kine_energy_best  =  kine_energy_best_daught_shw1;//best estimate of the KE of the shower
   tagger_info.ssm_daught_shw1_kine_energy_range = kine_energy_range_daught_shw1;//KE of the shower with range
   tagger_info.ssm_daught_shw1_kine_energy_range_mu = kine_energy_range_mu_daught_shw1;
   tagger_info.ssm_daught_shw1_kine_energy_range_p = kine_energy_range_p_daught_shw1;
@@ -1904,6 +2142,7 @@ std::cout<<"backwards_muon "<<backwards_muon<<"dir "<<dir<<std::endl;
   if(direct_length_daught_shw2>0 && length_daught_shw2>0) length_ratio_daught_shw2 = direct_length_daught_shw2/length_daught_shw2;
   tagger_info.ssm_daught_shw2_length_ratio = length_ratio_daught_shw2;
   tagger_info.ssm_daught_shw2_max_dev = max_dev_daught_shw2;//furthest distance from shw's daughtary axis along the shw
+  tagger_info.ssm_daught_shw2_kine_energy_best  =  kine_energy_best_daught_shw2;//best estimate of the KE of the shower
   tagger_info.ssm_daught_shw2_kine_energy_range = kine_energy_range_daught_shw2;//KE of the shower with range
   tagger_info.ssm_daught_shw2_kine_energy_range_mu = kine_energy_range_mu_daught_shw2;
   tagger_info.ssm_daught_shw2_kine_energy_range_p = kine_energy_range_p_daught_shw2;
@@ -1924,10 +2163,79 @@ std::cout<<"backwards_muon "<<backwards_muon<<"dir "<<dir<<std::endl;
   tagger_info.ssm_nu_angle_target = nu_angle_to_target;
   tagger_info.ssm_nu_angle_absorber = nu_angle_to_absorber;
   tagger_info.ssm_nu_angle_vertical = nu_angle_to_vertical;
+  tagger_info.ssm_con_nu_angle_z = con_nu_angle_to_z;
+  tagger_info.ssm_con_nu_angle_target = con_nu_angle_to_target;
+  tagger_info.ssm_con_nu_angle_absorber = con_nu_angle_to_absorber;
+  tagger_info.ssm_con_nu_angle_vertical = con_nu_angle_to_vertical;
+  tagger_info.ssm_prim_nu_angle_z = prim_nu_angle_to_z;
+  tagger_info.ssm_prim_nu_angle_target = prim_nu_angle_to_target;
+  tagger_info.ssm_prim_nu_angle_absorber = prim_nu_angle_to_absorber;
+  tagger_info.ssm_prim_nu_angle_vertical = prim_nu_angle_to_vertical;
   tagger_info.ssm_track_angle_z = track_angle_to_z;
   tagger_info.ssm_track_angle_target = track_angle_to_target;
   tagger_info.ssm_track_angle_absorber = track_angle_to_absorber;
   tagger_info.ssm_track_angle_vertical = track_angle_to_vertical;
+  tagger_info.ssm_vtxX = ssm_main_vtx->get_fit_pt().x/units::cm;
+  tagger_info.ssm_vtxY = ssm_main_vtx->get_fit_pt().y/units::cm;
+  tagger_info.ssm_vtxZ = ssm_main_vtx->get_fit_pt().z/units::cm;
+
+  //off vertex stuff
+  tagger_info.ssm_offvtx_length  =  off_vtx_length;//total length of off vertex segments
+  tagger_info.ssm_offvtx_energy  =  off_vtx_energy;//total energy of off vertex activity
+  tagger_info.ssm_n_offvtx_tracks_1  =  n_offvtx_tracks_1;//number of other daughter tracks greater than 1 cm
+  tagger_info.ssm_n_offvtx_tracks_3  =  n_offvtx_tracks_3;//number of other daughter tracks greater than 3 cm
+  tagger_info.ssm_n_offvtx_tracks_5  =  n_offvtx_tracks_5;//number of other daughter tracks greater than 5 cm
+  tagger_info.ssm_n_offvtx_tracks_8  =  n_offvtx_tracks_8;//number of other daughter tracks greater than 8 cm
+  tagger_info.ssm_n_offvtx_tracks_11  =  n_offvtx_tracks_11;//number of other daughter tracks greater than 11 cm
+  tagger_info.ssm_n_offvtx_showers_1  =  n_offvtx_showers_1;//number of other daughter tracks and showers greater than 1 cm
+  tagger_info.ssm_n_offvtx_showers_3  =  n_offvtx_showers_3;//number of other daughter tracks and showers greater than 3 cm
+  tagger_info.ssm_n_offvtx_showers_5  =  n_offvtx_showers_5;//number of other daughter tracks and showers greater than 5 cm
+  tagger_info.ssm_n_offvtx_showers_8  =  n_offvtx_showers_8;//number of other daughter tracks and showers greater than 8 cm
+  tagger_info.ssm_n_offvtx_showers_11  =  n_offvtx_showers_11;//number of other daughter tracks and showers greater than 11 cm
+   //properties of leading off vertex track
+  tagger_info.ssm_offvtx_track1_pdg  =  pdg_offvtx_track1;//initial pdg assigned to the track
+  tagger_info.ssm_offvtx_track1_score_mu_fwd  =  score_mu_fwd_offvtx_track1;//ID score normally normally used to choose muons
+  tagger_info.ssm_offvtx_track1_score_p_fwd  =  score_p_fwd_offvtx_track1;//ID score normally normally used to choose protons
+  tagger_info.ssm_offvtx_track1_score_e_fwd  =  score_e_fwd_offvtx_track1;//ID score normally normally used to choose e
+  tagger_info.ssm_offvtx_track1_score_mu_bck  =  score_mu_bck_offvtx_track1;//ID score normally normally used to choose muons but calculated backwards
+  tagger_info.ssm_offvtx_track1_score_p_bck  =  score_p_bck_offvtx_track1;//ID score normally normally used to choose protons but calculated backwards
+  tagger_info.ssm_offvtx_track1_score_e_bck  =  score_e_bck_offvtx_track1;//ID score normally normally used to choose e but calculated backwards
+  tagger_info.ssm_offvtx_track1_length  =  length_offvtx_track1;//length of track direct calculated from point to point
+  tagger_info.ssm_offvtx_track1_direct_length  =  direct_length_offvtx_track1;//length of track direct from end to end
+  tagger_info.ssm_offvtx_track1_max_dev  =  max_dev_offvtx_track1;//furthest distance from track's primary axis along the track
+  tagger_info.ssm_offvtx_track1_kine_energy_range  =  kine_energy_range_offvtx_track1;//KE of the track with range
+  tagger_info.ssm_offvtx_track1_kine_energy_range_mu  =  kine_energy_range_mu_offvtx_track1;
+  tagger_info.ssm_offvtx_track1_kine_energy_range_p  =  kine_energy_range_p_offvtx_track1;
+  tagger_info.ssm_offvtx_track1_kine_energy_range_e  =  kine_energy_range_e_offvtx_track1;
+  tagger_info.ssm_offvtx_track1_kine_energy_cal  =  kine_energy_cal_offvtx_track1;//KE of the shower with dq/dx
+  tagger_info.ssm_offvtx_track1_medium_dq_dx  =  medium_dq_dx_offvtx_track1;//medium dq/dx over the entire track 
+  tagger_info.ssm_offvtx_track1_x_dir  =  x_dir_offvtx_track1;//x dir det cord
+  tagger_info.ssm_offvtx_track1_y_dir  =  y_dir_offvtx_track1;//y dir det cord
+  tagger_info.ssm_offvtx_track1_z_dir  =  z_dir_offvtx_track1;//z dir det cord
+  tagger_info.ssm_offvtx_track1_dist_mainvtx  =  dist_mainvtx_offvtx_track1; //distance from the main vertex
+   //properties of leading off vertex shower
+  tagger_info.ssm_offvtx_shw1_pdg_offvtx  =  pdg_offvtx_shw1;//initial pdg assigned to the shw
+  tagger_info.ssm_offvtx_shw1_score_mu_fwd  =  score_mu_fwd_offvtx_shw1;//ID score normally normally used to choose muons
+  tagger_info.ssm_offvtx_shw1_score_p_fwd  =  score_p_fwd_offvtx_shw1;//ID score normally normally used to choose protons
+  tagger_info.ssm_offvtx_shw1_score_e_fwd  =  score_e_fwd_offvtx_shw1;//ID score normally normally used to choose e
+  tagger_info.ssm_offvtx_shw1_score_mu_bck  =  score_mu_bck_offvtx_shw1;//ID score normally normally used to choose muons but calculated backwards
+  tagger_info.ssm_offvtx_shw1_score_p_bck  =  score_p_bck_offvtx_shw1;//ID score normally normally used to choose protons but calculated backwards
+  tagger_info.ssm_offvtx_shw1_score_e_bck  =  score_e_bck_offvtx_shw1;//ID score normally normally used to choose e but calculated backwards
+  tagger_info.ssm_offvtx_shw1_length  =  length_offvtx_shw1;//length of shw direct calculated from point to point
+  tagger_info.ssm_offvtx_shw1_direct_length  =  direct_length_offvtx_shw1;//length of shw direct from end to end
+  tagger_info.ssm_offvtx_shw1_max_dev  =  max_dev_offvtx_shw1;//furthest distance from shw's primary axis along the shw
+  tagger_info.ssm_offvtx_shw1_kine_energy_best  =  kine_energy_best_offvtx_shw1;//best estimate of the KE of the shower
+  tagger_info.ssm_offvtx_shw1_kine_energy_range  =  kine_energy_range_offvtx_shw1;//KE of the shower with range
+  tagger_info.ssm_offvtx_shw1_kine_energy_range_mu  =  kine_energy_range_mu_offvtx_shw1;
+  tagger_info.ssm_offvtx_shw1_kine_energy_range_p  =  kine_energy_range_p_offvtx_shw1;
+  tagger_info.ssm_offvtx_shw1_kine_energy_range_e  =  kine_energy_range_e_offvtx_shw1;
+  tagger_info.ssm_offvtx_shw1_kine_energy_cal  =  kine_energy_cal_offvtx_shw1;//KE of the shower with dq/dx
+  tagger_info.ssm_offvtx_shw1_medium_dq_dx  =  medium_dq_dx_offvtx_shw1;//medium dq/dx over the entire shw 
+  tagger_info.ssm_offvtx_shw1_x_dir  =  x_dir_offvtx_shw1;//x dir det cord
+  tagger_info.ssm_offvtx_shw1_y_dir  =  y_dir_offvtx_shw1;//y dir det cord
+  tagger_info.ssm_offvtx_shw1_z_dir  =  z_dir_offvtx_shw1;//z dir det cord
+  tagger_info.ssm_offvtx_shw1_dist_mainvtx  =  dist_mainvtx_offvtx_shw1; //distance from the main vertex
+
 
   print_ssm_tagger();
 
@@ -1941,14 +2249,12 @@ std::vector<double> WCPPID::NeutrinoID::get_scores(WCPPID::ProtoSegment *sg){
   std::vector<double>& vec_dx = sg->get_dx_vec();
 
   int size = fit_pt_vec.size();
-  std::cout<<fit_pt_vec.size()<<" fit_pt_vec.size()"<<std::endl;
 
   std::vector<double> L(size,0);
   std::vector<double> dQ_dx(size,0);
   std::vector<double> rL(size,0);
   std::vector<double> rdQ_dx(size,0);
 
-  std::cout<<std::endl;
   double dis = 0;
   for (int i = 0; i<size; i++){
     double dq_dx = vec_dQ.at(i)/(vec_dx.at(i)/units::cm+1e-9);
@@ -1957,15 +2263,12 @@ std::vector<double> WCPPID::NeutrinoID::get_scores(WCPPID::ProtoSegment *sg){
     L.at(i) = dis;
     if (i+1 < size)
       dis += sqrt(pow(fit_pt_vec.at(i+1).x-fit_pt_vec.at(i).x,2) + pow(fit_pt_vec.at(i+1).y-fit_pt_vec.at(i).y,2) + pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
-    std::cout<<dis<<"' ";
   }
-  std::cout<<std::endl;
   // get reverse  vector for L
   for (size_t i=0;i!=L.size();i++){
     rL.at(i) = L.back() - L.at(L.size()-1-i);
-  std::cout<<rL.at(i)<<"' ";
   }
-  std::cout<<std::endl;
+
   std::vector<double> result_forward = sg->do_track_comp(L, dQ_dx, 15*units::cm);
   std::vector<double> result_backward = sg->do_track_comp(rL, rdQ_dx, 15*units::cm);
 
@@ -1982,40 +2285,305 @@ std::vector<double> WCPPID::NeutrinoID::get_scores(WCPPID::ProtoSegment *sg){
 
 }
 
-std::vector<double> WCPPID::NeutrinoID::get_scores(WCPPID::ProtoSegment *sg, int break_point, bool dir){
+void WCPPID::NeutrinoID::fill_ssmsp(WCPPID::ProtoSegment* sg, int pdg, int mother, int dir){
+     std::vector<WCP::Point >& vec_pts = sg->get_point_vec();
+     int temp_num_points = vec_pts.size();
+
+     double length = sg->get_length()/units::cm;
+     double residual_range = length;
+
+     std::vector<double>& vec_dQ = sg->get_dQ_vec();
+     std::vector<double>& vec_dx = sg->get_dx_vec();
+
+     std::cout<<"vec_dQ.size() "<<vec_dQ.size()<<" vec_dx.size() "<<vec_dQ.size()<<"  vec_pts.size() "<<vec_pts.size()<<std::endl;
+     std::cout<<"pdg "<<pdg<<"  mother "<<mother<<"  id "<<sg->get_id()+sg->get_cluster_id()*1000<<std::endl;
+
+     tagger_info.ssmsp_Nsp.push_back(0);
+
+     int containing_shower_id = get_containing_shower_id(sg);
+     double containing_shower_ke = -1;
+     int containing_shower_flag = -1;
+     if(containing_shower_id>0){
+       WCPPID::WCShower* containing_shower = get_containing_shower(sg);
+       containing_shower_ke = containing_shower->get_kine_best();
+       if (containing_shower_ke == 0 ) containing_shower_ke = containing_shower->get_kine_charge();
+       containing_shower_flag = containing_shower->get_flag_shower();
+     }
+     for (int point = 0; point<temp_num_points; point++){
+
+        int temp_point = point;
+	if(dir==-1){ temp_point = temp_num_points-point-1; }
+
+      	tagger_info.ssmsp_id.push_back(sg->get_id()+sg->get_cluster_id()*1000);
+	tagger_info.ssmsp_pdg.push_back(pdg);
+	tagger_info.ssmsp_mother.push_back(mother);
+
+	tagger_info.ssmsp_x.push_back(vec_pts.at(temp_point).x/units::cm);
+        tagger_info.ssmsp_y.push_back(vec_pts.at(temp_point).y/units::cm);
+	tagger_info.ssmsp_z.push_back(vec_pts.at(temp_point).z/units::cm);
+
+	tagger_info.ssmsp_dQ.push_back(vec_dQ.at(temp_point));
+        tagger_info.ssmsp_dx.push_back(vec_dx.at(temp_point)/units::cm);
+
+        tagger_info.ssmsp_KE.push_back( calc_kine_range_pdg(residual_range, pdg)  );
+
+        tagger_info.ssmsp_containing_shower_id.push_back(containing_shower_id);
+        tagger_info.ssmsp_containing_shower_ke.push_back(containing_shower_ke);
+        tagger_info.ssmsp_containing_shower_flag.push_back(containing_shower_flag);
+
+        std::cout<<"x "<<tagger_info.ssmsp_x.at(tagger_info.ssmsp_Nsp_tot)<<"  y "<<tagger_info.ssmsp_y.at(tagger_info.ssmsp_Nsp_tot)<<"  z "<<tagger_info.ssmsp_z.at(tagger_info.ssmsp_Nsp_tot)<<"  dx "<<tagger_info.ssmsp_dx.at(tagger_info.ssmsp_Nsp_tot)<<"  dq "<<tagger_info.ssmsp_dQ.at(tagger_info.ssmsp_Nsp_tot)<<"  KE "<<tagger_info.ssmsp_KE.at(tagger_info.ssmsp_Nsp_tot)<<"  rr "<<residual_range<<"  in shower "<<tagger_info.ssmsp_containing_shower_id.at(tagger_info.ssmsp_Nsp_tot)<<"  containing_shower_ke "<<containing_shower_ke<<"  containing_shower_flag "<<containing_shower_flag<<std::endl;
+
+        if(point<temp_num_points-1){
+	  if(dir==1) residual_range -= sqrt( pow(vec_pts.at(temp_point).x-vec_pts.at(temp_point+1).x,2) + pow(vec_pts.at(temp_point).y-vec_pts.at(temp_point+1).y,2) + pow(vec_pts.at(temp_point).z-vec_pts.at(temp_point+1).z,2))/units::cm;
+          else residual_range -= sqrt( pow(vec_pts.at(temp_point).x-vec_pts.at(temp_point-1).x,2) + pow(vec_pts.at(temp_point).y-vec_pts.at(temp_point-1).y,2) + pow(vec_pts.at(temp_point).z-vec_pts.at(temp_point-1).z,2))/units::cm;
+          if(residual_range<0) residual_range=0;
+	}
+        tagger_info.ssmsp_Nsp_tot+=1;
+	tagger_info.ssmsp_Nsp.at(tagger_info.ssmsp_Ntrack)+=1;
+        std::cout<<"ssmsp_Nsp_tot "<<tagger_info.ssmsp_Nsp_tot<<"  ssmsp_Nsp "<<tagger_info.ssmsp_Nsp.at(tagger_info.ssmsp_Ntrack)<<std::endl;
+      }
+
+  tagger_info.ssmsp_Ntrack+=1;
+}
+
+
+int WCPPID::NeutrinoID::fill_ssmsp_psuedo(WCPPID::WCShower* daught_shower, int mother, int acc_id){
+
+     tagger_info.ssmsp_Nsp.push_back(2);
+
+     int pdg = 2112;
+     if (fabs(daught_shower->get_particle_type())==11 || fabs(daught_shower->get_particle_type())==22){pdg = 22;}
+
+     int id = daught_shower->get_start_segment()->get_cluster_id()*1000 + acc_id;
+
+     std::cout<<"pdg "<<pdg<<"  mother "<<mother<<"  id "<<id<<std::endl;
+
+     //first point, the vertex we wish to connect to
+     tagger_info.ssmsp_id.push_back(id);
+     tagger_info.ssmsp_pdg.push_back(pdg);
+     tagger_info.ssmsp_mother.push_back(mother);
+ 
+     tagger_info.ssmsp_containing_shower_id.push_back(-1); 
+     tagger_info.ssmsp_containing_shower_ke.push_back(-1);
+     tagger_info.ssmsp_containing_shower_flag.push_back(-1);
+
+     tagger_info.ssmsp_x.push_back(daught_shower->get_start_vertex().first->get_fit_pt().x/units::cm);
+     tagger_info.ssmsp_y.push_back(daught_shower->get_start_vertex().first->get_fit_pt().y/units::cm);
+     tagger_info.ssmsp_z.push_back(daught_shower->get_start_vertex().first->get_fit_pt().z/units::cm);
+     tagger_info.ssmsp_dQ.push_back(0);
+     tagger_info.ssmsp_dx.push_back(0);
+     tagger_info.ssmsp_KE.push_back(0);
+
+     std::cout<<"x "<<tagger_info.ssmsp_x.at(tagger_info.ssmsp_Nsp_tot)<<"  y "<<tagger_info.ssmsp_y.at(tagger_info.ssmsp_Nsp_tot)<<"  z "<<tagger_info.ssmsp_z.at(tagger_info.ssmsp_Nsp_tot)<<"  in shower "<<tagger_info.ssmsp_containing_shower_id.at(tagger_info.ssmsp_Nsp_tot)<<std::endl;
+     tagger_info.ssmsp_Nsp_tot+=1;
+
+     //second point, the shower we wish to connect to
+     tagger_info.ssmsp_id.push_back(id);
+     tagger_info.ssmsp_pdg.push_back(pdg);
+     tagger_info.ssmsp_mother.push_back(mother);
+
+     tagger_info.ssmsp_containing_shower_id.push_back(-1);
+     tagger_info.ssmsp_containing_shower_ke.push_back(-1);
+     tagger_info.ssmsp_containing_shower_flag.push_back(-1);
+     if(daught_shower->get_start_segment()->get_flag_dir()==1){
+       tagger_info.ssmsp_x.push_back(daught_shower->get_start_segment()->get_point_vec().front().x/units::cm);
+       tagger_info.ssmsp_y.push_back(daught_shower->get_start_segment()->get_point_vec().front().y/units::cm);
+       tagger_info.ssmsp_z.push_back(daught_shower->get_start_segment()->get_point_vec().front().z/units::cm);
+     }
+     else{
+       tagger_info.ssmsp_x.push_back(daught_shower->get_start_segment()->get_point_vec().back().x/units::cm);
+       tagger_info.ssmsp_y.push_back(daught_shower->get_start_segment()->get_point_vec().back().y/units::cm);
+       tagger_info.ssmsp_z.push_back(daught_shower->get_start_segment()->get_point_vec().back().z/units::cm);
+     }
+     tagger_info.ssmsp_dQ.push_back(0);
+     tagger_info.ssmsp_dx.push_back(0);
+     tagger_info.ssmsp_KE.push_back(0);
+
+        std::cout<<"x "<<tagger_info.ssmsp_x.at(tagger_info.ssmsp_Nsp_tot)<<"  y "<<tagger_info.ssmsp_y.at(tagger_info.ssmsp_Nsp_tot)<<"  z "<<tagger_info.ssmsp_z.at(tagger_info.ssmsp_Nsp_tot)<<"  in shower "<<tagger_info.ssmsp_containing_shower_id.at(tagger_info.ssmsp_Nsp_tot)<<std::endl;
+     tagger_info.ssmsp_Nsp_tot+=1;
+
+     tagger_info.ssmsp_Ntrack+=1;
+
+     return id;
+}
+
+int WCPPID::NeutrinoID::fill_ssmsp_psuedo(WCPPID::WCShower* shower, WCPPID::ProtoSegment* sg, int mother, int acc_id){
+
+     tagger_info.ssmsp_Nsp.push_back(2);
+    
+     int pdg = 22;
+     int id = shower->get_start_segment()->get_cluster_id()*1000 + acc_id;
+
+     std::cout<<"pdg "<<pdg<<"  mother "<<mother<<"  id "<<id<<std::endl;
+
+     //first point, the vertex we wish to connect to
+     tagger_info.ssmsp_id.push_back(id);
+     tagger_info.ssmsp_pdg.push_back(pdg);
+     tagger_info.ssmsp_mother.push_back(mother);
+
+     double containing_shower_ke = shower->get_kine_best();
+     if (containing_shower_ke == 0 ) containing_shower_ke = shower->get_kine_charge(); 
+     int containing_shower_flag = shower->get_flag_shower();
+     tagger_info.ssmsp_containing_shower_id.push_back(shower->get_start_segment()->get_cluster_id()*1000 + shower->get_start_segment()->get_id());
+     tagger_info.ssmsp_containing_shower_ke.push_back(containing_shower_ke);
+     tagger_info.ssmsp_containing_shower_flag.push_back(containing_shower_flag);
+
+     if(shower->get_start_segment()->get_flag_dir()==1){
+       tagger_info.ssmsp_x.push_back(shower->get_start_segment()->get_point_vec().front().x/units::cm);
+       tagger_info.ssmsp_y.push_back(shower->get_start_segment()->get_point_vec().front().y/units::cm);
+       tagger_info.ssmsp_z.push_back(shower->get_start_segment()->get_point_vec().front().z/units::cm);
+     }
+     else{
+       tagger_info.ssmsp_x.push_back(shower->get_start_segment()->get_point_vec().back().x/units::cm);
+       tagger_info.ssmsp_y.push_back(shower->get_start_segment()->get_point_vec().back().y/units::cm);
+       tagger_info.ssmsp_z.push_back(shower->get_start_segment()->get_point_vec().back().z/units::cm);
+     }
+
+     tagger_info.ssmsp_dQ.push_back(0);
+     tagger_info.ssmsp_dx.push_back(0);
+     tagger_info.ssmsp_KE.push_back(0);
+
+     std::cout<<"x "<<tagger_info.ssmsp_x.at(tagger_info.ssmsp_Nsp_tot)<<"  y "<<tagger_info.ssmsp_y.at(tagger_info.ssmsp_Nsp_tot)<<"  z "<<tagger_info.ssmsp_z.at(tagger_info.ssmsp_Nsp_tot)<<"  in shower "<<tagger_info.ssmsp_containing_shower_id.at(tagger_info.ssmsp_Nsp_tot)<<"  containing_shower_ke "<<containing_shower_ke<<"  containing_shower_flag "<<containing_shower_flag<<std::endl;
+     tagger_info.ssmsp_Nsp_tot+=1;
+
+     //second point, the shower we wish to connect to
+     tagger_info.ssmsp_id.push_back(id);
+     tagger_info.ssmsp_pdg.push_back(pdg);
+     tagger_info.ssmsp_mother.push_back(mother);
+
+     tagger_info.ssmsp_containing_shower_id.push_back(shower->get_start_segment()->get_cluster_id()*1000 + shower->get_start_segment()->get_id());
+     tagger_info.ssmsp_containing_shower_ke.push_back(containing_shower_ke);
+     tagger_info.ssmsp_containing_shower_flag.push_back(containing_shower_flag);
+
+     if(sg->get_flag_dir()==1){
+       tagger_info.ssmsp_x.push_back(sg->get_point_vec().front().x/units::cm);
+       tagger_info.ssmsp_y.push_back(sg->get_point_vec().front().y/units::cm);
+       tagger_info.ssmsp_z.push_back(sg->get_point_vec().front().z/units::cm);
+     }
+     else{
+       tagger_info.ssmsp_x.push_back(sg->get_point_vec().back().x/units::cm);
+       tagger_info.ssmsp_y.push_back(sg->get_point_vec().back().y/units::cm);
+       tagger_info.ssmsp_z.push_back(sg->get_point_vec().back().z/units::cm);
+     }
+     tagger_info.ssmsp_dQ.push_back(0);
+     tagger_info.ssmsp_dx.push_back(0);
+     tagger_info.ssmsp_KE.push_back(0);
+
+     std::cout<<"x "<<tagger_info.ssmsp_x.at(tagger_info.ssmsp_Nsp_tot)<<"  y "<<tagger_info.ssmsp_y.at(tagger_info.ssmsp_Nsp_tot)<<"  z "<<tagger_info.ssmsp_z.at(tagger_info.ssmsp_Nsp_tot)<<"  in shower "<<tagger_info.ssmsp_containing_shower_id.at(tagger_info.ssmsp_Nsp_tot)<<"  containing_shower_ke "<<containing_shower_ke<<"  containing_shower_flag "<<containing_shower_flag<<std::endl;
+     tagger_info.ssmsp_Nsp_tot+=1;
+
+     tagger_info.ssmsp_Ntrack+=1;
+
+     return id;
+}
+
+//potnetially more correct to look at start and end points of segments?
+int WCPPID::NeutrinoID::fill_ssmsp_psuedo(WCPPID::WCShower* daught_shower, WCPPID::ProtoSegment* mother_sg, int acc_id){
+
+     tagger_info.ssmsp_Nsp.push_back(2);
+
+     int pdg = 2112;
+     if (fabs(daught_shower->get_particle_type())==11 || fabs(daught_shower->get_particle_type())==22){pdg = 22;}
+
+     int id = daught_shower->get_start_segment()->get_cluster_id()*1000 + acc_id;
+
+     int mother = 0;
+     if(mother_sg!=0) mother = mother_sg->get_cluster_id()*1000 + mother_sg->get_id();
+     std::cout<<"pdg "<<pdg<<"  mother "<<mother<<"  id "<<id<<std::endl;
+
+     //first point, the vertex we wish to connect to
+     tagger_info.ssmsp_id.push_back(id);
+     tagger_info.ssmsp_pdg.push_back(pdg);
+     tagger_info.ssmsp_mother.push_back(mother);
+ 
+     tagger_info.ssmsp_containing_shower_id.push_back(-1);
+     tagger_info.ssmsp_containing_shower_ke.push_back(-1);
+     tagger_info.ssmsp_containing_shower_flag.push_back(-1);
+
+     if(mother_sg==0){
+       tagger_info.ssmsp_x.push_back(daught_shower->get_start_vertex().first->get_fit_pt().x/units::cm);
+       tagger_info.ssmsp_y.push_back(daught_shower->get_start_vertex().first->get_fit_pt().y/units::cm);
+       tagger_info.ssmsp_z.push_back(daught_shower->get_start_vertex().first->get_fit_pt().z/units::cm);
+     }
+     else{
+       if(mother_sg->get_flag_dir()==1){
+         tagger_info.ssmsp_x.push_back(mother_sg->get_point_vec().back().x/units::cm);
+         tagger_info.ssmsp_y.push_back(mother_sg->get_point_vec().back().y/units::cm);
+         tagger_info.ssmsp_z.push_back(mother_sg->get_point_vec().back().z/units::cm);
+       }
+       else{
+         tagger_info.ssmsp_x.push_back(mother_sg->get_point_vec().front().x/units::cm);
+         tagger_info.ssmsp_y.push_back(mother_sg->get_point_vec().front().y/units::cm);
+         tagger_info.ssmsp_z.push_back(mother_sg->get_point_vec().front().z/units::cm);
+       }
+     }
+     tagger_info.ssmsp_dQ.push_back(0);
+     tagger_info.ssmsp_dx.push_back(0);
+     tagger_info.ssmsp_KE.push_back(0);
+
+     std::cout<<"x "<<tagger_info.ssmsp_x.at(tagger_info.ssmsp_Nsp_tot)<<"  y "<<tagger_info.ssmsp_y.at(tagger_info.ssmsp_Nsp_tot)<<"  z "<<tagger_info.ssmsp_z.at(tagger_info.ssmsp_Nsp_tot)<<"  in shower "<<tagger_info.ssmsp_containing_shower_id.at(tagger_info.ssmsp_Nsp_tot)<<std::endl;
+     tagger_info.ssmsp_Nsp_tot+=1;
+
+     //second point, the shower we wish to connect to
+     tagger_info.ssmsp_id.push_back(id);
+     tagger_info.ssmsp_pdg.push_back(pdg);
+     tagger_info.ssmsp_mother.push_back(mother);
+
+     tagger_info.ssmsp_containing_shower_id.push_back(-1);
+     tagger_info.ssmsp_containing_shower_ke.push_back(-1);
+     tagger_info.ssmsp_containing_shower_flag.push_back(-1);
+     if(daught_shower->get_start_segment()->get_flag_dir()==1){
+       tagger_info.ssmsp_x.push_back(daught_shower->get_start_segment()->get_point_vec().front().x/units::cm);
+       tagger_info.ssmsp_y.push_back(daught_shower->get_start_segment()->get_point_vec().front().y/units::cm);
+       tagger_info.ssmsp_z.push_back(daught_shower->get_start_segment()->get_point_vec().front().z/units::cm);
+     }
+     else{
+       tagger_info.ssmsp_x.push_back(daught_shower->get_start_segment()->get_point_vec().back().x/units::cm);
+       tagger_info.ssmsp_y.push_back(daught_shower->get_start_segment()->get_point_vec().back().y/units::cm);
+       tagger_info.ssmsp_z.push_back(daught_shower->get_start_segment()->get_point_vec().back().z/units::cm);
+     }
+
+     tagger_info.ssmsp_dQ.push_back(0);
+     tagger_info.ssmsp_dx.push_back(0);
+     tagger_info.ssmsp_KE.push_back(0);
+
+     std::cout<<"x "<<tagger_info.ssmsp_x.at(tagger_info.ssmsp_Nsp_tot)<<"  y "<<tagger_info.ssmsp_y.at(tagger_info.ssmsp_Nsp_tot)<<"  z "<<tagger_info.ssmsp_z.at(tagger_info.ssmsp_Nsp_tot)<<"  in shower "<<tagger_info.ssmsp_containing_shower_id.at(tagger_info.ssmsp_Nsp_tot)<<std::endl;
+     tagger_info.ssmsp_Nsp_tot+=1;
+
+     tagger_info.ssmsp_Ntrack+=1;
+
+     return id;
+}
+
+
+std::vector<double> WCPPID::NeutrinoID::get_scores(WCPPID::ProtoSegment *sg, int break_point, int dir){
 
   std::vector<WCP::Point >& fit_pt_vec =  sg->get_point_vec();
   std::vector<double>& vec_dQ = sg->get_dQ_vec();
   std::vector<double>& vec_dx = sg->get_dx_vec();
 
-  int size = fit_pt_vec.size();
+  int size = fit_pt_vec.size()-break_point;
+  int start = break_point;
+  if(dir==-1){size=break_point; start=0;}
 
   std::vector<double> L(size,0);
   std::vector<double> dQ_dx(size,0);
   std::vector<double> rL(size,0);
   std::vector<double> rdQ_dx(size,0);
 
-  //if(break_point>=size) break_point==0;
-
   std::cout<<std::endl;
-  //if(dir==1){
   double dis = 0;
-    for (int i = break_point; i<size; i++){
+    for (int i = start; i<start+size; i++){
       double dq_dx = vec_dQ.at(i)/(vec_dx.at(i)/units::cm+1e-9);
-      dQ_dx.at(i) = dq_dx;
-      rdQ_dx.at(size-1-i) = dq_dx;
-      L.at(i) = dis;
-      if (i+1 < size)
+      dQ_dx.at(i-start) = dq_dx;
+      rdQ_dx.at(size-1-i+start) = dq_dx;
+      L.at(i-start) = dis;
+      if (i+1 < size+start)
         dis += sqrt(pow(fit_pt_vec.at(i+1).x-fit_pt_vec.at(i).x,2) + pow(fit_pt_vec.at(i+1).y-fit_pt_vec.at(i).y,2) + pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
-    std::cout<<dis<<"' ";
     }
-    std::cout<<std::endl;
-    // get reverse  vector for L
-    for (size_t i=break_point;i<L.size();i++){
-      //rL.at(i) = L.back() - L.at(L.size()-1-i);
-        rL.at(i) = L.at(break_point) - L.at(L.size()-1-i);
+    for (size_t i=0;i<L.size();i++){
+        rL.at(i) = L.back() - L.at(L.size()-1-i);
     }
-  //}
 
   std::vector<double> result = sg->do_track_comp(L, dQ_dx, 15*units::cm);
   if(dir==-1){result = sg->do_track_comp(rL, rdQ_dx, 15*units::cm);}
@@ -2025,29 +2593,62 @@ std::vector<double> WCPPID::NeutrinoID::get_scores(WCPPID::ProtoSegment *sg, int
 }
 
 
+
 std::vector<double> WCPPID::NeutrinoID::calc_kine_range_multi_pdg(double length){
 
   std::vector<double> result;
 
-  TPCParams& mp = Singleton<TPCParams>::Instance();
-  TGraph *g_range = 0;
-
-  g_range = mp.get_muon_r2ke();
-  double kine_energy_mu = g_range->Eval(length) * units::MeV;
+  double kine_energy_mu = calc_kine_range_pdg(length, 13);
   result.push_back(kine_energy_mu);
 
-  g_range = mp.get_proton_r2ke();
-  double kine_energy_p = g_range->Eval(length) * units::MeV;
+  double kine_energy_p = calc_kine_range_pdg(length, 2212);
   result.push_back(kine_energy_p);
 
-  g_range = mp.get_electron_r2ke();
-  double kine_energy_e = g_range->Eval(length) * units::MeV;
+  double kine_energy_e = calc_kine_range_pdg(length, 11);
   result.push_back(kine_energy_e);
 
   return result;
 }
 
+double WCPPID::NeutrinoID::calc_kine_range_pdg(double length, int pdg){
 
+  TPCParams& mp = Singleton<TPCParams>::Instance();
+  TGraph *g_range = 0;
+
+  if(abs(pdg)==13 || abs(pdg)==211){
+    g_range = mp.get_muon_r2ke();
+  }
+  else if(abs(pdg)==2212){
+    g_range = mp.get_proton_r2ke();
+  }
+  else if(abs(pdg)==11){
+    g_range = mp.get_electron_r2ke();
+  }
+  else{ return 0;}
+
+  return g_range->Eval(length) * units::MeV;
+
+}
+
+int WCPPID::NeutrinoID::get_containing_shower_id(WCPPID::ProtoSegment* seg){
+      //check which shower we are in, if any
+      int in_shower_id = -1;
+      auto this_seg_in_shower = map_segment_in_shower.find(seg);
+      if (this_seg_in_shower!=map_segment_in_shower.end()){
+        WCPPID::WCShower *shower = this_seg_in_shower->second;
+        in_shower_id = shower->get_start_segment()->get_cluster_id()*1000 + shower->get_start_segment()->get_id();
+      }
+      return in_shower_id;
+}
+
+WCPPID::WCShower* WCPPID::NeutrinoID::get_containing_shower(WCPPID::ProtoSegment* seg){
+      auto this_seg_in_shower = map_segment_in_shower.find(seg);
+      if (this_seg_in_shower!=map_segment_in_shower.end()){
+        WCPPID::WCShower *shower = this_seg_in_shower->second;
+        return shower;
+      }
+      return 0;
+}
 
 bool WCPPID::NeutrinoID::exit_ssm_tagger(){
   tagger_info.ssm_dq_dx_fwd_1 = -999;
@@ -2253,6 +2854,7 @@ bool WCPPID::NeutrinoID::exit_ssm_tagger(){
   tagger_info.ssm_prim_shw1_kine_energy_range_mu = -999;
   tagger_info.ssm_prim_shw1_kine_energy_range_p = -999;
   tagger_info.ssm_prim_shw1_kine_energy_range_e = -999;
+  tagger_info.ssm_prim_shw1_kine_energy_best = -999;
   tagger_info.ssm_prim_shw1_kine_energy_cal = -999;
   tagger_info.ssm_prim_shw1_medium_dq_dx = -999;
   tagger_info.ssm_prim_shw1_x_dir = -999;
@@ -2280,6 +2882,7 @@ bool WCPPID::NeutrinoID::exit_ssm_tagger(){
   tagger_info.ssm_prim_shw2_kine_energy_range_mu = -999;
   tagger_info.ssm_prim_shw2_kine_energy_range_p = -999;
   tagger_info.ssm_prim_shw2_kine_energy_range_e = -999;
+  tagger_info.ssm_prim_shw2_kine_energy_best = -999;
   tagger_info.ssm_prim_shw2_kine_energy_cal = -999;
   tagger_info.ssm_prim_shw2_medium_dq_dx = -999;
   tagger_info.ssm_prim_shw2_x_dir = -999;
@@ -2307,6 +2910,7 @@ bool WCPPID::NeutrinoID::exit_ssm_tagger(){
   tagger_info.ssm_daught_shw1_kine_energy_range_mu = -999;
   tagger_info.ssm_daught_shw1_kine_energy_range_p = -999;
   tagger_info.ssm_daught_shw1_kine_energy_range_e = -999;
+  tagger_info.ssm_daught_shw1_kine_energy_best = -999;
   tagger_info.ssm_daught_shw1_kine_energy_cal = -999;
   tagger_info.ssm_daught_shw1_medium_dq_dx = -999;
   tagger_info.ssm_daught_shw1_x_dir = -999;
@@ -2334,6 +2938,7 @@ bool WCPPID::NeutrinoID::exit_ssm_tagger(){
   tagger_info.ssm_daught_shw2_kine_energy_range_mu = -999;
   tagger_info.ssm_daught_shw2_kine_energy_range_p = -999;
   tagger_info.ssm_daught_shw2_kine_energy_range_e = -999;
+  tagger_info.ssm_daught_shw2_kine_energy_best = -999;
   tagger_info.ssm_daught_shw2_kine_energy_cal = -999;
   tagger_info.ssm_daught_shw2_medium_dq_dx = -999;
   tagger_info.ssm_daught_shw2_x_dir = -999;
@@ -2350,15 +2955,206 @@ bool WCPPID::NeutrinoID::exit_ssm_tagger(){
   tagger_info.ssm_nu_angle_target = -999;
   tagger_info.ssm_nu_angle_absorber = -999;
   tagger_info.ssm_nu_angle_vertical = -999;
+  tagger_info.ssm_nu_angle_z = -999;
+  tagger_info.ssm_con_nu_angle_target = -999;
+  tagger_info.ssm_con_nu_angle_absorber = -999;
+  tagger_info.ssm_con_nu_angle_vertical = -999;
+  tagger_info.ssm_prim_nu_angle_z = -999;
+  tagger_info.ssm_prim_nu_angle_target = -999;
+  tagger_info.ssm_prim_nu_angle_absorber = -999;
+  tagger_info.ssm_prim_nu_angle_vertical = -999;
   tagger_info.ssm_track_angle_z = -999;
   tagger_info.ssm_track_angle_target = -999;
   tagger_info.ssm_track_angle_absorber = -999;
   tagger_info.ssm_track_angle_vertical = -999;
+  tagger_info.ssm_vtxX = -999;
+  tagger_info.ssm_vtxY = -999;
+  tagger_info.ssm_vtxZ = -999;
+
+  //off vertex stuff
+  tagger_info.ssm_offvtx_length  =  -999;
+  tagger_info.ssm_offvtx_energy  =  -999;
+  tagger_info.ssm_n_offvtx_tracks_1  =  -999;
+  tagger_info.ssm_n_offvtx_tracks_3  =  -999;
+  tagger_info.ssm_n_offvtx_tracks_5  =  -999;
+  tagger_info.ssm_n_offvtx_tracks_8  =  -999;
+  tagger_info.ssm_n_offvtx_tracks_11  =  -999;
+  tagger_info.ssm_n_offvtx_showers_1  =  -999;
+  tagger_info.ssm_n_offvtx_showers_3  =  -999;
+  tagger_info.ssm_n_offvtx_showers_5  =  -999;
+  tagger_info.ssm_n_offvtx_showers_8  =  -999;
+  tagger_info.ssm_n_offvtx_showers_11  =  -999;
+   //properties of leading off vertex track
+  tagger_info.ssm_offvtx_track1_pdg  =  -999;
+  tagger_info.ssm_offvtx_track1_score_mu_fwd  =  -999;
+  tagger_info.ssm_offvtx_track1_score_p_fwd  =  -999;
+  tagger_info.ssm_offvtx_track1_score_e_fwd  =  -999;
+  tagger_info.ssm_offvtx_track1_score_mu_bck  =  -999;
+  tagger_info.ssm_offvtx_track1_score_p_bck  =  -999;
+  tagger_info.ssm_offvtx_track1_score_e_bck  =  -999;
+  tagger_info.ssm_offvtx_track1_length  =  -999;
+  tagger_info.ssm_offvtx_track1_direct_length  =  -999;
+  tagger_info.ssm_offvtx_track1_max_dev  =  -999;
+  tagger_info.ssm_offvtx_track1_kine_energy_range  =  -999;
+  tagger_info.ssm_offvtx_track1_kine_energy_range_mu  = -999;
+  tagger_info.ssm_offvtx_track1_kine_energy_range_p  =  -999;
+  tagger_info.ssm_offvtx_track1_kine_energy_range_e  =  -999;
+  tagger_info.ssm_offvtx_track1_kine_energy_cal  =  -999;
+  tagger_info.ssm_offvtx_track1_medium_dq_dx  =  -999;
+  tagger_info.ssm_offvtx_track1_x_dir  =  -999;
+  tagger_info.ssm_offvtx_track1_y_dir  =  -999;
+  tagger_info.ssm_offvtx_track1_z_dir  =  -999;
+  tagger_info.ssm_offvtx_track1_dist_mainvtx  =  -999;
+   //properties of leading off vertex shower
+  tagger_info.ssm_offvtx_shw1_pdg_offvtx  =  -999;
+  tagger_info.ssm_offvtx_shw1_score_mu_fwd  = -999;
+  tagger_info.ssm_offvtx_shw1_score_p_fwd  =  -999;
+  tagger_info.ssm_offvtx_shw1_score_e_fwd  =  -999;
+  tagger_info.ssm_offvtx_shw1_score_mu_bck  =  -999;
+  tagger_info.ssm_offvtx_shw1_score_p_bck  =  -999;
+  tagger_info.ssm_offvtx_shw1_score_e_bck  =  -999;
+  tagger_info.ssm_offvtx_shw1_length  =  -999;
+  tagger_info.ssm_offvtx_shw1_direct_length  =  -999;
+  tagger_info.ssm_offvtx_shw1_max_dev  =  -999;
+  tagger_info.ssm_offvtx_shw1_kine_energy_best  =  -999;
+  tagger_info.ssm_offvtx_shw1_kine_energy_range  =  -999;
+  tagger_info.ssm_offvtx_shw1_kine_energy_range_mu  =  -999;
+  tagger_info.ssm_offvtx_shw1_kine_energy_range_p  =  -999;
+  tagger_info.ssm_offvtx_shw1_kine_energy_range_e  =  -999;
+  tagger_info.ssm_offvtx_shw1_kine_energy_cal  =  -999;
+  tagger_info.ssm_offvtx_shw1_medium_dq_dx  =  -999; 
+  tagger_info.ssm_offvtx_shw1_x_dir  =  -999;
+  tagger_info.ssm_offvtx_shw1_y_dir  =  -999;
+  tagger_info.ssm_offvtx_shw1_z_dir  =  -999;
+  tagger_info.ssm_offvtx_shw1_dist_mainvtx  =  -999;
+
+  // Fill the spacepoints despite not spotting an ssm
+  // This is a bit of a mess still. To do this really well we may need some additional revision for showers
+  if(flag_ssmsp>0){
+    std::cout<<std::endl;
+    //std::cout<<"Filling ssm spacepoints"<<std::endl;
+    std::cout<<std::endl;
+    std::cout<<"Main Vertex "<<main_vertex->get_fit_pt().x/units::cm<<" "<<main_vertex->get_fit_pt().y/units::cm<<" "<<main_vertex->get_fit_pt().z/units::cm<<std::endl;
+    // Stuff for bookeeping
+    std::set<WCPPID::ProtoVertex* > used_vertices;
+    std::set<WCPPID::ProtoSegment* > used_segments;
+    std::vector<std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> > segments_to_be_examined;
+    int temp_acc_segment_id = acc_segment_id;
+
+    //Everything connected to the ssm main vertex
+    for (auto it = map_vertex_segments[main_vertex].begin(); it != map_vertex_segments[main_vertex].end(); it++){
+      fill_ssmsp(*it, (*it)->get_particle_type(), 0, (*it)->get_flag_dir());//main vertex, mother is zero
+      used_segments.insert(*it);
+      WCPPID::ProtoVertex *other_vertex = find_other_vertex(*it, main_vertex);
+      segments_to_be_examined.push_back(std::make_pair(other_vertex, *it));
+    }
+    used_vertices.insert(main_vertex);
+
+    // now all the daughters
+    while(segments_to_be_examined.size()>0){
+      std::vector<std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoSegment*> > temp_segments;
+      for (auto it = segments_to_be_examined.begin(); it!= segments_to_be_examined.end(); it++){
+        WCPPID::ProtoVertex *curr_vtx = it->first;
+        WCPPID::ProtoSegment *prev_sg = it->second;
+        if (used_vertices.find(curr_vtx)!=used_vertices.end()) continue;
+
+        for (auto it1 = map_vertex_segments[curr_vtx].begin(); it1!=map_vertex_segments[curr_vtx].end(); it1++){
+          WCPPID::ProtoSegment *curr_sg = *it1;
+
+          if (used_segments.find(curr_sg)!=used_segments.end()) continue;
+          used_segments.insert(curr_sg);
+
+          // fill the tree, we will trust the nominal PID for daughters
+
+          fill_ssmsp(curr_sg, curr_sg->get_particle_type(), prev_sg->get_id()+prev_sg->get_cluster_id()*1000, curr_sg->get_flag_dir());
+
+          used_segments.insert(curr_sg);
+          WCPPID::ProtoVertex *other_vertex = find_other_vertex(curr_sg, curr_vtx);
+          if (used_vertices.find(other_vertex) == used_vertices.end())
+            temp_segments.push_back(std::make_pair(other_vertex, curr_sg));
+        }
+        used_vertices.insert(curr_vtx);
+      }
+      segments_to_be_examined = temp_segments;
+    }
+
+    //check for other showers which may not be in the same cluster
+    std::cout<<showers.size()<<" total showers."<<std::endl;
+    for (auto it = showers.begin(); it!= showers.end(); it++){
+      WCPPID::WCShower *shower = *it;
+      WCPPID::ProtoSegment* curr_sg = shower->get_start_segment();
+      std::pair<ProtoVertex*, int> pair_vertex = shower->get_start_vertex();
+      int temp_mother_id = 0;
+      double kine_best = shower->get_kine_best();
+      if (kine_best ==0 ) kine_best = shower->get_kine_charge();
+      if (pair_vertex.second == 1){ // direct connection
+        WCPPID::ProtoSegment* curr_sg = shower->get_start_segment();
+        if (used_segments.find(curr_sg)!=used_segments.end()) {std::cout<<"Shower "<<curr_sg->get_id()+curr_sg->get_cluster_id()*1000 <<" already added"<<std::endl; temp_mother_id = 0;}
+        else if (pair_vertex.first == main_vertex){
+          std::cout<<"pair_vertex.first == main_vertex but sg not in used_segments"<<std::endl;
+          used_segments.insert(curr_sg);
+          temp_mother_id = 0;
+        
+        }else{
+          WCPPID::ProtoSegment* prev_sg = 0;
+          if (map_vertex_in_shower.find(pair_vertex.first) != map_vertex_in_shower.end()){
+            prev_sg = map_vertex_in_shower[pair_vertex.first]->get_start_segment();
+          }else{
+            prev_sg = find_incoming_segment(pair_vertex.first);
+          }
+          temp_mother_id = prev_sg->get_id()+prev_sg->get_cluster_id()*1000;
+          // fill the tree, we will trust the nominal PID for daughters
+          fill_ssmsp(curr_sg, shower->get_particle_type(), temp_mother_id, curr_sg->get_flag_dir());
+        }
+      }else if (pair_vertex.second == 2 || pair_vertex.second == 3){
+        if (pair_vertex.first == main_vertex){
+          temp_mother_id = fill_ssmsp_psuedo(shower,0,temp_acc_segment_id);//daughter, mother, id
+	  temp_acc_segment_id++;
+          fill_ssmsp(curr_sg, curr_sg->get_particle_type(), temp_mother_id, curr_sg->get_flag_dir());
+        }else{
+          WCPPID::ProtoSegment* prev_sg = 0;
+          if (map_vertex_in_shower.find(pair_vertex.first) != map_vertex_in_shower.end()){
+            prev_sg = map_vertex_in_shower[pair_vertex.first]->get_start_segment();
+          }else{
+            prev_sg = find_incoming_segment(pair_vertex.first);
+          }
+          if(prev_sg==0){
+            std::cout<<"Missed Prev Seg, Setting to 0 "<<std::endl;
+            temp_mother_id = fill_ssmsp_psuedo(shower,0,temp_acc_segment_id);//daughter, mother, id
+          }
+          else{
+            temp_mother_id= fill_ssmsp_psuedo(shower, prev_sg, temp_acc_segment_id);
+          }
+          // fill the tree, we will trust the nominal PID for daughters
+	  temp_acc_segment_id++;
+          fill_ssmsp(curr_sg, curr_sg->get_particle_type(), temp_mother_id, curr_sg->get_flag_dir());
+        }
+      }else{std::cout<<curr_sg->get_id()+curr_sg->get_cluster_id()*1000<<" has pair vertex "<<pair_vertex.second<<std::endl; continue;}//missing case is 4, really far away so do not save
+      used_segments.insert(curr_sg);
+      // Filling in the other space points?
+      std::cout<<std::endl;
+      std::cout<<"Checking for other Shower spacepoints in "<<curr_sg->get_id()+curr_sg->get_cluster_id()*1000<<std::endl;
+      Map_Proto_Segment_Vertices& tmp_map_seg_vtxs = shower->get_map_seg_vtxs();
+      for (auto it = tmp_map_seg_vtxs.begin(); it!= tmp_map_seg_vtxs.end(); it++){
+        WCPPID::ProtoSegment *shower_sg = it->first;
+        if (used_segments.find(shower_sg)!=used_segments.end()) {std::cout<<"Shower segment "<<shower_sg->get_id()+shower_sg->get_cluster_id()*1000<<" already added"<<std::endl; continue;}
+          //put a gamma between here and the start of the shower. Appreoximation for now, could maybe make this better
+          std::cout<<"Adding segment and sudo segment"<<std::endl;
+          int psuedo_particle_id = fill_ssmsp_psuedo(shower,shower_sg,temp_mother_id,temp_acc_segment_id);
+          temp_acc_segment_id++;
+          fill_ssmsp(shower_sg, shower_sg->get_particle_type(), psuedo_particle_id, shower_sg->get_flag_dir());
+          used_segments.insert(shower_sg);
+      }
+      std::cout<<"Check completed"<<std::endl;
+      std::cout<<std::endl;
+    }
+
+  }
+
 	return false;
 }
 
 void WCPPID::NeutrinoID::print_ssm_tagger(){
-  std::cout<<std::endl;
   std::cout<<std::endl;
   std::cout<<"tagger_info.ssm_flag_st_kdar: "<<tagger_info.ssm_flag_st_kdar<<std::endl; //pass cutbased
 
@@ -2568,6 +3364,7 @@ void WCPPID::NeutrinoID::print_ssm_tagger(){
   std::cout<<"tagger_info.ssm_prim_shw1_kine_energy_range_mu: "<<tagger_info.ssm_prim_shw1_kine_energy_range_mu<<std::endl;
   std::cout<<"tagger_info.ssm_prim_shw1_kine_energy_range_p: "<<tagger_info.ssm_prim_shw1_kine_energy_range_p<<std::endl;
   std::cout<<"tagger_info.ssm_prim_shw1_kine_energy_range_e: "<<tagger_info.ssm_prim_shw1_kine_energy_range_e<<std::endl;
+  std::cout<<"tagger_info.ssm_prim_shw1_kine_energy_best: "<<tagger_info.ssm_prim_shw1_kine_energy_best<<std::endl;
   std::cout<<"tagger_info.ssm_prim_shw1_kine_energy_cal: "<<tagger_info.ssm_prim_shw1_kine_energy_cal<<std::endl;
   std::cout<<"tagger_info.ssm_prim_shw1_medium_dq_dx: "<<tagger_info.ssm_prim_shw1_medium_dq_dx<<std::endl;
   std::cout<<"tagger_info.ssm_prim_shw1_x_dir: "<<tagger_info.ssm_prim_shw1_x_dir<<std::endl;
@@ -2595,6 +3392,7 @@ void WCPPID::NeutrinoID::print_ssm_tagger(){
   std::cout<<"tagger_info.ssm_prim_shw2_kine_energy_range_mu: "<<tagger_info.ssm_prim_shw2_kine_energy_range_mu<<std::endl;
   std::cout<<"tagger_info.ssm_prim_shw2_kine_energy_range_p: "<<tagger_info.ssm_prim_shw2_kine_energy_range_p<<std::endl;
   std::cout<<"tagger_info.ssm_prim_shw2_kine_energy_range_e: "<<tagger_info.ssm_prim_shw2_kine_energy_range_e<<std::endl;
+  std::cout<<"tagger_info.ssm_prim_shw2_kine_energy_best: "<<tagger_info.ssm_prim_shw2_kine_energy_best<<std::endl;
   std::cout<<"tagger_info.ssm_prim_shw2_kine_energy_cal: "<<tagger_info.ssm_prim_shw2_kine_energy_cal<<std::endl;
   std::cout<<"tagger_info.ssm_prim_shw2_medium_dq_dx: "<<tagger_info.ssm_prim_shw2_medium_dq_dx<<std::endl;
   std::cout<<"tagger_info.ssm_prim_shw2_x_dir: "<<tagger_info.ssm_prim_shw2_x_dir<<std::endl;
@@ -2622,6 +3420,7 @@ void WCPPID::NeutrinoID::print_ssm_tagger(){
   std::cout<<"tagger_info.ssm_daught_shw1_kine_energy_range_mu: "<<tagger_info.ssm_daught_shw1_kine_energy_range_mu<<std::endl;
   std::cout<<"tagger_info.ssm_daught_shw1_kine_energy_range_p: "<<tagger_info.ssm_daught_shw1_kine_energy_range_p<<std::endl;
   std::cout<<"tagger_info.ssm_daught_shw1_kine_energy_range_e: "<<tagger_info.ssm_daught_shw1_kine_energy_range_e<<std::endl;
+  std::cout<<"tagger_info.ssm_daught_shw1_kine_energy_best: "<<tagger_info.ssm_daught_shw1_kine_energy_best<<std::endl;
   std::cout<<"tagger_info.ssm_daught_shw1_kine_energy_cal: "<<tagger_info.ssm_daught_shw1_kine_energy_cal<<std::endl;
   std::cout<<"tagger_info.ssm_daught_shw1_medium_dq_dx: "<<tagger_info.ssm_daught_shw1_medium_dq_dx<<std::endl;
   std::cout<<"tagger_info.ssm_daught_shw1_x_dir: "<<tagger_info.ssm_daught_shw1_x_dir<<std::endl;
@@ -2650,6 +3449,7 @@ void WCPPID::NeutrinoID::print_ssm_tagger(){
   std::cout<<"tagger_info.ssm_daught_shw2_kine_energy_range_p: "<<tagger_info.ssm_daught_shw2_kine_energy_range_p<<std::endl;
   std::cout<<"tagger_info.ssm_daught_shw2_kine_energy_range_e: "<<tagger_info.ssm_daught_shw2_kine_energy_range_e<<std::endl;
   std::cout<<"tagger_info.ssm_daught_shw2_kine_energy_cal: "<<tagger_info.ssm_daught_shw2_kine_energy_cal<<std::endl;
+  std::cout<<"tagger_info.ssm_daught_shw2_kine_energy_best: "<<tagger_info.ssm_daught_shw2_kine_energy_best<<std::endl;
   std::cout<<"tagger_info.ssm_daught_shw2_medium_dq_dx: "<<tagger_info.ssm_daught_shw2_medium_dq_dx<<std::endl;
   std::cout<<"tagger_info.ssm_daught_shw2_x_dir: "<<tagger_info.ssm_daught_shw2_x_dir<<std::endl;
   std::cout<<"tagger_info.ssm_daught_shw2_y_dir: "<<tagger_info.ssm_daught_shw2_y_dir<<std::endl;
@@ -2666,10 +3466,78 @@ void WCPPID::NeutrinoID::print_ssm_tagger(){
   std::cout<<"tagger_info.ssm_nu_angle_target: "<<tagger_info.ssm_nu_angle_target<<std::endl;
   std::cout<<"tagger_info.ssm_nu_angle_absorber: "<<tagger_info.ssm_nu_angle_absorber<<std::endl;
   std::cout<<"tagger_info.ssm_nu_angle_vertical: "<<tagger_info.ssm_nu_angle_vertical<<std::endl;
+  std::cout<<"tagger_info.ssm_con_nu_angle_z: "<<tagger_info.ssm_con_nu_angle_z<<std::endl;
+  std::cout<<"tagger_info.ssm_con_nu_angle_target: "<<tagger_info.ssm_con_nu_angle_target<<std::endl;
+  std::cout<<"tagger_info.ssm_con_nu_angle_absorber: "<<tagger_info.ssm_con_nu_angle_absorber<<std::endl;
+  std::cout<<"tagger_info.ssm_con_nu_angle_vertical: "<<tagger_info.ssm_con_nu_angle_vertical<<std::endl;
+  std::cout<<"tagger_info.ssm_prim_nu_angle_z: "<<tagger_info.ssm_prim_nu_angle_z<<std::endl;
+  std::cout<<"tagger_info.ssm_prim_nu_angle_target: "<<tagger_info.ssm_prim_nu_angle_target<<std::endl;
+  std::cout<<"tagger_info.ssm_prim_nu_angle_absorber: "<<tagger_info.ssm_prim_nu_angle_absorber<<std::endl;
+  std::cout<<"tagger_info.ssm_prim_nu_angle_vertical: "<<tagger_info.ssm_prim_nu_angle_vertical<<std::endl;
   std::cout<<"tagger_info.ssm_track_angle_z: "<<tagger_info.ssm_track_angle_z<<std::endl;
   std::cout<<"tagger_info.ssm_track_angle_target: "<<tagger_info.ssm_track_angle_target<<std::endl;
   std::cout<<"tagger_info.ssm_track_angle_absorber: "<<tagger_info.ssm_track_angle_absorber<<std::endl;
   std::cout<<"tagger_info.ssm_track_angle_vertical: "<<tagger_info.ssm_track_angle_vertical<<std::endl;
+  std::cout<<"tagger_info.ssm_vtxX: "<<tagger_info.ssm_vtxX<<std::endl;
+  std::cout<<"tagger_info.ssm_vtxY: "<<tagger_info.ssm_vtxY<<std::endl;
+  std::cout<<"tagger_info.ssm_vtxZ: "<<tagger_info.ssm_vtxZ<<std::endl;
+
+  //off vertex stuff
+  std::cout<<"tagger_info.ssm_offvtx_length: " <<tagger_info.ssm_offvtx_length<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_energy: " <<tagger_info.ssm_offvtx_energy<<std::endl;
+  std::cout<<"tagger_info.ssm_n_offvtx_tracks_1: " <<tagger_info.ssm_n_offvtx_tracks_1<<std::endl;
+  std::cout<<"tagger_info.ssm_n_offvtx_tracks_3: " <<tagger_info.ssm_n_offvtx_tracks_3<<std::endl;
+  std::cout<<"tagger_info.ssm_n_offvtx_tracks_5: " <<tagger_info.ssm_n_offvtx_tracks_5<<std::endl;
+  std::cout<<"tagger_info.ssm_n_offvtx_tracks_8: " <<tagger_info.ssm_n_offvtx_tracks_8<<std::endl;
+  std::cout<<"tagger_info.ssm_n_offvtx_tracks_11: " <<tagger_info.ssm_n_offvtx_tracks_11<<std::endl;
+  std::cout<<"tagger_info.ssm_n_offvtx_showers_1: " <<tagger_info.ssm_n_offvtx_showers_1<<std::endl;
+  std::cout<<"tagger_info.ssm_n_offvtx_showers_3: " <<tagger_info.ssm_n_offvtx_showers_3<<std::endl;
+  std::cout<<"tagger_info.ssm_n_offvtx_showers_5: " <<tagger_info.ssm_n_offvtx_showers_5<<std::endl;
+  std::cout<<"tagger_info.ssm_n_offvtx_showers_8: " <<tagger_info.ssm_n_offvtx_showers_8<<std::endl;
+  std::cout<<"tagger_info.ssm_n_offvtx_showers_11: " <<tagger_info.ssm_n_offvtx_showers_11<<std::endl;
+  //properties of leading off vertex track
+  std::cout<<"tagger_info.ssm_offvtx_track1_pdg: " <<tagger_info.ssm_offvtx_track1_pdg<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_score_mu_fwd: " <<tagger_info.ssm_offvtx_track1_score_mu_fwd<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_score_p_fwd: " <<tagger_info.ssm_offvtx_track1_score_p_fwd<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_score_e_fwd: " <<tagger_info.ssm_offvtx_track1_score_e_fwd<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_score_mu_bck: " <<tagger_info.ssm_offvtx_track1_score_mu_bck<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_score_p_bck: " <<tagger_info.ssm_offvtx_track1_score_p_bck<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_score_e_bck: " <<tagger_info.ssm_offvtx_track1_score_e_bck<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_length: " <<tagger_info.ssm_offvtx_track1_length<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_direct_length: " <<tagger_info.ssm_offvtx_track1_direct_length<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_max_dev: " <<tagger_info.ssm_offvtx_track1_max_dev<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_kine_energy_range: " <<tagger_info.ssm_offvtx_track1_kine_energy_range<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_kine_energy_range_mu: " <<tagger_info.ssm_offvtx_track1_kine_energy_range_mu<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_kine_energy_range_p: " <<tagger_info.ssm_offvtx_track1_kine_energy_range_p<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_kine_energy_range_e: " <<tagger_info.ssm_offvtx_track1_kine_energy_range_e<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_kine_energy_cal: " <<tagger_info.ssm_offvtx_track1_kine_energy_cal<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_medium_dq_dx: " <<tagger_info.ssm_offvtx_track1_medium_dq_dx<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_x_dir: " <<tagger_info.ssm_offvtx_track1_x_dir<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_y_dir: " <<tagger_info.ssm_offvtx_track1_y_dir<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_z_dir: " <<tagger_info.ssm_offvtx_track1_z_dir<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_track1_dist_mainvtx: " <<tagger_info.ssm_offvtx_track1_dist_mainvtx<<std::endl;
+  //properties of leading off vertex shower
+  std::cout<<"tagger_info.ssm_offvtx_shw1_pdg_offvtx: " <<tagger_info.ssm_offvtx_shw1_pdg_offvtx<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_score_mu_fwd: " <<tagger_info.ssm_offvtx_shw1_score_mu_fwd<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_score_p_fwd: " <<tagger_info.ssm_offvtx_shw1_score_p_fwd<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_score_e_fwd: " <<tagger_info.ssm_offvtx_shw1_score_e_fwd<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_score_mu_bck: " <<tagger_info.ssm_offvtx_shw1_score_mu_bck<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_score_p_bck: " <<tagger_info.ssm_offvtx_shw1_score_p_bck<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_score_e_bck: " <<tagger_info.ssm_offvtx_shw1_score_e_bck<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_length: " <<tagger_info.ssm_offvtx_shw1_length<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_direct_length: " <<tagger_info.ssm_offvtx_shw1_direct_length<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_max_dev: " <<tagger_info.ssm_offvtx_shw1_max_dev<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_kine_energy_best: " <<tagger_info.ssm_offvtx_shw1_kine_energy_best<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_kine_energy_range: " <<tagger_info.ssm_offvtx_shw1_kine_energy_range<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_kine_energy_range_mu: " <<tagger_info.ssm_offvtx_shw1_kine_energy_range_mu<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_kine_energy_range_p: " <<tagger_info.ssm_offvtx_shw1_kine_energy_range_p<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_kine_energy_range_e: " <<tagger_info.ssm_offvtx_shw1_kine_energy_range_e<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_kine_energy_cal: " <<tagger_info.ssm_offvtx_shw1_kine_energy_cal<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_medium_dq_dx: " <<tagger_info.ssm_offvtx_shw1_medium_dq_dx<<std::endl; 
+  std::cout<<"tagger_info.ssm_offvtx_shw1_x_dir: " <<tagger_info.ssm_offvtx_shw1_x_dir<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_y_dir: " <<tagger_info.ssm_offvtx_shw1_y_dir<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_z_dir: " <<tagger_info.ssm_offvtx_shw1_z_dir<<std::endl;
+  std::cout<<"tagger_info.ssm_offvtx_shw1_dist_mainvtx: " <<tagger_info.ssm_offvtx_shw1_dist_mainvtx<<std::endl;
 
 
   std::cout<<std::endl;

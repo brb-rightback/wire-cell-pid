@@ -42,6 +42,8 @@ int main(int argc, char* argv[])
 
   bool flag_lifetime_corr = true;
 
+  int flag_ssmsp = 0; //Save spacepoints for ssm tagger, 0 only when tagged, 1 always, -1 never  
+
   for (Int_t i=1;i!=argc;i++){
     switch(argv[i][1]){
     case 'a':
@@ -70,6 +72,9 @@ int main(int argc, char* argv[])
       break;
     case 'z':
       flag_timestamp = atoi(&argv[i][2]);
+      break;
+    case 's':
+      flag_ssmsp = atoi(&argv[i][2]);
       break;
     }
   }
@@ -1351,7 +1356,7 @@ int main(int argc, char* argv[])
 
     double offset_x =     (flash_time - time_offset)*2./nrebin*time_slice_width;
     WCPPID::NeutrinoID *neutrino = new WCPPID::NeutrinoID(main_cluster, additional_clusters, live_clusters, fid, gds, nrebin, frame_length, unit_dis, &ct_point_cloud, global_wc_map, flash_time, offset_x, flag_neutrino_id_process, flag_bdt, flag_dl_vtx, dl_vtx_cut, match_isFC);
-
+    neutrino->set_save_ssmsp(flag_ssmsp);
     neutrino_vec.push_back(neutrino);
     map_flash_tpc_pair_neutrino_id[std::make_pair(it->first, it->second)] = neutrino;
   }
@@ -1668,16 +1673,13 @@ int main(int argc, char* argv[])
     T_tagger->Branch("mip_min_dis",&tagger_info.mip_min_dis,"mip_min_dis/F");
     T_tagger->Branch("mip_filled",&tagger_info.mip_filled,"mip_filled/F");
 
-    //single track kdar tagger
+    //kdar tagger
     T_tagger->Branch("ssm_flag_st_kdar",&tagger_info.ssm_flag_st_kdar,"ssm_flag_st_kdar/F");
-    //T_tagger->Branch("n_prim_tracks_1",&tagger_info.n_prim_tracks_1,"n_prim_tracks_1/F");
-    //T_tagger->Branch("n_prim_tracks_3",&tagger_info.n_prim_tracks_3,"n_prim_tracks_3/F");
-    //T_tagger->Branch("n_prim_tracks_5",&tagger_info.n_prim_tracks_5,"n_prim_tracks_5/F");
     std::cout<<"nue:  tagger_info.ssm_Nsm"<<tagger_info.ssm_Nsm<<std::endl;
     T_tagger->Branch("ssm_Nsm",&tagger_info.ssm_Nsm,"ssm_Nsm/F");
     T_tagger->Branch("ssm_Nsm_wivtx",&tagger_info.ssm_Nsm_wivtx,"ssm_Nsm_wivtx/F");
 
-  //only filled if there is one ssm
+    //only filled if there is one ssm
       //properties of the ssm
       //dq/dx info
       T_tagger->Branch("ssm_dq_dx_fwd_1", &tagger_info.ssm_dq_dx_fwd_1, "ssm_dq_dx_fwd_1/F");
@@ -1889,6 +1891,7 @@ int main(int argc, char* argv[])
       T_tagger->Branch("ssm_prim_shw1_kine_energy_range_p", &tagger_info.ssm_prim_shw1_kine_energy_range_p, "ssm_prim_shw1_kine_energy_range_p/F");
       T_tagger->Branch("ssm_prim_shw1_kine_energy_range_e", &tagger_info.ssm_prim_shw1_kine_energy_range_e, "ssm_prim_shw1_kine_energy_range_e/F");
       T_tagger->Branch("ssm_prim_shw1_kine_energy_cal", &tagger_info.ssm_prim_shw1_kine_energy_cal, "ssm_prim_shw1_kine_energy_cal/F");
+      T_tagger->Branch("ssm_prim_shw1_kine_energy_best", &tagger_info.ssm_prim_shw1_kine_energy_best, "ssm_prim_shw1_kine_energy_best/F");
       T_tagger->Branch("ssm_prim_shw1_medium_dq_dx", &tagger_info.ssm_prim_shw1_medium_dq_dx, "ssm_prim_shw1_medium_dq_dx/F");
       T_tagger->Branch("ssm_prim_shw1_x_dir", &tagger_info.ssm_prim_shw1_x_dir, "ssm_prim_shw1_x_dir/F");
       T_tagger->Branch("ssm_prim_shw1_y_dir", &tagger_info.ssm_prim_shw1_y_dir, "ssm_prim_shw1_y_dir/F");
@@ -1917,6 +1920,7 @@ int main(int argc, char* argv[])
       T_tagger->Branch("ssm_prim_shw2_kine_energy_range_p", &tagger_info.ssm_prim_shw2_kine_energy_range_p, "ssm_prim_shw2_kine_energy_range_p/F");
       T_tagger->Branch("ssm_prim_shw2_kine_energy_range_e", &tagger_info.ssm_prim_shw2_kine_energy_range_e, "ssm_prim_shw2_kine_energy_range_e/F");
       T_tagger->Branch("ssm_prim_shw2_kine_energy_cal", &tagger_info.ssm_prim_shw2_kine_energy_cal, "ssm_prim_shw2_kine_energy_cal/F");
+      T_tagger->Branch("ssm_prim_shw2_kine_energy_best", &tagger_info.ssm_prim_shw2_kine_energy_best, "ssm_prim_shw2_kine_energy_best/F");
       T_tagger->Branch("ssm_prim_shw2_medium_dq_dx", &tagger_info.ssm_prim_shw2_medium_dq_dx, "ssm_prim_shw2_medium_dq_dx/F");
       T_tagger->Branch("ssm_prim_shw2_x_dir", &tagger_info.ssm_prim_shw2_x_dir, "ssm_prim_shw2_x_dir/F");
       T_tagger->Branch("ssm_prim_shw2_y_dir", &tagger_info.ssm_prim_shw2_y_dir, "ssm_prim_shw2_y_dir/F");
@@ -1945,6 +1949,7 @@ int main(int argc, char* argv[])
       T_tagger->Branch("ssm_daught_shw1_kine_energy_range_p", &tagger_info.ssm_daught_shw1_kine_energy_range_p, "ssm_daught_shw1_kine_energy_range_p/F");
       T_tagger->Branch("ssm_daught_shw1_kine_energy_range_e", &tagger_info.ssm_daught_shw1_kine_energy_range_e, "ssm_daught_shw1_kine_energy_range_e/F");
       T_tagger->Branch("ssm_daught_shw1_kine_energy_cal", &tagger_info.ssm_daught_shw1_kine_energy_cal, "ssm_daught_shw1_kine_energy_cal/F");
+      T_tagger->Branch("ssm_daught_shw1_kine_energy_best", &tagger_info.ssm_daught_shw1_kine_energy_best, "ssm_daught_shw1_kine_energy_best/F");
       T_tagger->Branch("ssm_daught_shw1_medium_dq_dx", &tagger_info.ssm_daught_shw1_medium_dq_dx, "ssm_daught_shw1_medium_dq_dx/F");
       T_tagger->Branch("ssm_daught_shw1_x_dir", &tagger_info.ssm_daught_shw1_x_dir, "ssm_daught_shw1_x_dir/F");
       T_tagger->Branch("ssm_daught_shw1_y_dir", &tagger_info.ssm_daught_shw1_y_dir, "ssm_daught_shw1_y_dir/F");
@@ -1972,6 +1977,7 @@ int main(int argc, char* argv[])
       T_tagger->Branch("ssm_daught_shw2_kine_energy_range_p", &tagger_info.ssm_daught_shw2_kine_energy_range_p, "ssm_daught_shw2_kine_energy_range_p/F");
       T_tagger->Branch("ssm_daught_shw2_kine_energy_range_e", &tagger_info.ssm_daught_shw2_kine_energy_range_e, "ssm_daught_shw2_kine_energy_range_e/F");
       T_tagger->Branch("ssm_daught_shw2_kine_energy_cal", &tagger_info.ssm_daught_shw2_kine_energy_cal, "ssm_daught_shw2_kine_energy_cal/F");
+      T_tagger->Branch("ssm_daught_shw2_kine_energy_best", &tagger_info.ssm_daught_shw2_kine_energy_best, "ssm_daught_shw2_kine_energy_best/F");
       T_tagger->Branch("ssm_daught_shw2_medium_dq_dx", &tagger_info.ssm_daught_shw2_medium_dq_dx, "ssm_daught_shw2_medium_dq_dx/F");
       T_tagger->Branch("ssm_daught_shw2_x_dir", &tagger_info.ssm_daught_shw2_x_dir, "ssm_daught_shw2_x_dir/F");
       T_tagger->Branch("ssm_daught_shw2_y_dir", &tagger_info.ssm_daught_shw2_y_dir, "ssm_daught_shw2_y_dir/F");
@@ -1987,13 +1993,95 @@ int main(int argc, char* argv[])
       T_tagger->Branch("ssm_nu_angle_target", &tagger_info.ssm_nu_angle_target, "ssm_nu_angle_target/F");
       T_tagger->Branch("ssm_nu_angle_absorber", &tagger_info.ssm_nu_angle_absorber, "ssm_nu_angle_absorber/F");
       T_tagger->Branch("ssm_nu_angle_vertical", &tagger_info.ssm_nu_angle_vertical, "ssm_nu_angle_vertical/F");
+      T_tagger->Branch("ssm_con_nu_angle_z", &tagger_info.ssm_con_nu_angle_z, "ssm_con_nu_angle_z/F");
+      T_tagger->Branch("ssm_con_nu_angle_target", &tagger_info.ssm_con_nu_angle_target, "ssm_con_nu_angle_target/F");
+      T_tagger->Branch("ssm_con_nu_angle_absorber", &tagger_info.ssm_con_nu_angle_absorber, "ssm_con_nu_angle_absorber/F");
+      T_tagger->Branch("ssm_con_nu_angle_vertical", &tagger_info.ssm_con_nu_angle_vertical, "ssm_con_nu_angle_vertical/F");
+      T_tagger->Branch("ssm_prim_nu_angle_z", &tagger_info.ssm_prim_nu_angle_z, "ssm_prim_nu_angle_z/F");
+      T_tagger->Branch("ssm_prim_nu_angle_target", &tagger_info.ssm_prim_nu_angle_target, "ssm_prim_nu_angle_target/F");
+      T_tagger->Branch("ssm_prim_nu_angle_absorber", &tagger_info.ssm_prim_nu_angle_absorber, "ssm_prim_nu_angle_absorber/F");
+      T_tagger->Branch("ssm_prim_nu_angle_vertical", &tagger_info.ssm_prim_nu_angle_vertical, "ssm_prim_nu_angle_vertical/F");
       T_tagger->Branch("ssm_track_angle_z", &tagger_info.ssm_track_angle_z, "ssm_track_angle_z/F");
       T_tagger->Branch("ssm_track_angle_target", &tagger_info.ssm_track_angle_target, "ssm_track_angle_target/F");
       T_tagger->Branch("ssm_track_angle_absorber", &tagger_info.ssm_track_angle_absorber, "ssm_track_angle_absorber/F");
       T_tagger->Branch("ssm_track_angle_vertical", &tagger_info.ssm_track_angle_vertical, "ssm_track_angle_vertical/F");
+      T_tagger->Branch("ssm_vtxX", &tagger_info.ssm_vtxX, "ssm_vtxX/F");
+      T_tagger->Branch("ssm_vtxY", &tagger_info.ssm_vtxY, "ssm_vtxY/F");
+      T_tagger->Branch("ssm_vtxZ", &tagger_info.ssm_vtxZ, "ssm_vtxZ/F");
 
+      //off vertex stuff
+      T_tagger->Branch("ssm_offvtx_length",&tagger_info.ssm_offvtx_length,"ssm_offvtx_length/F");
+      T_tagger->Branch("ssm_offvtx_energy",&tagger_info.ssm_offvtx_energy,"ssm_offvtx_energy/F");
+      T_tagger->Branch("ssm_n_offvtx_tracks_1",&tagger_info.ssm_n_offvtx_tracks_1,"ssm_n_offvtx_tracks_1/F");
+      T_tagger->Branch("ssm_n_offvtx_tracks_3",&tagger_info.ssm_n_offvtx_tracks_3,"ssm_n_offvtx_tracks_3/F");
+      T_tagger->Branch("ssm_n_offvtx_tracks_5",&tagger_info.ssm_n_offvtx_tracks_5,"ssm_n_offvtx_tracks_5/F");
+      T_tagger->Branch("ssm_n_offvtx_tracks_8",&tagger_info.ssm_n_offvtx_tracks_8,"ssm_n_offvtx_tracks_8/F");
+      T_tagger->Branch("ssm_n_offvtx_tracks_11",&tagger_info.ssm_n_offvtx_tracks_11,"ssm_n_offvtx_tracks_11/F");
+      T_tagger->Branch("ssm_n_offvtx_showers_1",&tagger_info.ssm_n_offvtx_showers_1,"ssm_n_offvtx_showers_1/F");
+      T_tagger->Branch("ssm_n_offvtx_showers_3",&tagger_info.ssm_n_offvtx_showers_3,"ssm_n_offvtx_showers_3/F");
+      T_tagger->Branch("ssm_n_offvtx_showers_5",&tagger_info.ssm_n_offvtx_showers_5,"ssm_n_offvtx_showers_5/F");
+      T_tagger->Branch("ssm_n_offvtx_showers_8",&tagger_info.ssm_n_offvtx_showers_8,"ssm_n_offvtx_showers_8/F");
+      T_tagger->Branch("ssm_n_offvtx_showers_11",&tagger_info.ssm_n_offvtx_showers_11,"ssm_n_offvtx_showers_11/F");
+      //properties of leading off vertex track
+      T_tagger->Branch("ssm_offvtx_track1_pdg",&tagger_info.ssm_offvtx_track1_pdg,"ssm_offvtx_track1_pdg/F");
+      T_tagger->Branch("ssm_offvtx_track1_score_mu_fwd",&tagger_info.ssm_offvtx_track1_score_mu_fwd,"ssm_offvtx_track1_score_mu_fwd/F");
+      T_tagger->Branch("ssm_offvtx_track1_score_p_fwd",&tagger_info.ssm_offvtx_track1_score_p_fwd,"ssm_offvtx_track1_score_p_fwd/F");
+      T_tagger->Branch("ssm_offvtx_track1_score_e_fwd",&tagger_info.ssm_offvtx_track1_score_e_fwd,"ssm_offvtx_track1_score_e_fwd/F");
+      T_tagger->Branch("ssm_offvtx_track1_score_mu_bck",&tagger_info.ssm_offvtx_track1_score_mu_bck,"ssm_offvtx_track1_score_mu_bck/F");
+      T_tagger->Branch("ssm_offvtx_track1_score_p_bck",&tagger_info.ssm_offvtx_track1_score_p_bck,"ssm_offvtx_track1_score_p_bck/F");
+      T_tagger->Branch("ssm_offvtx_track1_score_e_bck",&tagger_info.ssm_offvtx_track1_score_e_bck,"ssm_offvtx_track1_score_e_bck/F");
+      T_tagger->Branch("ssm_offvtx_track1_length",&tagger_info.ssm_offvtx_track1_length,"ssm_offvtx_track1_length/F");
+      T_tagger->Branch("ssm_offvtx_track1_direct_length",&tagger_info.ssm_offvtx_track1_direct_length,"ssm_offvtx_track1_direct_length/F");
+      T_tagger->Branch("ssm_offvtx_track1_max_dev",&tagger_info.ssm_offvtx_track1_max_dev,"ssm_offvtx_track1_max_dev/F");
+      T_tagger->Branch("ssm_offvtx_track1_kine_energy_range",&tagger_info.ssm_offvtx_track1_kine_energy_range,"ssm_offvtx_track1_kine_energy_range/F");
+      T_tagger->Branch("ssm_offvtx_track1_kine_energy_range_mu",&tagger_info.ssm_offvtx_track1_kine_energy_range_mu,"ssm_offvtx_track1_kine_energy_range_mu/F");
+      T_tagger->Branch("ssm_offvtx_track1_kine_energy_range_p",&tagger_info.ssm_offvtx_track1_kine_energy_range_p,"ssm_offvtx_track1_kine_energy_range_p/F");
+      T_tagger->Branch("ssm_offvtx_track1_kine_energy_range_e",&tagger_info.ssm_offvtx_track1_kine_energy_range_e,"ssm_offvtx_track1_kine_energy_range_e/F");
+      T_tagger->Branch("ssm_offvtx_track1_kine_energy_cal",&tagger_info.ssm_offvtx_track1_kine_energy_cal,"ssm_offvtx_track1_kine_energy_cal/F");
+      T_tagger->Branch("ssm_offvtx_track1_medium_dq_dx",&tagger_info.ssm_offvtx_track1_medium_dq_dx,"ssm_offvtx_track1_medium_dq_dx/F");
+      T_tagger->Branch("ssm_offvtx_track1_x_dir",&tagger_info.ssm_offvtx_track1_x_dir,"ssm_offvtx_track1_x_dir/F");
+      T_tagger->Branch("ssm_offvtx_track1_y_dir",&tagger_info.ssm_offvtx_track1_y_dir,"ssm_offvtx_track1_y_dir/F");
+      T_tagger->Branch("ssm_offvtx_track1_z_dir",&tagger_info.ssm_offvtx_track1_z_dir,"ssm_offvtx_track1_z_dir/F");
+      T_tagger->Branch("ssm_offvtx_track1_dist_mainvtx",&tagger_info.ssm_offvtx_track1_dist_mainvtx,"ssm_offvtx_track1_dist_mainvtx/F");
+      //properties of leading off vertex shower
+      T_tagger->Branch("ssm_offvtx_shw1_pdg_offvtx",&tagger_info.ssm_offvtx_shw1_pdg_offvtx,"ssm_offvtx_shw1_pdg_offvtx/F");
+      T_tagger->Branch("ssm_offvtx_shw1_score_mu_fwd",&tagger_info.ssm_offvtx_shw1_score_mu_fwd,"ssm_offvtx_shw1_score_mu_fwd/F");
+      T_tagger->Branch("ssm_offvtx_shw1_score_p_fwd",&tagger_info.ssm_offvtx_shw1_score_p_fwd,"ssm_offvtx_shw1_score_p_fwd/F");
+      T_tagger->Branch("ssm_offvtx_shw1_score_e_fwd",&tagger_info.ssm_offvtx_shw1_score_e_fwd,"ssm_offvtx_shw1_score_e_fwd/F");
+      T_tagger->Branch("ssm_offvtx_shw1_score_mu_bck",&tagger_info.ssm_offvtx_shw1_score_mu_bck,"ssm_offvtx_shw1_score_mu_bck/F");
+      T_tagger->Branch("ssm_offvtx_shw1_score_p_bck",&tagger_info.ssm_offvtx_shw1_score_p_bck,"ssm_offvtx_shw1_score_p_bck/F");
+      T_tagger->Branch("ssm_offvtx_shw1_score_e_bck",&tagger_info.ssm_offvtx_shw1_score_e_bck,"ssm_offvtx_shw1_score_e_bck/F");
+      T_tagger->Branch("ssm_offvtx_shw1_length",&tagger_info.ssm_offvtx_shw1_length,"ssm_offvtx_shw1_length/F");
+      T_tagger->Branch("ssm_offvtx_shw1_direct_length",&tagger_info.ssm_offvtx_shw1_direct_length,"ssm_offvtx_shw1_direct_length/F");
+      T_tagger->Branch("ssm_offvtx_shw1_max_dev",&tagger_info.ssm_offvtx_shw1_max_dev,"ssm_offvtx_shw1_max_dev/F");
+      T_tagger->Branch("ssm_offvtx_shw1_kine_energy_best",&tagger_info.ssm_offvtx_shw1_kine_energy_best,"ssm_offvtx_shw1_kine_energy_best/F");
+      T_tagger->Branch("ssm_offvtx_shw1_kine_energy_range",&tagger_info.ssm_offvtx_shw1_kine_energy_range,"ssm_offvtx_shw1_kine_energy_range/F");
+      T_tagger->Branch("ssm_offvtx_shw1_kine_energy_range_mu",&tagger_info.ssm_offvtx_shw1_kine_energy_range_mu,"ssm_offvtx_shw1_kine_energy_range_mu/F");
+      T_tagger->Branch("ssm_offvtx_shw1_kine_energy_range_p",&tagger_info.ssm_offvtx_shw1_kine_energy_range_p,"ssm_offvtx_shw1_kine_energy_range_p/F");
+      T_tagger->Branch("ssm_offvtx_shw1_kine_energy_range_e",&tagger_info.ssm_offvtx_shw1_kine_energy_range_e,"ssm_offvtx_shw1_kine_energy_range_e/F");
+      T_tagger->Branch("ssm_offvtx_shw1_kine_energy_cal",&tagger_info.ssm_offvtx_shw1_kine_energy_cal,"ssm_offvtx_shw1_kine_energy_cal/F");
+      T_tagger->Branch("ssm_offvtx_shw1_medium_dq_dx",&tagger_info.ssm_offvtx_shw1_medium_dq_dx,"ssm_offvtx_shw1_medium_dq_dx/F");
+      T_tagger->Branch("ssm_offvtx_shw1_x_dir",&tagger_info.ssm_offvtx_shw1_x_dir,"ssm_offvtx_shw1_x_dir/F");
+      T_tagger->Branch("ssm_offvtx_shw1_y_dir",&tagger_info.ssm_offvtx_shw1_y_dir,"ssm_offvtx_shw1_y_dir/F");
+      T_tagger->Branch("ssm_offvtx_shw1_z_dir",&tagger_info.ssm_offvtx_shw1_z_dir,"ssm_offvtx_shw1_z_dir/F");
+      T_tagger->Branch("ssm_offvtx_shw1_dist_mainvtx",&tagger_info.ssm_offvtx_shw1_dist_mainvtx,"ssm_offvtx_shw1_dist_mainvtx/F");
 
-
+      // Sapcepoints
+      T_tagger->Branch("ssmsp_Ntrack", &tagger_info.ssmsp_Ntrack, "ssmsp_Ntrack/I");
+      T_tagger->Branch("ssmsp_Nsp", &tagger_info.ssmsp_Nsp);
+      T_tagger->Branch("ssmsp_Nsp_tot", &tagger_info.ssmsp_Nsp_tot, "ssmsp_Nsp_tot/I");
+      T_tagger->Branch("ssmsp_pdg", &tagger_info.ssmsp_pdg);
+      T_tagger->Branch("ssmsp_id", &tagger_info.ssmsp_id);
+      T_tagger->Branch("ssmsp_mother", &tagger_info.ssmsp_mother);
+      T_tagger->Branch("ssmsp_x", &tagger_info.ssmsp_x);
+      T_tagger->Branch("ssmsp_y", &tagger_info.ssmsp_y);
+      T_tagger->Branch("ssmsp_z", &tagger_info.ssmsp_z);
+      T_tagger->Branch("ssmsp_dx", &tagger_info.ssmsp_dx);
+      T_tagger->Branch("ssmsp_dQ", &tagger_info.ssmsp_dQ);
+      T_tagger->Branch("ssmsp_KE", &tagger_info.ssmsp_KE);
+      T_tagger->Branch("ssmsp_containing_shower_id", &tagger_info.ssmsp_containing_shower_id);
+      T_tagger->Branch("ssmsp_containing_shower_ke", &tagger_info.ssmsp_containing_shower_ke);
+      T_tagger->Branch("ssmsp_containing_shower_flag", &tagger_info.ssmsp_containing_shower_flag);
 
     //single photon shower
     T_tagger->Branch("shw_sp_flag",&tagger_info.shw_sp_flag,"shw_sp_flag/F");
@@ -2973,11 +3061,14 @@ int main(int argc, char* argv[])
   T_kine->Branch("kine_pio_angle",&kine_tree.kine_pio_angle,"kine_pio_angle/F");
 
   for (size_t i=0; i!= neutrino_vec.size();i++){
+    std::cout<<std::endl;
+    std::cout<<"Filling nu "<<i<<" PF tree"<<std::endl;
     //    neutrino_vec.at(i)->fill_proto_main_tree(reco_tree);
     neutrino_vec.at(i)->fill_particle_tree(reco_tree );
     kine_tree = neutrino_vec.at(i)->get_kine_info();
     //    neutrino_vec.at(i)->fill_kine_tree(kine_tree );
   }
+  std::cout<<std::endl;
   TMC->Fill();
   T_kine->Fill();
 
