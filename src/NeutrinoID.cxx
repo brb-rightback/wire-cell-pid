@@ -275,7 +275,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
 
   
     // loop over other clusters ...
-     if (flag_other_clusters){
+     if (flag_other_clusters){ 
       for (auto it = other_clusters.begin(); it!=other_clusters.end(); it++){
         if (map_cluster_length[*it] > 6*units::cm){
 	        find_proto_vertex(*it, true, 2);
