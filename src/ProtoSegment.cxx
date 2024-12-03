@@ -1493,9 +1493,6 @@ TVector3 WCPPID::ProtoSegment::cal_dir_3vector(int direction, int num_points, in
   }else if (direction == -1){
     for (size_t i=start;i<start+num_points-1;i++){
       if (i+1 > fit_pt_vec.size()) break;
-      //p.x += fit_pt_vec.at(fit_pt_vec.size()-i-1).x - fit_pt_vec.back().x;
-      //p.y += fit_pt_vec.at(fit_pt_vec.size()-i-1).y - fit_pt_vec.back().y;
-      //p.z += fit_pt_vec.at(fit_pt_vec.size()-i-1).z - fit_pt_vec.back().z;
       p.x += fit_pt_vec.at(fit_pt_vec.size()-i-1).x - fit_pt_vec.at(fit_pt_vec.size()-start).x;
       p.y += fit_pt_vec.at(fit_pt_vec.size()-i-1).y - fit_pt_vec.at(fit_pt_vec.size()-start).y;
       p.z += fit_pt_vec.at(fit_pt_vec.size()-i-1).z - fit_pt_vec.at(fit_pt_vec.size()-start).z;

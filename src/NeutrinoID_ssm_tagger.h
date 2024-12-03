@@ -419,8 +419,8 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
     bool sg_flag_vtx_activity = false;
     if( (sg_length <= 34 && sg_length >= 1 && abs(sg->get_particle_type())==13) || (sg_direct_length > 0.9 * sg_length && sg_length <= 32 && sg_length >= 1 && abs(sg->get_particle_type())==11)){
     //veto stuff we still dont want
-      if(sg_length<1) {std::cout<<"\n too short"<<std::endl; continue;}//prviously was 5
-      if(sg->get_medium_dQ_dx()/(43e3/units::cm)<0.95){ std::cout<<"\n bad dq/dx"<<std::endl; continue;}//make more conservative?, prviously was 1
+      if(sg_length<1) {std::cout<<"\n too short"<<std::endl; continue;}//previously was 5
+      if(sg->get_medium_dQ_dx()/(43e3/units::cm)<0.95){ std::cout<<"\n bad dq/dx"<<std::endl; continue;}//previously was 1
       Nsm+=1;
 
       //make the d dq/dx vector
@@ -461,7 +461,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
       if(start<0) {start=0;}
       if(start_3<0) {start_3=0;}
       for (int point = start; point<vec_d_dq_dx.size(); point++){
-        if(abs(vec_d_dq_dx.at(point))>0.7 && abs(vec_d_dq_dx.at(point))>max_d_dq_dx_bck_5){
+        if(abs(vec_d_dq_dx.at(point))>0.7 && abs(vec_d_dq_dx.at(point))>sg_max_d_dq_dx_bck_5){
           vtx_activity_bck = true;
           sg_max_d_dq_dx_bck_5 = abs(vec_d_dq_dx.at(point));
         }
@@ -475,7 +475,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
         if(sg_max_d_dq_dx_fwd_5<1.0) vtx_activity_fwd = false;
         if(sg_max_d_dq_dx_bck_5<1.0) vtx_activity_bck = false;
         if(!vtx_activity_bck && !vtx_activity_fwd){
-          if(sg_max_d_dq_dx_fwd_5>sg_max_d_dq_dx_bck_5){
+          if(sg_max_d_dq_dx_fwd_5>=sg_max_d_dq_dx_bck_5){
             vtx_activity_fwd = true;
             vtx_activity_bck = false;
           }else{
@@ -497,7 +497,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
           if(sg_max_d_dq_dx_fwd_5<1.3) vtx_activity_fwd = false;
           if(sg_max_d_dq_dx_bck_5<1.3) vtx_activity_bck = false;
           if(!vtx_activity_bck && !vtx_activity_fwd){
-            if(sg_max_d_dq_dx_fwd_5>sg_max_d_dq_dx_bck_5){
+            if(sg_max_d_dq_dx_fwd_5>=sg_max_d_dq_dx_bck_5){
               vtx_activity_fwd = true;
               vtx_activity_bck = false;
             }else{
@@ -505,7 +505,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
               vtx_activity_bck = true;
             }
           }else if(vtx_activity_bck && vtx_activity_fwd){
-            if(sg_max_d_dq_dx_fwd_5>sg_max_d_dq_dx_bck_5){
+            if(sg_max_d_dq_dx_fwd_5>=sg_max_d_dq_dx_bck_5){
               vtx_activity_fwd = true;
               vtx_activity_bck = false;
             }else{
@@ -644,7 +644,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
   if(start<0){start=0;}
   for (int point = start; point<vec_d_dq_dx.size(); point++){
     if(fabs(vec_d_dq_dx.at(point))>0.7){
-      if(bck_vtx_activity==false){break_point_bck = point; bck_vtx_activity = true;}
+      if(bck_vtx_activity==false){break_point_bck = point+1; bck_vtx_activity = true;}
     }
   }
 
@@ -743,10 +743,10 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
   medium_dq_dx = ssm_sg->get_medium_dQ_dx()/(43e3/units::cm);
   medium_dq_dx_bp = medium_dq_dx;
   if(dir==1 && vtx_activity == true){medium_dq_dx_bp = ssm_sg->get_medium_dQ_dx(break_point,ssm_sg->get_dQ_vec().size())/(43e3/units::cm);}
-  else if(vtx_activity == true){medium_dq_dx_bp = ssm_sg->get_medium_dQ_dx(0,ssm_sg->get_dQ_vec().size()-break_point)/(43e3/units::cm);}
+  else if(vtx_activity == true){medium_dq_dx_bp = ssm_sg->get_medium_dQ_dx(0,break_point)/(43e3/units::cm);}
 
   //catch and fix cases where we have a large d(dq/dx) for all points
-  if(break_point==vec_d_dq_dx.size()){
+  if( (break_point==vec_d_dq_dx.size() && dir==1 && vtx_activity) || (break_point==0 && dir==-1 && vtx_activity) ){
     reduced_muon_length = length;
     score_mu_fwd_bp = score_mu_fwd;
     score_p_fwd_bp = score_p_fwd;
@@ -789,7 +789,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
   TVector3 mom_daught_shw1(0,0,0);
   TVector3 mom_daught_shw2(0,0,0);
 
-  //add another loop to fill the prim and duaghter stuff
+  //loop to fill the prim and daughter stuff
   for (auto it = map_vertex_segments[main_vertex].begin(); it!= map_vertex_segments[main_vertex].end(); it++){
     WCPPID::ProtoSegment *sg = *it;
     if(sg==ssm_sg) continue;
@@ -832,7 +832,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
     double sg_kine_energy_range = sg->cal_kine_range();
     std::vector<double> sg_kine_energy_range_pdg = calc_kine_range_multi_pdg(sg_length);
     TVector3 sg_dir = sg->cal_dir_3vector();
-    //track with vertex at the muon butt vertex
+    //track at the origional vertex
     if (!sg->get_flag_shower()){
       if(sg_length<length_prim_track2) continue;
       int sg_add_daught_track_counts_1 = calculate_num_daughter_tracks(main_vertex, sg, false, 1*units::cm).first-1;
@@ -912,7 +912,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
         add_daught_all_counts_11_prim_track1 = sg_add_daught_all_counts_11;
       }
     }
-    else{//shower at the muon butt vertex
+    else{//shower at the origional vertex
       if(sg_length<length_prim_shw2) continue;
       int sg_add_daught_track_counts_1 = calculate_num_daughter_tracks(main_vertex, sg, false, 1*units::cm).first;//not a track, don't subtract
       if(sg_add_daught_track_counts_1<0) sg_add_daught_track_counts_1=0;
@@ -1005,7 +1005,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
     }
   }
 
-  //loop the vertex corresponding to the muon butt
+  //loop the vertex corresponding to what was the origional muon butt vertex
   WCPPID::ProtoVertex* second_vtx = find_other_vertex(ssm_sg,main_vertex);
   for (auto it = map_vertex_segments[second_vtx].begin(); it!= map_vertex_segments[second_vtx].end(); it++){
     WCPPID::ProtoSegment *sg = *it;
@@ -1049,7 +1049,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
     double sg_kine_energy_range = sg->cal_kine_range();
     std::vector<double> sg_kine_energy_range_pdg = calc_kine_range_multi_pdg(sg_length);
     TVector3 sg_dir = sg->cal_dir_3vector();
-    //track with vertex at the muon butt vertex
+    //track at the muon butt vertex
     if (!sg->get_flag_shower()){
       if(sg_length<length_daught_track2) continue;
       int sg_add_daught_track_counts_1 = calculate_num_daughter_tracks(second_vtx, sg, false, 1*units::cm).first-1;
@@ -1222,6 +1222,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
     }
   }
 
+  //need a check on direction of the other particles?
   if(length_prim_track1>0){
     std::vector<double> scores_prim_track1 = get_scores(prim_track1_sg);
     score_mu_fwd_prim_track1 = scores_prim_track1.at(0);
@@ -1230,6 +1231,11 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
     score_mu_bck_prim_track1 = scores_prim_track1.at(3);
     score_p_bck_prim_track1 = scores_prim_track1.at(4);
     score_e_bck_prim_track1 = scores_prim_track1.at(5);
+    if(prim_track1_sg->get_flag_dir()==-1){
+      std::swap(score_mu_fwd_prim_track1,score_mu_bck_prim_track1);
+      std::swap(score_p_fwd_prim_track1,score_p_bck_prim_track1);
+      std::swap(score_e_fwd_prim_track1,score_e_bck_prim_track1);
+    }
   }
   if(length_prim_track2>0){
     std::vector<double> scores_prim_track2 = get_scores(prim_track2_sg);
@@ -1239,6 +1245,11 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
     score_mu_bck_prim_track2 = scores_prim_track2.at(3);
     score_p_bck_prim_track2 = scores_prim_track2.at(4);
     score_e_bck_prim_track2 = scores_prim_track2.at(5);
+    if(prim_track2_sg->get_flag_dir()==-1){
+      std::swap(score_mu_fwd_prim_track2,score_mu_bck_prim_track2);
+      std::swap(score_p_fwd_prim_track2,score_p_bck_prim_track2);
+      std::swap(score_e_fwd_prim_track2,score_e_bck_prim_track2);
+    }
   }
   if(length_daught_track1>0){
     std::vector<double> scores_daught_track1 = get_scores(daught_track1_sg);
@@ -1248,6 +1259,11 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
     score_mu_bck_daught_track1 = scores_daught_track1.at(3);
     score_p_bck_daught_track1 = scores_daught_track1.at(4);
     score_e_bck_daught_track1 = scores_daught_track1.at(5);
+    if(daught_track1_sg->get_flag_dir()==-1){
+      std::swap(score_mu_fwd_daught_track1,score_mu_bck_daught_track1);
+      std::swap(score_p_fwd_daught_track1,score_p_bck_daught_track1);
+      std::swap(score_e_fwd_daught_track1,score_e_bck_daught_track1);
+    }
   }
   if(length_daught_track2>0){
     std::vector<double> scores_daught_track2 = get_scores(daught_track2_sg);
@@ -1257,6 +1273,11 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
     score_mu_bck_daught_track2 = scores_daught_track2.at(3);
     score_p_bck_daught_track2 = scores_daught_track2.at(4);
     score_e_bck_daught_track2 = scores_daught_track2.at(5);
+    if(daught_track2_sg->get_flag_dir()==-1){
+      std::swap(score_mu_fwd_daught_track2,score_mu_bck_daught_track2);
+      std::swap(score_p_fwd_daught_track2,score_p_bck_daught_track2);
+      std::swap(score_e_fwd_daught_track2,score_e_bck_daught_track2);
+    }
   }
   if(length_prim_shw1>0){
     std::vector<double> scores_prim_shw1 = get_scores(prim_shw1_sg);
@@ -1266,6 +1287,11 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
     score_mu_bck_prim_shw1 = scores_prim_shw1.at(3);
     score_p_bck_prim_shw1 = scores_prim_shw1.at(4);
     score_e_bck_prim_shw1 = scores_prim_shw1.at(5);
+    if(prim_shw1_sg->get_flag_dir()==-1){
+      std::swap(score_mu_fwd_prim_shw1,score_mu_bck_prim_shw1);
+      std::swap(score_p_fwd_prim_shw1,score_p_bck_prim_shw1);
+      std::swap(score_e_fwd_prim_shw1,score_e_bck_prim_shw1);
+    }
   }
   if(length_prim_shw2>0){
     std::vector<double> scores_prim_shw2 = get_scores(prim_shw2_sg);
@@ -1275,6 +1301,11 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
     score_mu_bck_prim_shw2 = scores_prim_shw2.at(3);
     score_p_bck_prim_shw2 = scores_prim_shw2.at(4);
     score_e_bck_prim_shw2 = scores_prim_shw2.at(5);
+    if(prim_shw2_sg->get_flag_dir()==-1){
+      std::swap(score_mu_fwd_prim_shw2,score_mu_bck_prim_shw2);
+      std::swap(score_p_fwd_prim_shw2,score_p_bck_prim_shw2);
+      std::swap(score_e_fwd_prim_shw2,score_e_bck_prim_shw2);
+    }
   }
   if(length_daught_shw1>0){
     std::vector<double> scores_daught_shw1 = get_scores(daught_shw1_sg);
@@ -1284,6 +1315,11 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
     score_mu_bck_daught_shw1 = scores_daught_shw1.at(3);
     score_p_bck_daught_shw1 = scores_daught_shw1.at(4);
     score_e_bck_daught_shw1 = scores_daught_shw1.at(5);
+    if(daught_shw1_sg->get_flag_dir()==-1){
+      std::swap(score_mu_fwd_daught_shw1,score_mu_bck_daught_shw1);
+      std::swap(score_p_fwd_daught_shw1,score_p_bck_daught_shw1);
+      std::swap(score_e_fwd_daught_shw1,score_e_bck_daught_shw1);
+    }
   }
   if(length_daught_shw2>0){
     std::vector<double> scores_daught_shw2 = get_scores(daught_shw2_sg);
@@ -1293,10 +1329,15 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
     score_mu_bck_daught_shw2 = scores_daught_shw2.at(3);
     score_p_bck_daught_shw2 = scores_daught_shw2.at(4);
     score_e_bck_daught_shw2 = scores_daught_shw2.at(5);
+    if(daught_shw2_sg->get_flag_dir()==-1){
+      std::swap(score_mu_fwd_daught_shw2,score_mu_bck_daught_shw2);
+      std::swap(score_p_fwd_daught_shw2,score_p_bck_daught_shw2);
+      std::swap(score_e_fwd_daught_shw2,score_e_bck_daught_shw2);
+    }
   }
 
     //figure our condition needed to swap, for now just daught and prim if muon is backwards
-    //will be more complex if we look for off vertex stuff, here fwd/bckg may als switch if the muon in non-prim
+    //will be more complex if we look for off vertex stuff, here fwd/bckg may also switch if the muon in non-prim
   if(backwards_muon){
 
     std::swap(n_prim_all_1, n_daughter_all_1);
@@ -1530,14 +1571,8 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
   for (auto it = map_segment_vertices.begin(); it!= map_segment_vertices.end(); it++){
     WCPPID::ProtoSegment *sg = it->first;
     if( (map_vertex_segments[ssm_main_vtx].find(sg) != map_vertex_segments[ssm_main_vtx].end()) || (map_vertex_segments[ssm_second_vtx].find(sg) != map_vertex_segments[ssm_second_vtx].end()) ){
-    // not connected to either vertex and not in the same cluster
      continue; 
     }
-    //auto it_shower = map_segment_in_shower.find(sg);
-    //if (it_shower!=map_segment_in_shower.end()){
-    //  WCPPID::WCShower *shower = it_shower->second;
-    //  if (pi0_showers.find(shower)!=pi0_showers.end()){ continue; }//in a pi0, will be accounted for later
-    //}
 
     double sg_length = sg->get_length()/units::cm;
     double sg_pdg = abs(sg->get_particle_type());
@@ -1603,6 +1638,11 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
         score_e_bck_offvtx_track1 = scores_offvtx_track1.at(5);
 	dist_mainvtx_offvtx_track1 = sep_dist;
         offvtx_track1_sg = sg;
+        if(offvtx_track1_sg->get_flag_dir()==-1){
+          std::swap(score_mu_fwd_offvtx_track1,score_mu_bck_offvtx_track1);
+          std::swap(score_p_fwd_offvtx_track1,score_p_bck_offvtx_track1);
+          std::swap(score_e_fwd_offvtx_track1,score_e_bck_offvtx_track1);
+        }
     }
     else if(sg_length>length_offvtx_shw1 && (sg_pdg==22 || sg_pdg==11) ){//this is the longest off vertex shower
         length_offvtx_shw1 = sg_length;
@@ -1632,6 +1672,11 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
         score_e_bck_offvtx_shw1 = scores_offvtx_shw1.at(5);
         dist_mainvtx_offvtx_shw1 = sep_dist;
 	offvtx_shw1_sg = sg;
+        if(offvtx_shw1_sg->get_flag_dir()==-1){
+          std::swap(score_mu_fwd_offvtx_shw1,score_mu_bck_offvtx_shw1);
+          std::swap(score_p_fwd_offvtx_shw1,score_p_bck_offvtx_shw1);
+          std::swap(score_e_fwd_offvtx_shw1,score_e_bck_offvtx_shw1);
+        }
     }
 
   }
@@ -2242,6 +2287,7 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
   return true;
 };
 
+
 std::vector<double> WCPPID::NeutrinoID::get_scores(WCPPID::ProtoSegment *sg){
 
   std::vector<WCP::Point >& fit_pt_vec =  sg->get_point_vec();
@@ -2264,7 +2310,7 @@ std::vector<double> WCPPID::NeutrinoID::get_scores(WCPPID::ProtoSegment *sg){
     if (i+1 < size)
       dis += sqrt(pow(fit_pt_vec.at(i+1).x-fit_pt_vec.at(i).x,2) + pow(fit_pt_vec.at(i+1).y-fit_pt_vec.at(i).y,2) + pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
   }
-  // get reverse  vector for L
+  // get reverse vector for L
   for (size_t i=0;i!=L.size();i++){
     rL.at(i) = L.back() - L.at(L.size()-1-i);
   }
@@ -2284,6 +2330,44 @@ std::vector<double> WCPPID::NeutrinoID::get_scores(WCPPID::ProtoSegment *sg){
   return result;
 
 }
+
+
+std::vector<double> WCPPID::NeutrinoID::get_scores(WCPPID::ProtoSegment *sg, int break_point, int dir){
+
+  std::vector<WCP::Point >& fit_pt_vec =  sg->get_point_vec();
+  std::vector<double>& vec_dQ = sg->get_dQ_vec();
+  std::vector<double>& vec_dx = sg->get_dx_vec();
+
+  int size = fit_pt_vec.size()-break_point;
+  int start = break_point;
+  if(dir==-1){size=break_point; start=0;}
+
+  std::vector<double> L(size,0);
+  std::vector<double> dQ_dx(size,0);
+  std::vector<double> rL(size,0);
+  std::vector<double> rdQ_dx(size,0);
+
+  std::cout<<std::endl;
+  double dis = 0;
+    for (int i = start; i<start+size; i++){
+      double dq_dx = vec_dQ.at(i)/(vec_dx.at(i)/units::cm+1e-9);
+      dQ_dx.at(i-start) = dq_dx;
+      rdQ_dx.at(size-1-i+start) = dq_dx;
+      L.at(i-start) = dis;
+      if (i+1 < size+start)
+        dis += sqrt(pow(fit_pt_vec.at(i+1).x-fit_pt_vec.at(i).x,2) + pow(fit_pt_vec.at(i+1).y-fit_pt_vec.at(i).y,2) + pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
+    }
+    for (size_t i=0;i<L.size();i++){
+        rL.at(i) = L.back() - L.at(L.size()-1-i);
+    }
+
+  std::vector<double> result = sg->do_track_comp(L, dQ_dx, 15*units::cm);
+  if(dir==-1){result = sg->do_track_comp(rL, rdQ_dx, 15*units::cm);}
+
+  return result;
+
+}
+
 
 void WCPPID::NeutrinoID::fill_ssmsp(WCPPID::ProtoSegment* sg, int pdg, int mother, int dir){
      std::vector<WCP::Point >& vec_pts = sg->get_point_vec();
@@ -2407,6 +2491,7 @@ int WCPPID::NeutrinoID::fill_ssmsp_psuedo(WCPPID::WCShower* daught_shower, int m
      return id;
 }
 
+
 int WCPPID::NeutrinoID::fill_ssmsp_psuedo(WCPPID::WCShower* shower, WCPPID::ProtoSegment* sg, int mother, int acc_id){
 
      tagger_info.ssmsp_Nsp.push_back(2);
@@ -2476,6 +2561,7 @@ int WCPPID::NeutrinoID::fill_ssmsp_psuedo(WCPPID::WCShower* shower, WCPPID::Prot
 
      return id;
 }
+
 
 //potnetially more correct to look at start and end points of segments?
 int WCPPID::NeutrinoID::fill_ssmsp_psuedo(WCPPID::WCShower* daught_shower, WCPPID::ProtoSegment* mother_sg, int acc_id){
@@ -2556,44 +2642,6 @@ int WCPPID::NeutrinoID::fill_ssmsp_psuedo(WCPPID::WCShower* daught_shower, WCPPI
 }
 
 
-std::vector<double> WCPPID::NeutrinoID::get_scores(WCPPID::ProtoSegment *sg, int break_point, int dir){
-
-  std::vector<WCP::Point >& fit_pt_vec =  sg->get_point_vec();
-  std::vector<double>& vec_dQ = sg->get_dQ_vec();
-  std::vector<double>& vec_dx = sg->get_dx_vec();
-
-  int size = fit_pt_vec.size()-break_point;
-  int start = break_point;
-  if(dir==-1){size=break_point; start=0;}
-
-  std::vector<double> L(size,0);
-  std::vector<double> dQ_dx(size,0);
-  std::vector<double> rL(size,0);
-  std::vector<double> rdQ_dx(size,0);
-
-  std::cout<<std::endl;
-  double dis = 0;
-    for (int i = start; i<start+size; i++){
-      double dq_dx = vec_dQ.at(i)/(vec_dx.at(i)/units::cm+1e-9);
-      dQ_dx.at(i-start) = dq_dx;
-      rdQ_dx.at(size-1-i+start) = dq_dx;
-      L.at(i-start) = dis;
-      if (i+1 < size+start)
-        dis += sqrt(pow(fit_pt_vec.at(i+1).x-fit_pt_vec.at(i).x,2) + pow(fit_pt_vec.at(i+1).y-fit_pt_vec.at(i).y,2) + pow(fit_pt_vec.at(i+1).z - fit_pt_vec.at(i).z,2));
-    }
-    for (size_t i=0;i<L.size();i++){
-        rL.at(i) = L.back() - L.at(L.size()-1-i);
-    }
-
-  std::vector<double> result = sg->do_track_comp(L, dQ_dx, 15*units::cm);
-  if(dir==-1){result = sg->do_track_comp(rL, rdQ_dx, 15*units::cm);}
-
-  return result;
-
-}
-
-
-
 std::vector<double> WCPPID::NeutrinoID::calc_kine_range_multi_pdg(double length){
 
   std::vector<double> result;
@@ -2609,6 +2657,7 @@ std::vector<double> WCPPID::NeutrinoID::calc_kine_range_multi_pdg(double length)
 
   return result;
 }
+
 
 double WCPPID::NeutrinoID::calc_kine_range_pdg(double length, int pdg){
 
@@ -2630,6 +2679,7 @@ double WCPPID::NeutrinoID::calc_kine_range_pdg(double length, int pdg){
 
 }
 
+
 int WCPPID::NeutrinoID::get_containing_shower_id(WCPPID::ProtoSegment* seg){
       //check which shower we are in, if any
       int in_shower_id = -1;
@@ -2641,6 +2691,7 @@ int WCPPID::NeutrinoID::get_containing_shower_id(WCPPID::ProtoSegment* seg){
       return in_shower_id;
 }
 
+
 WCPPID::WCShower* WCPPID::NeutrinoID::get_containing_shower(WCPPID::ProtoSegment* seg){
       auto this_seg_in_shower = map_segment_in_shower.find(seg);
       if (this_seg_in_shower!=map_segment_in_shower.end()){
@@ -2649,6 +2700,7 @@ WCPPID::WCShower* WCPPID::NeutrinoID::get_containing_shower(WCPPID::ProtoSegment
       }
       return 0;
 }
+
 
 bool WCPPID::NeutrinoID::exit_ssm_tagger(){
   tagger_info.ssm_dq_dx_fwd_1 = -999;
@@ -2970,7 +3022,6 @@ bool WCPPID::NeutrinoID::exit_ssm_tagger(){
   tagger_info.ssm_vtxX = -999;
   tagger_info.ssm_vtxY = -999;
   tagger_info.ssm_vtxZ = -999;
-
   //off vertex stuff
   tagger_info.ssm_offvtx_length  =  -999;
   tagger_info.ssm_offvtx_energy  =  -999;
@@ -3032,7 +3083,7 @@ bool WCPPID::NeutrinoID::exit_ssm_tagger(){
   // This is a bit of a mess still. To do this really well we may need some additional revision for showers
   if(flag_ssmsp>0){
     std::cout<<std::endl;
-    //std::cout<<"Filling ssm spacepoints"<<std::endl;
+    std::cout<<"Filling ssm spacepoints"<<std::endl;
     std::cout<<std::endl;
     std::cout<<"Main Vertex "<<main_vertex->get_fit_pt().x/units::cm<<" "<<main_vertex->get_fit_pt().y/units::cm<<" "<<main_vertex->get_fit_pt().z/units::cm<<std::endl;
     // Stuff for bookeeping
@@ -3153,6 +3204,7 @@ bool WCPPID::NeutrinoID::exit_ssm_tagger(){
 
 	return false;
 }
+
 
 void WCPPID::NeutrinoID::print_ssm_tagger(){
   std::cout<<std::endl;
@@ -3460,7 +3512,6 @@ void WCPPID::NeutrinoID::print_ssm_tagger(){
   std::cout<<"tagger_info.ssm_daught_shw2_add_daught_all_counts_5: "<<tagger_info.ssm_daught_shw2_add_daught_all_counts_5<<std::endl;
   std::cout<<"tagger_info.ssm_daught_shw2_add_daught_track_counts_11: "<<tagger_info.ssm_daught_shw2_add_daught_track_counts_11<<std::endl;
   std::cout<<"tagger_info.ssm_daught_shw2_add_daught_all_counts_11: "<<tagger_info.ssm_daught_shw2_add_daught_all_counts_11<<std::endl;
-
   //event level properties
   std::cout<<"tagger_info.ssm_nu_angle_z: "<<tagger_info.ssm_nu_angle_z<<std::endl;
   std::cout<<"tagger_info.ssm_nu_angle_target: "<<tagger_info.ssm_nu_angle_target<<std::endl;
@@ -3481,7 +3532,6 @@ void WCPPID::NeutrinoID::print_ssm_tagger(){
   std::cout<<"tagger_info.ssm_vtxX: "<<tagger_info.ssm_vtxX<<std::endl;
   std::cout<<"tagger_info.ssm_vtxY: "<<tagger_info.ssm_vtxY<<std::endl;
   std::cout<<"tagger_info.ssm_vtxZ: "<<tagger_info.ssm_vtxZ<<std::endl;
-
   //off vertex stuff
   std::cout<<"tagger_info.ssm_offvtx_length: " <<tagger_info.ssm_offvtx_length<<std::endl;
   std::cout<<"tagger_info.ssm_offvtx_energy: " <<tagger_info.ssm_offvtx_energy<<std::endl;

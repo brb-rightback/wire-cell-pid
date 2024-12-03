@@ -1774,7 +1774,6 @@ int main(int argc, char* argv[])
       T_tagger->Branch("ssm_prim_track1_length_ratio", &tagger_info.ssm_prim_track1_length_ratio, "ssm_prim_track1_length_ratio/F");
       T_tagger->Branch("ssm_prim_track1_max_dev", &tagger_info.ssm_prim_track1_max_dev, "ssm_prim_track1_max_dev/F");
       T_tagger->Branch("ssm_prim_track1_kine_energy_range", &tagger_info.ssm_prim_track1_kine_energy_range, "ssm_prim_track1_kine_energy_range/F");
-      T_tagger->Branch("ssm_prim_track1_kine_energy_range", &tagger_info.ssm_prim_track1_kine_energy_range, "ssm_prim_track1_kine_energy_range/F");
       T_tagger->Branch("ssm_prim_track1_kine_energy_range_mu", &tagger_info.ssm_prim_track1_kine_energy_range_mu, "ssm_prim_track1_kine_energy_range_mu/F");
       T_tagger->Branch("ssm_prim_track1_kine_energy_range_p", &tagger_info.ssm_prim_track1_kine_energy_range_p, "ssm_prim_track1_kine_energy_range_p/F");
       T_tagger->Branch("ssm_prim_track1_kine_energy_range_e", &tagger_info.ssm_prim_track1_kine_energy_range_e, "ssm_prim_track1_kine_energy_range_e/F");
@@ -1801,7 +1800,6 @@ int main(int argc, char* argv[])
       T_tagger->Branch("ssm_prim_track2_direct_length", &tagger_info.ssm_prim_track2_direct_length, "ssm_prim_track2_direct_length/F");
       T_tagger->Branch("ssm_prim_track2_length_ratio", &tagger_info.ssm_prim_track2_length_ratio, "ssm_prim_track2_length_ratio/F");
       T_tagger->Branch("ssm_prim_track2_max_dev", &tagger_info.ssm_prim_track2_max_dev, "ssm_prim_track2_max_dev/F");
-      T_tagger->Branch("ssm_prim_track2_kine_energy_range", &tagger_info.ssm_prim_track2_kine_energy_range, "ssm_prim_track2_kine_energy_range/F");
       T_tagger->Branch("ssm_prim_track2_kine_energy_range", &tagger_info.ssm_prim_track2_kine_energy_range, "ssm_prim_track2_kine_energy_range/F");
       T_tagger->Branch("ssm_prim_track2_kine_energy_range_mu", &tagger_info.ssm_prim_track2_kine_energy_range_mu, "ssm_prim_track2_kine_energy_range_mu/F");
       T_tagger->Branch("ssm_prim_track2_kine_energy_range_p", &tagger_info.ssm_prim_track2_kine_energy_range_p, "ssm_prim_track2_kine_energy_range_p/F");
@@ -1830,7 +1828,6 @@ int main(int argc, char* argv[])
       T_tagger->Branch("ssm_daught_track1_length_ratio", &tagger_info.ssm_daught_track1_length_ratio, "ssm_daught_track1_length_ratio/F");
       T_tagger->Branch("ssm_daught_track1_max_dev", &tagger_info.ssm_daught_track1_max_dev, "ssm_daught_track1_max_dev/F");
       T_tagger->Branch("ssm_daught_track1_kine_energy_range", &tagger_info.ssm_daught_track1_kine_energy_range, "ssm_daught_track1_kine_energy_range/F");
-      T_tagger->Branch("ssm_daught_track1_kine_energy_range", &tagger_info.ssm_daught_track1_kine_energy_range, "ssm_daught_track1_kine_energy_range/F");
       T_tagger->Branch("ssm_daught_track1_kine_energy_range_mu", &tagger_info.ssm_daught_track1_kine_energy_range_mu, "ssm_daught_track1_kine_energy_range_mu/F");
       T_tagger->Branch("ssm_daught_track1_kine_energy_range_p", &tagger_info.ssm_daught_track1_kine_energy_range_p, "ssm_daught_track1_kine_energy_range_p/F");
       T_tagger->Branch("ssm_daught_track1_kine_energy_range_e", &tagger_info.ssm_daught_track1_kine_energy_range_e, "ssm_daught_track1_kine_energy_range_e/F");
@@ -1858,7 +1855,6 @@ int main(int argc, char* argv[])
       T_tagger->Branch("ssm_daught_track2_length_ratio", &tagger_info.ssm_daught_track2_length_ratio, "ssm_daught_track2_length_ratio/F");
       T_tagger->Branch("ssm_daught_track2_max_dev", &tagger_info.ssm_daught_track2_max_dev, "ssm_daught_track2_max_dev/F");
       T_tagger->Branch("ssm_daught_track2_kine_energy_range", &tagger_info.ssm_daught_track2_kine_energy_range, "ssm_daught_track2_kine_energy_range/F");
-      T_tagger->Branch("ssm_daught_track2_kine_energy_range", &tagger_info.ssm_daught_track2_kine_energy_range, "ssm_daught_track2_kine_energy_range/F");
       T_tagger->Branch("ssm_daught_track2_kine_energy_range_mu", &tagger_info.ssm_daught_track2_kine_energy_range_mu, "ssm_daught_track2_kine_energy_range_mu/F");
       T_tagger->Branch("ssm_daught_track2_kine_energy_range_p", &tagger_info.ssm_daught_track2_kine_energy_range_p, "ssm_daught_track2_kine_energy_range_p/F");
       T_tagger->Branch("ssm_daught_track2_kine_energy_range_e", &tagger_info.ssm_daught_track2_kine_energy_range_e, "ssm_daught_track2_kine_energy_range_e/F");
@@ -1885,7 +1881,6 @@ int main(int argc, char* argv[])
       T_tagger->Branch("ssm_prim_shw1_direct_length", &tagger_info.ssm_prim_shw1_direct_length, "ssm_prim_shw1_direct_length/F");
       T_tagger->Branch("ssm_prim_shw1_length_ratio", &tagger_info.ssm_prim_shw1_length_ratio, "ssm_prim_shw1_length_ratio/F");
       T_tagger->Branch("ssm_prim_shw1_max_dev", &tagger_info.ssm_prim_shw1_max_dev, "ssm_prim_shw1_max_dev/F");
-      T_tagger->Branch("ssm_prim_shw1_kine_energy_range", &tagger_info.ssm_prim_shw1_kine_energy_range, "ssm_prim_shw1_kine_energy_range/F");
       T_tagger->Branch("ssm_prim_shw1_kine_energy_range", &tagger_info.ssm_prim_shw1_kine_energy_range, "ssm_prim_shw1_kine_energy_range/F");
       T_tagger->Branch("ssm_prim_shw1_kine_energy_range_mu", &tagger_info.ssm_prim_shw1_kine_energy_range_mu, "ssm_prim_shw1_kine_energy_range_mu/F");
       T_tagger->Branch("ssm_prim_shw1_kine_energy_range_p", &tagger_info.ssm_prim_shw1_kine_energy_range_p, "ssm_prim_shw1_kine_energy_range_p/F");
@@ -1915,7 +1910,6 @@ int main(int argc, char* argv[])
       T_tagger->Branch("ssm_prim_shw2_length_ratio", &tagger_info.ssm_prim_shw2_length_ratio, "ssm_prim_shw2_length_ratio/F");
       T_tagger->Branch("ssm_prim_shw2_max_dev", &tagger_info.ssm_prim_shw2_max_dev, "ssm_prim_shw2_max_dev/F");
       T_tagger->Branch("ssm_prim_shw2_kine_energy_range", &tagger_info.ssm_prim_shw2_kine_energy_range, "ssm_prim_shw2_kine_energy_range/F");
-      T_tagger->Branch("ssm_prim_shw2_kine_energy_range", &tagger_info.ssm_prim_shw2_kine_energy_range, "ssm_prim_shw2_kine_energy_range/F");
       T_tagger->Branch("ssm_prim_shw2_kine_energy_range_mu", &tagger_info.ssm_prim_shw2_kine_energy_range_mu, "ssm_prim_shw2_kine_energy_range_mu/F");
       T_tagger->Branch("ssm_prim_shw2_kine_energy_range_p", &tagger_info.ssm_prim_shw2_kine_energy_range_p, "ssm_prim_shw2_kine_energy_range_p/F");
       T_tagger->Branch("ssm_prim_shw2_kine_energy_range_e", &tagger_info.ssm_prim_shw2_kine_energy_range_e, "ssm_prim_shw2_kine_energy_range_e/F");
@@ -1943,7 +1937,6 @@ int main(int argc, char* argv[])
       T_tagger->Branch("ssm_daught_shw1_direct_length", &tagger_info.ssm_daught_shw1_direct_length, "ssm_daught_shw1_direct_length/F");
       T_tagger->Branch("ssm_daught_shw1_length_ratio", &tagger_info.ssm_daught_shw1_length_ratio, "ssm_daught_shw1_length_ratio/F");
       T_tagger->Branch("ssm_daught_shw1_max_dev", &tagger_info.ssm_daught_shw1_max_dev, "ssm_daught_shw1_max_dev/F");
-      T_tagger->Branch("ssm_daught_shw1_kine_energy_range", &tagger_info.ssm_daught_shw1_kine_energy_range, "ssm_daught_shw1_kine_energy_range/F");
       T_tagger->Branch("ssm_daught_shw1_kine_energy_range", &tagger_info.ssm_daught_shw1_kine_energy_range, "ssm_daught_shw1_kine_energy_range/F");
       T_tagger->Branch("ssm_daught_shw1_kine_energy_range_mu", &tagger_info.ssm_daught_shw1_kine_energy_range_mu, "ssm_daught_shw1_kine_energy_range_mu/F");
       T_tagger->Branch("ssm_daught_shw1_kine_energy_range_p", &tagger_info.ssm_daught_shw1_kine_energy_range_p, "ssm_daught_shw1_kine_energy_range_p/F");
