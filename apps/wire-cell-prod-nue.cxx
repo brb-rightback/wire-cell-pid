@@ -27,8 +27,6 @@ int main(int argc, char* argv[])
   }
   TH1::AddDirectory(kFALSE);
 
-  std::cout<<"test test test"<<std::endl;
-
   bool flag_debug_output = true; // output
   int datatier = 0; // data=0, overlay=1, full mc=2
   int flag_calib_corr = 1;
@@ -234,10 +232,14 @@ int main(int argc, char* argv[])
   bool match_isFC = false;
   TTree *T_eval = (TTree*)file->Get("T_eval");
   Int_t temp_run_no, temp_subrun_no, temp_event_no;
+  float lm_cluster_length = -999;
   T_eval->SetBranchAddress("match_isFC",&match_isFC);
   T_eval->SetBranchAddress("run",&temp_run_no);
   T_eval->SetBranchAddress("subrun",&temp_subrun_no);
   T_eval->SetBranchAddress("event",&temp_event_no);
+  if(T_eval->GetBranch("lm_cluster_length")){
+    T_eval->SetBranchAddress("lm_cluster_length",&lm_cluster_length);
+  }
   for (Int_t i = 0; i!= T_eval->GetEntries();i++){
     T_eval->GetEntry(i);
     if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) {
@@ -2058,7 +2060,6 @@ int main(int argc, char* argv[])
       T_tagger->Branch("ssm_offvtx_shw1_y_dir",&tagger_info.ssm_offvtx_shw1_y_dir,"ssm_offvtx_shw1_y_dir/F");
       T_tagger->Branch("ssm_offvtx_shw1_z_dir",&tagger_info.ssm_offvtx_shw1_z_dir,"ssm_offvtx_shw1_z_dir/F");
       T_tagger->Branch("ssm_offvtx_shw1_dist_mainvtx",&tagger_info.ssm_offvtx_shw1_dist_mainvtx,"ssm_offvtx_shw1_dist_mainvtx/F");
-
       // Sapcepoints
       T_tagger->Branch("ssmsp_Ntrack", &tagger_info.ssmsp_Ntrack, "ssmsp_Ntrack/I");
       T_tagger->Branch("ssmsp_Nsp", &tagger_info.ssmsp_Nsp);
@@ -2075,6 +2076,27 @@ int main(int argc, char* argv[])
       T_tagger->Branch("ssmsp_containing_shower_id", &tagger_info.ssmsp_containing_shower_id);
       T_tagger->Branch("ssmsp_containing_shower_ke", &tagger_info.ssmsp_containing_shower_ke);
       T_tagger->Branch("ssmsp_containing_shower_flag", &tagger_info.ssmsp_containing_shower_flag);
+      // Also add the kine vars to the KDAR BDT tagger
+      WCPPID::KineInfo ssm_kine_tree;
+      ssm_kine_tree.kine_pio_flag = 0;
+      T_tagger->Branch("ssm_kine_reco_Enu",&ssm_kine_tree.kine_reco_Enu,"ssm_kine_reco_Enu/F");
+      T_tagger->Branch("ssm_kine_reco_add_energy",&ssm_kine_tree.kine_reco_add_energy,"ssm_kine_reco_add_energy/F");
+      T_tagger->Branch("ssm_kine_energy_particle",&ssm_kine_tree.kine_energy_particle);
+      T_tagger->Branch("ssm_kine_energy_info",&ssm_kine_tree.kine_energy_info);
+      T_tagger->Branch("ssm_kine_particle_type",&ssm_kine_tree.kine_particle_type);
+      T_tagger->Branch("ssm_kine_energy_included",&ssm_kine_tree.kine_energy_included);
+      T_tagger->Branch("ssm_kine_pio_mass",&ssm_kine_tree.kine_pio_mass,"ssm_kine_pio_mass/F");
+      T_tagger->Branch("ssm_kine_pio_flag",&ssm_kine_tree.kine_pio_flag,"ssm_kine_pio_flag/I");
+      T_tagger->Branch("ssm_kine_pio_vtx_dis",&ssm_kine_tree.kine_pio_vtx_dis,"ssm_kine_pio_vtx_dis/F");
+      T_tagger->Branch("ssm_kine_pio_energy_1",&ssm_kine_tree.kine_pio_energy_1,"ssm_kine_pio_energy_1/F");
+      T_tagger->Branch("ssm_kine_pio_theta_1",&ssm_kine_tree.kine_pio_theta_1,"ssm_kine_pio_theta_1/F");
+      T_tagger->Branch("ssm_kine_pio_phi_1",&ssm_kine_tree.kine_pio_phi_1,"ssm_kine_pio_phi_1/F");
+      T_tagger->Branch("ssm_kine_pio_dis_1",&ssm_kine_tree.kine_pio_dis_1,"ssm_kine_pio_dis_1/F");
+      T_tagger->Branch("ssm_kine_pio_energy_2",&ssm_kine_tree.kine_pio_energy_2,"ssm_kine_pio_energy_2/F");
+      T_tagger->Branch("ssm_kine_pio_theta_2",&ssm_kine_tree.kine_pio_theta_2,"ssm_kine_pio_theta_2/F");
+      T_tagger->Branch("ssm_kine_pio_phi_2",&ssm_kine_tree.kine_pio_phi_2,"ssm_kine_pio_phi_2/F");
+      T_tagger->Branch("ssm_kine_pio_dis_2",&ssm_kine_tree.kine_pio_dis_2,"ssm_kine_pio_dis_2/F");
+      T_tagger->Branch("ssm_kine_pio_angle",&ssm_kine_tree.kine_pio_angle,"ssm_kine_pio_angle/F");
 
     //single photon shower
     T_tagger->Branch("shw_sp_flag",&tagger_info.shw_sp_flag,"shw_sp_flag/F");
@@ -2864,7 +2886,6 @@ int main(int argc, char* argv[])
     T_tagger->Branch("cosmict_10_length",&tagger_info.cosmict_10_length);
 
     T_tagger->Branch("numu_cc_flag",&tagger_info.numu_cc_flag,"numu_cc_flag/F");
-
     T_tagger->Branch("numu_cc_flag_1",&tagger_info.numu_cc_flag_1);
     T_tagger->Branch("numu_cc_1_particle_type",&tagger_info.numu_cc_1_particle_type);
     T_tagger->Branch("numu_cc_1_length",&tagger_info.numu_cc_1_length);
@@ -2950,7 +2971,6 @@ int main(int argc, char* argv[])
 
       auto it1 = map_vertex_segments.find(nu_vtx);
       Point vertex_point;
-
       if (it1 != map_vertex_segments.end() && it1->second.size()>0){
 	WCPPID::ProtoSegment *sg = *map_vertex_segments[nu_vtx].begin();
 	if (nu_vtx->get_wcpt().index == sg->get_wcpt_vec().front().index){
@@ -2967,6 +2987,13 @@ int main(int argc, char* argv[])
       tagger_info = neutrino_vec.at(i)->tagger_info;
 
       //      std::cout << tagger_info.cosmic_flag << " " << neutrino_vec.at(i)->tagger_info.cosmic_flag << std::endl;
+
+      ssm_kine_tree = neutrino_vec.at(i)->get_kine_info();
+
+      //Set numu_cc_flag to -2 if we pass KDAR gensel, but not regular gensel
+      float temp_flag = tagger_info.numu_cc_flag;
+      if(lm_cluster_length>1 && lm_cluster_length<10){tagger_info.numu_cc_flag=-2;}
+      std::cout<<"Updating numu flag: lm_cluster_length "<<lm_cluster_length<<" New "<<tagger_info.numu_cc_flag<<" Origional "<<temp_flag<<std::endl;
 
       T_tagger->Fill();
     }
@@ -3064,8 +3091,6 @@ int main(int argc, char* argv[])
   std::cout<<std::endl;
   TMC->Fill();
   T_kine->Fill();
-
-
 
 
 

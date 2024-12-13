@@ -606,6 +606,27 @@ namespace WCPPID{
   std::vector<float> ssmsp_containing_shower_ke;
   std::vector<float> ssmsp_containing_shower_flag;
 
+
+  //Kine vars
+  float ssm_kine_reco_Enu; // kinetic energy  + additional energy ...
+  float ssm_kine_reco_add_energy;  // mass, binding energy ...
+  std::vector<float> ssm_kine_energy_particle;  // energy of each particle
+  std::vector<int> ssm_kine_energy_info; // what kind of energy reconstruction?
+  std::vector<int> ssm_kine_particle_type;
+  std::vector<int> ssm_kine_energy_included; // included in the neutrino energy calculation?
+  float ssm_kine_pio_mass; // mass
+  int ssm_kine_pio_flag; // 0 not filled, 1, with vertex, 2 without vertex
+  float ssm_kine_pio_vtx_dis;
+  float ssm_kine_pio_energy_1;
+  float ssm_kine_pio_theta_1;
+  float ssm_kine_pio_phi_1;
+  float ssm_kine_pio_dis_1;
+  float ssm_kine_pio_energy_2;
+  float ssm_kine_pio_theta_2;
+  float ssm_kine_pio_phi_2;
+  float ssm_kine_pio_dis_2;
+  float ssm_kine_pio_angle;
+
     //single photon shower id
     float shw_sp_flag;
     float shw_sp_filled;

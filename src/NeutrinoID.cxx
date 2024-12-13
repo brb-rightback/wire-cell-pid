@@ -2533,10 +2533,24 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.ssm_offvtx_shw1_y_dir  =  -999;
   tagger_info.ssm_offvtx_shw1_z_dir  =  -999;
   tagger_info.ssm_offvtx_shw1_dist_mainvtx  =  -999;
-
   // Spacepoints
   tagger_info.ssmsp_Ntrack = 0;
   tagger_info.ssmsp_Nsp_tot = 0;
+  // Kine vars
+  tagger_info.ssm_kine_reco_Enu = -999; // kinetic energy  + additional energy ...
+  tagger_info.ssm_kine_reco_add_energy = -999;  // mass, binding energy ...
+  tagger_info.ssm_kine_pio_mass = -999; // mass
+  tagger_info.ssm_kine_pio_flag = -999; // 0 not filled, 1, with vertex, 2 without vertex
+  tagger_info.ssm_kine_pio_vtx_dis = -999;
+  tagger_info.ssm_kine_pio_energy_1 = -999;
+  tagger_info.ssm_kine_pio_theta_1 = -999;
+  tagger_info.ssm_kine_pio_phi_1 = -999;
+  tagger_info.ssm_kine_pio_dis_1 = -999;
+  tagger_info.ssm_kine_pio_energy_2 = -999;
+  tagger_info.ssm_kine_pio_theta_2 = -999;
+  tagger_info.ssm_kine_pio_phi_2 = -999;
+  tagger_info.ssm_kine_pio_dis_2 = -999;
+  tagger_info.ssm_kine_pio_angle = -999;
 
   // single photon shower identification
   tagger_info.shw_sp_flag = true;

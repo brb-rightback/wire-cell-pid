@@ -101,6 +101,60 @@ int main(int argc, char* argv[])
   TFile *file = new TFile(filename);
   TTree *Trun = (TTree*)file->Get("Trun");
 
+  bool image_fail=false;
+  TTree* T_eval = (TTree*)file->Get("T_eval");
+  if(T_eval->GetBranch("image_fail")){
+    T_eval->SetBranchAddress("image_fail",&image_fail);
+  }
+  T_eval->GetEntry(entry_no);
+  //imaging failed, create a minimal dummy file for the next step
+  if(image_fail==true){
+    double eventTime;
+    int run_no, subrun_no, event_no;
+    Trun->SetBranchAddress("eventNo",&event_no);
+    Trun->SetBranchAddress("runNo",&run_no);
+    Trun->SetBranchAddress("subRunNo",&subrun_no);
+    Trun->GetEntry(entry_no);
+    std::cout<<"Creating dummy file for entry "<<entry_no<<" run "<<run_no<<" subrun "<<subrun_no<<" event "<<event_no<<std::endl;
+    TFile *file1 = new TFile(Form("stm_%d_%d_%d.root",run_no,subrun_no,event_no),"RECREATE");
+    TTree *Trun1 = new TTree("Trun","Trun");
+    Trun1->SetDirectory(file1);
+    int time_offset=-1;
+    int triggerbits=-1;
+    Trun1->Branch("eventNo",&event_no,"eventNo/I");
+    Trun1->Branch("runNo",&run_no,"runNo/I");
+    Trun1->Branch("subRunNo",&subrun_no,"subRunNo/I");
+    Trun1->Branch("triggerBits",&triggerbits,"triggerBits/i");
+    Trun1->Branch("time_offset",&time_offset,"time_offset/I");
+    Trun1->Fill();
+
+    TTree *T_match1 = new TTree("T_match","T_match");
+    T_match1->SetDirectory(file1);
+    Int_t ncluster=0;
+    Int_t flash_id=-1;
+    Int_t event_type=-1;
+    Double_t flash_time=-999;
+    Double_t cluster_length=-999;
+    T_match1->Branch("tpc_cluster_id",&ncluster,"tpc_cluster_id/I");
+    T_match1->Branch("flash_id",&flash_id,"flash_id/I");
+    T_match1->Branch("event_type",&event_type,"event_type/I");
+    T_match1->Branch("flash_time",&flash_time,"flash_time/D");
+    T_match1->Branch("cluster_length",&cluster_length,"cluster_length/D");
+    T_match1->Fill();
+
+    TTree *T_eval1 = new TTree("T_eval","T_eval");
+    T_eval1->SetDirectory(file1);
+    Float_t lm_cluster_length=-999;
+    T_eval1->Branch("image_fail",&image_fail,"image_fail/O");
+    T_eval1->Branch("lm_cluster_length",&lm_cluster_length,"lm_cluster_length/F");
+    T_eval1->Fill();
+
+    file1->Write();
+    file1->Close();
+
+    return 0;
+  }
+
   if (entry_no >=Trun->GetEntries()) return 0;
   double eventTime;
   int run_no, subrun_no, event_no;
@@ -261,7 +315,7 @@ int main(int argc, char* argv[])
   std::map<std::pair<int, int>, std::tuple<int, double, double, int> > map_flash_tpc_pair_type; // type, ks, chi2, ndf
   
   OpflashSelection flashes;
-  
+std::cout<<"Flashes"<<std::endl; 
   for (int i=0;i!=T_flash->GetEntries();i++){
     T_flash->GetEntry(i);
     if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
@@ -276,7 +330,7 @@ int main(int argc, char* argv[])
   }
 
 
-  
+  std::cout<<"Matches"<<std::endl;
   for (int i=0;i!=T_match->GetEntries();i++){
     T_match->GetEntry(i);
     if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
@@ -374,7 +428,7 @@ int main(int argc, char* argv[])
   WCPPID::PR3DCluster *cluster;
   std::map<WCPPID::PR3DCluster*, int> map_cluster_parent_id; // cluster to main cluster
   std::map<int, std::vector<WCPPID::PR3DCluster*> > map_parentid_clusters; // main cluster to clusters
-
+std::cout<<"Clusters"<<std::endl;
   int prev_cluster_id=-1;
   int ident = 0;
   TC->GetEntry(entry_no);
@@ -492,7 +546,7 @@ int main(int argc, char* argv[])
   flag_u_vec->clear();
   flag_v_vec->clear();
   flag_w_vec->clear();
-
+std::cout<<"TDC"<<std::endl;
   TDC->GetEntry(entry_no);
   for (int i=0;i!=cluster_id_vec->size();i++){
     int cluster_id = cluster_id_vec->at(i);
@@ -564,7 +618,7 @@ int main(int argc, char* argv[])
     fid->AddDeadRegion(mcell,time_slices);
     ident++;
   }
- 
+ std::cout<<"Bad"<<std::endl;
   // Load T_ch_bad tree ...
   TTree *T_bad_ch = (TTree*)file->Get("T_bad_ch");
   if (T_bad_ch!=0){
@@ -624,7 +678,6 @@ int main(int argc, char* argv[])
     }
   }
   cout << em("load clusters from file") << endl;
-  
   // form a global map with the current map information
   std::map<int,std::map<const GeomWire*, SMGCSelection > > global_wc_map;
   for (size_t i=0; i!=live_clusters.size();i++){
@@ -681,7 +734,7 @@ int main(int argc, char* argv[])
       }
     }
   }
-  
+ std::cout<<"Clusters"<<std::endl; 
   // replace by the new sampling points ...
   for (size_t i=0; i!=live_clusters.size();i++){
     WCPPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
@@ -749,7 +802,7 @@ int main(int argc, char* argv[])
   T_match1->Branch("flash_time",&flash_time,"flash_time/D");
   cluster_length = 0;
   T_match1->Branch("cluster_length",&cluster_length,"cluster_length/D");
-  
+  std::cout<<"T_match1"<<std::endl;
   for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
     flash_time = map_flash_info[it->first]->get_time();
     //std::cout << flash_time << " " << triggerbits << " " << lowerwindow << " " << upperwindow << std::endl;
@@ -1015,7 +1068,7 @@ int main(int argc, char* argv[])
     T_proj_data->Branch("charge_err",&proj_data_cluster_charge_err);
     T_proj_data->Branch("charge_pred",&proj_data_cluster_charge_pred);
     T_proj_data->SetDirectory(file1);
-    
+   std::cout<<"T_proj_data"<<std::endl; 
     for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
       
       WCPPID::PR3DCluster* new_cluster = *it;
@@ -1127,7 +1180,7 @@ int main(int argc, char* argv[])
     T_proj->Branch("charge",&proj_cluster_charge);
     T_proj->Branch("charge_err",&proj_cluster_charge_err);
     T_proj->SetDirectory(file1);
-    
+   std::cout<<"T_proj"<<std::endl; 
     for (auto it = map_parentid_clusters.begin(); it!=map_parentid_clusters.end(); it++){
       int cluster_id = it->first;
       std::vector<int> proj_channel;
@@ -1171,6 +1224,10 @@ int main(int argc, char* argv[])
     // additional
     bool match_isSTM = false;
     bool match_isFullDetDead =false;
+
+    //for kdar gensel
+    float lm_cluster_length = 999999;
+    bool image_fail = false;
     
     T_eval->SetBranchAddress("run", &temp_run_no);
     T_eval->SetBranchAddress("subrun", &temp_subrun_no);
@@ -1186,7 +1243,7 @@ int main(int argc, char* argv[])
     T_eval->SetBranchAddress("match_notFC_FV", &match_notFC_FV);
     T_eval->SetBranchAddress("match_notFC_SP", &match_notFC_SP);
     T_eval->SetBranchAddress("match_notFC_DC", &match_notFC_DC);
-    
+ 
     T_eval1->Branch("run", &temp_run_no);
     T_eval1->Branch("subrun", &temp_subrun_no);
     T_eval1->Branch("event", &temp_event_no);
@@ -1244,6 +1301,13 @@ int main(int argc, char* argv[])
       T_eval1->Branch("match_purity_xy", &match_purity_xy);
       T_eval1->Branch("match_charge", &match_charge);
       T_eval1->Branch("match_energy", &match_energy);
+    }
+
+    if(T_eval->GetBranch("lm_cluster_length")){
+      T_eval->SetBranchAddress("lm_cluster_length", &lm_cluster_length);
+      T_eval->SetBranchAddress("image_fail", &image_fail);
+      T_eval1->Branch("lm_cluster_length", &lm_cluster_length,"lm_cluster_length/F");
+      T_eval1->Branch("image_fail", &image_fail);
     }
 
     for (int i=0;i!=T_eval->GetEntries();i++){
