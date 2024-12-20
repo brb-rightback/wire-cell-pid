@@ -315,7 +315,6 @@ int main(int argc, char* argv[])
   std::map<std::pair<int, int>, std::tuple<int, double, double, int> > map_flash_tpc_pair_type; // type, ks, chi2, ndf
   
   OpflashSelection flashes;
-std::cout<<"Flashes"<<std::endl; 
   for (int i=0;i!=T_flash->GetEntries();i++){
     T_flash->GetEntry(i);
     if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
@@ -330,7 +329,6 @@ std::cout<<"Flashes"<<std::endl;
   }
 
 
-  std::cout<<"Matches"<<std::endl;
   for (int i=0;i!=T_match->GetEntries();i++){
     T_match->GetEntry(i);
     if (temp_run_no!=run_no || temp_subrun_no!=subrun_no || temp_event_no != event_no) continue;
@@ -428,7 +426,6 @@ std::cout<<"Flashes"<<std::endl;
   WCPPID::PR3DCluster *cluster;
   std::map<WCPPID::PR3DCluster*, int> map_cluster_parent_id; // cluster to main cluster
   std::map<int, std::vector<WCPPID::PR3DCluster*> > map_parentid_clusters; // main cluster to clusters
-std::cout<<"Clusters"<<std::endl;
   int prev_cluster_id=-1;
   int ident = 0;
   TC->GetEntry(entry_no);
@@ -546,7 +543,6 @@ std::cout<<"Clusters"<<std::endl;
   flag_u_vec->clear();
   flag_v_vec->clear();
   flag_w_vec->clear();
-std::cout<<"TDC"<<std::endl;
   TDC->GetEntry(entry_no);
   for (int i=0;i!=cluster_id_vec->size();i++){
     int cluster_id = cluster_id_vec->at(i);
@@ -618,7 +614,6 @@ std::cout<<"TDC"<<std::endl;
     fid->AddDeadRegion(mcell,time_slices);
     ident++;
   }
- std::cout<<"Bad"<<std::endl;
   // Load T_ch_bad tree ...
   TTree *T_bad_ch = (TTree*)file->Get("T_bad_ch");
   if (T_bad_ch!=0){
@@ -734,7 +729,6 @@ std::cout<<"TDC"<<std::endl;
       }
     }
   }
- std::cout<<"Clusters"<<std::endl; 
   // replace by the new sampling points ...
   for (size_t i=0; i!=live_clusters.size();i++){
     WCPPID::calc_sampling_points(gds,live_clusters.at(i),nrebin, frame_length, unit_dis);
@@ -802,7 +796,6 @@ std::cout<<"TDC"<<std::endl;
   T_match1->Branch("flash_time",&flash_time,"flash_time/D");
   cluster_length = 0;
   T_match1->Branch("cluster_length",&cluster_length,"cluster_length/D");
-  std::cout<<"T_match1"<<std::endl;
   for (auto it = map_flash_tpc_ids.begin(); it!=map_flash_tpc_ids.end(); it++){
     flash_time = map_flash_info[it->first]->get_time();
     //std::cout << flash_time << " " << triggerbits << " " << lowerwindow << " " << upperwindow << std::endl;
@@ -1068,7 +1061,6 @@ std::cout<<"TDC"<<std::endl;
     T_proj_data->Branch("charge_err",&proj_data_cluster_charge_err);
     T_proj_data->Branch("charge_pred",&proj_data_cluster_charge_pred);
     T_proj_data->SetDirectory(file1);
-   std::cout<<"T_proj_data"<<std::endl; 
     for (auto it = live_clusters.begin(); it!=live_clusters.end(); it++){
       
       WCPPID::PR3DCluster* new_cluster = *it;
@@ -1180,7 +1172,6 @@ std::cout<<"TDC"<<std::endl;
     T_proj->Branch("charge",&proj_cluster_charge);
     T_proj->Branch("charge_err",&proj_cluster_charge_err);
     T_proj->SetDirectory(file1);
-   std::cout<<"T_proj"<<std::endl; 
     for (auto it = map_parentid_clusters.begin(); it!=map_parentid_clusters.end(); it++){
       int cluster_id = it->first;
       std::vector<int> proj_channel;
