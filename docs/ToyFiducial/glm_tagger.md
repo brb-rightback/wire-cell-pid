@@ -158,24 +158,24 @@ The glm_tagger calls several helper functions to perform its analysis. Here are 
 
 1. **Track Analysis Functions**
    - `get_extreme_wcps()`: Gets endpoints of the track cluster
-   - `inside_fiducial_volume()`: Checks if a point is within detector active volume
+   - `inside_fiducial_volume()`: Checks if a point is within detector active volume [detailed documentation](./inside_fiducial_volume.md)
    - `inside_x_region()`: Checks if track is within specified x coordinates
-   - `check_tgm()`: Performs Through-Going Muon analysis
-   - `check_stm()`: Performs Stopping Muon analysis
-   - `check_other_tracks()`: Analyzes additional tracks in the event
-   - `check_other_clusters()`: Examines nearby particle clusters
+   - `check_tgm()`: Performs Through-Going Muon analysis [detailed documentation](./check_tgm.md)
+   - `check_stm()`: Performs Stopping Muon analysis [detailed documentation](./check_stm.md)
+   - `check_other_tracks()`: Analyzes additional tracks in the event [detailed documentation](./check_other_tracks.md)
+   - `check_other_clusters()`: Examines nearby particle clusters [detailed documentation](./check_other_clusters.md)
 
 2. **Light Pattern Analysis**
-   - `calculate_pred_pe()`: Calculates predicted photoelectrons for given track
+   - `calculate_pred_pe()`: Calculates predicted photoelectrons for given track [detailed documentation](./calculate_pred_pe.md)
    - `get_PE()`: Gets actual photoelectron measurements
    - `get_PE_err()`: Gets measurement uncertainties
-   - `KolmogorovTest()`: Performs KS test between predicted and measured light patterns
+   - `KolmogorovTest()`: Performs KS test between predicted and measured light patterns [detailed documentation](./KolmogorovTest.md)
 
 3. **Geometry Functions**
-   - `inside1_outside0_SCB()`: Checks space charge boundary conditions
-   - `M2_offset_YX_x()`: Calculates offsets in YX projection
-   - `M2_check_stm()`: Performs STM checks with updated space charge boundary
-   - `M2_check_tgm()`: Performs TGM checks with updated space charge boundary
+   - `inside1_outside0_SCB()`: Checks space charge boundary conditions [detailed documentation](./inside1_outside0_SCB.md)
+   - `M2_offset_YX_x()`: Calculates offsets in YX projection [detailed documentation](./M2_offset_YX_x.md)
+   - `M2_check_stm()`: Performs STM checks with updated space charge boundary [detailed documentation](./M2_check_stm.md)
+   - `M2_check_tgm()`: Performs TGM checks with updated space charge boundary [detailed documentation](./M2_check_tgm.md)
 
 4. **Signal Processing Functions**
    - `check_signal_processing()`: Analyzes signal characteristics [detailed documentation](./check_signal_processing.md)

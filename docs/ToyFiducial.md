@@ -25,17 +25,17 @@ The ToyFiducial class is part of the WCPPID namespace and provides functionality
 
 ##### Through-Going Muon (TGM) Detection
 - `check_tgm()`: Main TGM identification function [detailed documentation](./ToyFiducial/check_tgm.md)
-- `M2_check_tgm()`: Enhanced TGM checking algorithm
+- `M2_check_tgm()`: Enhanced TGM checking algorithm [detailed documentation](./ToyFiducial/M2_check_tgm.md)
 - Handles both flash-matched and flash-independent TGM identification
 
 ##### Stopping Muon (STM) Detection
-- `check_stm()`: Primary STM identification function
-- `check_stm_only()`: STM identification function
-- `M2_check_stm()`: Enhanced STM checking algorithm
-- `eval_stm()`: Evaluates track characteristics for STM classification
+- `check_stm()`: Primary STM identification function [detailed documentation](./ToyFiducial/check_stm.md)
+- `check_stm_only()`: STM identification function [detailed documentation](./ToyFiducial/check_stm_only.md)
+- `M2_check_stm()`: Enhanced STM checking algorithm [detailed documentation](./ToyFiducial/M2_check_stm.md)
+- `eval_stm()`: Evaluates track characteristics for STM classification [detailed documentation](./ToyFiducial/eval_stm.md)
 
 #### Flash Matching
-- `calculate_pred_pe()`: Calculates predicted photoelectron response
+- `calculate_pred_pe()`: Calculates predicted photoelectron response [detailed documentation](./ToyFiducial/calculate_pred_pe.md)
 - Provides flash-to-track matching capabilities
 - Handles PMT response predictions
 
@@ -57,8 +57,8 @@ The ToyFiducial class is part of the WCPPID namespace and provides functionality
 - `check_full_detector_dead()`: check if the full detector is dead [detailed documentation](./ToyFiducial/check_full_detector_dead.md)
 
 #### Track Analysis
-- `find_first_kink()`: Identifies track bending points
-- `detect_proton()`: Proton track identification
+- `find_first_kink()`: Identifies track bending points [detailed documentation](./ToyFiducial/find_first_kink.md)
+- `detect_proton()`: Proton track identification [detailed documentation](./ToyFiducial/detect_proton.md)
 - Track trajectory and dE/dx analysis
 
 ## Key Data Structures

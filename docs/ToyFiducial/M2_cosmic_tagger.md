@@ -29,7 +29,7 @@ Returns a tuple containing:
 3. [`inside_fiducial_volume()`](inside_fiducial_volume.md): Checks if point is within detector bounds
 4. [`calculate_pred_pe()`](calculate_pred_pe.md): Calculates predicted photoelectron response
 5. [`inside1_outside0_SCB()`](inside1_outside0_SCB.md): Boundary checking function
-6. [`check_dead_volume()`](check_dead_volume.md): Checks for detector dead regions
+6. [`check_dead_volume()`](check_dead_region.md): Checks for detector dead regions
 7. [`check_signal_processing()`](check_signal_processing.md): Verifies signal quality
 8. [`check_boundary()`](check_boundary.md): Analyzes cluster boundary points
 
