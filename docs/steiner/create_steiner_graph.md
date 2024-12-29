@@ -190,6 +190,6 @@ The function includes various checks and balances:
 - `dijkstra_shortest_paths()` 
 - `establish_same_mcell_steiner_edges()` For more details, refer to the [establish_same_mcell_steiner_edges.md](establish_same_mcell_steiner_edges.md) documentation.
 - `Create_steiner_tree()` For more details, refer to the [create_steiner_tree.md](create_steiner_tree.md) documentation.
-- `Improve_PR3DCluster_2()`
+- `Improve_PR3DCluster_2()` For more details, refer to the [Improve_PR3DCluster_2.md](../ImproveCluster/Improve_PR3DCluster_2.md) documentation.
 
 The function serves as a crucial component in the PR3DCluster system, creating an optimized Steiner tree representation of point clusters while managing multiple coordinate systems and graph structures.
