@@ -26,7 +26,7 @@ The PR3DCluster Steiner tree implementation provides functionality for analyzing
 ## Key Functions
 
 ### create_steiner_graph()
-Creates a Steiner tree graph structure from cluster data.
+Creates a Steiner tree graph structure from cluster data. For more details, refer to the [create_steiner_graph documentation](./steiner/create_steiner_graph.md).
 
 **Inputs:**
 - `WCP::ToyCTPointCloud& ct_point_cloud`: Point cloud data
@@ -50,7 +50,7 @@ Reconstructs a Steiner graph from terminal indices.
 - Identifies minimal spanning tree
 
 ### Create_steiner_tree()
-Creates a new Steiner tree from point cloud data.
+Creates a new Steiner tree from point cloud data. For more details, refer to the [create_steiner_tree documentation](./steiner/create_steiner_tree.md).
 
 **Inputs:**
 - `WCP::ToyPointCloud *point_cloud_steiner`: Target point cloud
@@ -69,7 +69,7 @@ Creates a new Steiner tree from point cloud data.
 - Incorporates charge information
 
 ### find_steiner_terminals()
-Identifies terminal points for Steiner tree construction.
+Identifies terminal points for Steiner tree construction. For more details, refer to the [find_steiner_terminals documentation](./steiner/find_steiner_terminals.md).
 
 **Inputs:**
 - `WCP::GeomDataSource& gds`: Geometry data
@@ -80,7 +80,7 @@ Identifies terminal points for Steiner tree construction.
 - Creates cell-point mappings
 
 ### find_peak_point_indices()
-Identifies peak points within merged geometry cells.
+Identifies peak points within merged geometry cells. For more details, refer to the [find_peak_point_indices documentation](./steiner/find_peak_point_indices.md).
 
 **Inputs:**
 - `SMGCSelection mcells`: Merged cell selection
