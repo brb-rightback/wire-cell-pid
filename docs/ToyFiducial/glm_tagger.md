@@ -151,3 +151,73 @@ graph TD
    - Kolmogorov-Smirnov test
 
 5. Multiple boundary checks are performed to ensure track classifications are robust
+
+## Called Functions Reference
+
+The glm_tagger calls several helper functions to perform its analysis. Here are the key functions and their purposes:
+
+1. **Track Analysis Functions**
+   - `get_extreme_wcps()`: Gets endpoints of the track cluster
+   - `inside_fiducial_volume()`: Checks if a point is within detector active volume
+   - `inside_x_region()`: Checks if track is within specified x coordinates
+   - `check_tgm()`: Performs Through-Going Muon analysis
+   - `check_stm()`: Performs Stopping Muon analysis
+   - `check_other_tracks()`: Analyzes additional tracks in the event
+   - `check_other_clusters()`: Examines nearby particle clusters
+
+2. **Light Pattern Analysis**
+   - `calculate_pred_pe()`: Calculates predicted photoelectrons for given track
+   - `get_PE()`: Gets actual photoelectron measurements
+   - `get_PE_err()`: Gets measurement uncertainties
+   - `KolmogorovTest()`: Performs KS test between predicted and measured light patterns
+
+3. **Geometry Functions**
+   - `inside1_outside0_SCB()`: Checks space charge boundary conditions
+   - `M2_offset_YX_x()`: Calculates offsets in YX projection
+   - `M2_check_stm()`: Performs STM checks with updated space charge boundary
+   - `M2_check_tgm()`: Performs TGM checks with updated space charge boundary
+
+4. **Signal Processing Functions**
+   - `check_signal_processing()`: Analyzes signal characteristics [detailed documentation](./check_signal_processing.md)
+   - `check_dead_volume()`: Checks for detector dead regions [detailed documentation](./check_dead_region.md)
+   - `inside_dead_region()`: Tests if point is in known dead region [detailed documentation](./inside_dead_region.md)
+
+5. **Event/Flash Related Functions**
+   - `get_time()`: Gets timing information for flash
+   - `get_flash_id()`: Gets unique identifier for flash
+   - `get_type()`: Gets flash classification type
+
+6. **Data Structure Functions**
+   - `get_point_cloud()`: Retrieves 3D points making up track
+   - `get_cluster_id()`: Gets unique identifier for cluster
+   - `get_num_mcells()`: Gets number of merged cells in cluster
+
+Example usage pattern:
+
+```cpp
+// Example showing typical function call sequence
+bool GlmAnalysis(PR3DCluster* cluster, Opflash* flash) {
+    // Get track endpoints
+    auto extreme_points = cluster->get_extreme_wcps();
+    
+    // Check geometry
+    if (!inside_fiducial_volume(point, offset)) {
+        return false;
+    }
+    
+    // Calculate predicted light
+    auto pred_light = calculate_pred_pe(...);
+    
+    // Compare with measurement
+    double ks_test = h1_meas->KolmogorovTest(h1_pred,"M");
+    
+    // Check track characteristics
+    bool is_tgm = check_tgm(cluster, flash, offset, cloud);
+    bool is_stm = check_stm(cluster, offset, time);
+    
+    // Make final decision based on results
+    return DetermineTrackType(is_tgm, is_stm, ks_test);
+}
+```
+
+Each of these functions plays a specific role in helping determine the correct classification of tracks in the detector. The interplay between geometry checks, light pattern analysis, and track characteristics allows the tagger to make robust decisions about particle track classifications.
