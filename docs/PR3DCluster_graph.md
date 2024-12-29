@@ -53,7 +53,7 @@ The PR3DCluster class implements graph-based functionality for 3D particle recon
 - Creates edges between points in same cell
 - Assigns edge weights based on distance
 
-For more details, refer to the [establish_same_mcell_steiner_edges documentation](../steiner/establish_same_mcell_steiner_edges.md).
+For more details, refer to the [establish_same_mcell_steiner_edges documentation](./steiner/establish_same_mcell_steiner_edges.md).
 
 ### Connect_graph(WCP::ToyCTPointCloud& ct_point_cloud, WCP::ToyPointCloud* ref_point_cloud)
 **Purpose**: Connects separate components of the graph
@@ -69,7 +69,7 @@ For more details, refer to the [establish_same_mcell_steiner_edges documentation
 - Adds edges to connect components
 - Uses MST (Minimum Spanning Tree) algorithm to optimize connections
 
-For more details, refer to the [connect_graph documentation](./connect_graph.md).
+For more details, refer to the [connect_graph documentation](./graph/connect_graph.md).
 
 
 ### Create_graph(WCP::ToyCTPointCloud& ct_point_cloud, WCP::ToyPointCloud* ref_point_cloud)
@@ -85,7 +85,7 @@ For more details, refer to the [connect_graph documentation](./connect_graph.md)
 - Establishes close connections
 - Connects components
 
-For more details, refer to the [create_graph documentation](./create_graph.md).
+For more details, refer to the [create_graph documentation](./graph/create_graph.md).
 
 ### Establish_close_connected_graph()
 **Purpose**: Creates initial connections between nearby points
@@ -96,7 +96,7 @@ For more details, refer to the [create_graph documentation](./create_graph.md).
 - Optimizes edge creation for performance
 - Handles special cases for different wire planes
 
-For more details, refer to the [establish_close_connected_graph documentation](./establish_close_connected_graph.md).
+For more details, refer to the [establish_close_connected_graph documentation](./graph/establish_close_connected_graph.md).
 
 
 ### search_for_connection_isochronous()
@@ -110,7 +110,7 @@ For more details, refer to the [establish_close_connected_graph documentation](.
 - Uses drift direction for calculations
 - Finds connections based on geometric criteria
 
-For more details, refer to the [search_for_connection_isochronous documentation](./search_for_connection_isochronous.md).
+For more details, refer to the [search_for_connection_isochronous documentation](./graph/search_for_connection_isochronous.md).
 
 
 ## Common Usage Patterns
