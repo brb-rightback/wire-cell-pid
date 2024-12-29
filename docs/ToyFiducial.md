@@ -20,6 +20,7 @@ The ToyFiducial class is part of the WCPPID namespace and provides functionality
 - `check_signal_processing()`: Verifies signal processing quality along tracks [detailed documentation](./ToyFiducial/check_signal_processing.md)
 - `inside1_outside0_SCB()`: inside the space charge boundary [detailed documentation](./ToyFiducial/inside1_outside0_SCB.md)
 - `check_boundary()`: check boundary [detailed documentation](./ToyFiducial/check_boundary.md)
+- `inside_x_region()`: check boundary [detailed documentation](./ToyFiducial/inside_x_region.md)
 
 #### Track Classification
 
