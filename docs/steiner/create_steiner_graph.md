@@ -187,8 +187,8 @@ The function includes various checks and balances:
 ## Related Functions
 
 - `get_two_boundary_wcps()`
-- `dijkstra_shortest_paths()`
-- `establish_same_mcell_steiner_edges()`
+- `dijkstra_shortest_paths()` 
+- `establish_same_mcell_steiner_edges()` For more details, refer to the [establish_same_mcell_steiner_edges.md](establish_same_mcell_steiner_edges.md) documentation.
 - `Create_steiner_tree()` For more details, refer to the [create_steiner_tree.md](create_steiner_tree.md) documentation.
 - `Improve_PR3DCluster_2()`
 
