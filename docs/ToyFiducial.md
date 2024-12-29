@@ -24,7 +24,7 @@ The ToyFiducial class is part of the WCPPID namespace and provides functionality
 #### Track Classification
 
 ##### Through-Going Muon (TGM) Detection
-- `check_tgm()`: Main TGM identification function
+- `check_tgm()`: Main TGM identification function [detailed documentation](./ToyFiducial/check_tgm.md)
 - `M2_check_tgm()`: Enhanced TGM checking algorithm
 - Handles both flash-matched and flash-independent TGM identification
 
@@ -42,8 +42,8 @@ The ToyFiducial class is part of the WCPPID namespace and provides functionality
 ### Advanced Features
 
 #### Neutrino candidate
-- `check_neutrino_candidate()`: identify neutrino candidate
-- `check_fully_contained(): check if the activity is fully contained
+- `check_neutrino_candidate()`: identify neutrino candidate [detailed documentation](./ToyFiducial/check_neutrino_candidate.md)
+- `check_fully_contained():` check if the activity is fully contained [detailed documentation](./ToyFiducial/check_fully_contained.md)
 
 #### Cosmic Ray Tagging
 - `glm_tagger()`: Global cosmic ray tagging algorithm [detailed documentation](./ToyFiducial/glm_tagger.md)
