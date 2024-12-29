@@ -92,7 +92,7 @@ Identifies peak points within merged geometry cells.
 - `std::set<int>`: Set of peak point indices
 
 ### calc_charge_wcp()
-Calculates charge for wire chamber points.
+Calculates charge for wire chamber points. For more details, refer to the [calc_charge_wcp documentation](./steiner/calc_charge_wcp.md).
 
 **Inputs:**
 - `WCP::WCPointCloud<double>::WCPoint& wcp`: Wire chamber point
@@ -104,7 +104,8 @@ Calculates charge for wire chamber points.
 - `std::pair<bool,double>`: Validity flag and calculated charge
 
 ### form_cell_points_map()
-Creates mappings between cells and their points.
+Creates mappings between cells and their points. For more details, refer to the [form_cell_points_map documentation](./steiner/form_cell_points_map.md).
+
 
 **Effects:**
 - Populates cell_point_indices_map

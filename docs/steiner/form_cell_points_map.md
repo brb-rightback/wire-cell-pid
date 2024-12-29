@@ -82,8 +82,8 @@ cell_point_indices_map = {
 
 ## Logic Flow Diagram
 
-[form_cell_points_map_logic.md](form_cell_points_map_logic.md)
+[form_cell_points_map_logic.md](./form_cell_points_map_logic.md)
 
-![form_cell_points_map_logic](form_cell_points_map_logic.png)
+![form_cell_points_map_logic](./form_cell_points_map_logic.png)
 
 The diagram illustrates the steps taken by the function to create the mapping between SlimMergeGeomCells and their associated point indices.
