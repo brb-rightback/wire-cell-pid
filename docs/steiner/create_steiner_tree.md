@@ -82,6 +82,7 @@ if (flag_path && path_wcps.size() > 0) {
     }
 }
 ```
+ For more details, refer to the [path_processing documentation](./path_processing.md).
 
 ### 3. Terminal Point Processing
 The function processes terminal points and creates mappings:
@@ -116,6 +117,8 @@ for (auto terminal_index : selected_terminal_indices) {
     );
 }
 ```
+For more details, refer to the [terminal_point_processing documentation](./terminal_point_processing.md).
+
 
 ### 4. Edge Weight Calculation
 The function calculates edge weights considering charge information:

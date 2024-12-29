@@ -41,7 +41,7 @@ Creates a Steiner tree graph structure from cluster data. For more details, refe
 - Sets up edge connections
 
 ### recover_steiner_graph()
-Reconstructs a Steiner graph from terminal indices.
+Reconstructs a Steiner graph from terminal indices. For more details, refer to the [recover_steiner_graph documentation](./steiner/recover_steiner_graph.md).
 
 **Effects:**
 - Updates steiner_graph_terminal_indices
