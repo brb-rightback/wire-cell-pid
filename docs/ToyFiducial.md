@@ -42,6 +42,9 @@ The ToyFiducial class is part of the WCPPID namespace and provides functionality
 
 ### Advanced Features
 
+### Add Dead Region
+- `AddDeadRegion`: add dead region [detailed documentation](./ToyFiducial/AddDeadRegion.md)
+
 #### Neutrino candidate
 - `check_neutrino_candidate()`: identify neutrino candidate [detailed documentation](./ToyFiducial/check_neutrino_candidate.md)
 - `check_fully_contained():` check if the activity is fully contained [detailed documentation](./ToyFiducial/check_fully_contained.md)
