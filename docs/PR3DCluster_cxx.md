@@ -61,7 +61,7 @@ PR3DCluster::do_tracking(WCP::ToyCTPointCloud& ct_point_cloud,
 - Handles both initial tracking and subsequent refinement passes
 - Accounts for detector configuration and measurement uncertainties
 
-### trajectory_fit
+### trajectory_fit [mode details](./track_fitting/trajectory_fit.md)
 ```cpp
 PR3DCluster::trajectory_fit(WCP::PointVector& ps_vec, /*...multiple map parameters...*/)
 ```
@@ -72,7 +72,7 @@ PR3DCluster::trajectory_fit(WCP::PointVector& ps_vec, /*...multiple map paramete
 
 ## 4. Charge Analysis Functions 
 
-### dQ_dx_fit
+### dQ_dx_fit [more details](./track_fitting/dQ_dx_fit.md)
 ```cpp
 PR3DCluster::dQ_dx_fit(std::map<int,std::map<const GeomWire*, SMGCSelection>>& global_wc_map,
                        /*...charge map parameters...*/,
@@ -87,7 +87,7 @@ PR3DCluster::dQ_dx_fit(std::map<int,std::map<const GeomWire*, SMGCSelection>>& g
 - Uses regularization for stability
 - Handles induction/collection plane differences
 
-### cal_gaus_integral
+### cal_gaus_integral [more details](./track_fitting/cal_gaus_integral.md)
 ```cpp
 PR3DCluster::cal_gaus_integral(int tbin, int wbin, double t_center, 
                               double t_sigma, double w_center, 
@@ -102,7 +102,7 @@ PR3DCluster::cal_gaus_integral(int tbin, int wbin, double t_center,
 
 ## 5. Path Organization Functions
 
-### organize_wcps_path  [more details](./organize_wcps_path.md)
+### organize_wcps_path  [more details](./track_fitting/organize_wcps_path.md)
 ```cpp
 PR3DCluster::organize_wcps_path(WCP::ToyCTPointCloud& ct_point_cloud,
                                std::list<WCPointCloud<double>::WCPoint>& path_wcps_list,
@@ -113,7 +113,7 @@ PR3DCluster::organize_wcps_path(WCP::ToyCTPointCloud& ct_point_cloud,
 - Enforces minimum/maximum point spacing
 - Returns organized point vector
 
-### organize_ps_path
+### organize_ps_path [more details](./track_fitting/organize_ps_path.md)
 ```cpp
 PR3DCluster::organize_ps_path(WCP::ToyCTPointCloud& ct_point_cloud,
                              WCP::PointVector& pts,
@@ -151,7 +151,7 @@ PR3DCluster::form_map(WCP::ToyCTPointCloud& ct_point_cloud,
 
 ## 7. Charge Collection and Projection Functions
 
-### collect_charge_trajectory
+### collect_charge_trajectory [more details](./track_fitting/collect_charge_trajectory.md)
 ```cpp
 PR3DCluster::collect_charge_trajectory(ToyCTPointCloud& ct_point_cloud, 
                                      double dis_cut, double range_cut)

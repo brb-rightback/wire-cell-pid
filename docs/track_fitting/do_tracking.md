@@ -80,15 +80,15 @@ form_map(ct_point_cloud, pts, map_2D_ut_charge, map_2D_vt_charge, map_2D_wt_char
    - Creates associations between 2D and 3D points
    - Maps wire plane hits to 3D space points
 
-4. **trajectory_fit()**
+4. **trajectory_fit()** [more details](./trajectory_fit.md)
    - Performs fitting of track trajectory
    - Uses charge information from multiple planes
 
-5. **organize_ps_path()**
+5. **organize_ps_path()** [more details](./organize_ps_path.md)
    - Reorganizes points after initial fit
    - Applies additional constraints
 
-6. **dQ_dx_fit()**
+6. **dQ_dx_fit()** [more details](./dQ_dx_fit.md)
    - Performs charge/distance (dQ/dx) fitting
    - Uses regularization if enabled
 
