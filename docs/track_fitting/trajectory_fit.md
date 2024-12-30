@@ -27,6 +27,64 @@ graph TD
     end
 ```
 
+# Flow Diagram
+```mermaid
+flowchart TD
+    Start([Start trajectory_fit]) --> Init[Initialize TPC Parameters]
+    Init --> InitMatrices[Initialize Response Matrices]
+    InitMatrices --> InitData[Initialize Data Vectors]
+    
+    subgraph ParamSetup [Parameter Setup]
+        InitData --> CalcDiff[Calculate Diffusion Coefficients]
+        CalcDiff --> CalcWeights[Calculate Weighting Factors]
+        CalcWeights --> SetupReg[Setup Regularization Parameters]
+    end
+
+    ParamSetup --> LoopStart{For each trajectory point}
+    
+    subgraph PointProcessing [Point Processing]
+        LoopStart --> GetPos[Get Current/Prev/Next Positions]
+        GetPos --> CalcGaus[Calculate Gaussian Response]
+        CalcGaus --> FillMatrices[Fill Response Matrices RU, RV, RW]
+        FillMatrices --> CheckFlags[Check Dead Channel Flags]
+        CheckFlags --> NextPoint[Process Next Point]
+        NextPoint --> LoopStart
+    end
+
+    LoopStart -- All points processed --> BuildSystem[Build Linear System]
+    
+    subgraph SolverPhase [Solver Phase]
+        BuildSystem --> CreateSparse[Create Sparse Matrices]
+        CreateSparse --> AddReg[Add Regularization Terms]
+        AddReg --> SolveSystem[Solve Linear System]
+        SolveSystem --> CheckSolution{Check Solution}
+        CheckSolution -->|Valid| ProcessResults[Process Results]
+        CheckSolution -->|Invalid| FallbackSolve[Use Fallback Solver]
+        FallbackSolve --> ProcessResults
+    end
+
+    ProcessResults --> CalcdQdx[Calculate dQ/dx]
+    
+    subgraph SkipCheck [Skip Point Check]
+        CalcdQdx --> CheckCharge[Check Charge Ratios]
+        CheckCharge --> CheckAngles[Check Angles]
+        CheckAngles --> CheckDead[Check Dead Channels]
+        CheckDead --> ApplySkip[Apply Skip Conditions]
+    end
+
+    ApplySkip --> StoreResults[Store Final Results]
+    StoreResults --> UpdateProj[Update Projection Maps]
+    UpdateProj --> End([End])
+
+    classDef processNode fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef decisionNode fill:#bbf,stroke:#333,stroke-width:2px;
+    classDef dataNode fill:#bfb,stroke:#333,stroke-width:2px;
+    
+    class BuildSystem,ProcessResults,CalcdQdx processNode;
+    class CheckSolution,LoopStart decisionNode;
+    class StoreResults,UpdateProj dataNode;
+```
+
 ## Key Components
 
 ### 1. Input Parameters
