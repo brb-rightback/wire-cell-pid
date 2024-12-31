@@ -250,6 +250,8 @@ bool nue_tagger(double muon_kine_energy = 0);
 bool singlephoton_tagger(double muon_kine_energy = 0);
 ```
 
+[numu tagger](./NeutrinoID/numu_tagger.md)
+
 ### Additional Shower Analysis Functions
 ```cpp
 bool stem_length(WCShower* shower, double energy);
@@ -347,6 +349,8 @@ float cal_bdts();
 float cal_bdts_xgboost();
 ```
 
+[numu bdts](./NeutrinoID/numu_bdt.md)
+
 ### Output Generation [more details](./NeutrinoID/fill_info.md)
 ```cpp
 void fill_reco_tree(ProtoSegment* seg, WCRecoTree& rtree);
@@ -354,6 +358,8 @@ void fill_reco_tree(WCShower* shower, WCRecoTree& rtree);
 void fill_kine_tree(KineInfo& ktree);
 void fill_skeleton_info(int mother_cluster_id, WCPointTree& ptree, TTree* T);
 ```
+
+[more details](./NeutrinoID/fill_info.md)
 
 ### Pi0 Reconstruction
 ```cpp
