@@ -140,6 +140,8 @@ bool examine_vertex_position(ProtoVertex* vertex);
 
 [determine_overall_main_vertex_DL](./NeutrinoID/NeutrinoID_DL.md)
 
+[improve_vertex](./NeutrinoID/NeutrinoID_improve_vertex.md)
+
 ### Track/Shower Separation
 ```cpp
 void separate_track_shower();
@@ -147,6 +149,8 @@ void shower_clustering_with_nv();
 void shower_determing_in_main_cluster();
 void examine_showers();
 ```
+
+[examine showers](./NeutrinoID/Neutrino_em_shower.md)
 
 ### Graph Management
 ```cpp
@@ -194,6 +198,9 @@ bool examine_structure_2(PR3DCluster* cluster);
 bool examine_structure_3(PR3DCluster* cluster);
 bool examine_structure_4(ProtoVertex* vertex, PR3DCluster* cluster, bool flag_final_vertex = false);
 ```
+[various exmine_structure_final* functions](./NeutrinoID/NeutrinoID_final_structure.md)
+
+[various examine_structure_* functions](./NeutrinoID/NeutrinoID_examine_structure.md)
 
 ### Map Management and Analysis
 ```cpp
@@ -365,6 +372,8 @@ double cal_kine_charge(WCShower* shower);
 
 [get_dir](./NeutrinoID/NeutrinoID_cxx.md)
 
+[cal_kine_charge explanation](./NeutrinoID/NeutrinoID_energy_reco.md)
+
 ## Usage Example
 
 ```cpp
@@ -505,6 +514,8 @@ For neutrino candidates (is_neutrino_candidate == true):
    - For clusters > 6cm: full processing
    - For smaller clusters: simplified processing
    - Perform deghosting
+
+[deghosting explanation](./NeutrinoID/Neutrino_deghost.md)
 
 4. Determine overall main vertex
 5. If main vertex found:
