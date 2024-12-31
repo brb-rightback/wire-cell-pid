@@ -33,7 +33,7 @@ graph TD
 ## Key Function Calls
 The function makes several important calls:
 
-1. `cluster->clustering_points_master()`: Initial point clustering [see details](./clustering_points_master.md)
+1. `cluster->clustering_points_master()`: Initial point clustering [see details](../PR3DCluster_point_clustering.md)
 2. `sg->reset_associate_points()`: Clears existing point associations [see protosegment](../protosegment.md)
 3. `sg->add_associate_point()`: Associates regular points [see protosegment](../protosegment.md)
 4. `sg->add_associate_point_steiner()`: Associates Steiner points [see protosegment](../protosegment.md)
