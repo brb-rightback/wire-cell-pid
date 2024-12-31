@@ -235,6 +235,8 @@ bool low_energy_overlapping(WCShower* shower);
 bool high_energy_overlapping(WCShower* shower);
 ```
 
+[stem direction](./NeutrinoID/nue_functions.md)
+
 ### Debugging and Information
 ```cpp
 void print_segs_info(PR3DCluster* cluster);
@@ -266,6 +268,10 @@ bool angular_cut(WCShower* shower, double energy, double angle);
 bool single_shower(WCShower* shower, bool flag_single_shower);
 bool low_energy_michel(WCShower* shower);
 ```
+
+[stem_length, multiple_showers, vertex_inside_shower, compare_muon_energy](./NeutrinoID/nue_functions.md)
+
+
 
 ### Direction and Clustering Functions
 ```cpp
