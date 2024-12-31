@@ -1,10 +1,49 @@
-# Understanding the fit_point Function (end points, vertex)
+# Understanding the fit_point Function - Complete Guide
 
-The `fit_point` function is a critical component in Wire-Cell's 3D trajectory fitting algorithm. It fits a single 3D point by minimizing the differences between the projected 2D coordinates and the measured charge deposits in three wire planes (U, V, and W).
+## Overview
 
-## Purpose
+The `fit_point` function is a critical component in Wire-Cell's 3D trajectory fitting algorithm. It optimizes the position of a 3D point by minimizing the differences between its projected 2D coordinates and the measured charge deposits across three wire planes (U, V, and W).
 
-The function takes a 3D point and its associated 2D projections and charge measurements, then optimizes the point's position to better match the measured charge deposits while maintaining physical constraints.
+## Mathematical Foundation
+
+### Coordinate System and Projections
+
+The Wire-Cell detector uses three wire planes (U, V, W) at different angles. Each point in 3D space projects onto these planes according to these transformations:
+
+1. **Time Projection**: 
+   ```
+   T = offset_t + slope_x * X
+   ```
+
+2. **U-Plane Projection**:
+   ```
+   U = offset_u + slope_yu * Y + slope_zu * Z
+   ```
+
+3. **V-Plane Projection**:
+   ```
+   V = offset_v + slope_yv * Y + slope_zv * Z + 2400
+   ```
+
+4. **W-Plane Projection**:
+   ```
+   W = offset_w + slope_yw * Y + slope_zw * Z + 4800
+   ```
+
+### Optimization Problem
+
+The algorithm solves the following optimization problem:
+
+Minimize: 
+```
+|| RU * P - DU ||² + || RV * P - DV ||² + || RW * P - DW ||²
+```
+
+Where:
+- P is the 3D point position (x,y,z)
+- RU, RV, RW are projection matrices
+- DU, DV, DW are measured charge deposits
+- ||...||² denotes L2 norm
 
 ## Logical Flow
 
@@ -34,7 +73,7 @@ graph TD
     end
 ```
 
-## Key Components
+## Implementation Details
 
 ### 1. Input Parameters
 
@@ -47,9 +86,9 @@ map_U/V/Wdiv_fac             // Division factors for charge sharing
 // ... geometry parameters ...
 ```
 
-### 2. Matrix Setup
+### 2. Matrix Structure
 
-The function sets up sparse matrices to represent the projection from 3D to 2D planes:
+The projection matrices have the following structure:
 
 ```cpp
 // Size of projection data for each plane
@@ -63,36 +102,59 @@ Eigen::SparseMatrix<double> RV(n_2D_v, 3);
 Eigen::SparseMatrix<double> RW(n_2D_w, 3);
 ```
 
-### 3. Data Vector Population
+Each projection matrix (RU, RV, RW) has the following structure:
+- Dimensions: (2n × 3), where n is the number of measurements
+- Even rows: Wire coordinate projections
+- Odd rows: Time coordinate projections
 
-For each wire plane, the function:
-1. Collects charge measurements
-2. Calculates projection coordinates
-3. Applies scaling factors
-4. Handles dead/noisy channels
+### 3. Charge Weighting
+
+The algorithm applies sophisticated charge weighting:
 
 ```cpp
-// Example for U plane
-for (auto it = map_3D_2DU_set[i].first.begin(); it!=map_3D_2DU_set[i].first.end(); it++) {
-    double charge = std::get<0>(map_2D_ut_charge[*it]);
-    double charge_err = std::get<1>(map_2D_ut_charge[*it]);
-    
-    // Scale based on charge measurement quality
-    double scaling = charge/charge_err * map_Udiv_fac[...];
-    
-    // Fill data and projection matrices
-    data_u_2D(2*index) = scaling * (it->first - offset_u);
-    data_u_2D(2*index+1) = scaling * (it->second - offset_t);
-    
-    RU.insert(2*index, 1) = scaling * slope_yu;  // Y→U projection
-    RU.insert(2*index, 2) = scaling * slope_zu;  // Z→U projection
-    RU.insert(2*index+1,0) = scaling * slope_x;  // X→T projection
+// Statistical weight
+double w_stat = charge / sqrt(charge_err * charge_err + 
+                            pow(charge * rel_uncer, 2) + 
+                            pow(add_uncer, 2));
+
+// Quality scaling
+if (quality < 0.5) {
+    if (quality != 0)
+        scaling *= pow(quality/0.5, 1);
+    else
+        scaling *= 0.05;
 }
 ```
 
-### 4. Optimization
+### 4. Data Vector Population
 
-The function solves a linear system to minimize the difference between projected coordinates and measurements:
+For each wire plane, the function:
+
+```cpp
+// Example for U plane
+for (auto it = map_3D_2DU_set[i].first.begin(); 
+     it != map_3D_2DU_set[i].first.end(); it++) {
+    // Get charge measurement
+    double charge = std::get<0>(map_2D_ut_charge[*it]);
+    double charge_err = std::get<1>(map_2D_ut_charge[*it]);
+    
+    // Apply scaling
+    double scaling = charge/charge_err * map_Udiv_fac[...];
+    
+    // Fill data vector
+    data_u_2D(2*index) = scaling * (it->first - offset_u);
+    data_u_2D(2*index+1) = scaling * (it->second - offset_t);
+    
+    // Fill projection matrix
+    RU.insert(2*index, 1) = scaling * slope_yu;
+    RU.insert(2*index, 2) = scaling * slope_zu;
+    RU.insert(2*index+1,0) = scaling * slope_x;
+}
+```
+
+### 5. Optimization Solution
+
+The function solves the optimization problem using BiCGSTAB:
 
 ```cpp
 // Setup system matrices
@@ -100,35 +162,63 @@ Eigen::SparseMatrix<double> RUT = RU.transpose();
 Eigen::SparseMatrix<double> RVT = RV.transpose();
 Eigen::SparseMatrix<double> RWT = RW.transpose();
 
-// Create and solve system
-Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
+// Create system
 Eigen::VectorXd b = RUT * data_u_2D + RVT * data_v_2D + RWT * data_w_2D;
 Eigen::SparseMatrix<double> A = RUT * RU + RVT * RV + RWT * RW;
 
 // Solve with initial guess
+Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
 temp_pos_3D = solver.solveWithGuess(b, temp_pos_3D_init);
 ```
 
-## Error Handling
+### 6. Error Recovery
 
-The function includes robust error handling:
-- Checks for NaN in solver results
-- Falls back to initial position if optimization fails
-- Handles missing charge measurements
-- Scales influence based on measurement quality
+The algorithm includes robust error handling:
 
-## Key Features
+```cpp
+// Handle solver failure
+if (std::isnan(solver.error())) {
+    final_p = init_p;  // Return initial point
+    return final_p;
+}
 
-1. **Charge Quality Weighting**: Measurements are weighted by their uncertainty and quality
-2. **Dead Channel Handling**: Special handling for dead or noisy channels
-3. **Geometric Constraints**: Maintains physical constraints from wire geometry
-4. **Iterative Solution**: Uses BiCGSTAB solver for sparse system optimization
-5. **Robust Fallbacks**: Multiple fallback mechanisms if optimization fails
+// Handle boundary cases
+if (pos_out_of_bounds(temp_pos_3D)) {
+    temp_pos_3D = boundary_correction(temp_pos_3D);
+}
+
+// Quality check
+if (solution_quality < threshold) {
+    return fallback_solution(init_p, partial_result);
+}
+```
+
+## Performance Considerations
+
+1. **Sparse Matrix Operations**
+   - Uses Eigen's efficient sparse matrix format
+   - Optimized matrix-vector multiplication
+   - Memory-efficient for large datasets
+
+2. **Memory Management**
+   - Pre-allocated vectors for frequent operations
+   - Reuse of matrix structures
+   - Efficient handling of large point clouds
+
+3. **Computational Optimization**
+   - Local coordinate systems when possible
+   - Optimized projection calculations
+   - Efficient charge sharing calculations
 
 ## Usage Example
 
 ```cpp
+// Initialize point and related data
 Point init_point(x, y, z);
+map<int, pair<set<pair<double,double>>, double>> map_3D_2DU_set;
+// ... initialize other maps ...
+
+// Call fit_point
 Point optimized_point = fit_point(
     init_point,
     point_index,
@@ -146,6 +236,33 @@ Point optimized_point = fit_point(
     offset_v, slope_yv, slope_zv,
     offset_w, slope_yw, slope_zw
 );
+
+// Use optimized point
+process_fitted_point(optimized_point);
 ```
 
-The resulting optimized point better matches the measured charge deposits while maintaining physical constraints from the detector geometry.
+## Key Features
+
+1. **Robust Charge Weighting**
+   - Statistical uncertainty handling
+   - Quality-based scaling
+   - Dead channel compensation
+
+2. **Flexible Geometry**
+   - Handles arbitrary wire angles
+   - Supports different detector configurations
+   - Accommodates time projection
+
+3. **Error Handling**
+   - Multiple fallback mechanisms
+   - Boundary condition handling
+   - Quality checks at each step
+
+4. **Performance Optimized**
+   - Sparse matrix operations
+   - Efficient memory usage
+   - Optimized numerical methods
+
+## Conclusion
+
+The `fit_point` function provides a robust and efficient solution for 3D point fitting in Wire-Cell, combining sophisticated mathematical optimization with practical considerations for real detector conditions. Its modular design allows for easy adaptation to different detector configurations while maintaining high performance and accuracy.
