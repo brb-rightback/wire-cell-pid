@@ -247,6 +247,11 @@ bool examine_maps(ProtoVertex* vertex);
 bool examine_maps(int cluster_id);
 float calc_conflict_maps(ProtoVertex* vertex);
 ```
+[improve_maps*](./NeutrinoID_shower/improve_maps.md)
+
+[fix_maps_*](./NeutrinoID_shower/fix_maps.md)
+
+[calc_conflict_maps](./NeutrinoID_shower/calc_conflict_maps.md)
 
 ### Shower Analysis
 ```cpp
@@ -263,6 +268,8 @@ bool bad_reconstruction(WCShower* shower);
 bool low_energy_overlapping(WCShower* shower);
 bool high_energy_overlapping(WCShower* shower);
 ```
+
+[examine_all_showers](./NeutrinoID_shower/examine_all_showers.md)
 
 [stem direction](./NeutrinoID/nue_functions.md)
 
@@ -490,7 +497,9 @@ neutrino_id.fill_particle_tree(reco_tree);
 neutrino_id.fill_kine_tree(kine_info);
 ```
 
-[more details](./NeutrinoID/fill_info.md)
+[determine_main_vertex](./NeutrinoID_shower/determine_main_vertex.md)
+
+[more details on fill information](./NeutrinoID/fill_info.md)
 
 [Use find_incoming_segment](./NeutrinoID/find_incoming_segment.md)
 

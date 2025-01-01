@@ -26,7 +26,7 @@ The `shower_determining_in_main_cluster` function is a key component in neutrino
    - Analyzes cases where a shower enters and a track exits
    - May reverse shower direction based on topology
 
-4. One-In Many-Out Processing
+4. One-In Many-Out Processing [see details](./improve_maps.md)
    ```cpp
    improve_maps_one_in(temp_cluster);
    ```
@@ -35,7 +35,7 @@ The `shower_determining_in_main_cluster` function is a key component in neutrino
 
 ## Key Steps in Track/Shower Determination
 
-### 1. Shower-Track Conversion
+### 1. Shower-Track Conversion [see details](./improve_maps.md)
 ```cpp
 improve_maps_shower_in_track_out(temp_cluster->get_cluster_id());
 ```
@@ -43,7 +43,7 @@ improve_maps_shower_in_track_out(temp_cluster->get_cluster_id());
 - Uses topology and energy deposition patterns
 - May iterate multiple times to refine classifications
 
-### 2. Direction Determination
+### 2. Direction Determination [see details](./improve_maps.md)
 ```cpp
 improve_maps_no_dir_tracks(temp_cluster->get_cluster_id());
 ```
@@ -52,7 +52,7 @@ improve_maps_no_dir_tracks(temp_cluster->get_cluster_id());
   * Energy deposition patterns
   * Topology relative to other tracks/showers
 
-### 3. Multiple Track Analysis
+### 3. Multiple Track Analysis [see details](./improve_maps.md)
 ```cpp
 improve_maps_multiple_tracks_in(temp_cluster->get_cluster_id());
 ```
