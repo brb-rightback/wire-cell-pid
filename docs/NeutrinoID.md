@@ -128,6 +128,10 @@ void examine_vertices(PR3DCluster* cluster);
 
 [process_other_clusters (not really used)](./NeutrinoID/NeutrinoID_cxx.md)
 
+[find_proto_vertex](./NeutrinoID/find_proto_vertex.md)
+
+[break_segments](./NeutrinoID/break_segments.md)
+
 ### Vertex Finding and Improvement
 ```cpp
 void determine_direction(PR3DCluster* cluster);
@@ -165,6 +169,14 @@ void init_point_segment(PR3DCluster* cluster);
 ProtoVertex* find_vertex_other_segment(PR3DCluster* cluster, bool flag_forward, WCPointCloud<double>::WCPoint& wcp);
 std::tuple<ProtoVertex*, ProtoSegment*, Point> check_end_point(PR3DCluster* cluster, PointVector& tracking_path, bool flag_front = true);
 
+[init_point_segment, init_first_segment](./NeutrinoID/init_first_segment.md)
+
+[find_vertex_other_segments](./NeutrinoID/find_other_segments.md)
+
+[add_proto_connection](./NeutrinoID/add_other_connection.md)
+
+[check_end_point](./NeutrinoID/check_end_point.md)
+
 // Vertex/Segment Relationship
 WCPPID::ProtoSegment* find_segment(ProtoVertex* v1, ProtoVertex* v2);
 std::pair<ProtoVertex*, ProtoVertex*> find_vertices(ProtoSegment* sg);
@@ -173,6 +185,12 @@ ProtoVertexSelection find_vertices(PR3DCluster* cluster);
 ProtoSegmentSelection find_segments(PR3DCluster* cluster);
 std::pair<ProtoVertex*, ProtoVertex*> get_start_end_vertices(ProtoSegment* seg);
 ```
+
+[find_other_vertex](./NeutrinoID/find_other_vertex.md)
+
+[find_vertices](./NeutrinoID/find_vertices.md)
+
+[find_segment, find_segments](./NeutrinoID/find_segment.md)
 
 ### Vertex/Segment Examination and Modification
 ```cpp
@@ -198,9 +216,14 @@ bool examine_structure_2(PR3DCluster* cluster);
 bool examine_structure_3(PR3DCluster* cluster);
 bool examine_structure_4(ProtoVertex* vertex, PR3DCluster* cluster, bool flag_final_vertex = false);
 ```
+[modify_*_isochronous](./NeutrinoID/modify_segment_isochronous.md)
+
+[examine_partial_identical_segments](./NeutrinoID/examine_partial_identical_segments.md)
+
 [various exmine_structure_final* functions](./NeutrinoID/NeutrinoID_final_structure.md)
 
 [various examine_structure_* functions](./NeutrinoID/NeutrinoID_examine_structure.md)
+
 
 ### Map Management and Analysis
 ```cpp
@@ -310,6 +333,8 @@ void find_other_segments(PR3DCluster* cluster, bool flag_break_track = true, dou
 ```
 
 [calc_dir_cluster](./NeutrinoID/NeutrinoID_cxx.md)
+
+[find_other_segments](./NeutrinoID/find_other_segments.md)
 
 ### Helper Functions
 ```cpp
