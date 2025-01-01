@@ -153,7 +153,7 @@ struct ClusterMetrics {
    - `Calc_PCA()`
    - `get_PCA_axis()`
    - `calculate_num_daughter_tracks()` 
-   - `calculate_num_daughter_showers()` [more details](./calculate_num_daughter_showers.md)
+   - `calculate_num_daughter_showers()` [more details](../NeutrinoID_shower/calculate_num_daughter_showers.md)
 
 ## Output Structure
 

@@ -70,6 +70,8 @@ for (auto it = map_vertex_segments[main_vertex].begin();
 
 [compare_main_vertices_global](./compare_main_vertices_global.md)
 
+[calculate_num_daughter_showers](../NeutrinoID_shower/calculate_num_daughter_showers.md)
+
 ## Logical Flow
 
 ```mermaid
@@ -91,7 +93,7 @@ graph TD
 
 ## Key Functions Called
 
-1. `examine_main_vertices()`
+1. `examine_main_vertices()` 
    - Purpose: Evaluates all candidate vertices to identify the best main vertex
    - Key operations: Track counting, shower analysis, boundary checks
 
@@ -99,7 +101,8 @@ graph TD
    - Purpose: Determines if the main cluster should be switched
    - Evaluates cluster properties and shower characteristics
 
-3. `calculate_num_daughter_showers()`
+3. `calculate_num_daughter_showers()` [more details](../NeutrinoID_shower/calculate_num_daughter_showers.md)
+
    - Purpose: Counts daughter particles from a vertex
    - Returns pair of counts and shower information
 

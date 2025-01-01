@@ -154,6 +154,10 @@ void shower_determing_in_main_cluster();
 void examine_showers();
 ```
 
+[shower_clustering_with_nv](./NeutrinoID_shower/shower_clustering_with_nv.md)
+
+[shower_determing_in_main_cluster()](./NeutrinoID_shower/shower_determining_in_main_cluster.md)
+
 [examine showers](./NeutrinoID/Neutrino_em_shower.md)
 
 ### Graph Management
@@ -259,6 +263,8 @@ bool high_energy_overlapping(WCShower* shower);
 ```
 
 [stem direction](./NeutrinoID/nue_functions.md)
+
+[calculate_num_daughter_showers](./NeutrinoID_shower/calculate_num_daughter_showers.md)
 
 ### Debugging and Information
 ```cpp
@@ -629,6 +635,10 @@ cal_bdts()
 [single_photon_tagger](./NeutrinoID/single_photon_tagger.md)
 
 [clustering_point](./NeutrinoID/clustering_point.md)
+
+[shower_clustering_with_nv](./NeutrinoID_shower/shower_clustering_with_nv.md)
+
+[examine_direction](./NeutrinoID_shower/examine_direction.md)
 
 ## Flow Diagram
 ```mermaid

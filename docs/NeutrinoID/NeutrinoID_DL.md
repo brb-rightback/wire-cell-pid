@@ -72,8 +72,8 @@ graph TD
    - `WCPPyUtil::SCN_Vertex`: Performs deep learning inference
 
 2. **Vertex Analysis Functions**
-   - `examine_direction`: Validates vertex direction [more details](./examine_direction.md)
-   - `calculate_num_daughter_showers`: Counts connected showers [more details](./calculate_num_daughter_showers.md)
+   - `examine_direction`: Validates vertex direction [more details](../NeutrinoID_shower/examine_direction.md)
+   - `calculate_num_daughter_showers`: Counts connected showers [more details](../NeutrinoID_shower/calculate_num_daughter_showers.md)
    - `swap_main_cluster`: Updates main cluster assignment [more details](./determine_overall_main_vertex.md)
 
 3. **Geometry Functions**
