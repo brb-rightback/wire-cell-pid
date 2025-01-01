@@ -118,3 +118,94 @@ This helps create a more accurate and cleaner representation of particle tracks 
 2. Ensure point cloud data is properly populated
 3. Verify vertex and segment maps are consistent
 4. Follow up with track refitting for affected segments
+
+## Function Dependencies
+
+The function makes calls to several other methods and utilities:
+
+### Core Function Calls
+
+1. `get_closest_wcpoint`
+   - Part of point cloud management
+   - Used to find nearest detector point to a given 3D coordinate
+   - Returns: WCPointCloud<double>::WCPoint
+
+2. `add_proto_connection(ProtoVertex*, ProtoSegment*, PR3DCluster*)`
+   - Manages connections between vertices and segments
+   - Establishes topological relationships in track reconstruction
+   - Updates internal maps and relationships
+
+3. `del_proto_vertex(ProtoVertex*)`
+   - Removes a vertex from the reconstruction
+   - Cleans up associated connections and mappings
+
+4. `del_proto_segment(ProtoSegment*)`
+   - Removes a segment from the reconstruction
+   - Handles cleanup of associated vertex connections
+
+5. `do_multi_tracking`
+   - Performs track fitting and reconstruction
+   - Parameters include:
+     - map_vertex_segments
+     - map_segment_vertices
+     - ct_point_cloud
+     - global_wc_map
+     - flash_time
+   - Used for final refinement of track geometry
+
+### Helper Functions
+
+1. `get_closest_point`
+   - Returns: pair<double, WCP::Point>
+   - Finds nearest point on a segment to given coordinate
+
+2. `is_good_point`
+   - Part of the point cloud validation
+   - Checks if a point is valid in detector space
+
+### Utility Functions
+
+1. `sqrt`, `pow`
+   - Standard math functions for distance calculations
+
+2. `round`
+   - Used for discretizing distances in point calculations
+
+### Class Member Access
+
+The function relies on several class member variables:
+- `acc_vertex_id`
+- `acc_segment_id` 
+- Various maps including:
+  - `map_vertex_segments`
+  - `map_segment_vertices`
+  - `map_vertex_cluster`
+  - `map_cluster_vertices`
+  - `map_segment_cluster`
+  - `map_cluster_segments`
+
+### Sequence of Typical Function Calls
+
+```mermaid
+sequenceDiagram
+    participant Main as examine_partial_identical_segments
+    participant PC as PointCloud
+    participant Track as TrackProcessing
+    participant Map as MapManagement
+    
+    Main->>PC: get_closest_wcpoint
+    Main->>Track: get_closest_point
+    Main->>PC: is_good_point
+    Main->>Map: add_proto_connection
+    Main->>Map: del_proto_vertex
+    Main->>Map: del_proto_segment
+    Main->>Track: do_multi_tracking
+```
+
+### Error Handling Dependencies
+
+- `ct_point_cloud->get_closest_dead_chs()`
+  - Checks for dead channels in detector
+  - Critical for validation of track reconstruction
+
+This comprehensive list of function dependencies shows how `examine_partial_identical_segments` integrates with the larger reconstruction framework and relies on various specialized utilities for its operation.
