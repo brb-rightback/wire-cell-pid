@@ -55,12 +55,16 @@ In the shower-only case:
 - Additional vertices from track/shower map are included
 - The function calls `compare_main_vertices_all_showers()`
 
+[compare_main_vertices_all_showers](./compare_main_vertices_all_showers.md)
+
 ### 4. Mixed Track/Shower Case
 For mixed cases:
 1. Improves vertex mapping
 2. Fixes track/shower mappings
 3. Examines the structure of connections
 4. Calls `compare_main_vertices()`
+
+[compare_main_vertices](./compare_main_vertices.md)
 
 ### 5. Structure Examination
 After main vertex selection:
@@ -177,7 +181,7 @@ map_vertex_segments[vertex].insert(shower1); // electron shower
    - Purpose: Examines vertex candidates in mixed track/shower case
    - Prepares vertices for comparison
 
-6. `compare_main_vertices(main_vertex_candidates)`
+6. `compare_main_vertices(main_vertex_candidates)` [more details](./compare_main_vertices.md)
    - Purpose: Selects best vertex in mixed track/shower case
    - Uses physics and topology criteria
    - Returns selected main vertex

@@ -142,6 +142,8 @@ void improve_vertex(PR3DCluster* cluster, bool search_activity, bool final_verte
 bool examine_vertex_position(ProtoVertex* vertex);
 ```
 
+[determine_direction](./NeutrinoID_shower/determine_direction.md)
+
 [determine_overall_main_vertex_DL](./NeutrinoID/NeutrinoID_DL.md)
 
 [improve_vertex](./NeutrinoID/NeutrinoID_improve_vertex.md)
@@ -251,7 +253,13 @@ float calc_conflict_maps(ProtoVertex* vertex);
 
 [fix_maps_*](./NeutrinoID_shower/fix_maps.md)
 
+[examine_good_tracks](./NeutrinoID_shower/examine_good_tracks.md)
+
+[examine_maps](./NeutrinoID_shower/examine_maps.md)
+
 [calc_conflict_maps](./NeutrinoID_shower/calc_conflict_maps.md)
+
+[judge_no_dir_tracks_close_to_showers](./NeutrinoID_shower/judge_no_dir_tracks_close_to_showers.md)
 
 ### Shower Analysis
 ```cpp
@@ -274,6 +282,10 @@ bool high_energy_overlapping(WCShower* shower);
 [stem direction](./NeutrinoID/nue_functions.md)
 
 [calculate_num_daughter_showers](./NeutrinoID_shower/calculate_num_daughter_showers.md)
+
+[change_daughter_type](./NeutrinoID_shower/charnge_daughter_type.md)
+
+[nue taggers](./NeutrinoID/nue_tagger.md)
 
 ### Debugging and Information
 ```cpp
@@ -646,6 +658,8 @@ cal_numu_bdts_xgboost()
 cal_bdts_xgboost()
 cal_bdts()
 ```
+
+[determine_direction](./NeutrinoID_shower/determine_direction.md)
 
 [single_photon_tagger](./NeutrinoID/single_photon_tagger.md)
 
