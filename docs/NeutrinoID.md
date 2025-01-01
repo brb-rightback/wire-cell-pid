@@ -196,6 +196,8 @@ std::pair<ProtoVertex*, ProtoVertex*> get_start_end_vertices(ProtoSegment* seg);
 
 [find_segment, find_segments](./NeutrinoID/find_segment.md)
 
+[get_start_end_vertices](./NeutrinoID_shower/get_start_end_vertices.md)
+
 ### Vertex/Segment Examination and Modification
 ```cpp
 bool examine_vertices_1(PR3DCluster* cluster);
@@ -434,6 +436,10 @@ void id_pi0_with_vertex();
 void id_pi0_without_vertex();
 std::pair<int, int> fill_pi0_reco_tree(WCShower* shower, WCRecoTree& rtree);
 ```
+
+[id_pi0_with_vertex](./NeutrinoID_shower/id_pi0_with_vertex.md)
+
+[id_pi0_without_vertex](./NeutrinoID_shower/id_pi0_without_vertex.md)
 
 ### Support Functions
 ```cpp
