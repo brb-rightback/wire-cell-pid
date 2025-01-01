@@ -252,6 +252,10 @@ bool nue_tagger(double muon_kine_energy = 0);
 bool singlephoton_tagger(double muon_kine_energy = 0);
 ```
 
+[cosmic_tagger](./NeutrinoID/NeutrinoID_cosmic_tagger.md)
+
+[nue_tagger](./NeutrinoID/nue_tagger.md)
+
 [numu tagger](./NeutrinoID/numu_tagger.md)
 
 ### Additional Shower Analysis Functions
@@ -268,6 +272,30 @@ bool angular_cut(WCShower* shower, double energy, double angle);
 bool single_shower(WCShower* shower, bool flag_single_shower);
 bool low_energy_michel(WCShower* shower);
 ```
+
+[Stem_length](./nue_functions.md#Stem_length)
+
+[single_shower](./single_shower.md)
+
+[angular_cut](./single_shower.md)
+
+[Stem_direction](./nue_functions.md#Stem_direction)
+
+[Multiple_showers](./nue_functions.md#Multiple_showers)
+
+[Other_showers](./nue_functions.md#Other_showers)
+
+[Vertex_inside_shower](./nue_functions.md#Vertex_inside_shower)
+
+[Compare_muon_energy](./nue_functions.md#Compare_muon_energy)
+
+[bad_reconstruction](./bad_reconstruction.md)
+
+[High_energy_overlapping](./overlapping_overclustering.md)
+
+[Low_energy_overlapping](./overlapping_overclustering.md)
+
+[Track_overclustering](./overlapping_overclustering.md)
 
 [stem_length, multiple_showers, vertex_inside_shower, compare_muon_energy](./NeutrinoID/nue_functions.md)
 
@@ -356,6 +384,8 @@ float cal_bdts_xgboost();
 ```
 
 [numu bdts](./NeutrinoID/numu_bdt.md)
+
+[nue bdts](./NeutrinoID/nue_bdt.md)
 
 ### Output Generation [more details](./NeutrinoID/fill_info.md)
 ```cpp
@@ -570,6 +600,8 @@ cal_numu_bdts_xgboost()
 cal_bdts_xgboost()
 cal_bdts()
 ```
+
+[single_photon_tagger](./NeutrinoID/single_photon_tagger.md)
 
 [clustering_point](./NeutrinoID/clustering_point.md)
 
