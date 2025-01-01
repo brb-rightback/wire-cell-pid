@@ -29,14 +29,3 @@ if (start->get_wcpt().index == segment->get_wcpt_vec().front().index) {
 - Used in shower reconstruction and topology analysis
 - Critical for maintaining connectivity information
 
-## Integration of Functions
-
-These functions work together in the following typical sequence:
-
-1. Initial shower identification/creation
-2. `calculate_shower_kinematics()` computes basic properties
-3. `examine_merge_showers()` looks for merger opportunities
-4. `update_shower_maps()` maintains consistency
-5. Process repeats as needed
-
-This integrated approach ensures proper shower reconstruction and characterization while maintaining data consistency throughout the process.

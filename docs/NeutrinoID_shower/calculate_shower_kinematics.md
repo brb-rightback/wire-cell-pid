@@ -1,45 +1,103 @@
 ## calculate_shower_kinematics()
 
-This function handles the calculation of shower kinematic properties, treating different particle types appropriately.
+This function handles the calculation of shower kinematic properties, with specialized handling for different particle types. It iterates through all showers and updates their kinematic information if not already calculated.
 
-### Main Operations:
+### Algorithm Details
 
-1. **Regular Showers (non-muon)**
-   - Calculates basic kinematics
-   - Computes charge deposition
-   - Sets kinematics flag
+1. **Shower Type Detection**
+   - Regular showers (electron-like, |particle_type| != 13)
+   - Long muon showers (|particle_type| = 13)
 
-2. **Long Muons**
-   - Special handling for muon-like tracks
-   - Uses segments_in_long_muon for calculations
-   - Different charge calculation approach
+2. **Regular Shower Processing** [see details](../pattern_recognition/wcshower_kinematics.md)
+   ```cpp
+   if (|particle_type| != 13) {
+      shower->calculate_kinematics();
+      double kine_charge = cal_kine_charge(shower);
+      // Set properties
+   }
+   ```
+   - Calculates basic kinematics including:
+     * Energy deposition patterns
+     * Direction vectors
+     * Momentum reconstruction
+     * Shower shape parameters
 
-### Implementation Pattern:
-```cpp
-for (auto shower : showers) {
-    if (!shower->get_flag_kinematics()) {
-        if (abs(shower->get_particle_type()) != 13) {
-            // Regular shower calculations
-            shower->calculate_kinematics();
-            double charge = cal_kine_charge(shower);
-        } else {
-            // Long muon calculations
-            shower->calculate_kinematics_long_muon(segments_in_long_muon);
-            double charge = cal_kine_charge(shower);
-        }
-        shower->set_flag_kinematics(true);
-    }
-}
+3. **Long Muon Processing** [see details](../pattern_recognition/wcshower_kinematics.md)
+   ```cpp
+   if (|particle_type| == 13) {
+      shower->calculate_kinematics_long_muon(segments_in_long_muon);
+      double kine_charge = cal_kine_charge(shower);
+      // Set properties
+   }
+   ```
+   - Special handling for muon tracks:
+     * Uses segment information from long_muon container
+     * Takes into account track length
+     * Considers energy deposition along track
+     * Handles multiple scattering effects
+
+4. **Charge Calculations**
+   - For all shower types:
+     * Calculates kinetic charge using cal_kine_charge()
+     * Updates shower charge property
+     * Sets kinematic flag to true
+
+### Key Properties Updated
+
+1. **Kinematic Flag**
+   - Tracks whether kinematics have been calculated
+   - Prevents redundant calculations
+   - Set to true after processing
+
+2. **Kinetic Charge**
+   - Represents energy deposition
+   - Calculated differently for muons vs other particles
+   - Stored in shower object
+
+3. **Shower Parameters**
+   - Direction vectors
+   - Energy profiles
+   - Track/shower shape characteristics
+
+### Implementation Flow
+
+```mermaid
+graph TD
+    A[Start] --> B[Get Next Shower]
+    B --> C{Kinematics Calculated?}
+    C -- No --> D{Is Muon?}
+    C -- Yes --> B
+    D -- Yes --> E[Calculate Long Muon Kinematics]
+    D -- No --> F[Calculate Regular Kinematics]
+    E --> G[Calculate Kinetic Charge]
+    F --> G
+    G --> H[Update Shower Properties]
+    H --> B
+    B -- No More Showers --> I[End]
 ```
 
-## Integration of Functions
+### Integration with Other Functions
 
-These functions work together in the following typical sequence:
+- Works closely with `examine_merge_showers()`
+- Provides input for particle identification
+- Essential for shower clustering algorithms
+- Feeds into neutrino interaction reconstruction
 
-1. Initial shower identification/creation
-2. `calculate_shower_kinematics()` computes basic properties
-3. `examine_merge_showers()` looks for merger opportunities [see details](./examine_merge_showers.md)
-4. `update_shower_maps()` maintains consistency [see details](./update_shower_maps.md)
-5. Process repeats as needed
+### Performance Considerations
 
-This integrated approach ensures proper shower reconstruction and characterization while maintaining data consistency throughout the process.
+1. **Computational Efficiency**
+   - Only calculates when needed (flag check)
+   - Different algorithms for different particle types
+   - Optimized charge calculations
+
+2. **Memory Management**
+   - Updates existing shower objects
+   - No temporary storage needed
+   - Efficient property updates
+
+3. **Accuracy**
+   - Specialized handling improves precision
+   - Particle-type specific calculations
+   - Proper treatment of edge cases
+
+This function is crucial for accurate particle energy reconstruction and subsequent physics analysis in the Wire-Cell pattern recognition chain.
