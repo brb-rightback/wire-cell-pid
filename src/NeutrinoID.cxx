@@ -31,6 +31,8 @@ using namespace WCP;
 #include "NeutrinoID_pio_tagger.h"
 #include "NeutrinoID_singlephoton_tagger.h"
 
+#include "NeutrinoID_ssm_tagger.h"
+
 #include "NeutrinoID_numu_bdts.h"
 #include "NeutrinoID_nue_bdts.h"
 #include "NeutrinoID_DL.h"
@@ -235,11 +237,15 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
       
       bool flag_cosmic = cosmic_tagger();
 
+
       // set the cosmic flag anyway ...
       // if (flag_cosmic) tagger_info.cosmic_flag = false;
       
       auto results = numu_tagger();
       bool flag_long_muon = results.first;
+
+      bool flag_ssm = ssm_tagger(); 
+      if(flag_ssm) std::cout<<"SSM Spotted"<<std::endl;
       
       nue_tagger(results.second);
 
@@ -252,6 +258,7 @@ WCPPID::NeutrinoID::NeutrinoID(WCPPID::PR3DCluster *main_cluster1, std::vector<W
 
     if (flag_bdt >0)
         tagger_info.numu_score = cal_numu_bdts_xgboost();
+
     
     if (flag_bdt == 1){
       // Xgboost training ...
@@ -1147,7 +1154,10 @@ void WCPPID::NeutrinoID::fill_reco_tree(WCPPID::ProtoSegment* sg, WCRecoTree& rt
   
   sg->set_kine_charge( rtree.mc_kine_charge[rtree.mc_Ntrack] * units::MeV);
   //    std::cout << rtree.mc_kine_range[rtree.mc_Ntrack] << " " << rtree.mc_kine_dQdx[rtree.mc_Ntrack] << " " << rtree.mc_kine_charge[rtree.mc_Ntrack] << std::endl;
-  
+ 
+ // std::cout<<"id "<<sg->get_cluster_id()*1000 + sg->get_id()<<"  pdg "<<sg->get_particle_type()<<"  KE "<<sg->get_particle_4mom(3)-sg->get_particle_mass()<<"  x "<<sg->get_point_vec().front().x/units::cm<<"  y  "<<sg->get_point_vec().front().y/units::cm<<"  z "<<sg->get_point_vec().front().z/units::cm<<std::endl;
+
+ 
   if (sg->get_flag_dir()==0) return; // no direction not plot 
 
   else if (sg->get_flag_dir()==1){
@@ -1213,7 +1223,6 @@ void WCPPID::NeutrinoID::fill_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rt
     rtree.mc_included[rtree.mc_Ntrack] = shower->get_start_vertex().second; // 3 or 4 ...
   }
 
-
   
   rtree.mc_kine_range[rtree.mc_Ntrack] = shower->get_kine_range()/units::MeV;
   rtree.mc_kine_dQdx[rtree.mc_Ntrack] = shower->get_kine_dQdx()/units::MeV;
@@ -1249,6 +1258,7 @@ void WCPPID::NeutrinoID::fill_reco_tree(WCPPID::WCShower* shower, WCRecoTree& rt
   rtree.mc_startMomentum[rtree.mc_Ntrack][1] = momentum * init_dir.Y()/units::GeV;
   rtree.mc_startMomentum[rtree.mc_Ntrack][2] = momentum * init_dir.Z()/units::GeV;
   
+ // std::cout<<"id "<<sg1->get_cluster_id()*1000 + sg1->get_id()<<"  pdg "<<shower->get_particle_type()<<"  KE "<<kine_best<<"  x "<<shower->get_start_point().x/units::cm<<"  y  "<<shower->get_start_point().y/units::cm<<"  z "<<shower->get_start_point().z/units::cm<<std::endl;
 
   rtree.mc_mother[rtree.mc_Ntrack] = 0;
   rtree.mc_Ntrack++;
@@ -1264,7 +1274,7 @@ std::pair<int, int> WCPPID::NeutrinoID::fill_pi0_reco_tree(WCPPID::WCShower* sho
     WCPPID::ProtoSegment *sg1 = shower->get_start_segment();
     rtree.mc_id[rtree.mc_Ntrack]  = sg1->get_cluster_id()*1000 + map_shower_pio_id[shower];
     rtree.mc_pdg[rtree.mc_Ntrack] = 111;
-    
+ // std::cout<<"id "<<sg1->get_cluster_id()*1000 + map_shower_pio_id[shower]<<"  pdg 111"<<"  KE "<<map_pio_id_mass[map_shower_pio_id[shower]].first<<"  x "<<shower->get_start_vertex().first->get_fit_pt().x/units::cm<<"  y "<<shower->get_start_vertex().first->get_fit_pt().y/units::cm<<"  z "<<shower->get_start_vertex().first->get_fit_pt().z/units::cm<<std::endl;    
     rtree.mc_process[rtree.mc_Ntrack] = 0;  
     rtree.mc_kine_range[rtree.mc_Ntrack] = 0;
     rtree.mc_kine_dQdx[rtree.mc_Ntrack] = 0;
@@ -1359,10 +1369,12 @@ int WCPPID::NeutrinoID::fill_psuedo_reco_tree(WCPPID::WCShower* shower, WCRecoTr
   rtree.mc_startMomentum[rtree.mc_Ntrack][1] = momentum * init_dir.Y()/units::GeV;
   rtree.mc_startMomentum[rtree.mc_Ntrack][2] = momentum * init_dir.Z()/units::GeV;
   
+  //std::cout<<"id "<<sg1->get_cluster_id()*1000 + acc_segment_id<<"  pdg "<<rtree.mc_pdg[rtree.mc_Ntrack]<<"  KE "<<kine_best<<"  x "<<shower->get_start_vertex().first->get_fit_pt().x/units::cm<<"  y "<<shower->get_start_vertex().first->get_fit_pt().y/units::cm<<"  z "<<shower->get_start_vertex().first->get_fit_pt().z/units::cm<<std::endl;
 
   rtree.mc_mother[rtree.mc_Ntrack] = 0;
   rtree.mc_Ntrack++;
   rtree.mc_daughters->resize(rtree.mc_Ntrack);
+
 
   return rtree.mc_id[rtree.mc_Ntrack-1];
 }
@@ -1397,7 +1409,6 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
     WCPPID::ProtoSegment* sg= it->first;
     if (map_segment_in_shower.find(sg)!=map_segment_in_shower.end()) continue;
     if (sg->get_cluster_id() != main_vertex->get_cluster_id() ) continue;
-    //    std::cout << sg->get_cluster_id() << " " << main_vertex->get_cluster_id() << " " << sg->get_id() << " " << sg->get_length()/units::cm << " " << sg->get_flag_dir() << std::endl;
     fill_reco_tree(sg, rtree);
     std::pair<WCPPID::ProtoVertex*, WCPPID::ProtoVertex*> pair_vertices = find_vertices(sg);
     if (map_vertex_segments[pair_vertices.first].size()==1 || map_vertex_segments[pair_vertices.second].size()==1 ){
@@ -1405,12 +1416,26 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
     }else{
       rtree.mc_stopped[rtree.mc_Ntrack-1] = 0;
     }
-    //    std::cout << "kak " << sg->get_cluster_id() << " " << sg->get_id() << std::endl;
+        std::cout << "kak " << sg->get_cluster_id() << " " << sg->get_id() << std::endl;
   }
+std::cout<<std::endl;
+std::cout<<"Passed over tracks"<<std::endl;
+for(int i=0; i<rtree.mc_Ntrack; i++){
+double mass = 0;
+if(rtree.mc_pdg[i]==13) mass = 0.1057;
+if(abs(rtree.mc_pdg[i])==211) mass = 0.140;
+if(rtree.mc_pdg[i]==111) mass = 0.135;
+if(rtree.mc_pdg[i]==2212 || rtree.mc_pdg[i]==2112) mass = 0.938;
+double ke = rtree.mc_startMomentum[i][3]-mass;
+std::cout<<"id "<<rtree.mc_id[i]<<"  pdg "<<rtree.mc_pdg[i]<<"  mom "<<rtree.mc_mother[i]<<"  inc "<<rtree.mc_included[i]<<"  KE "<<ke*1000<<"  Start:  x "<<rtree.mc_startXYZT[i][0]<<"  y "<<rtree.mc_startXYZT[i][1]<<"  z "<<rtree.mc_startXYZT[i][2]<<"  End:  x "<<rtree.mc_endXYZT[i][0]<<"  y "<<rtree.mc_endXYZT[i][1]<<"  z "<<rtree.mc_endXYZT[i][2]<<std::endl;
+}
+std::cout<<std::endl;
+
   for (auto it = showers.begin(); it!=showers.end();it++){
     fill_reco_tree(*it, rtree);
     rtree.mc_stopped[rtree.mc_Ntrack-1] = 0;
     //std::cout << "gag " << *it << " " << (*it)->get_start_segment()->get_id() << std::endl;
+    std::cout << "gag " << (*it)->get_start_segment()->get_cluster_id() << " " << (*it)->get_start_segment()->get_id() << std::endl;
   }
 
     // id vs. rtree id
@@ -1475,6 +1500,18 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
     }
     segments_to_be_examined = temp_segments;
   }
+
+std::cout<<std::endl;
+std::cout<<"Passed over tracks+ some showers"<<std::endl;
+for(int i=0; i<rtree.mc_Ntrack; i++){
+double mass = 0;
+if(rtree.mc_pdg[i]==13) mass = 0.1057;
+if(abs(rtree.mc_pdg[i])==211) mass = 0.140;
+if(rtree.mc_pdg[i]==111) mass = 0.135;
+if(rtree.mc_pdg[i]==2212 || rtree.mc_pdg[i]==2112) mass = 0.938;
+double ke = rtree.mc_startMomentum[i][3]-mass;
+std::cout<<"id "<<rtree.mc_id[i]<<"  pdg "<<rtree.mc_pdg[i]<<"  mom "<<rtree.mc_mother[i]<<"  inc "<<rtree.mc_included[i]<<"  KE "<<ke*1000<<"  Start:  x "<<rtree.mc_startXYZT[i][0]<<"  y "<<rtree.mc_startXYZT[i][1]<<"  z "<<rtree.mc_startXYZT[i][2]<<"  End:  x "<<rtree.mc_endXYZT[i][0]<<"  y "<<rtree.mc_endXYZT[i][1]<<"  z "<<rtree.mc_endXYZT[i][2]<<std::endl;
+}
 
   // Now the showers
   for (auto it = showers.begin(); it!= showers.end(); it++){
@@ -1572,6 +1609,19 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
       
     }
   }
+
+std::cout<<std::endl;
+std::cout<<"Passed over everything"<<std::endl;
+for(int i=0; i<rtree.mc_Ntrack; i++){
+double mass = 0;
+if(rtree.mc_pdg[i]==13) mass = 0.1057;
+if(abs(rtree.mc_pdg[i])==211) mass = 0.140;
+if(rtree.mc_pdg[i]==111) mass = 0.135;
+if(rtree.mc_pdg[i]==2212 || rtree.mc_pdg[i]==2112) mass = 0.938;
+double ke = rtree.mc_startMomentum[i][3]-mass;
+std::cout<<"id "<<rtree.mc_id[i]<<"  pdg "<<rtree.mc_pdg[i]<<"  mom "<<rtree.mc_mother[i]<<"  inc "<<rtree.mc_included[i]<<"  KE "<<ke*1000<<"  Start:  x "<<rtree.mc_startXYZT[i][0]<<"  y "<<rtree.mc_startXYZT[i][1]<<"  z "<<rtree.mc_startXYZT[i][2]<<"  End:  x "<<rtree.mc_endXYZT[i][0]<<"  y "<<rtree.mc_endXYZT[i][1]<<"  z "<<rtree.mc_endXYZT[i][2]<<std::endl;
+}
+
 }
 
 WCPPID::ProtoSegment* WCPPID::NeutrinoID::find_incoming_segment(WCPPID::ProtoVertex *vtx){
@@ -2128,6 +2178,404 @@ void WCPPID::NeutrinoID::init_tagger_info(){
   tagger_info.mip_vec_dQ_dx_17 = 0; 
   tagger_info.mip_vec_dQ_dx_18 = 0; 
   tagger_info.mip_vec_dQ_dx_19 = 0; 
+
+  //single track kdar tagger
+  tagger_info.ssm_flag_st_kdar = false;
+  tagger_info.ssm_Nsm = -999;//number of short straight muons
+  tagger_info.ssm_Nsm_wivtx = -999;//number of short straight muons with vertex activity
+  tagger_info.ssm_dq_dx_fwd_1 = -999;
+  tagger_info.ssm_dq_dx_fwd_2 = -999;
+  tagger_info.ssm_dq_dx_fwd_3 = -999;
+  tagger_info.ssm_dq_dx_fwd_4 = -999;
+  tagger_info.ssm_dq_dx_fwd_5 = -999;
+  tagger_info.ssm_dq_dx_bck_1 = -999;
+  tagger_info.ssm_dq_dx_bck_2 = -999;
+  tagger_info.ssm_dq_dx_bck_3 = -999;
+  tagger_info.ssm_dq_dx_bck_4 = -999;
+  tagger_info.ssm_dq_dx_bck_5 = -999;
+  tagger_info.ssm_d_dq_dx_fwd_12 = -999;
+  tagger_info.ssm_d_dq_dx_fwd_23 = -999;
+  tagger_info.ssm_d_dq_dx_fwd_34 = -999;
+  tagger_info.ssm_d_dq_dx_fwd_45 = -999;
+  tagger_info.ssm_d_dq_dx_bck_12 = -999;
+  tagger_info.ssm_d_dq_dx_bck_23 = -999;
+  tagger_info.ssm_d_dq_dx_bck_34 = -999;
+  tagger_info.ssm_d_dq_dx_bck_45 = -999;
+  tagger_info.ssm_max_dq_dx_fwd_3 = -999;
+  tagger_info.ssm_max_dq_dx_fwd_5 = -999;
+  tagger_info.ssm_max_dq_dx_bck_3 = -999;
+  tagger_info.ssm_max_dq_dx_bck_5 = -999;
+  tagger_info.ssm_max_d_dq_dx_fwd_3 = -999;
+  tagger_info.ssm_max_d_dq_dx_fwd_5 = -999;
+  tagger_info.ssm_max_d_dq_dx_bck_3 = -999;
+  tagger_info.ssm_max_d_dq_dx_bck_5 = -999;
+  tagger_info.ssm_medium_dq_dx = -999;
+  tagger_info.ssm_medium_dq_dx_bp = -999;
+      //angluar info
+  tagger_info.ssm_angle_to_z = -999;
+  tagger_info.ssm_angle_to_target = -999;
+  tagger_info.ssm_angle_to_absorber = -999;
+  tagger_info.ssm_angle_to_vertical = -999;
+      //directional info
+  tagger_info.ssm_x_dir = -999;
+  tagger_info.ssm_y_dir = -999;
+  tagger_info.ssm_z_dir = -999;
+      //energy info
+  tagger_info.ssm_kine_energy = -999;
+  tagger_info.ssm_kine_energy_reduced = -999;
+      //general properties
+  tagger_info.ssm_vtx_activity = -999;
+  tagger_info.ssm_pdg = -999;
+  tagger_info.ssm_dQ_dx_cut = -999;
+  tagger_info.ssm_score_mu_fwd = -999;
+  tagger_info.ssm_score_p_fwd = -999;
+  tagger_info.ssm_score_e_fwd = -999;
+  tagger_info.ssm_score_mu_bck = -999;
+  tagger_info.ssm_score_p_bck = -999;
+  tagger_info.ssm_score_e_bck = -999;
+  tagger_info.ssm_score_mu_fwd_bp = -999;
+  tagger_info.ssm_score_p_fwd_bp = -999;
+  tagger_info.ssm_score_e_fwd_bp = -999;
+      //track "straighness"
+  tagger_info.ssm_length = -999;
+  tagger_info.ssm_direct_length = -999;
+  tagger_info.ssm_length_ratio = -999;
+  tagger_info.ssm_max_dev = -999;
+    //number of other particles
+  tagger_info.ssm_n_prim_tracks_1 = -999;
+  tagger_info.ssm_n_prim_tracks_3 = -999;
+  tagger_info.ssm_n_prim_tracks_5 = -999;
+  tagger_info.ssm_n_prim_tracks_8 = -999;
+  tagger_info.ssm_n_prim_tracks_11 = -999;
+  tagger_info.ssm_n_all_tracks_1 = -999;
+  tagger_info.ssm_n_all_tracks_3 = -999;
+  tagger_info.ssm_n_all_tracks_5 = -999;
+  tagger_info.ssm_n_all_tracks_8 = -999;
+  tagger_info.ssm_n_all_tracks_11 = -999;
+  tagger_info.ssm_n_daughter_tracks_1 = -999;
+  tagger_info.ssm_n_daughter_tracks_3 = -999;
+  tagger_info.ssm_n_daughter_tracks_5 = -999;
+  tagger_info.ssm_n_daughter_tracks_8 = -999;
+  tagger_info.ssm_n_daughter_tracks_11 = -999;
+  tagger_info.ssm_n_daughter_all_1 = -999;
+  tagger_info.ssm_n_daughter_all_3 = -999;
+  tagger_info.ssm_n_daughter_all_5 = -999;
+  tagger_info.ssm_n_daughter_all_8 = -999;
+  tagger_info.ssm_n_daughter_all_11 = -999;
+    //properties of leading other primary track
+  tagger_info.ssm_prim_track1_pdg = -999;
+  tagger_info.ssm_prim_track1_score_mu_fwd = -999;
+  tagger_info.ssm_prim_track1_score_p_fwd = -999;
+  tagger_info.ssm_prim_track1_score_e_fwd = -999;
+  tagger_info.ssm_prim_track1_score_mu_bck = -999;
+  tagger_info.ssm_prim_track1_score_p_bck = -999;
+  tagger_info.ssm_prim_track1_score_e_bck = -999;
+  tagger_info.ssm_prim_track1_length = -999;
+  tagger_info.ssm_prim_track1_direct_length = -999;
+  tagger_info.ssm_prim_track1_length_ratio = -999;
+  tagger_info.ssm_prim_track1_max_dev = -999;
+  tagger_info.ssm_prim_track1_kine_energy_range = -999;
+  tagger_info.ssm_prim_track1_kine_energy_range_mu = -999;
+  tagger_info.ssm_prim_track1_kine_energy_range_p = -999;
+  tagger_info.ssm_prim_track1_kine_energy_range_e = -999;
+  tagger_info.ssm_prim_track1_kine_energy_cal = -999;
+  tagger_info.ssm_prim_track1_medium_dq_dx = -999;
+  tagger_info.ssm_prim_track1_x_dir = -999;
+  tagger_info.ssm_prim_track1_y_dir = -999;
+  tagger_info.ssm_prim_track1_z_dir = -999;
+  tagger_info.ssm_prim_track1_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_prim_track1_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_prim_track1_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_prim_track1_add_daught_all_counts_5 = -999; 
+  tagger_info.ssm_prim_track1_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_prim_track1_add_daught_all_counts_11 = -999;
+  //properties of sub-leading other primary track
+  tagger_info.ssm_prim_track2_pdg = -999;
+  tagger_info.ssm_prim_track2_score_mu_fwd = -999;
+  tagger_info.ssm_prim_track2_score_p_fwd = -999;
+  tagger_info.ssm_prim_track2_score_e_fwd = -999;
+  tagger_info.ssm_prim_track2_score_mu_bck = -999;
+  tagger_info.ssm_prim_track2_score_p_bck = -999;
+  tagger_info.ssm_prim_track2_score_e_bck = -999;
+  tagger_info.ssm_prim_track2_length = -999;
+  tagger_info.ssm_prim_track2_direct_length = -999;
+  tagger_info.ssm_prim_track2_length_ratio = -999;
+  tagger_info.ssm_prim_track2_max_dev = -999;
+  tagger_info.ssm_prim_track2_kine_energy_range = -999;
+  tagger_info.ssm_prim_track2_kine_energy_range_mu = -999;
+  tagger_info.ssm_prim_track2_kine_energy_range_p = -999;
+  tagger_info.ssm_prim_track2_kine_energy_range_e = -999;
+  tagger_info.ssm_prim_track2_kine_energy_cal = -999;
+  tagger_info.ssm_prim_track2_medium_dq_dx = -999;
+  tagger_info.ssm_prim_track2_x_dir = -999;
+  tagger_info.ssm_prim_track2_y_dir = -999;
+  tagger_info.ssm_prim_track2_z_dir = -999;
+  tagger_info.ssm_prim_track2_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_prim_track2_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_prim_track2_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_prim_track2_add_daught_all_counts_5 = -999;
+  tagger_info.ssm_prim_track2_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_prim_track2_add_daught_all_counts_11 = -999;
+  //properties of leading daughter track
+  tagger_info.ssm_daught_track1_pdg = -999;
+  tagger_info.ssm_daught_track1_score_mu_fwd = -999;
+  tagger_info.ssm_daught_track1_score_p_fwd = -999;
+  tagger_info.ssm_daught_track1_score_e_fwd = -999;
+  tagger_info.ssm_daught_track1_score_mu_bck = -999;
+  tagger_info.ssm_daught_track1_score_p_bck = -999;
+  tagger_info.ssm_daught_track1_score_e_bck = -999;
+  tagger_info.ssm_daught_track1_length = -999;
+  tagger_info.ssm_daught_track1_direct_length = -999;
+  tagger_info.ssm_daught_track1_length_ratio = -999;
+  tagger_info.ssm_daught_track1_max_dev = -999;
+  tagger_info.ssm_daught_track1_kine_energy_range = -999;
+  tagger_info.ssm_daught_track1_kine_energy_range_mu = -999;
+  tagger_info.ssm_daught_track1_kine_energy_range_p = -999;
+  tagger_info.ssm_daught_track1_kine_energy_range_e = -999;
+  tagger_info.ssm_daught_track1_kine_energy_cal = -999;
+  tagger_info.ssm_daught_track1_medium_dq_dx = -999;
+  tagger_info.ssm_daught_track1_x_dir = -999;
+  tagger_info.ssm_daught_track1_y_dir = -999;
+  tagger_info.ssm_daught_track1_z_dir = -999;
+  tagger_info.ssm_daught_track1_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_daught_track1_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_daught_track1_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_daught_track1_add_daught_all_counts_5 = -999;
+  tagger_info.ssm_daught_track1_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_daught_track1_add_daught_all_counts_11 = -999;
+  //properties of sub-leading daughter track
+  tagger_info.ssm_daught_track2_pdg = -999;
+  tagger_info.ssm_daught_track2_score_mu_fwd = -999;
+  tagger_info.ssm_daught_track2_score_p_fwd = -999;
+  tagger_info.ssm_daught_track2_score_e_fwd = -999;
+  tagger_info.ssm_daught_track2_score_mu_bck = -999;
+  tagger_info.ssm_daught_track2_score_p_bck = -999;
+  tagger_info.ssm_daught_track2_score_e_bck = -999;
+  tagger_info.ssm_daught_track2_length = -999;
+  tagger_info.ssm_daught_track2_direct_length = -999;
+  tagger_info.ssm_daught_track2_length_ratio = -999;
+  tagger_info.ssm_daught_track2_max_dev = -999;
+  tagger_info.ssm_daught_track2_kine_energy_range = -999;
+  tagger_info.ssm_daught_track2_kine_energy_range_mu = -999;
+  tagger_info.ssm_daught_track2_kine_energy_range_p = -999;
+  tagger_info.ssm_daught_track2_kine_energy_range_e = -999;
+  tagger_info.ssm_daught_track2_kine_energy_cal = -999;
+  tagger_info.ssm_daught_track2_medium_dq_dx = -999;
+  tagger_info.ssm_daught_track2_x_dir = -999;
+  tagger_info.ssm_daught_track2_y_dir = -999;
+  tagger_info.ssm_daught_track2_z_dir = -999;
+  tagger_info.ssm_daught_track2_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_daught_track2_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_daught_track2_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_daught_track2_add_daught_all_counts_5 = -999;
+  tagger_info.ssm_daught_track2_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_daught_track2_add_daught_all_counts_11 = -999;
+  //properties of leading other primary shower
+  tagger_info.ssm_prim_shw1_pdg = -999;
+  tagger_info.ssm_prim_shw1_score_mu_fwd = -999;
+  tagger_info.ssm_prim_shw1_score_p_fwd = -999;
+  tagger_info.ssm_prim_shw1_score_e_fwd = -999;
+  tagger_info.ssm_prim_shw1_score_mu_bck = -999;
+  tagger_info.ssm_prim_shw1_score_p_bck = -999;
+  tagger_info.ssm_prim_shw1_score_e_bck = -999;
+  tagger_info.ssm_prim_shw1_length = -999;
+  tagger_info.ssm_prim_shw1_direct_length = -999;
+  tagger_info.ssm_prim_shw1_length_ratio = -999;
+  tagger_info.ssm_prim_shw1_max_dev = -999;
+  tagger_info.ssm_prim_shw1_kine_energy_range = -999;
+  tagger_info.ssm_prim_shw1_kine_energy_range_mu = -999;
+  tagger_info.ssm_prim_shw1_kine_energy_range_p = -999;
+  tagger_info.ssm_prim_shw1_kine_energy_range_e = -999;
+  tagger_info.ssm_prim_shw1_kine_energy_cal = -999;
+  tagger_info.ssm_prim_shw1_kine_energy_best = -999;
+  tagger_info.ssm_prim_shw1_medium_dq_dx = -999;
+  tagger_info.ssm_prim_shw1_x_dir = -999;
+  tagger_info.ssm_prim_shw1_y_dir = -999;
+  tagger_info.ssm_prim_shw1_z_dir = -999;
+  tagger_info.ssm_prim_shw1_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_prim_shw1_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_prim_shw1_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_prim_shw1_add_daught_all_counts_5 = -999;
+  tagger_info.ssm_prim_shw1_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_prim_shw1_add_daught_all_counts_11 = -999;
+    //properties of sub-leading other primary shower
+  tagger_info.ssm_prim_shw2_pdg = -999;
+  tagger_info.ssm_prim_shw2_score_mu_fwd = -999;
+  tagger_info.ssm_prim_shw2_score_p_fwd = -999;
+  tagger_info.ssm_prim_shw2_score_e_fwd = -999;
+  tagger_info.ssm_prim_shw2_score_mu_bck = -999;
+  tagger_info.ssm_prim_shw2_score_p_bck = -999;
+  tagger_info.ssm_prim_shw2_score_e_bck = -999;
+  tagger_info.ssm_prim_shw2_length = -999;
+  tagger_info.ssm_prim_shw2_direct_length = -999;
+  tagger_info.ssm_prim_shw2_length_ratio = -999;
+  tagger_info.ssm_prim_shw2_max_dev = -999;
+  tagger_info.ssm_prim_shw2_kine_energy_range = -999;
+  tagger_info.ssm_prim_shw2_kine_energy_range_mu = -999;
+  tagger_info.ssm_prim_shw2_kine_energy_range_p = -999;
+  tagger_info.ssm_prim_shw2_kine_energy_range_e = -999;
+  tagger_info.ssm_prim_shw2_kine_energy_cal = -999;
+  tagger_info.ssm_prim_shw2_kine_energy_best = -999;
+  tagger_info.ssm_prim_shw2_medium_dq_dx = -999;
+  tagger_info.ssm_prim_shw2_x_dir = -999;
+  tagger_info.ssm_prim_shw2_y_dir = -999;
+  tagger_info.ssm_prim_shw2_z_dir = -999;
+  tagger_info.ssm_prim_shw2_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_prim_shw2_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_prim_shw2_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_prim_shw2_add_daught_all_counts_5 = -999;
+  tagger_info.ssm_prim_shw2_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_prim_shw2_add_daught_all_counts_11 = -999;
+  //properties of leading daughter shower
+  tagger_info.ssm_daught_shw1_pdg = -999;
+  tagger_info.ssm_daught_shw1_score_mu_fwd = -999;
+  tagger_info.ssm_daught_shw1_score_p_fwd = -999;
+  tagger_info.ssm_daught_shw1_score_e_fwd = -999;
+  tagger_info.ssm_daught_shw1_score_mu_bck = -999;
+  tagger_info.ssm_daught_shw1_score_p_bck = -999;
+  tagger_info.ssm_daught_shw1_score_e_bck = -999;
+  tagger_info.ssm_daught_shw1_length = -999;
+  tagger_info.ssm_daught_shw1_direct_length = -999;
+  tagger_info.ssm_daught_shw1_length_ratio = -999;
+  tagger_info.ssm_daught_shw1_max_dev = -999;
+  tagger_info.ssm_daught_shw1_kine_energy_range = -999;
+  tagger_info.ssm_daught_shw1_kine_energy_range_mu = -999;
+  tagger_info.ssm_daught_shw1_kine_energy_range_p = -999;
+  tagger_info.ssm_daught_shw1_kine_energy_range_e = -999;
+  tagger_info.ssm_daught_shw1_kine_energy_cal = -999;
+  tagger_info.ssm_daught_shw1_kine_energy_best = -999;
+  tagger_info.ssm_daught_shw1_medium_dq_dx = -999;
+  tagger_info.ssm_daught_shw1_x_dir = -999;
+  tagger_info.ssm_daught_shw1_y_dir = -999;
+  tagger_info.ssm_daught_shw1_z_dir = -999;
+  tagger_info.ssm_daught_shw1_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_daught_shw1_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_daught_shw1_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_daught_shw1_add_daught_all_counts_5 = -999;
+  tagger_info.ssm_daught_shw1_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_daught_shw1_add_daught_all_counts_11 = -999;
+    //properties of sub-leading daughter shower
+  tagger_info.ssm_daught_shw2_pdg = -999;
+  tagger_info.ssm_daught_shw2_score_mu_fwd = -999;
+  tagger_info.ssm_daught_shw2_score_p_fwd = -999;
+  tagger_info.ssm_daught_shw2_score_e_fwd = -999;
+  tagger_info.ssm_daught_shw2_score_mu_bck = -999;
+  tagger_info.ssm_daught_shw2_score_p_bck = -999;
+  tagger_info.ssm_daught_shw2_score_e_bck = -999;
+  tagger_info.ssm_daught_shw2_length = -999;
+  tagger_info.ssm_daught_shw2_direct_length = -999;
+  tagger_info.ssm_daught_shw2_length_ratio = -999;
+  tagger_info.ssm_daught_shw2_max_dev = -999;
+  tagger_info.ssm_daught_shw2_kine_energy_range = -999;
+  tagger_info.ssm_daught_shw2_kine_energy_range_mu = -999;
+  tagger_info.ssm_daught_shw2_kine_energy_range_p = -999;
+  tagger_info.ssm_daught_shw2_kine_energy_range_e = -999;
+  tagger_info.ssm_daught_shw2_kine_energy_cal = -999;
+  tagger_info.ssm_daught_shw2_kine_energy_best = -999;
+  tagger_info.ssm_daught_shw2_medium_dq_dx = -999;
+  tagger_info.ssm_daught_shw2_x_dir = -999;
+  tagger_info.ssm_daught_shw2_y_dir = -999;
+  tagger_info.ssm_daught_shw2_z_dir = -999;
+  tagger_info.ssm_daught_shw2_add_daught_track_counts_1 = -999;
+  tagger_info.ssm_daught_shw2_add_daught_all_counts_1 = -999;
+  tagger_info.ssm_daught_shw2_add_daught_track_counts_5 = -999;
+  tagger_info.ssm_daught_shw2_add_daught_all_counts_5 = -999;
+  tagger_info.ssm_daught_shw2_add_daught_track_counts_11 = -999;
+  tagger_info.ssm_daught_shw2_add_daught_all_counts_11 = -999;
+  //event level properties
+  tagger_info.ssm_nu_angle_z = -999;
+  tagger_info.ssm_nu_angle_target = -999;
+  tagger_info.ssm_nu_angle_absorber = -999;
+  tagger_info.ssm_nu_angle_vertical = -999;
+  tagger_info.ssm_con_nu_angle_z = -999;
+  tagger_info.ssm_con_nu_angle_target = -999;
+  tagger_info.ssm_con_nu_angle_absorber = -999;
+  tagger_info.ssm_con_nu_angle_vertical = -999;
+  tagger_info.ssm_prim_nu_angle_z = -999;
+  tagger_info.ssm_prim_nu_angle_target = -999;
+  tagger_info.ssm_prim_nu_angle_absorber = -999;
+  tagger_info.ssm_prim_nu_angle_vertical = -999;
+  tagger_info.ssm_track_angle_z = -999;
+  tagger_info.ssm_track_angle_target = -999;
+  tagger_info.ssm_track_angle_absorber = -999;
+  tagger_info.ssm_track_angle_vertical = -999;
+  tagger_info.ssm_vtxX = -999;
+  tagger_info.ssm_vtxY = -999;
+  tagger_info.ssm_vtxZ = -999;
+  //off vertex stuff
+  tagger_info.ssm_offvtx_length  =  -999;
+  tagger_info.ssm_offvtx_energy  =  -999;
+  tagger_info.ssm_n_offvtx_tracks_1  =  -999;
+  tagger_info.ssm_n_offvtx_tracks_3  =  -999;
+  tagger_info.ssm_n_offvtx_tracks_5  =  -999;
+  tagger_info.ssm_n_offvtx_tracks_8  =  -999;
+  tagger_info.ssm_n_offvtx_tracks_11  =  -999;
+  tagger_info.ssm_n_offvtx_showers_1  =  -999;
+  tagger_info.ssm_n_offvtx_showers_3  =  -999;
+  tagger_info.ssm_n_offvtx_showers_5  =  -999;
+  tagger_info.ssm_n_offvtx_showers_8  =  -999;
+  tagger_info.ssm_n_offvtx_showers_11  =  -999;
+   //properties of leading off vertex track
+  tagger_info.ssm_offvtx_track1_pdg  =  -999;
+  tagger_info.ssm_offvtx_track1_score_mu_fwd  =  -999;
+  tagger_info.ssm_offvtx_track1_score_p_fwd  =  -999;
+  tagger_info.ssm_offvtx_track1_score_e_fwd  =  -999;
+  tagger_info.ssm_offvtx_track1_score_mu_bck  =  -999;
+  tagger_info.ssm_offvtx_track1_score_p_bck  =  -999;
+  tagger_info.ssm_offvtx_track1_score_e_bck  =  -999;
+  tagger_info.ssm_offvtx_track1_length  =  -999;
+  tagger_info.ssm_offvtx_track1_direct_length  =  -999;
+  tagger_info.ssm_offvtx_track1_max_dev  =  -999;
+  tagger_info.ssm_offvtx_track1_kine_energy_range  =  -999;
+  tagger_info.ssm_offvtx_track1_kine_energy_range_mu  = -999;
+  tagger_info.ssm_offvtx_track1_kine_energy_range_p  =  -999;
+  tagger_info.ssm_offvtx_track1_kine_energy_range_e  =  -999;
+  tagger_info.ssm_offvtx_track1_kine_energy_cal  =  -999;
+  tagger_info.ssm_offvtx_track1_medium_dq_dx  =  -999;
+  tagger_info.ssm_offvtx_track1_x_dir  =  -999;
+  tagger_info.ssm_offvtx_track1_y_dir  =  -999;
+  tagger_info.ssm_offvtx_track1_z_dir  =  -999;
+  tagger_info.ssm_offvtx_track1_dist_mainvtx  =  -999;
+   //properties of leading off vertex shower
+  tagger_info.ssm_offvtx_shw1_pdg_offvtx  =  -999;
+  tagger_info.ssm_offvtx_shw1_score_mu_fwd  = -999;
+  tagger_info.ssm_offvtx_shw1_score_p_fwd  =  -999;
+  tagger_info.ssm_offvtx_shw1_score_e_fwd  =  -999;
+  tagger_info.ssm_offvtx_shw1_score_mu_bck  =  -999;
+  tagger_info.ssm_offvtx_shw1_score_p_bck  =  -999;
+  tagger_info.ssm_offvtx_shw1_score_e_bck  =  -999;
+  tagger_info.ssm_offvtx_shw1_length  =  -999;
+  tagger_info.ssm_offvtx_shw1_direct_length  =  -999;
+  tagger_info.ssm_offvtx_shw1_max_dev  =  -999;
+  tagger_info.ssm_offvtx_shw1_kine_energy_best  =  -999;
+  tagger_info.ssm_offvtx_shw1_kine_energy_range  =  -999;
+  tagger_info.ssm_offvtx_shw1_kine_energy_range_mu  =  -999;
+  tagger_info.ssm_offvtx_shw1_kine_energy_range_p  =  -999;
+  tagger_info.ssm_offvtx_shw1_kine_energy_range_e  =  -999;
+  tagger_info.ssm_offvtx_shw1_kine_energy_cal  =  -999;
+  tagger_info.ssm_offvtx_shw1_medium_dq_dx  =  -999;
+  tagger_info.ssm_offvtx_shw1_x_dir  =  -999;
+  tagger_info.ssm_offvtx_shw1_y_dir  =  -999;
+  tagger_info.ssm_offvtx_shw1_z_dir  =  -999;
+  tagger_info.ssm_offvtx_shw1_dist_mainvtx  =  -999;
+  // Spacepoints
+  tagger_info.ssmsp_Ntrack = 0;
+  tagger_info.ssmsp_Nsp_tot = 0;
+  // Kine vars
+  tagger_info.ssm_kine_reco_Enu = -999; // kinetic energy  + additional energy ...
+  tagger_info.ssm_kine_reco_add_energy = -999;  // mass, binding energy ...
+  tagger_info.ssm_kine_pio_mass = -999; // mass
+  tagger_info.ssm_kine_pio_flag = -999; // 0 not filled, 1, with vertex, 2 without vertex
+  tagger_info.ssm_kine_pio_vtx_dis = -999;
+  tagger_info.ssm_kine_pio_energy_1 = -999;
+  tagger_info.ssm_kine_pio_theta_1 = -999;
+  tagger_info.ssm_kine_pio_phi_1 = -999;
+  tagger_info.ssm_kine_pio_dis_1 = -999;
+  tagger_info.ssm_kine_pio_energy_2 = -999;
+  tagger_info.ssm_kine_pio_theta_2 = -999;
+  tagger_info.ssm_kine_pio_phi_2 = -999;
+  tagger_info.ssm_kine_pio_dis_2 = -999;
+  tagger_info.ssm_kine_pio_angle = -999;
 
   // single photon shower identification
   tagger_info.shw_sp_flag = true;
