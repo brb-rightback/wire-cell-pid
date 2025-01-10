@@ -474,25 +474,25 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
       if(vtx_activity_bck && vtx_activity_fwd){
         if(sg_max_d_dq_dx_fwd_5<1.0) vtx_activity_fwd = false;
         if(sg_max_d_dq_dx_bck_5<1.0) vtx_activity_bck = false;
-        if(!vtx_activity_bck && !vtx_activity_fwd){
+        if(sg_max_d_dq_dx_bck_5==sg_max_d_dq_dx_fwd_5){
+            if(sg_max_d_dq_dx_fwd_3==sg_max_d_dq_dx_bck_3){
+              vtx_activity_fwd = false;
+              vtx_activity_bck = false;
+            }else if(sg_max_d_dq_dx_fwd_3>sg_max_d_dq_dx_bck_3){
+              vtx_activity_fwd = true;
+              vtx_activity_bck = false;
+            }else{
+              vtx_activity_fwd = false;
+              vtx_activity_bck = true;
+            }
+        }else if(!vtx_activity_bck && !vtx_activity_fwd){
           if(sg_max_d_dq_dx_fwd_5>=sg_max_d_dq_dx_bck_5){
             vtx_activity_fwd = true;
             vtx_activity_bck = false;
           }else{
             vtx_activity_fwd = false;
             vtx_activity_bck = true;
-          } 
-	}else if(sg_max_d_dq_dx_bck_5==sg_max_d_dq_dx_fwd_5){
-            if(sg_max_d_dq_dx_fwd_3==sg_max_d_dq_dx_bck_3){
-	      vtx_activity_fwd = false;
-              vtx_activity_bck = false;
-	    }else if(sg_max_d_dq_dx_fwd_3>sg_max_d_dq_dx_bck_3){
-              vtx_activity_fwd = true;
-              vtx_activity_bck = false;
-            }else{
-              vtx_activity_fwd = false;
-              vtx_activity_bck = true;
-	    }
+          }
         }else if(vtx_activity_bck && vtx_activity_fwd){
           if(sg_max_d_dq_dx_fwd_5<1.3) vtx_activity_fwd = false;
           if(sg_max_d_dq_dx_bck_5<1.3) vtx_activity_bck = false;
@@ -515,13 +515,12 @@ bool WCPPID::NeutrinoID::ssm_tagger(){
           }
         }
       }
-
+	    
       //flag the muon as backwards if the direction with vertex activity does not match where the start of the muon is
       if(vtx_activity_bck){
         Nsm_wivtx+=1;
         if(sg->get_flag_dir()==1) {sg_flag_backwards_muon=true;}
         sg_flag_vtx_activity = true;
-        ssm_sg = sg;
       }else if(vtx_activity_fwd){
         Nsm_wivtx+=1;
         if(sg->get_flag_dir()==-1) {sg_flag_backwards_muon=true;}
