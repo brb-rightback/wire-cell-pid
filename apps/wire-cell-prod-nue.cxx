@@ -1677,7 +1677,7 @@ int main(int argc, char* argv[])
 
     //kdar tagger
     T_tagger->Branch("ssm_flag_st_kdar",&tagger_info.ssm_flag_st_kdar,"ssm_flag_st_kdar/F");
-    std::cout<<"nue:  tagger_info.ssm_Nsm"<<tagger_info.ssm_Nsm<<std::endl;
+    //std::cout<<"nue:  tagger_info.ssm_Nsm"<<tagger_info.ssm_Nsm<<std::endl;
     T_tagger->Branch("ssm_Nsm",&tagger_info.ssm_Nsm,"ssm_Nsm/F");
     T_tagger->Branch("ssm_Nsm_wivtx",&tagger_info.ssm_Nsm_wivtx,"ssm_Nsm_wivtx/F");
 
@@ -3081,14 +3081,14 @@ int main(int argc, char* argv[])
   T_kine->Branch("kine_pio_angle",&kine_tree.kine_pio_angle,"kine_pio_angle/F");
 
   for (size_t i=0; i!= neutrino_vec.size();i++){
-    std::cout<<std::endl;
-    std::cout<<"Filling nu "<<i<<" PF tree"<<std::endl;
+    //std::cout<<std::endl;
+    //std::cout<<"Filling nu "<<i<<" PF tree"<<std::endl;
     //    neutrino_vec.at(i)->fill_proto_main_tree(reco_tree);
     neutrino_vec.at(i)->fill_particle_tree(reco_tree );
     kine_tree = neutrino_vec.at(i)->get_kine_info();
     //    neutrino_vec.at(i)->fill_kine_tree(kine_tree );
   }
-  std::cout<<std::endl;
+  //std::cout<<std::endl;
   TMC->Fill();
   T_kine->Fill();
 
