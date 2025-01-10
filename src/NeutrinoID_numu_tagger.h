@@ -47,8 +47,8 @@ std::pair<bool, double> WCPPID::NeutrinoID::numu_tagger(){
       flag_numu_cc_1 = true;
       
       if (length > max_muon_length) {
-	max_muon_length = length;
-	max_muon = sg;
+        max_muon_length = length;
+        max_muon = sg;
       }
     }
 
