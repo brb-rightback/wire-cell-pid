@@ -1416,10 +1416,10 @@ void WCPPID::NeutrinoID::fill_particle_tree(WCPPID::WCRecoTree& rtree){
     }else{
       rtree.mc_stopped[rtree.mc_Ntrack-1] = 0;
     }
-        std::cout << "kak " << sg->get_cluster_id() << " " << sg->get_id() << std::endl;
+        //std::cout << "kak " << sg->get_cluster_id() << " " << sg->get_id() << std::endl;
   }
-std::cout<<std::endl;
-std::cout<<"Passed over tracks"<<std::endl;
+//std::cout<<std::endl;
+//std::cout<<"Passed over tracks"<<std::endl;
 for(int i=0; i<rtree.mc_Ntrack; i++){
 double mass = 0;
 if(rtree.mc_pdg[i]==13) mass = 0.1057;
@@ -1427,15 +1427,15 @@ if(abs(rtree.mc_pdg[i])==211) mass = 0.140;
 if(rtree.mc_pdg[i]==111) mass = 0.135;
 if(rtree.mc_pdg[i]==2212 || rtree.mc_pdg[i]==2112) mass = 0.938;
 double ke = rtree.mc_startMomentum[i][3]-mass;
-std::cout<<"id "<<rtree.mc_id[i]<<"  pdg "<<rtree.mc_pdg[i]<<"  mom "<<rtree.mc_mother[i]<<"  inc "<<rtree.mc_included[i]<<"  KE "<<ke*1000<<"  Start:  x "<<rtree.mc_startXYZT[i][0]<<"  y "<<rtree.mc_startXYZT[i][1]<<"  z "<<rtree.mc_startXYZT[i][2]<<"  End:  x "<<rtree.mc_endXYZT[i][0]<<"  y "<<rtree.mc_endXYZT[i][1]<<"  z "<<rtree.mc_endXYZT[i][2]<<std::endl;
+//std::cout<<"id "<<rtree.mc_id[i]<<"  pdg "<<rtree.mc_pdg[i]<<"  mom "<<rtree.mc_mother[i]<<"  inc "<<rtree.mc_included[i]<<"  KE "<<ke*1000<<"  Start:  x "<<rtree.mc_startXYZT[i][0]<<"  y "<<rtree.mc_startXYZT[i][1]<<"  z "<<rtree.mc_startXYZT[i][2]<<"  End:  x "<<rtree.mc_endXYZT[i][0]<<"  y "<<rtree.mc_endXYZT[i][1]<<"  z "<<rtree.mc_endXYZT[i][2]<<std::endl;
 }
-std::cout<<std::endl;
+//std::cout<<std::endl;
 
   for (auto it = showers.begin(); it!=showers.end();it++){
     fill_reco_tree(*it, rtree);
     rtree.mc_stopped[rtree.mc_Ntrack-1] = 0;
     //std::cout << "gag " << *it << " " << (*it)->get_start_segment()->get_id() << std::endl;
-    std::cout << "gag " << (*it)->get_start_segment()->get_cluster_id() << " " << (*it)->get_start_segment()->get_id() << std::endl;
+    //std::cout << "gag " << (*it)->get_start_segment()->get_cluster_id() << " " << (*it)->get_start_segment()->get_id() << std::endl;
   }
 
     // id vs. rtree id
@@ -1501,8 +1501,8 @@ std::cout<<std::endl;
     segments_to_be_examined = temp_segments;
   }
 
-std::cout<<std::endl;
-std::cout<<"Passed over tracks+ some showers"<<std::endl;
+//std::cout<<std::endl;
+//std::cout<<"Passed over tracks+ some showers"<<std::endl;
 for(int i=0; i<rtree.mc_Ntrack; i++){
 double mass = 0;
 if(rtree.mc_pdg[i]==13) mass = 0.1057;
@@ -1510,7 +1510,7 @@ if(abs(rtree.mc_pdg[i])==211) mass = 0.140;
 if(rtree.mc_pdg[i]==111) mass = 0.135;
 if(rtree.mc_pdg[i]==2212 || rtree.mc_pdg[i]==2112) mass = 0.938;
 double ke = rtree.mc_startMomentum[i][3]-mass;
-std::cout<<"id "<<rtree.mc_id[i]<<"  pdg "<<rtree.mc_pdg[i]<<"  mom "<<rtree.mc_mother[i]<<"  inc "<<rtree.mc_included[i]<<"  KE "<<ke*1000<<"  Start:  x "<<rtree.mc_startXYZT[i][0]<<"  y "<<rtree.mc_startXYZT[i][1]<<"  z "<<rtree.mc_startXYZT[i][2]<<"  End:  x "<<rtree.mc_endXYZT[i][0]<<"  y "<<rtree.mc_endXYZT[i][1]<<"  z "<<rtree.mc_endXYZT[i][2]<<std::endl;
+//std::cout<<"id "<<rtree.mc_id[i]<<"  pdg "<<rtree.mc_pdg[i]<<"  mom "<<rtree.mc_mother[i]<<"  inc "<<rtree.mc_included[i]<<"  KE "<<ke*1000<<"  Start:  x "<<rtree.mc_startXYZT[i][0]<<"  y "<<rtree.mc_startXYZT[i][1]<<"  z "<<rtree.mc_startXYZT[i][2]<<"  End:  x "<<rtree.mc_endXYZT[i][0]<<"  y "<<rtree.mc_endXYZT[i][1]<<"  z "<<rtree.mc_endXYZT[i][2]<<std::endl;
 }
 
   // Now the showers
@@ -1610,8 +1610,8 @@ std::cout<<"id "<<rtree.mc_id[i]<<"  pdg "<<rtree.mc_pdg[i]<<"  mom "<<rtree.mc_
     }
   }
 
-std::cout<<std::endl;
-std::cout<<"Passed over everything"<<std::endl;
+//std::cout<<std::endl;
+//std::cout<<"Passed over everything"<<std::endl;
 for(int i=0; i<rtree.mc_Ntrack; i++){
 double mass = 0;
 if(rtree.mc_pdg[i]==13) mass = 0.1057;
@@ -1619,7 +1619,7 @@ if(abs(rtree.mc_pdg[i])==211) mass = 0.140;
 if(rtree.mc_pdg[i]==111) mass = 0.135;
 if(rtree.mc_pdg[i]==2212 || rtree.mc_pdg[i]==2112) mass = 0.938;
 double ke = rtree.mc_startMomentum[i][3]-mass;
-std::cout<<"id "<<rtree.mc_id[i]<<"  pdg "<<rtree.mc_pdg[i]<<"  mom "<<rtree.mc_mother[i]<<"  inc "<<rtree.mc_included[i]<<"  KE "<<ke*1000<<"  Start:  x "<<rtree.mc_startXYZT[i][0]<<"  y "<<rtree.mc_startXYZT[i][1]<<"  z "<<rtree.mc_startXYZT[i][2]<<"  End:  x "<<rtree.mc_endXYZT[i][0]<<"  y "<<rtree.mc_endXYZT[i][1]<<"  z "<<rtree.mc_endXYZT[i][2]<<std::endl;
+//std::cout<<"id "<<rtree.mc_id[i]<<"  pdg "<<rtree.mc_pdg[i]<<"  mom "<<rtree.mc_mother[i]<<"  inc "<<rtree.mc_included[i]<<"  KE "<<ke*1000<<"  Start:  x "<<rtree.mc_startXYZT[i][0]<<"  y "<<rtree.mc_startXYZT[i][1]<<"  z "<<rtree.mc_startXYZT[i][2]<<"  End:  x "<<rtree.mc_endXYZT[i][0]<<"  y "<<rtree.mc_endXYZT[i][1]<<"  z "<<rtree.mc_endXYZT[i][2]<<std::endl;
 }
 
 }
